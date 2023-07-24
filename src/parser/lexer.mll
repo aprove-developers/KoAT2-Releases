@@ -1,5 +1,5 @@
 {
-  (** Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials. *)
+  (** Is used to generate a lexer with ocamllex to lex transition graphs, its constraints and polynomials. *)
 
   (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
 (*  module Make(G : Parseable.Program) =
@@ -22,7 +22,7 @@ let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let comment = '#'[^ '\n' '\r']*newline
-let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '.' '_' '\'']* '\''?
+let id = ['a'-'z' 'A'-'Z' '_' '!'] ['a'-'z' 'A'-'Z' '0'-'9' '.' '_' '\'' '!']* '\''?
 
 let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
 let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'* | '[' fraction ']'
