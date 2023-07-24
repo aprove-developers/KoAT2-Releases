@@ -4,6 +4,7 @@
 FROM ocaml/opam:alpine-ocaml-4.14-flambda as koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
+LABEL author="Nils Lommen"
 
 WORKDIR /home/opam
 
@@ -92,16 +93,27 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
     rm *.tar.xz && \
     mv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10/bin/clang .
 
+# Build SMTPushdown
+FROM ocaml/opam:ubuntu-20.04-ocaml-4.12 as koat2_smt2
+
+RUN git clone https://github.com/aprove-developers/SMTPushdown.git && \
+    opam install ocamlbuild ocamlfind sexplib && \
+    eval $(opam env) && \
+    cd SMTPushdown/ && \
+    make && \
+    cp _build/convert.native SMTPushdown
+
 #-------------------------------------------
 # Final Image
 #-------------------------------------------
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
 RUN apt-get -y update && \
     apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 glibc-source git python3-sympy
 
 RUN mkdir /koat2
 WORKDIR /koat2
+
 
 COPY examples/Complexity_ITS ./examples/Complexity_ITS
 COPY examples/Complexity_C_Integer ./examples/Complexity_C_Integer
@@ -114,7 +126,8 @@ COPY python/SizeBoundSolvable.py ./python/SizeBoundSolvable.py
 COPY --from=koat2_c_utils /llvm2kittel/build/llvm2kittel bin/llvm2kittel
 COPY --from=koat2_c_utils /clang bin/clang
 
-COPY docker_scripts/SMTPushdown bin/SMTPushdown
+COPY --from=koat2_smt2 /home/opam/SMTPushdown/SMTPushdown bin/SMTPushdown
+
 COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
 COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
