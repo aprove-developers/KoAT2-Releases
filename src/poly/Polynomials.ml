@@ -58,14 +58,14 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
 
-    let rec simplify poly =
-      match poly with
-      | [] -> []
-      | scaled::tail ->
-         let curr_monom = ScaledMonomial_.monomial scaled in
-         let curr_coeff = coeff curr_monom poly in
-         if Value.(curr_coeff =~= zero) then (simplify (delete_monomial curr_monom tail))
-         else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
+    let simplify poly =
+      let poly' =
+        List.group (fun sm1 sm2 -> Monomial_.compare (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2)) poly
+        |> List.map (fun sms ->
+          let coeffs = List.map ScaledMonomial_.coeff sms in
+          let sum_coeffs = List.fold Value.add Value.zero coeffs in
+          ScaledMonomial_.make sum_coeffs (ScaledMonomial_.monomial @@ List.first sms)) in
+        List.filter (not % (Value.equal Value.zero) % ScaledMonomial_.coeff) poly'
 
     let to_string_simplified ?(to_file=false) ?(pretty=false) poly =
       let positive, negative = List.partition (fun s -> ScaledMonomial_.coeff s > Value.zero) poly in

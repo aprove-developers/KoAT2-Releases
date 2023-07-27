@@ -50,8 +50,8 @@ let read_update_element =
 let read_atom =
   read Parser.onlyAtom
 
-let read_polynomial =
-  read Parser.onlyPolynomial
+let read_polynomial str =
+  read Parser.onlyPolynomial str |> Polynomials.Polynomial.simplify
 
 let read_bound =
   read Parser.onlyBound
