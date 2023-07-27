@@ -398,7 +398,7 @@ let relax_guard ~non_static t =
   {t with guard = List.filter is_static t.guard}
 let remove_non_contributors non_contributors t =
   let patterns = List.filter (flip VarSet.mem (VarSet.diff (input_vars t) non_contributors)) (VarSet.to_list @@ input_vars t) in
-  let assignments = Util.cat_maybes @@ List.map (flip VarMap.find_opt t.update) patterns in
+  let assignments = List.map (flip VarMap.find t.update) patterns in
   mk ~cost:t.cost ~assignments:assignments ~patterns:patterns ~guard:t.guard ~id:None
 
 (* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
