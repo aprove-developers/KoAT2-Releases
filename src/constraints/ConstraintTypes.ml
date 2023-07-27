@@ -106,6 +106,8 @@ module type Atom =
          (** Returns the negation of an atom. *)
         val neg : t -> t
 
+        val flip_comp : t -> t
+
         (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
         val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
@@ -139,6 +141,8 @@ module type Atom =
         val poly : t -> polynomial
 
         val is_lt : t -> bool
+
+        val is_le : t -> bool
 
   end
 

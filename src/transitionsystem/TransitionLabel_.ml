@@ -174,6 +174,34 @@ let overapprox_nonlinear_updates t =
   let (guard',update') = VarMap.fold overapprox_poly t.update (t.guard, t.update) in
   {t with guard = guard'; update = update'}
 
+let eliminate_tmp_var var t =
+  let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
+  let occurs_in_equality var label =
+    let atoms = Guard.atom_list orig_guard_and_invariants in
+    List.find_opt (fun (atom1,atom2) ->
+        Atom.is_le atom1 &&
+        Atom.is_le atom2 &&
+        Atom.equal atom1 (Atom.flip_comp atom2) &&
+        VarSet.mem var (Atom.vars atom1) &&
+        Polynomial.var_only_linear var (Atom.poly atom1))
+        (List.cartesian_product atoms atoms) in
+    let opt = occurs_in_equality var t in
+    if Option.is_some opt then
+      let (atom1,atom2) = Option.get opt in
+      let guard' = List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Guard.atom_list @@ t.guard) in
+      let inv' = List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Invariant.atom_list @@ t.invariant) in
+      let replacement =
+        let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
+        if Z.(coeff_of_var < zero) then
+          Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [Z.neg coeff_of_var] [var])
+        else
+          Polynomial.neg @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [Z.neg coeff_of_var] [var])
+      in
+      let update' = VarMap.map (Polynomial.substitute var ~replacement:replacement) t.update in
+      MaybeChanged.changed {t with guard = guard'; invariant = inv'; update = update'}
+    else
+      MaybeChanged.same t
+
 let guard t = Guard.mk_and t.guard t.invariant
 
 let chain_guards t1 t2 = guard (append t1 t2)
@@ -321,6 +349,8 @@ let input_size t =
   |> input_vars
   |> VarSet.cardinal
 
+let tmp_vars t = VarSet.diff (vars t) (input_vars t)
+
 let changed_vars t =
   input_vars t
   |> VarSet.filter (fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
@@ -356,7 +386,7 @@ let rename rename_map t =
   }
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
-let relax_guard ?(non_static=VarSet.empty) t = 
+let relax_guard ?(non_static=VarSet.empty) t =
   let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
   {t with guard = List.filter is_static t.guard}
 let remove_non_contributors non_contributors t =

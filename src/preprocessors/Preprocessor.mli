@@ -8,6 +8,7 @@ type _ t =
   | CutUnreachableLocations: 'p t  (** Removes all unreachable locations. *)
   | CutUnsatisfiableTransitions: 'p t  (** Removes all unsatisfiable transitions. *)
   | EliminateNonContributors: 'p t
+  | EliminateTempVars: Program.t t
   | Chaining: Program.t t (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
   | ChainingConservative: Program.t t (** Same as chaining but only for locations with one entry and one outgoing edge. *)
   | InvariantGeneration: 'p t  (** Adds invariants to transitions. *)

@@ -80,7 +80,7 @@ struct
     |> Enum.map TL.input_vars
     |> Enum.fold VarSet.union VarSet.empty
 
-  let temp_vars =
+  let tmp_vars =
     fun program -> VarSet.diff (vars program) (input_vars program)
 
   let from_graph start graph =
@@ -148,7 +148,7 @@ struct
       [
         "Start:  "^L.to_string program.start;
         "Program_Vars:  "^(input_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
-        "Temp_Vars:  "^(temp_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
+        "Temp_Vars:  "^(tmp_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
         "Locations:  "^locations;
         "Transitions:";
       ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)
