@@ -341,7 +341,7 @@ module ProbabilisticTransitionLabel = struct
 
   let tmp_vars t = VarSet.diff (vars t) (input_vars t)
 
-  let relax_guard ?(non_static=VarSet.empty) t =
+  let relax_guard ~non_static t =
     let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
     {t with guard = List.filter is_static t.guard;
             overappr_guard = List.filter is_static t.overappr_guard}
@@ -402,7 +402,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   let tmp_vars t = VarSet.diff (vars t) (input_vars t)
 
-  let relax_guard ?(non_static=VarSet.empty) t =
+  let relax_guard ~non_static t =
     let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
     {t with guard = List.filter is_static t.guard;
             overappr_guard = List.filter is_static t.overappr_guard}

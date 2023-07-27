@@ -102,8 +102,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
-    let updated_trans = TransitionLabel.relax_guard t in
-    let handle_scc = List.map (Tuple3.map2 TransitionLabel.relax_guard) in
+    let updated_trans = TransitionLabel.relax_guard ~non_static:VarSet.empty t in
+    let handle_scc = List.map (Tuple3.map2 (TransitionLabel.relax_guard ~non_static:VarSet.empty)) in
     let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
         Location.equal l1' l2' &&
