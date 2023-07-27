@@ -145,6 +145,9 @@ module type TransitionLabel = sig
   (** Returns the set of input variables of the transition, i.e. the non temporary variables  *)
   val input_vars : t -> VarSet.t
 
+  (** Returns the set of temporay variables of the transition.  *)
+  val tmp_vars : t -> VarSet.t
+
   (** Returns the number of input variables *)
   val input_size : t -> int
 
@@ -355,6 +358,9 @@ module type Program = sig
 
   (** Returns all input variables of the program. *)
   val input_vars : t -> VarSet.t
+
+  (** Returns the set of temporay variables of the transition. *)
+  val tmp_vars : t -> VarSet.t
 
   (** Returns all locations which occur in the transitions, but each location only once. *)
   val locations : t -> location_set

@@ -339,7 +339,9 @@ module ProbabilisticTransitionLabel = struct
   let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
-  let relax_guard ?(non_static=VarSet.empty) t = 
+  let tmp_vars t = VarSet.diff (vars t) (input_vars t)
+
+  let relax_guard ?(non_static=VarSet.empty) t =
     let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
     {t with guard = List.filter is_static t.guard;
             overappr_guard = List.filter is_static t.overappr_guard}
@@ -398,7 +400,9 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let vars_without_memoization = vars_without_memoization VarsOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
-  let relax_guard ?(non_static=VarSet.empty) t = 
+  let tmp_vars t = VarSet.diff (vars t) (input_vars t)
+
+  let relax_guard ?(non_static=VarSet.empty) t =
     let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
     {t with guard = List.filter is_static t.guard;
             overappr_guard = List.filter is_static t.overappr_guard}
@@ -408,7 +412,6 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let changed_vars t =
     input_vars t
     |> VarSet.filter (fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
-
 end
 
 module ProbabilisticTransition = struct
@@ -728,7 +731,7 @@ module ProbabilisticProgram = struct
   let restore_legacy_distribution_update_semantics =
     map_transitions ProbabilisticTransition.restore_legacy_distribution_update_semantics
 
-  let temp_vars t =
+  let tmp_vars t =
     VarSet.diff (vars t) (input_vars t)
 
   let is_initial_gt t gt =
@@ -755,7 +758,7 @@ module ProbabilisticProgram = struct
     FormattedString.format_append (
       [ "Start:  "^Location.to_string (start t);
         "Program_Vars:  "^(input_vars t |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
-        "Temp_Vars:  "^(temp_vars t |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
+        "Temp_Vars:  "^(tmp_vars t |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
         "Locations:  "^locations;
         "Transitions:";]
     |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) transitions

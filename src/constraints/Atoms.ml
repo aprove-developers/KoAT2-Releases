@@ -70,9 +70,13 @@ struct
     (* Maybe use SMT-solver here *)
     let (=~=) (poly1,comp1) (poly2,comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
 
-    let neg = function 
+    let neg = function
       | (poly,LE) -> (P.neg poly, LT)
       | (poly,LT) -> (P.neg poly, LE)
+
+    let flip_comp = function
+      | (poly,LE) -> (P.neg poly, LE)
+      | (poly,LT) -> (P.neg poly, LT)
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
 
@@ -115,6 +119,10 @@ struct
 
     let is_lt (_, comp) = match comp with
       | LT -> true
+      | _ -> false
+
+    let is_le (_, comp) = match comp with
+      | LE -> true
       | _ -> false
 end
 

@@ -547,7 +547,6 @@ module type Polynomial =
     (** Returns if the value of the polynomial is the constant value one (1). *)
     val is_one : t -> bool
 
-
     (** {1 {L Misc}} *)
 
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)

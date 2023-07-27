@@ -50,3 +50,5 @@ val update_to_file_string_lhs: t -> string
 (** Returns a string representing the right hand side of the update function.
     Can be used to dump the Program to a file. *)
 val update_to_file_string_rhs: t -> string
+
+val eliminate_tmp_var: Var.t -> t -> MaybeChanged.status * t

@@ -9,6 +9,7 @@ type _ t =
   | CutUnreachableLocations: 'p t
   | CutUnsatisfiableTransitions: 'p t
   | EliminateNonContributors: 'p t
+  | EliminateTempVars: Program.t t
   | Chaining: Program.t t
   | ChainingConservative: Program.t t
   | InvariantGeneration: 'p t
@@ -20,6 +21,7 @@ let show: type p. p t -> string = function
   | Chaining -> "chaining"
   | ChainingConservative -> "chaining-conservative"
   | EliminateNonContributors -> "eliminate"
+  | EliminateTempVars -> "tmp"
   | InvariantGeneration -> "invgen"
 
 let affects: type p. p t -> p t list = function
@@ -28,6 +30,7 @@ let affects: type p. p t -> p t list = function
   | InvariantGeneration -> [ CutUnsatisfiableTransitions ]
   | CutUnsatisfiableTransitions -> [ CutUnreachableLocations; EliminateNonContributors]
   | EliminateNonContributors -> []
+  | EliminateTempVars -> [EliminateNonContributors; CutUnsatisfiableTransitions]
   | Chaining -> [CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration]
   | ChainingConservative -> [CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration]
 
@@ -59,11 +62,12 @@ let transform (type p) (module P: ProgramTypes.ClassicalProgramModules with type
   | ChainingConservative -> (MaybeChanged.map normalise_temp_vars  % lift_to_program (Chaining.transform_graph ~conservative:true)) subject
   | EliminateNonContributors ->
     let module ENC = EliminateNonContributors.Make(P) in ENC.eliminate subject
+  | EliminateTempVars -> EliminateTempVars.eliminate_tmp_vars subject
   | InvariantGeneration ->
     let module IG = InvariantGeneration.Make(P) in IG.transform_program subject
 
 let all_classical: Program.t t list =
-  [Chaining; ChainingConservative; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
+  [Chaining; ChainingConservative; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration; EliminateTempVars]
 
 let all_probabilistic: ProbabilisticPrograms.ProbabilisticProgram.t t list =
   [CutZeroProbTransitions; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
