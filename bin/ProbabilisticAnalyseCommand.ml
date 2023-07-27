@@ -1,6 +1,6 @@
 (** Perform a full-fledged probabilistic analysis *)
-open Batteries
 open Koat2
+open OurBase
 open Readers
 open ProbabilisticProgramModules
 
@@ -46,16 +46,16 @@ let run (params: params) =
     Preprocessor.process (module NonProbOverappr) params.preprocessing_strategy params.preprocessors
   in
 
-  Printf.printf "prog %s\n\n" (Program.to_string_pretty program);
+  Stdio.printf "prog %s\n\n" (Program.to_string_pretty program);
 
   let classical_analysis_conf =
     let open TWN in
-    List.fold_left (fun conf -> function
+    List.fold_left ~f:(fun conf -> function
         | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth; }
         | `TWN -> { conf with twn_configuration = Some `NoTransformation}
         | `TWNTransform -> { conf with twn_configuration = Some `Transformation}
       )
-      Analysis.default_configuration params.classic_local
+      ~init:Analysis.default_configuration params.classic_local
   in
 
   let program, class_appr =

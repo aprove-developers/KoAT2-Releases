@@ -20,7 +20,7 @@ module type Atomizable =
     val coeff_of_var : Var.t -> t -> value
     val get_constant : t -> value
     val of_coeff_list : value list -> Var.t list -> t
-    val sum : t Enum.t -> t
+    val sum : t OurBase.Sequence.t -> t
   end
 
 (** An atom is a comparison between two polynomials. *)

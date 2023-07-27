@@ -1,6 +1,6 @@
 (** Handles shell arguments and computes a normalform for an input. *)
-open Batteries
 open Koat2
+open OurBase
 open Polynomials
 open Atoms
 open BoundsInst
@@ -23,7 +23,7 @@ type params = {
   } [@@deriving cmdliner]
 
 let run (params: params) =
-  let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
+  let logs = List.map ~f:(fun log -> (log, Logger.DEBUG)) params.logs in
   Logging.use_loggers logs;
   let output = match params.kind with
     | `Polynomial -> Polynomial.to_string (Polynomial.simplify (Readers.read_polynomial params.input))

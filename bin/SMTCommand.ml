@@ -1,5 +1,5 @@
 open Koat2
-open Batteries
+open OurBase
 
 module Valuation = Valuation.Make(OurInt)
 
@@ -24,10 +24,11 @@ let run (params: params) =
   and constr = Readers.read_formula params.constr in
   constr
   |> solve
-  |> Option.map (fun solution ->
-         Enum.fold (fun str -> (fun (var,value) -> str ^ (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n"))) "" (Valuation.bindings solution)
+  |> Option.map ~f:(fun solution ->
+         Sequence.fold
+           ~f:(fun str -> (fun (var,value) -> str ^ (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")))
+           ~init:"" (Valuation.bindings solution)
        )
   |? "unsatisfiable\n"
   |> print_string;
-  Printf.printf "\nZ3 version: %s\n" Z3.version;
-
+  Stdio.printf "\nZ3 version: %s\n" Z3.version;

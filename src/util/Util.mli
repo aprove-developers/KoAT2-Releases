@@ -56,6 +56,8 @@ val read_from_channel: BatInnerIO.input -> string
 
 val read_process: string -> string
 
+val iterate_n_times: ('a -> 'a) -> int -> 'a -> 'a
+
 (** Reasoning about type equalities *)
 module TypeEq: sig
   type (_,_) t = | Refl: ('a,'a) t

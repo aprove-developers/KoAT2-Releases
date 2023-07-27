@@ -23,7 +23,7 @@ module PolynomialOver(Value : Ring): sig
 
   (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
       Leaves all variables unchanged which are not in the replacement map.  *)
-  val substitute_all : t Map.Make(Var).t -> t -> t
+  val substitute_all : (Var.t,t,Var.comparator_witness) Base.Map.t -> t -> t
 end
 
 (** Provides default implementation of polynomials ranged over [OurInt]. *)

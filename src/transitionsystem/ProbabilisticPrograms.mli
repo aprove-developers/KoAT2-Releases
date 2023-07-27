@@ -82,7 +82,7 @@ end
 module GeneralTransitionSet: sig
   include ProgramTypes.TransitionSet
     with type elt = GeneralTransition.t
-     and type elt_comparator_witness = GeneralTransition.comparator_witness
+     and type comparator_witness = GeneralTransition.comparator_witness
      and type location_set = (Location.t, Location.comparator_witness) Base.Set.t
 
   include module type of OurBase.MakeSetCreators0(GeneralTransition)

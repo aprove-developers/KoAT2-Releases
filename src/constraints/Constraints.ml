@@ -97,7 +97,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
       let dualised_left = List.map
           (fun row ->
              List.map2 (fun c -> A.P.mul c % A.P.of_var ) row vars
-             |> List.enum
+             |> OurBase.Sequence.of_list
              |> A.P.sum)
           matrix
       in

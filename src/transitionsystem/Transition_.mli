@@ -13,13 +13,13 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
   (** A set of transitions. *)
   (* include module type of Base.Set with type ('a,'b) t :=  ('a,'b) base_set_t *)
 
-  include OurBase.Creators'0
+  include OurBase.SetCreators'0
     with type elt = T.t
-     and type elt_comparator_witness = T.comparator_witness
+     and type comparator_witness = T.comparator_witness
 
   include ProgramTypes.TransitionSet
     with type elt = T.t
-     and type elt_comparator_witness = T.comparator_witness
+     and type comparator_witness = T.comparator_witness
      and type location_set = (L.t, L.comparator_witness) Base.Set.t
 
 end

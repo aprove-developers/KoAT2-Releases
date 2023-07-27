@@ -1,54 +1,61 @@
-open Batteries
+open OurBase
 open BoundsInst
 open Polynomials
 
 module UpdateValue = struct
-  type t = Var of Var.t
-         | Dist of ProbabilityDistribution.t [@@deriving eq,ord]
+  module Inner = struct
+    type t = Var of Var.t
+          | Dist of ProbabilityDistribution.t [@@deriving eq,ord]
 
-  let to_string ?(pretty=false) ?(to_file=false) = function
-    | Dist d -> ProbabilityDistribution.to_string ~pretty d
-    | Var  v -> Var.to_string ~pretty v
+    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
-  let rename m = function
-    | Dist d -> Dist (ProbabilityDistribution.rename m d)
-    | Var  v -> Var (VarIndeterminate.rename m v)
+    let to_string ?(pretty=false) ?(to_file=false) = function
+      | Dist d -> ProbabilityDistribution.to_string ~pretty d
+      | Var  v -> Var.to_string ~pretty v
 
-  let vars = function
-    | Dist d -> ProbabilityDistribution.vars d
-    | Var  v -> VarSet.singleton v
+    let rename m = function
+      | Dist d -> Dist (ProbabilityDistribution.rename m d)
+      | Var  v -> Var (VarIndeterminate.rename m v)
 
-  let of_var v = Var v
+    let vars = function
+      | Dist d -> ProbabilityDistribution.vars d
+      | Var  v -> VarSet.singleton v
 
-  let is_dist = function
-    | Dist d -> true
-    | Var  v -> false
+    let of_var v = Var v
 
-  let get_var = function
-    | Dist d  -> None
-    | Var  v  -> Some v
+    let is_dist = function
+      | Dist d -> true
+      | Var  v -> false
 
-  let exp_value_poly = function
-    | Var  v -> RealPolynomial.of_var v
-    | Dist d -> ProbabilityDistribution.exp_value_poly d
+    let get_var = function
+      | Dist d  -> None
+      | Var  v  -> Some v
 
-  let moment_poly d i = match d with
-    | Var  v -> RealPolynomial.pow (RealPolynomial.of_var v) i
-    | Dist d -> ProbabilityDistribution.moment_poly d i
+    let exp_value_poly = function
+      | Var  v -> RealPolynomial.of_var v
+      | Dist d -> ProbabilityDistribution.exp_value_poly d
 
-  let moment_abs_bound d i = match d with
-    | Var v  -> RealBound.(pow (of_var v) i)
-    | Dist d -> ProbabilityDistribution.moment_abs_bound d i
+    let moment_poly d i = match d with
+      | Var  v -> RealPolynomial.pow (RealPolynomial.of_var v) i
+      | Dist d -> ProbabilityDistribution.moment_poly d i
 
-  let is_integral = fun _ -> true
+    let moment_abs_bound d i = match d with
+      | Var v  -> RealBound.(pow (of_var v) i)
+      | Dist d -> ProbabilityDistribution.moment_abs_bound d i
 
-  let admissibility_constraint = function
-    | Var  v -> Guard.mk_true
-    | Dist d -> ProbabilityDistribution.admissibility_constraint d
+    let is_integral = fun _ -> true
 
-  let as_guard uv new_var = match uv with
-    | Var  v -> Guard.Infix.(Polynomial.(of_var v = of_var new_var))
-    | Dist d -> ProbabilityDistribution.as_guard d new_var
+    let admissibility_constraint = function
+      | Var  v -> Guard.mk_true
+      | Dist d -> ProbabilityDistribution.admissibility_constraint d
+
+    let as_guard uv new_var = match uv with
+      | Var  v -> Guard.Infix.(Polynomial.(of_var v = of_var new_var))
+      | Dist d -> ProbabilityDistribution.as_guard d new_var
+  end
+
+  include Inner
+  include Comparator.Make(Inner)
 end
 
 include PolynomialOverIndeterminate(UpdateValue)(OurInt)
@@ -59,11 +66,11 @@ let is_integral = fun _ -> true
 let to_polynomial =
   fold
     ~const:(Option.some % Polynomial.of_constant)
-    ~indeterminate:(Option.map Polynomial.of_var % UpdateValue.get_var)
-    ~neg:(Option.map Polynomial.neg)
+    ~indeterminate:(Option.map ~f:Polynomial.of_var % UpdateValue.get_var)
+    ~neg:(Option.map ~f:Polynomial.neg)
     ~plus:(OptionMonad.liftM2 Polynomial.add)
     ~times:(OptionMonad.liftM2 Polynomial.mul)
-    ~pow:(fun p i -> Option.map (fun p -> Polynomial.pow p i) p)
+    ~pow:(fun p i -> Option.map ~f:(fun p -> Polynomial.pow p i) p)
 
 let of_poly =
   Polynomial.fold
@@ -94,9 +101,9 @@ let as_guard ue new_var =
   Guard.mk_and (Guard.mk_eq (Polynomial.of_var new_var) replaced_poly) dist_constrs
 
 let exp_value_poly: t -> RealPolynomial.t = fun t ->
-  List.enum (monomials_with_coeffs t)
-  |> Enum.map (Tuple2.map2 (RealPolynomial.product % Enum.map (uncurry UpdateValue.moment_poly) % Monomial_.to_enum))
-  |> Enum.map RealPolynomial.(fun(c,p) -> mul (of_intconstant c) p)
+  Sequence.of_list (monomials_with_coeffs t)
+  |> Sequence.map ~f:(Tuple2.map2 (RealPolynomial.product % Sequence.map ~f:(uncurry UpdateValue.moment_poly) % Monomial_.to_sequence))
+  |> Sequence.map ~f:RealPolynomial.(fun(c,p) -> mul (of_intconstant c) p)
   |> RealPolynomial.sum
 
 let moment_poly t i = exp_value_poly (pow t i)
@@ -122,42 +129,47 @@ let as_linear_abstract manager constr t new_var =
   in
 
   let module Multiplicand = struct
-    type t = UpdateValue.t * int
-    let compare a b = Tuple2.compare ~cmp1:UpdateValue.compare a b
+    module Inner = struct
+      type t = UpdateValue.t * int
+      let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+      let compare a b = Tuple2.compare ~cmp1:UpdateValue.compare a b
+    end
+    include Inner
+    include Comparator.Make(Inner)
   end in
-  let module MultiplicandSet = Set.Make(Multiplicand) in
-  let module MultiplicandMap = Map.Make(Multiplicand) in
-  let module IndetMap = Map.Make(UpdateValue) in
+  let module MultiplicandSet = MakeSetCreators0(Multiplicand) in
+  let module MultiplicandMap = MakeMapCreators1(Multiplicand) in
+  let module IndetMap = MakeMapCreators1(UpdateValue) in
   let module ClassicalMonomial = Monomials.Make(OurInt) in
 
-  let indeterminates_repr_map = IndetMap.of_enum @@
-    Enum.map (fun i -> i, match UpdateValue.get_var i with
+  let indeterminates_repr_map = IndetMap.of_sequence_exn @@
+    Sequence.map ~f:(fun i -> i, match UpdateValue.get_var i with
                         | Some v -> v
                         | None   -> Var.fresh_id Var.Int ())
-      (indeterminates t)
+      (Sequence.of_list @@ indeterminates t)
   in
   let indet_guard =
-    Enum.map
-      (fun(i,v) -> if UpdateValue.is_dist i then UpdateValue.as_guard i v else Guard.mk_true)
-      (IndetMap.enum indeterminates_repr_map)
-    |> Guard.all % List.of_enum
+    Sequence.map
+      ~f:(fun(i,v) -> if UpdateValue.is_dist i then UpdateValue.as_guard i v else Guard.mk_true)
+      (Base.Map.to_sequence indeterminates_repr_map)
+    |> Guard.all % Sequence.to_list
   in
 
   let multiplicands_repr_map =
-    List.enum (monomials t)
-    |> Enum.map Monomial_.to_enum
-    |> MultiplicandSet.enum % MultiplicandSet.of_enum % Enum.flatten
-    |> Enum.map (fun (i,e) ->
-        let v = if e = 1 then IndetMap.find i indeterminates_repr_map else Var.fresh_id Var.Int () in ((i,e),v))
-    |> MultiplicandMap.of_enum
+    Sequence.of_list (monomials t)
+    |> Sequence.map ~f:Monomial_.to_sequence
+    |> Base.Set.to_sequence % MultiplicandSet.of_sequence % Sequence.join
+    |> Sequence.map ~f:(fun (i,e) ->
+        let v = if e = 1 then Base.Map.find_exn indeterminates_repr_map i else Var.fresh_id Var.Int () in ((i,e),v))
+    |> MultiplicandMap.of_sequence_exn
   in
 
   (* post_update refinement constraints for updates of the form X^e where e is even*)
   let multiplicands_post_update_constraint =
-    MultiplicandMap.enum multiplicands_repr_map
-    |> Enum.filter (fun ((_,e),_) -> e mod 2 = 0 && Int.(e > 0))
-    |> Enum.map (fun ((i,e), multipl_repr_var) ->
-        let ind_repr_var = IndetMap.find i indeterminates_repr_map in
+    Base.Map.to_sequence multiplicands_repr_map
+    |> Sequence.filter ~f:(fun ((_,e),_) -> e mod 2 = 0 && Int.(e > 0))
+    |> Sequence.map ~f:(fun ((i,e), multipl_repr_var) ->
+        let ind_repr_var = Base.Map.find_exn indeterminates_repr_map i in
         let guard = Guard.Infix.(constr && UpdateValue.as_guard i ind_repr_var) in
         let multipl_repr_poly = Polynomial.of_var multipl_repr_var in
 
@@ -170,7 +182,7 @@ let as_linear_abstract manager constr t new_var =
         else
           Guard.Infix.(multipl_repr_poly >= Polynomial.zero)
       )
-    |> Guard.all % List.of_enum
+    |> Guard.all % Sequence.to_list
   in
 
   let keep_vars = Base.Set.add (Base.Set.union (Guard.vars constr) (vars t)) new_var in
@@ -189,22 +201,22 @@ let as_linear_abstract manager constr t new_var =
 
   let update_monomial_multiplicands a =
     let vars, assgnmts =
-      MultiplicandMap.enum multiplicands_repr_map
-      |> Enum.map (fun ((i,e),v) ->
-          let ind_repr_var = IndetMap.find i indeterminates_repr_map in
+      Map.to_alist multiplicands_repr_map
+      |> List.map ~f:(fun ((i,e),v) ->
+          let ind_repr_var = Map.find_exn indeterminates_repr_map i in
           v, poly_to_apron environment (Polynomial.(pow (of_var ind_repr_var) e))
         )
-      |> List.split % List.of_enum
+      |> List.unzip
     in
-    Apron.Abstract1.assign_texpr_array manager a (Array.map var_to_apron @@ Array.of_list vars) (Array.of_list assgnmts) (Some post_update_abstract)
+    Apron.Abstract1.assign_texpr_array manager a (Array.map ~f:var_to_apron @@ Array.of_list vars) (Array.of_list assgnmts) (Some post_update_abstract)
   in
 
   let update_final =
     monomials_with_coeffs t
-    |> List.map (fun(c,m) -> c,
-         Monomial_.to_enum m
-         |> Enum.map (fun (i,e) -> MultiplicandMap.find (i,e) multiplicands_repr_map, 1)
-         |> ClassicalMonomial.make % List.of_enum
+    |> List.map ~f:(fun(c,m) -> c,
+         Monomial_.to_sequence m
+         |> Sequence.map ~f:(fun (i,e) -> Base.Map.find_exn multiplicands_repr_map (i,e), 1)
+         |> ClassicalMonomial.make % Sequence.to_list
        )
     |> Polynomial.make
   in
@@ -239,9 +251,9 @@ let pull_out_of_uniform: t -> t =
 
 let exp_value_abs_bound t =
   let simplified = pull_out_of_uniform t in
-  List.enum (monomials_with_coeffs simplified)
-  |> Enum.map
-      (Tuple2.map2
-         (RealBound.product % Enum.map (uncurry UpdateValue.moment_abs_bound) % Monomial_.to_enum))
-  |> Enum.map RealBound.(fun(c,p) -> mul (of_constant @@ OurFloat.of_ourint c) p)
-  |> RealBound.sum
+  Sequence.of_list (monomials_with_coeffs simplified)
+  |> Sequence.map
+      ~f:(Tuple2.map2
+         (RealBound.product_sequence % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound) % Monomial_.to_sequence))
+  |> Sequence.map ~f:RealBound.(fun(c,p) -> mul (of_constant @@ OurFloat.of_ourint c) p)
+  |> RealBound.sum_sequence

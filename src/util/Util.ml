@@ -138,6 +138,10 @@ let read_process cmd =
   let chan = Unix.open_process_in cmd in
   read_from_channel chan
 
+let rec iterate_n_times (f: 'a -> 'a) (n: int) (a: 'a): 'a =
+  if n < 0 then raise (Invalid_argument "iterate_n_times: Negative Argument")
+  else if n = 0 then a else iterate_n_times f (n-1) (f a)
+
 module TypeEq = struct
   type (_,_) t =  | Refl: ('a,'a) t
 

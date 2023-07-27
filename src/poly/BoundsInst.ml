@@ -467,7 +467,7 @@ module Make(Num : PolyTypes.OurNumber) =
 
     let vars = Option.default VarSet.empty % Option.map vars_bound
 
-    let indeterminates = List.enum % Base.Set.to_list % vars
+    let indeterminates = Base.Set.to_list % vars
 
     let keep_simpler_bound b1 b2 = match compare_asy b1 b2 with
       (* First compare asymptotic_complexity *)

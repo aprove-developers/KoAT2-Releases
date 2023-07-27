@@ -25,7 +25,7 @@ module type Location = sig
 end
 
 module type LocationSet = sig
-  include OurBase.Creators'0
+  include OurBase.SetCreators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -34,7 +34,7 @@ end
 module type TransitionSet = sig
   (** A set of transitions. *)
 
-  include OurBase.Creators'0
+  include OurBase.SetCreators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -435,7 +435,7 @@ module type ProgramModules = sig
   module Location: Location
   module LocationSet: LocationSet
     with type elt = Location.t
-     and type elt_comparator_witness = Location.comparator_witness
+     and type comparator_witness = Location.comparator_witness
 
   module UpdateElement: PolyTypes.Polynomial
     with type value = OurInt.t
@@ -449,7 +449,7 @@ module type ProgramModules = sig
 
   module TransitionSet: TransitionSet
     with type elt = Transition.t
-     and type elt_comparator_witness = Transition.comparator_witness
+     and type comparator_witness = Transition.comparator_witness
      and type location_set = (Location.t, Location.comparator_witness) Base.Set.t
 
   module TransitionGraph: TransitionGraph

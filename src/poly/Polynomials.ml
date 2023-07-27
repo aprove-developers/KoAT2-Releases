@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open PolyTypes
 
 module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring) =
@@ -14,40 +14,36 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
     type value = Value.t
     type indeterminate = I.t
 
-    let make = List.map (fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
+    let make = List.map ~f:(fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
 
-    let is_integral =
-      Enum.for_all identity % Enum.map ScaledMonomial_.is_integral % List.enum
+    let is_integral = List.for_all ~f:ScaledMonomial_.is_integral
 
     let lift coeff mon = [ScaledMonomial_.make coeff mon]
 
     let of_scaled scaled = scaled
 
     let fold ~const ~indeterminate ~neg ~plus ~times ~pow =
-      List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~indeterminate ~times ~pow scaled)) (const Value.zero)
+      List.fold_left ~f:(fun b scaled -> plus b (ScaledMonomial_.fold ~const ~indeterminate ~times ~pow scaled)) ~init:(const Value.zero)
 
     let degree poly =
-      if poly = [] then
-        0
-      else
-        List.max (List.map (ScaledMonomial_.degree) poly )
+      Option.value ~default:0 @@ List.max_elt ~compare:Int.compare (List.map ~f:(ScaledMonomial_.degree) poly )
 
     let indeterminate_only_linear i p =
-      Enum.map (ScaledMonomial_.monomial) (List.enum p)
-      |> Enum.map (Monomial_.degree_variable i)
-      |> Enum.for_all ((>=) 1)
+      Sequence.map ~f:(ScaledMonomial_.monomial) (Sequence.of_list p)
+      |> Sequence.map ~f:(Monomial_.degree_variable i)
+      |> Sequence.for_all ~f:((>=) 1)
 
     let var_only_linear var = function
       | [] -> true
-      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> Base.Set.mem (ScaledMonomial_.vars s) var) p))
+      | p -> List.for_all ~f:((>=) 1) (List.map ~f:ScaledMonomial_.degree (List.filter ~f:(fun s -> Base.Set.mem (ScaledMonomial_.vars s) var) p))
 
     let coeff mon poly =
          poly
-      |> List.filter (fun scaled -> Monomial_.(=~=) (ScaledMonomial_.monomial scaled) mon)
-      |> List.map ScaledMonomial_.coeff
-      |> List.fold_left Value.add Value.zero
+      |> List.filter ~f:(fun scaled -> Monomial_.(=~=) (ScaledMonomial_.monomial scaled) mon)
+      |> List.map ~f:ScaledMonomial_.coeff
+      |> List.fold_left ~f:Value.add ~init:Value.zero
 
-    let coeffs = List.map ScaledMonomial_.coeff
+    let coeffs = List.map ~f:ScaledMonomial_.coeff
 
     let coeff_of_indeterminate var poly =
         let mon = Monomial_.lift var 1 in
@@ -56,27 +52,27 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
     let coeff_of_var var poly = coeff_of_indeterminate (I.of_var var) poly
 
     let delete_monomial mon poly =
-      List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
+      List.filter ~f:(fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
 
     let simplify poly =
       let poly' =
-        List.group (fun sm1 sm2 -> Monomial_.compare (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2)) poly
-        |> List.map (fun sms ->
-          let coeffs = List.map ScaledMonomial_.coeff sms in
-          let sum_coeffs = List.fold Value.add Value.zero coeffs in
-          ScaledMonomial_.make sum_coeffs (ScaledMonomial_.monomial @@ List.first sms)) in
-        List.filter (not % (Value.equal Value.zero) % ScaledMonomial_.coeff) poly'
+        List.sort_and_group ~compare:(fun sm1 sm2 -> Monomial_.compare (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2)) poly
+        |> List.map ~f:(fun sms ->
+          let coeffs = List.map ~f:ScaledMonomial_.coeff sms in
+          let sum_coeffs = List.fold ~f:Value.add ~init:Value.zero coeffs in
+          ScaledMonomial_.make sum_coeffs (ScaledMonomial_.monomial @@ List.hd_exn sms)) in
+        List.filter ~f:(not % (Value.equal Value.zero) % ScaledMonomial_.coeff) poly'
 
     let to_string_simplified ?(to_file=false) ?(pretty=false) poly =
-      let positive, negative = List.partition (fun s -> ScaledMonomial_.coeff s > Value.zero) poly in
+      let positive, negative = List.partition_tf ~f:(fun s ->  Value.compare (ScaledMonomial_.coeff s) Value.zero > 0) poly in
       let str_list str scaled_monomials = match
         scaled_monomials
-        |> List.map (ScaledMonomial_.to_string ~to_file ~pretty)
-        |> List.filter (not % (String.equal "")) with
+        |> List.map ~f:(ScaledMonomial_.to_string ~to_file ~pretty)
+        |> List.filter ~f:(not % (String.equal "")) with
           | [] -> ""
-          | xs -> String.concat str xs in
+          | xs -> String.concat ~sep:str xs in
       let pos_str = str_list "+" positive in
-      let neg_str = str_list "-" (List.map (ScaledMonomial_.mult_with_const (Value.neg Value.one)) negative) in
+      let neg_str = str_list "-" (List.map ~f:(ScaledMonomial_.mult_with_const (Value.neg Value.one)) negative) in
       if String.equal (pos_str ^ neg_str) "" then "0"
       else if String.equal neg_str "" then pos_str
       else pos_str ^ "-" ^ neg_str
@@ -90,15 +86,15 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
     let monomials poly =
          poly
       |> simplify
-      |> List.map ScaledMonomial_.monomial
-      |> List.filter ((<>) Monomial_.one)
+      |> List.map ~f:ScaledMonomial_.monomial
+      |> List.filter ~f:(not % Monomial_.equal Monomial_.one)
 
     let scaled_monomials poly = poly |> simplify
 
     let monomials_with_coeffs poly =
          poly
       |> simplify
-      |> List.map (fun mon -> ScaledMonomial_.coeff mon, ScaledMonomial_.monomial mon)
+      |> List.map ~f:(fun mon -> ScaledMonomial_.coeff mon, ScaledMonomial_.monomial mon)
 
     let of_monomial mon = lift Value.one mon
 
@@ -117,9 +113,6 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
                 |_ -> []
         else []
 
-    let of_coeffs_list_univariate var coeffs =
-      List.fold_righti (fun i coeff p -> (ScaledMonomial_.make coeff (Monomial_.lift var i))::p) coeffs []
-
     let var str = of_var (Var.of_string str)
 
     let value c = of_constant (Value.of_int c)
@@ -135,11 +128,11 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let get_indeterminate t =
       if List.length t = 1 then
-        let scaled = List.hd t in
+        let scaled = List.hd_exn t in
         if Value.equal Value.one (ScaledMonomial_.coeff scaled) then
-          let pow_list = List.of_enum @@ Monomial_.to_enum @@ ScaledMonomial_.monomial scaled in
+          let pow_list = Sequence.to_list @@ Monomial_.to_sequence @@ ScaledMonomial_.monomial scaled in
           if List.length pow_list = 1 then
-            let (ind,pow) = List.hd pow_list in
+            let (ind,pow) = List.hd_exn pow_list in
             if pow = 1 then Some ind
             else None
           else None
@@ -147,25 +140,24 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       else None
 
     let indeterminates poly =
-      let module S = Set.Make(I) in
-      List.enum (monomials (simplify poly))
-      |> Enum.map Monomial_.indeterminates
-      |> Enum.flatten
-      |> S.enum % S.of_enum
+      monomials (simplify poly)
+      |> List.map ~f:Monomial_.indeterminates
+      |> List.join
+      |> OurBase.Set.stable_dedup_list (module I)
 
     let vars poly =
          poly
       |> simplify
       |> monomials
-      |> List.map Monomial_.vars
-      |> List.fold_left Base.Set.union VarSet.empty
+      |> List.map ~f:Monomial_.vars
+      |> VarSet.union_list
 
     let is_indeterminate poly =
          poly
       |> simplify
       |> monomials
       |> fun monomials -> List.length monomials == 1 &&
-                            Monomial_.is_univariate_linear (List.hd monomials) && (Value.(=~=) (coeff (List.hd monomials) poly) Value.one)
+                            Monomial_.is_univariate_linear (List.hd_exn monomials) && (Value.(=~=) (coeff (List.hd_exn monomials) poly) Value.one)
 
     let is_indeterminate_plus_constant poly =
          poly
@@ -175,7 +167,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
     let is_sum_of_indeterminates_plus_constant poly =
          poly
       |> delete_monomial Monomial_.one
-      |> List.for_all (fun scaled -> Value.(=~=) (ScaledMonomial_.coeff scaled) Value.one &&
+      |> List.for_all ~f:(fun scaled -> Value.(=~=) (ScaledMonomial_.coeff scaled) Value.one &&
                                        Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
     let is_univariate_linear poly =
@@ -183,26 +175,30 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let is_const poly = degree poly <= 0
 
-    let no_constant_addend poly = not @@ (is_const poly || List.exists (fun sm -> ScaledMonomial_.degree sm = 0) poly)
+    let no_constant_addend poly = not @@ (is_const poly || List.exists ~f:(fun sm -> ScaledMonomial_.degree sm = 0) poly)
 
     let is_linear poly = (degree poly <= 1)
 
     let rename varmapping poly =
-      List.map (ScaledMonomial_.rename varmapping) poly
+      List.map ~f:(ScaledMonomial_.rename varmapping) poly
 
     let mult_with_const const poly =
-      List.map (ScaledMonomial_.mult_with_const const) poly
+      List.map ~f:(ScaledMonomial_.mult_with_const const) poly
 
-      let degree_coeff_list (poly:t) =
-        if Base.Set.length (vars poly) <= 1 then
-        let tuples_deg_coeff = List.map (fun s -> (ScaledMonomial_.degree s, ScaledMonomial_.coeff s)) poly in
-        let missing_degrees = Set.diff (Set.of_list (List.range 0 `To (degree poly))) (Set.of_list (List.map Tuple2.first tuples_deg_coeff)) in
-          missing_degrees
-          |> Set.to_list
-          |> List.fold_left (fun tuples i -> (i,Value.zero)::tuples) tuples_deg_coeff
-          |> List.sort (fun t1 t2 -> (Tuple2.first t1) - (Tuple2.first t2))
-          |> List.map Tuple2.second
-        else []
+    let degree_coeff_list (poly:t) =
+      if Base.Set.length (vars poly) <= 1 then
+      let tuples_deg_coeff = List.map ~f:(fun s -> (ScaledMonomial_.degree s, ScaledMonomial_.coeff s)) poly in
+      let missing_degrees =
+        Set.diff
+          (Set.of_list (module Int) (List.range ~stride:1 ~start:`inclusive ~stop:`inclusive 0 (degree poly)))
+          (Set.of_list (module Int) (List.map ~f:Tuple2.first tuples_deg_coeff))
+      in
+        missing_degrees
+        |> Set.to_list
+        |> List.fold_left ~f:(fun tuples i -> (i,Value.zero)::tuples) ~init:tuples_deg_coeff
+        |> List.sort ~compare:(fun t1 t2 -> (Tuple2.first t1) - (Tuple2.first t2))
+        |> List.map ~f:Tuple2.second
+      else []
 
     type outer_t = t
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
@@ -221,12 +217,10 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
         let mul poly1 poly2 =
              List.cartesian_product poly1 poly2
-          |> List.map (fun (a, b) -> ScaledMonomial_.mul a b)
+          |> List.map ~f:(fun (a, b) -> ScaledMonomial_.mul a b)
 
         let pow poly d =
-             poly
-          |> Enum.repeat ~times:d
-          |> Enum.fold mul one
+          Util.iterate_n_times (mul poly) d one
 
       end
     include PolyTypes.MakeMath(BaseMathImpl)
@@ -265,13 +259,13 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let eval_f poly f =
          poly
-      |> List.map (fun scaled -> ScaledMonomial_.eval_f scaled f)
-      |> List.fold_left Value.add Value.zero
+      |> List.map ~f:(fun scaled -> ScaledMonomial_.eval_f scaled f)
+      |> List.fold_left ~f:Value.add ~init:Value.zero
 
     let eval poly valuation =
          poly
-      |> List.map (fun scaled -> ScaledMonomial_.eval scaled valuation)
-      |> List.fold_left Value.add Value.zero
+      |> List.map ~f:(fun scaled -> ScaledMonomial_.eval scaled valuation)
+      |> List.fold_left ~f:Value.add ~init:Value.zero
 
     let substitute_f substitution =
       fold ~const:of_constant ~indeterminate:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
@@ -283,22 +277,21 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let eval_partial poly valuation =
       substitute_f (fun ind ->
-          Option.map of_constant (Valuation_.eval_opt ind valuation) |? of_indeterminate ind
+          Option.map ~f:of_constant (Valuation_.eval_opt ind valuation) |? of_indeterminate ind
         ) poly
 
-    let partition =
-      List.partition
+    let partition f =
+      List.partition_tf ~f
 
   end
 
 module PolynomialOver(Value: PolyTypes.Ring) = struct
   include PolynomialOverIndeterminate(VarIndeterminate)(Value)
 
-  let substitute_all substitution =
-    let module VarMap = Map.Make(Var) in
+  let substitute_all substitution t =
     substitute_f (fun var ->
-        VarMap.find_default (of_var var) var substitution
-      )
+        Option.value ~default:(of_var var) @@ Base.Map.find substitution var
+      ) t
 
 end
 
@@ -320,19 +313,18 @@ module Polynomial =
         ~pow:OurInt.pow
 
     let pull_out_common_addends (t1:t) (t2:t)  =
-      let findi_opt p l =
-        try Some (List.findi (const p) l)
-        with Not_found -> None
+      let rec remove_at pos = function
+        | [] -> []
+        | (x::xs) -> Int.(if pos > 0 then x :: remove_at (pos - 1) xs else xs)
       in
-
       (* Iterate over t1. Initially t2' = t1. *)
       (* In every step we take a scaled monomial from t1. *)
       (* If the monomial occurs in t2 as well (with a coefficient of the same sign) we pull out the scaled monomial by adding it to t', t1' (if necessary), and altering t2' *)
       let iter_t1 (t',(t1',t2')) t1_next =
         let next_mon = ScaledMonomial_.monomial t1_next in
         let t2_o =
-          findi_opt
-            (fun t2_next -> Monomial_.equal next_mon (ScaledMonomial_.monomial t2_next)
+          List.findi
+            ~f:(fun _ t2_next -> Monomial_.equal next_mon (ScaledMonomial_.monomial t2_next)
                          &&  OurInt.compare (ScaledMonomial_.coeff t1_next) OurInt.zero = OurInt.compare (ScaledMonomial_.coeff t2_next) OurInt.zero)
             t2'
         in
@@ -344,15 +336,15 @@ module Polynomial =
           match OurInt.(compare (abs c1) (abs c2)) with
             | -1 ->
               let t' = ScaledMonomial_.make c1 common_mon :: t' in
-              let t2' = ScaledMonomial_.make OurInt.(c2 - c1) common_mon :: List.remove_at i t2' in
+              let t2' = ScaledMonomial_.make OurInt.(c2 - c1) common_mon :: remove_at i t2' in
               t', (t1',t2')
             | _  ->
               let t' = ScaledMonomial_.make c2 common_mon :: t' in
               let t1' = ScaledMonomial_.make OurInt.(c1 - c2) common_mon :: t1' in
-              let t2' = List.remove_at i t2' in
+              let t2' = remove_at i t2' in
               t', (t1',t2')
       in
-      List.fold iter_t1 ([],([],t2)) t1
+      List.fold ~f:iter_t1 ~init:([],([],t2)) t1
 
   end
 
@@ -384,9 +376,9 @@ module RationalPolynomial =
     let normalize poly =
       let coeff_inv =
         coeffs poly
-        |> List.filter (not % OurRational.is_integer)
-        |> List.map Tuple2.second
-        |> List.fold OurInt.lcm OurInt.one |> OurInt.abs |> OurRational.of_ourint in
+        |> List.filter ~f:(not % OurRational.is_integer)
+        |> List.map ~f:Tuple2.second
+        |> List.fold ~f:OurInt.lcm ~init:OurInt.one |> OurInt.abs |> OurRational.of_ourint in
       poly
       |> mult_with_const coeff_inv
       |> fold
@@ -400,9 +392,9 @@ module RationalPolynomial =
     let normalize_return_factor poly =
       let coeff_inv =
         coeffs poly
-        |> List.filter (not % OurRational.is_integer)
-        |> List.map Tuple2.second
-        |> List.fold OurInt.lcm OurInt.one |> OurInt.abs |> OurRational.of_ourint in
+        |> List.filter ~f:(not % OurRational.is_integer)
+        |> List.map ~f:Tuple2.second
+        |> List.fold ~f:OurInt.lcm ~init:OurInt.one |> OurInt.abs |> OurRational.of_ourint in
       (poly
       |> mult_with_const coeff_inv
       |> fold
@@ -426,7 +418,7 @@ module RationalPolynomial =
       Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~indeterminate:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
 
     let is_integer_poly  poly =
-      List.for_all OurRational.is_integer @@ coeffs poly
+      List.for_all ~f:OurRational.is_integer @@ coeffs poly
 
   end
 

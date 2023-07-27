@@ -68,7 +68,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       | `Cost -> cost
       | `Time -> Polynomial.one
 
-  module VarMap = Map.Make(Var)
   (* method transforms polynome to parapolynom*)
   let as_parapoly update var =
       match Base.Map.find update var with

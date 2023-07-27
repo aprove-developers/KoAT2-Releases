@@ -1,41 +1,42 @@
-open Batteries
+open OurBase
 
 module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring) =
   struct
-    module M = Map.Make(I)
+    module M = MakeMapCreators1(I)
     type value = Value.t
     type t = value M.t
     type indeterminate = I.t
 
     let from entries =
       let addEntry entry = match entry with
-        | (key, value) -> M.add key value in
-      List.fold_left (fun map keyadder -> keyadder map) M.empty (List.map addEntry entries)
+        | (key, value) -> Base.Map.add_exn ~key ~data:value in
+      List.fold_left ~f:(fun map keyadder -> keyadder map) ~init:M.empty (List.map ~f:addEntry entries)
 
-    let zero vars = from (List.map (fun var -> (var, Value.zero)) vars)
+    let zero vars = from (List.map ~f:(fun var -> (var, Value.zero)) vars)
 
-    let eval = M.find
+    let eval indet t = Base.Map.find_exn t indet
 
-    let eval_opt var valuation =
-      try Some (M.find var valuation) with
-        Not_found -> None
+    let eval_opt indet t = Base.Map.find t indet
 
     let is_defined valuation var =
-      M.mem var valuation
+      Base.Map.mem valuation var
 
-    let indeterminates t = List.map Tuple2.first (M.bindings t)
+    let indeterminates t = List.map ~f:Tuple2.first (Base.Map.to_alist t)
 
     let vars valuation =
-      Base.Sequence.map ~f:(Base.Set.to_sequence % I.vars % Tuple2.first) (Base.Sequence.of_list @@ List.of_enum @@ M.enum valuation)
-      |> Base.Sequence.join
-      |> VarSet.stable_dedup_list % Base.Sequence.to_list
+      Sequence.map ~f:(Base.Set.to_sequence % I.vars % Tuple2.first) (Map.to_sequence valuation)
+      |> Sequence.join
+      |> VarSet.stable_dedup_list % Sequence.to_list
 
-    let bindings = M.enum
+    let bindings: t -> (indeterminate * value) Sequence.t =
+      Base.Map.to_sequence
 
-    let to_string valuation =
-      let output = IO.output_string () in
-      M.print (fun output key -> IO.nwrite output (I.to_string key)) (fun output value -> IO.nwrite output (Value.to_string value)) output valuation;
-      IO.close_out output
+    let to_string (valuation: t) =
+      let output = Buffer.create 100 in
+      Buffer.add_string output "{\n";
+      Base.Map.iteri ~f:(fun ~key ~data -> Buffer.add_string output @@ "  "^I.to_string key ^ ": " ^ Value.to_string data ^ ",\n") valuation;
+      Buffer.add_string output "}\n";
+      Buffer.contents output
   end
 
 module Make(Value: PolyTypes.Ring) =
@@ -43,5 +44,5 @@ module Make(Value: PolyTypes.Ring) =
     include MakeOverIndeterminate(VarIndeterminate)(Value)
 
     let from_native entries =
-      from (List.map (fun (var, value) -> (Var.of_string var, Value.of_int value)) entries)
+      from (List.map ~f:(fun (var, value) -> (Var.of_string var, Value.of_int value)) entries)
   end

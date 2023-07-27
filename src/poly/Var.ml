@@ -6,7 +6,7 @@ module Inner = struct
     | Int [@@deriving eq, ord, sexp]
 
   module TempOpen = struct
-    open Base
+    open OurBase
     type t =
       | Var of Base.String.t
       | Helper of sort*int
