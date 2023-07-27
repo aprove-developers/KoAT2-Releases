@@ -189,8 +189,6 @@ let eliminate_tmp_var var t =
   let opt = occurs_in_equality var t in
   if Option.is_some opt then
     let (atom1,atom2) = Option.get opt in
-    let guard' = List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Guard.atom_list @@ t.guard) in
-    let inv' = List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Invariant.atom_list @@ t.invariant) in
     let replacement =
       let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
       if Z.(coeff_of_var < zero) then
@@ -199,6 +197,14 @@ let eliminate_tmp_var var t =
         Polynomial.neg @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [Z.neg coeff_of_var] [var])
     in
     let update' = VarMap.map (Polynomial.substitute var ~replacement:replacement) t.update in
+    let guard' =
+      List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Guard.atom_list @@ t.guard)
+      |> Guard.map_polynomial (Polynomial.substitute var ~replacement:replacement)
+    in
+    let inv' =
+      List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Invariant.atom_list @@ t.invariant)
+      |> Invariant.map_polynomial (Polynomial.substitute var ~replacement:replacement)
+    in
     MaybeChanged.changed {t with guard = guard'; invariant = inv'; update = update'}
   else
     MaybeChanged.same t
