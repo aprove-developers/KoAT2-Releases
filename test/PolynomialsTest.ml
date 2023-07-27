@@ -277,6 +277,15 @@ module Methods =
                                 (true, "0");
                             ];
                     );
+                  "equals" >::: (
+                      List.map (fun (expected, expression1, expression2) ->
+                          expression1 ^ "," ^ expression2  >:: (fun _ -> assert_equal_bool expected (Polynomial.equal (Readers.read_polynomial expression1) (Readers.read_polynomial expression2))))
+                              [
+                                  (true, "x + y", "y + x");
+                                  (true, "x + y", "x + y");
+                                  (true, "x + y - (y + x)", "0");
+                              ];
+                      );
                 (*
                 "scale_coefficients" >::: (
                     List.map (fun (expression, expected) ->
