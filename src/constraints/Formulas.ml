@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Constraints
 
 module FormulaOver(C : ConstraintTypes.Constraint) =
@@ -35,7 +35,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
 
     let mk_and formula1 formula2 =
       List.cartesian_product formula1 formula2
-      |> List.map (uncurry C.mk_and)
+      |> List.map ~f:(uncurry C.mk_and)
 
     let mk_or =
       List.append
@@ -43,13 +43,13 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk_uneq p1 p2 =
       mk_or (mk_lt p1 p2) (mk_gt p1 p2)
 
-    let remove_strict = List.map C.remove_strict
+    let remove_strict = List.map ~f:C.remove_strict
 
     let constraints formula =
       formula
 
     let fold ~subject ~le ~lt ~correct ~conj ~wrong ~disj =
-      List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~lt ~correct ~conj constr)) wrong
+      List.fold_left ~f:(fun c constr -> disj c (C.fold ~subject ~le ~lt ~correct ~conj constr)) ~init:wrong
 
     let map_polynomial f =
       fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and ~wrong:mk_false ~disj:mk_or
@@ -82,48 +82,48 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     end
 
     let all =
-      List.fold_left mk_and mk_true
+      List.fold_left ~f:mk_and ~init:mk_true
 
     let any =
-      List.flatten
+      List.join
 
     (* a <= max{b1,...,bn}   <=>   a<=b1 || ... || a<=bn *)
     let le_than_any poly list =
          list
-      |> List.map (fun b -> Infix.(poly <= b))
+      |> List.map ~f:(fun b -> Infix.(poly <= b))
       |> any
 
     let le_than_all poly list =
          list
-      |> List.map (fun b -> Infix.(poly <= b))
+      |> List.map ~f:(fun b -> Infix.(poly <= b))
       |> all
 
     let vars formula =
          formula
-      |> List.map (C.vars)
-      |> List.fold_left Base.Set.union VarSet.empty
+      |> List.map ~f:C.vars
+      |> VarSet.union_list
 
     let to_string ?(pretty=false) constr =
-      String.concat (if pretty then " ∨ " else " || ") (List.map (C.to_string ~pretty) constr)
+      String.concat ~sep:(if pretty then " ∨ " else " || ") (List.map ~f:(C.to_string ~pretty) constr)
 
     let to_string_formatted = function
       | [] -> FormattedString.Empty
       | x::xs ->
-        (C.to_string ~pretty:true x)::(List.map (((^) " ∨ ") % C.to_string ~pretty:true) xs)
-        |> List.map FormattedString.mk_str_line
-        |> List.reduce FormattedString.(<>)
+        (C.to_string ~pretty:true x)::(List.map ~f:(((^) " ∨ ") % C.to_string ~pretty:true) xs)
+        |> List.map ~f:FormattedString.mk_str_line
+        |> List.reduce_exn ~f:FormattedString.(<>)
 
     let rename formula varmapping =
-      List.map (fun constr -> C.rename constr varmapping) formula
+      List.map ~f:(fun constr -> C.rename constr varmapping) formula
 
     let turn =
-      List.map C.turn
+      List.map ~f:C.turn
 
-    let is_linear = List.for_all C.is_linear
+    let is_linear = List.for_all ~f:C.is_linear
 
-    let is_true = List.for_all C.is_true
+    let is_true = List.for_all ~f:C.is_true
 
-    let atoms = List.concat % List.map C.atom_list
+    let atoms = List.concat % List.map ~f:C.atom_list
   end
 
 module Formula =
@@ -132,11 +132,11 @@ module Formula =
 
     let max_of_occurring_constants constraints =
       constraints
-      |> List.map Constraint.max_of_occurring_constants
-      |> List.fold_left OurInt.add OurInt.one
+      |> List.map ~f:Constraint.max_of_occurring_constants
+      |> List.fold_left ~f:OurInt.add ~init:OurInt.one
 
     let simplify =
-      (List.unique ~eq:Constraint.equal) % (List.map Constraint.simplify)
+      (List.dedup_and_sort ~compare:Constraint.compare) % (List.map ~f:Constraint.simplify)
 
   end
 
@@ -161,8 +161,8 @@ module RealFormula =
 
     let max_of_occurring_constants constraints =
       constraints
-      |> List.map RealConstraint.max_of_occurring_constants
-      |> List.fold_left OurFloat.mul OurFloat.one
+      |> List.map ~f:RealConstraint.max_of_occurring_constants
+      |> List.fold_left ~f:OurFloat.mul ~init:OurFloat.one
 
   end
 

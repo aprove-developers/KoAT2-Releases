@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Polynomials
 open BoundsInst
 
@@ -22,7 +22,7 @@ struct
           | LT -> "<"
           | LE -> "<="
 
-        let str_values = List.map to_string values
+        let str_values = List.map ~f:to_string values
 
                        (*
         let to_function =
@@ -93,7 +93,7 @@ struct
     let rename (poly,comp) varmapping = (P.rename varmapping poly, comp)
 
     let fold ~subject ~le ~lt (poly,comp) =
-      if comp = LE then
+      if equal_compkind comp LE then
         le (subject poly) (subject P.zero)
       else
         lt (subject poly) (subject P.zero)

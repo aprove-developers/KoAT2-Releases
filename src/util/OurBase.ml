@@ -24,6 +24,20 @@ module Tuple3 = Batteries.Tuple3
 module Tuple4 = Batteries.Tuple4
 module Tuple5 = Batteries.Tuple5
 
+module List = struct
+  include List
+
+  (** Like zip2 but truncate the longer list if both are of uneven length *)
+  let rec zip2_truncate l1 l2 = match (l1,l2) with
+    | (x::xs,y::ys) -> (x,y) :: zip2_truncate xs ys
+    | _           -> []
+
+  (** Like map2 but truncate the longer list if both are of uneven length *)
+  let rec map2_truncate l1 l2 ~f = match (l1,l2) with
+    | (x::xs,y::ys) -> f x y :: map2_truncate xs ys ~f
+    | _ -> []
+end
+
 module Set = struct
   include Set
 

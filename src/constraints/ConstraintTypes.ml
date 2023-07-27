@@ -1,5 +1,5 @@
 (** Provides all modules related to constraints, i.e., atoms, constraints and formulas. *)
-open Batteries
+open OurBase
 open PolyTypes
 
 exception StrictUnremovable of string

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Atoms
 open Polynomials
 
@@ -40,10 +40,10 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     end
 
     let remove_strict =
-      List.map A.remove_strict
+      List.map ~f:A.remove_strict
 
     (** TODO Filter related: x < 0 && x < 1*)
-    let all = List.flatten
+    let all = List.join
 
     let is_true = function
       | [] -> true
@@ -51,59 +51,59 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 
     (* TODO Wrong, use SMT-solver here *)
     let (=~=) constr1 constr2 =
-         List.combine constr1 constr2
-      |> List.map (uncurry A.(=~=))
-      |> List.fold_left (&&) true
+         List.zip_exn constr1 constr2
+      |> List.map ~f:(uncurry A.(=~=))
+      |> List.fold_left ~f:(&&) ~init:true
 
     let vars constr =
          constr
-      |> List.map (A.vars)
-      |> List.fold_left Base.Set.union VarSet.empty
+      |> List.map ~f:A.vars
+      |> List.fold_left ~f:Base.Set.union ~init:VarSet.empty
 
-    let to_string ?(to_file=false) ?(pretty=false) ?(conj=" && ") constr = String.concat (if pretty then " ∧ " else conj) (List.map (A.to_string ~to_file ~pretty) constr)
+    let to_string ?(to_file=false) ?(pretty=false) ?(conj=" && ") constr = String.concat ~sep:(if pretty then " ∧ " else conj) (List.map ~f:(A.to_string ~to_file ~pretty) constr)
 
-    let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
+    let rename constr varmapping = List.map ~f:(fun atom -> A.rename atom varmapping) constr
 
     let turn =
-      List.map A.neg
+      List.map ~f:A.neg
 
     let atom_list = identity
 
     let fold ~subject ~le ~lt ~correct ~conj =
-      List.fold_left (fun c atom -> conj c (A.fold ~subject ~le ~lt atom)) correct
+      List.fold_left ~f:(fun c atom -> conj c (A.fold ~subject ~le ~lt atom)) ~init:correct
 
     let map_polynomial f =
       fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and
 
     let drop_nonlinear constr =
-      List.filter A.is_linear constr
+      List.filter ~f:A.is_linear constr
 
-    let is_linear = List.for_all A.is_linear
+    let is_linear = List.for_all ~f:A.is_linear
 
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr =
-        List.map (A.get_coefficient var) constr
+        List.map ~f:(A.get_coefficient var) constr
 
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr =
-        List.map A.get_constant constr
+        List.map ~f:A.get_constant constr
 
         (** returns a list of lists of the coefficients of the constraint*)
     let get_matrix vars constr =
-        List.map (fun var -> get_coefficient_vector var constr) vars
+        List.map ~f:(fun var -> get_coefficient_vector var constr) vars
 
     (** returns a list of lists of the coefficients of the constraint*)
     let dualise vars (matrix: A.P.t list list) column =
       let dualised_left = List.map
-          (fun row ->
-             List.map2 (fun c -> A.P.mul c % A.P.of_var ) row vars
+          ~f:(fun row ->
+             List.map2_exn ~f:(fun c -> A.P.mul c % A.P.of_var ) row vars
              |> OurBase.Sequence.of_list
              |> A.P.sum)
           matrix
       in
-      let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
-      let ensure_positivity = List.map (fun v -> A.Infix.(A.P.of_var v >= A.P.zero)) vars in
-      mk (List.flatten [dualised_eq; ensure_positivity])
+      let dualised_eq = List.join (List.map2_exn ~f:mk_eq dualised_left column) in
+      let ensure_positivity = List.map ~f:(fun v -> A.Infix.(A.P.of_var v >= A.P.zero)) vars in
+      mk (List.join [dualised_eq; ensure_positivity])
   end
 
 module Constraint =
@@ -112,11 +112,11 @@ module Constraint =
 
     let max_of_occurring_constants atoms =
       atoms
-      |> List.map Atom.max_of_occurring_constants
-      |> List.fold_left OurInt.mul OurInt.one
+      |> List.map ~f:Atom.max_of_occurring_constants
+      |> List.fold_left ~f:OurInt.mul ~init:OurInt.one
 
     let simplify =
-      List.unique ~eq:Atom.equal
+      List.dedup_and_sort ~compare:Atom.compare
   end
 
 module RealConstraint =
@@ -125,11 +125,11 @@ module RealConstraint =
 
     let max_of_occurring_constants atoms =
       atoms
-      |> List.map RealAtom.max_of_occurring_constants
-      |> List.fold_left OurFloat.mul OurFloat.one
+      |> List.map ~f:RealAtom.max_of_occurring_constants
+      |> List.fold_left ~f:OurFloat.mul ~init:OurFloat.one
 
     let of_intconstraint intconstraint =
-      mk (List.map (fun atom -> RealAtom.of_intatom atom) intconstraint)
+      mk (List.map ~f:(fun atom -> RealAtom.of_intatom atom) intconstraint)
   end
 
 module ParameterConstraintOver(Value: PolyTypes.Ring) = struct
@@ -167,7 +167,7 @@ module ParameterConstraintOver(Value: PolyTypes.Ring) = struct
     in
     let a_matrix = get_matrix vars constr in
     let b_right = get_constant_vector constr in
-    let c_left = List.map (flip A.get_coefficient param_atom) vars in
+    let c_left = List.map ~f:(flip A.get_coefficient param_atom) vars in
     let d_right = A.get_constant param_atom in
     apply_farkas a_matrix b_right c_left d_right
 end

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Polynomials
 open Atoms
 open Constraints
@@ -41,10 +41,10 @@ module Koat2Apron =
           Texpr1.Binop (Texpr1.Mul, expr1, expr2, Texpr1.Int, Texpr1.Up)
         )
         ~pow:(fun expr n ->
-          Enum.repeat ~times:n expr
-          |> Enum.fold
-               (fun result expr -> Texpr1.Binop (Texpr1.Mul, result, expr, Texpr1.Int, Texpr1.Up))
-               (Texpr1.Cst (const_to_apron OurInt.one))
+          Util.iterate_n_times
+            (fun result -> Texpr1.Binop (Texpr1.Mul, result, expr, Texpr1.Int, Texpr1.Up))
+            n
+            (Texpr1.Cst (const_to_apron OurInt.one))
         )
         poly
       |> Apron.Texpr1.of_expr environment
@@ -65,7 +65,7 @@ module Koat2Apron =
       let single_constraints =
         constr
         |> Constraint.atom_list
-        |> List.map (atom_to_apron environment)
+        |> List.map ~f:(atom_to_apron environment)
         |> Array.of_list (* Pretty dump, but more readable *)
       in
       let constraints =
@@ -89,7 +89,7 @@ module Apron2Koat =
 
     (** Converts an apron variable set to its koat equivalent. *)
     let vars_from_apron: Apron.Var.t array -> VarSet.t =
-      VarSet.of_array % Array.map var_from_apron
+      VarSet.of_array % Array.map ~f:var_from_apron
 
     (** Converts an apron integer to its koat equivalent. *)
     (** TODO Usage of OurInt.to_int breaks usage of big_int *)
