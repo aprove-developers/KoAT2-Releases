@@ -1,4 +1,3 @@
-open Batteries
 open FormattedString
 
 (* Monad instance *)
@@ -7,7 +6,7 @@ include Monad.Make(
 (*     type 'a t = M of (metadata -> metadata * formatted * 'a) *)
     type 'a t = (metadata -> metadata * FormattedString.t * 'a)
 
-    let map (f: 'a -> 'b) (a: 'a t): 'b t = Tuple3.map3 f % a
+    let map (f: 'a -> 'b) (a: 'a t): 'b t = OurBase.(Tuple3.map3 f % a)
 
     let pure a = fun metadata -> (metadata, Empty, a)
 

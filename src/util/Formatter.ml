@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open FormatMonad
 open FormattedString
 
@@ -49,7 +49,7 @@ let initial_meta = {title = None; }
 let render_html meta f =
   let preamble = "<!DOCTYPE html>\n" in
   let header =
-    "<html>\n<head>\n<title>" ^ Option.default "" meta.title ^ "</title>\n</head>\n"
+    "<html>\n<head>\n<title>" ^ Option.value ~default:"" meta.title ^ "</title>\n</head>\n"
   in
   let start_body = "<body>\n" in
   let end_body = "</body>\n" in
@@ -68,7 +68,7 @@ let render_html meta f =
         | Small -> "<h4>" ^ render_f_only f' ^ "</h4>\n")
     | SequentialComp (f1, f2) -> render_f_only f1 ^ render_f_only f2
   in
-  String.concat ""
+  String.concat ~sep:""
     [
       preamble
     ; header
@@ -86,8 +86,8 @@ let rec render_markdown meta f =
 
   (* TODO: Is this a useful encoding for strings in markdown? *)
   | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () @@
-        String.replace_chars
-          (fun c -> match c with
+        String.concat_map ~sep:""
+          ~f:(fun c -> match c with
             | '*' -> "\\*"
             | c -> String.of_char c)
           s

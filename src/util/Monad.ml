@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module Make
   (M :
@@ -33,7 +33,7 @@ module Make
           >>= fun vs -> pure (v::vs)
 
     let mapM f =
-      sequence % List.map f
+      sequence % List.map ~f
 
     let liftM2 f ma mb =
       ma >>= (fun a -> mb >>= (fun b -> pure (f a b)))

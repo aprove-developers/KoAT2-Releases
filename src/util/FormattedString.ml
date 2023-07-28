@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 type header_size = Small | Big
 
@@ -19,7 +19,7 @@ let (<>) form1 form2 =
   | (f1, f2) -> SequentialComp(f1, f2)
 
 let format_append = (<>)
-let mappend forms = List.fold_left (fun f f' -> SequentialComp (f,f')) Empty forms
+let mappend forms = List.fold_left ~f:(fun f f' -> SequentialComp (f,f')) ~init:Empty forms
 
 let mk_raw_str str = RawStr str
 let mk_str str = Str str
@@ -51,7 +51,7 @@ let render_string =
   let rec helper ~indent f =
     match f with
     | Empty                   -> ""
-    | Str s                   -> String.repeat " " indent^s
+    | Str s                   -> String.make indent ' ' ^ s
     | RawStr s                -> s
     | Paragraph f'            -> helper f' ~indent:(indent + 2)^ "\n\n"
     | Block f'                -> helper f' ~indent:(indent + 2)^ "\n"

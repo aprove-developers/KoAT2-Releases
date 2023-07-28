@@ -1,5 +1,3 @@
-open Batteries
-
 module type Monad = sig
   type 'a t
   val pure: 'a -> 'a t

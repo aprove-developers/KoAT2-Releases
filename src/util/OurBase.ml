@@ -1,4 +1,25 @@
-include Base
+
+(* explicitly import required modules from Base *)
+module Comparator = Base.Comparator
+module Fn = Base.Fn
+module Sexpable = Base.Sexpable
+module String = Base.String
+module Option = Base.Option
+module Stack = Base.Stack
+module Array = Base.Array
+module Int = Base.Int
+module Float = Base.Float
+module Sexp = Base.Sexp
+
+let bool_of_sexp = Base.bool_of_sexp
+let float_of_sexp = Base.float_of_sexp
+let int_of_sexp = Base.int_of_sexp
+let string_of_sexp = Base.string_of_sexp
+
+let sexp_of_bool = Base.sexp_of_bool
+let sexp_of_float = Base.sexp_of_float
+let sexp_of_int = Base.sexp_of_int
+let sexp_of_string = Base.sexp_of_string
 
 module Logger = Batteries.Logger
 
@@ -36,7 +57,7 @@ module Unique = struct
 end
 
 module List = struct
-  include List
+  include Base.List
 
   (** Like zip2 but truncate the longer list if both are of uneven length *)
   let rec zip_truncate l1 l2 = match (l1,l2) with
@@ -55,7 +76,7 @@ module List = struct
 end
 
 module Sequence = struct
-  include Sequence
+  include Base.Sequence
 
   (** Counterpart to iter. E.g. construct a sequence by pulling from a function *)
   let uniter f =
@@ -63,7 +84,7 @@ module Sequence = struct
 end
 
 module Set = struct
-  include Set
+  include Base.Set
 
   let powerset (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) =
     let combine result x =
@@ -73,7 +94,7 @@ module Set = struct
 end
 
 module Map = struct
-  include Map
+  include Base.Map
   let find_default m ~default key = Option.value ~default (find m key)
 
   (** Adds the key or overwrites it if already present *)
@@ -81,7 +102,7 @@ module Map = struct
 end
 
 module Hashtbl = struct
-  include Hashtbl
+  include Base.Hashtbl
 
   (** Adds the key or overwrites it if already present *)
   let add_or_overwrite m ~key ~data = change m key ~f:(fun o -> Some data)
