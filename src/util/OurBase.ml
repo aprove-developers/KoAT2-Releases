@@ -1,15 +1,16 @@
 
 (* explicitly import required modules from Base *)
-module Comparator = Base.Comparator
-module Fn = Base.Fn
-module Sexpable = Base.Sexpable
-module String = Base.String
-module Option = Base.Option
-module Stack = Base.Stack
 module Array = Base.Array
-module Int = Base.Int
+module Comparator = Base.Comparator
 module Float = Base.Float
+module Fn = Base.Fn
+module Int = Base.Int
+module Option = Base.Option
+module Poly = Base.Poly
 module Sexp = Base.Sexp
+module Sexpable = Base.Sexpable
+module Stack = Base.Stack
+module String = Base.String
 
 let bool_of_sexp = Base.bool_of_sexp
 let float_of_sexp = Base.float_of_sexp
