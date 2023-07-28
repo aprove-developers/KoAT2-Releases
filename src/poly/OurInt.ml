@@ -9,6 +9,7 @@ let pow_ourint i n =
   helper i n
 
 include Z
+include Z.Compare
 
 let (=~=) = equal
 

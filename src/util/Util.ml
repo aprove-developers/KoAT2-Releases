@@ -72,6 +72,16 @@ let memoize cache ~extractor f =
        y
   in g
 
+let memoize_base_hashtbl cache ~extractor f =
+  let g x =
+    match Base.Hashtbl.find cache (extractor x) with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Base.Hashtbl.add_exn cache ~key:(extractor x) ~data:y;
+       y
+  in g
+
 (* TODO: Hash a string into an integer. https://stackoverflow.com/questions/2624192/good-hash-function-for-strings *)
 let hash str =
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1

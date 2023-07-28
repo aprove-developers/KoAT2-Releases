@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 (** This module represents a transition graph over simple locations *)
 
 (** Creates a TransitionGraph over given transition label, location and internal graph modules *)
@@ -13,7 +13,7 @@ module Make_(T: ProgramTypes.Transition)
      and type location_set = Location.LocationSetOver(L).t
      and type transition_label = T.transition_label
      and type transition = T.t
-     and type transition_set = (T.t, T.comparator_witness) Base.Set.t
+     and type transition_set = (T.t, T.comparator_witness) Set.t
      and type t = G.t
 end
 
@@ -24,7 +24,7 @@ module TransitionGraphOverLocation(L: ProgramTypes.Location) : sig
      and type location_set = Location.LocationSetOver(L).t
      and type transition_label = TransitionLabel_.t
      and type transition = Transition_.TransitionOver(TransitionLabel_)(L).t
-     and type transition_set = (Transition_.TransitionOver(TransitionLabel_)(L).t, Transition_.TransitionOver(TransitionLabel_)(L).comparator_witness) Base.Set.t
+     and type transition_set = (Transition_.TransitionOver(TransitionLabel_)(L).t, Transition_.TransitionOver(TransitionLabel_)(L).comparator_witness) Set.t
 end
 
 include module type of TransitionGraphOverLocation(Location)

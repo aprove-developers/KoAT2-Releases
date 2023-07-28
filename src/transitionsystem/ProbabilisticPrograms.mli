@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module ProbabilisticTransitionLabel: sig
   include ProgramTypes.TransitionLabel
@@ -76,16 +76,16 @@ module GeneralTransition: sig
   (** map over all contained probabilistic transitions *)
   val map_transitions: (ProbabilisticTransition.t -> ProbabilisticTransition.t) -> t -> t
 
-  include Base.Comparator.S with type t := t
+  include Comparator.S with type t := t
 end
 
 module GeneralTransitionSet: sig
   include ProgramTypes.TransitionSet
     with type elt = GeneralTransition.t
      and type comparator_witness = GeneralTransition.comparator_witness
-     and type location_set = (Location.t, Location.comparator_witness) Base.Set.t
+     and type location_set = (Location.t, Location.comparator_witness) Set.t
 
-  include module type of OurBase.MakeSetCreators0(GeneralTransition)
+  include module type of MakeSetCreators0(GeneralTransition)
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -93,7 +93,7 @@ module GeneralTransitionSet: sig
   (** Returns a short string representing the transition set. *)
   val to_id_string : t -> string
 
-  type location_set = (Location.t, Location.comparator_witness) Base.Set.t
+  type location_set = (Location.t, Location.comparator_witness) Set.t
   val locations: t -> location_set
 
   val all_transitions: t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t

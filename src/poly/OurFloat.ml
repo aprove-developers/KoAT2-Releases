@@ -40,6 +40,8 @@ module Compare = struct
   let (>) = (>)
 end
 
+include Compare
+
 let floor t = Z.fdiv t.num t.den
 
 let ceil t = Z.(floor t + if Z.equal zero (t.num mod t.den) then zero else one)

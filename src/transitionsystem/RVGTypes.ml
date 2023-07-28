@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
@@ -21,7 +21,7 @@ struct
       let compare = compare_ T.compare
     end
     include Inner
-    include Base.Comparator.Make(Inner)
+    include Comparator.Make(Inner)
   end
 
   type transition = RVTuple_.transition
@@ -69,37 +69,37 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
 
     let rvs_to_id_string rvs =
       rvs
-      |> List.map RV.to_id_string
-      |> String.concat ","
+      |> List.map ~f:RV.to_id_string
+      |> String.concat ~sep:","
 
     let pre rvg rv =
       pred rvg rv
 
     let add_vertices_to_rvg vertices rvg =
-      Base.Sequence.fold ~f:add_vertex ~init:rvg vertices
+      Sequence.fold ~f:add_vertex ~init:rvg vertices
 
     let rvg get_vars_in_lsb (program: Program.t) =
       let program_vars = Program.input_vars program in
       let add_transition (post_transition: Transition.t) (rvg: t): t =
         let rvg_with_vertices: t =
           add_vertices_to_rvg
-            (Base.Set.to_sequence program_vars |> Base.Sequence.map ~f:(fun var -> (post_transition,var)))
+            (Set.to_sequence program_vars |> Sequence.map ~f:(fun var -> (post_transition,var)))
             rvg
         in
         (* Force evaluation of pre_transitions to avoid recomputation in pre_nodes *)
-        let pre_transitions = Base.Set.to_list @@ Program.pre_transitionset_cached program post_transition in
+        let pre_transitions = Set.to_list @@ Program.pre_transitionset_cached program post_transition in
         let pre_nodes (post_var: Var.t) =
           get_vars_in_lsb (post_transition,post_var)
           |? VarSet.empty
-          |> Base.Set.to_sequence
-          |> Base.Sequence.cartesian_product (Base.Sequence.of_list pre_transitions)
-          |> Base.Sequence.map ~f:(fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
+          |> Set.to_sequence
+          |> Sequence.cartesian_product (Sequence.of_list pre_transitions)
+          |> Sequence.map ~f:(fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
         in
         program_vars
-        |> Base.Set.to_sequence
-        |> Base.Sequence.map ~f:pre_nodes
-        |> Base.Sequence.join
-        |> Base.Sequence.fold ~f:(fun rvg (pre_transition,pre_var,post_var) -> add_edge rvg (pre_transition,pre_var) (post_transition,post_var))
+        |> Set.to_sequence
+        |> Sequence.map ~f:pre_nodes
+        |> Sequence.join
+        |> Sequence.fold ~f:(fun rvg (pre_transition,pre_var,post_var) -> add_edge rvg (pre_transition,pre_var) (post_transition,post_var))
           ~init:rvg_with_vertices
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module Make_(T: ProgramTypes.Transition)
             (L: ProgramTypes.Location with type t = T.location)
@@ -40,8 +40,8 @@ module Make_(T: ProgramTypes.Transition)
   let loc_transitions graph locations =
     transitions graph
     |> Base.Set.filter ~f:(fun (l,_,l') ->
-           List.mem_cmp Location.compare l locations
-           && List.mem_cmp Location.compare l' locations)
+           List.mem ~equal:Location.equal locations l
+           && List.mem ~equal:Location.equal locations l')
 
   let equivalent graph1 graph2 =
     let module Equivalence_TransitionSet = struct
@@ -59,14 +59,14 @@ module Make_(T: ProgramTypes.Transition)
   let add_invariant location invariant graph =
     location
     |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
-    |> List.fold_left (fun result transition ->
+    |> List.fold_left ~f:(fun result transition ->
            replace_edge_e transition (T.add_invariant invariant transition) result
-         ) graph
+         ) ~init:graph
 
   let sccs graph =
     let module SCC = Graph.Components.Make(G) in
-    List.map (loc_transitions graph) @@ SCC.scc_list graph
-    |> List.filter (not % Base.Set.is_empty)
+    List.map ~f:(loc_transitions graph) @@ SCC.scc_list graph
+    |> List.filter ~f:(not % Base.Set.is_empty)
 
   let sccs_ trans =
     let graph = add_transitions trans empty in

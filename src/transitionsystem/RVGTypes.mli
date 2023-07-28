@@ -1,5 +1,5 @@
 (** Provides all modules related to result variable graphs. *)
-open Batteries
+open OurBase
 
 (** Module handling result variables. *)
 module MakeRV(TL: ProgramTypes.TransitionLabel)

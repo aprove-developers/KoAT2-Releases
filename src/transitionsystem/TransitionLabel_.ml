@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Polynomials
 open Formulas
 open Atoms
@@ -20,7 +20,7 @@ module Inner = struct
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
   let fresh_id t = {
-      id = unique ();
+      id = Unique.unique ();
       update = t.update;
       guard = t.guard;
       invariant = t.invariant;
@@ -78,7 +78,7 @@ module Inner = struct
       |> fill_up_update_arg_vars_up_to_num (List.length patterns)
     in
     {
-      id = if Option.is_none id then unique () else Option.get id;
+      id = if Option.is_none id then Unique.unique () else Option.value_exn id;
       update;
       guard = Guard.rename guard map_to_arg_vars;
       invariant = Guard.mk_true;
@@ -86,16 +86,15 @@ module Inner = struct
     }
 
   let append t1 t2 =
-    let module VarTable = Hashtbl.Make(Var) in
-    let nondet_vars = VarTable.create 3 in
+    let nondet_vars = Hashtbl.create ~size:3 (module Var) in
     let substitution update_map var =
-      Base.Map.find update_map var
+      Map.find update_map var
       |? Polynomial.of_var
           (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
-          (VarTable.find_option nondet_vars var
-            |> Option.default_delayed (fun () ->
+          (Hashtbl.find nondet_vars var
+            |> Option.value_or_thunk ~default:(fun () ->
                   let nondet_var = Var.fresh_id Var.Int () in
-                  VarTable.add nondet_vars var nondet_var;
+                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                   nondet_var
                 )
           )
@@ -109,7 +108,7 @@ module Inner = struct
     and updated_cost = Polynomial.substitute_f (substitution t1.update) t2.cost
     in
     {
-      id = unique ();
+      id = Unique.unique ();
       update = new_update;
       guard = new_guard;
       invariant = new_invariant;
@@ -167,8 +166,8 @@ module Inner = struct
               Guard.mk_true, new_var_poly_with_coeff
       in
       let (final_guard, final_upd_poly) =
-        List.map handle_monom (Polynomial.monomials_with_coeffs poly)
-        |> List.fold_left (fun (g,p) (g',p') -> Guard.mk_and g g', Polynomial.add p p') (guard, Polynomial.zero)
+        List.map ~f:handle_monom (Polynomial.monomials_with_coeffs poly)
+        |> List.fold_left ~f:(fun (g,p) (g',p') -> Guard.mk_and g g', Polynomial.add p p') ~init:(guard, Polynomial.zero)
       in
       final_guard, Base.Map.set update ~key:orig_var ~data:final_upd_poly
     in
@@ -180,7 +179,7 @@ module Inner = struct
     let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
     let occurs_in_equality var label =
       let atoms = Guard.atom_list orig_guard_and_invariants in
-      List.find_opt (fun (atom1,atom2) ->
+      List.find ~f:(fun (atom1,atom2) ->
           Atom.is_le atom1 &&
           Atom.is_le atom2 &&
           Atom.equal atom1 (Atom.flip_comp atom2) &&
@@ -190,21 +189,21 @@ module Inner = struct
     in
     let opt = occurs_in_equality var t in
     if Option.is_some opt then
-      let (atom1,atom2) = Option.get opt in
+      let (atom1,atom2) = Option.value_exn opt in
       let replacement =
         let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
-        if Z.(coeff_of_var < zero) then
+        if OurInt.(coeff_of_var < zero) then
           Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [Z.neg coeff_of_var] [var])
         else
           Polynomial.neg @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [Z.neg coeff_of_var] [var])
       in
       let update' = Base.Map.map ~f:(Polynomial.substitute var ~replacement:replacement) t.update in
       let guard' =
-        List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Guard.atom_list @@ t.guard)
+        List.filter ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Guard.atom_list @@ t.guard)
         |> Guard.map_polynomial (Polynomial.substitute var ~replacement:replacement)
       in
       let inv' =
-        List.filter (fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Invariant.atom_list @@ t.invariant)
+        List.filter ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom)) (Invariant.atom_list @@ t.invariant)
         |> Invariant.map_polynomial (Polynomial.substitute var ~replacement:replacement)
       in
       MaybeChanged.changed {t with guard = guard'; invariant = inv'; update = update'}
@@ -238,8 +237,8 @@ module Inner = struct
     |> (Base.Set.union % Polynomial.vars) cost
 
   (* TODO May invalidate through invariant generation! *)
-  let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
-  let vars = Util.memoize vars_memoization ~extractor:id vars_
+  let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create ~size:10 (module Int)
+  let vars = Util.memoize_base_hashtbl vars_memoization ~extractor:id vars_
   let vars_without_memoization = vars_ (** TODO remove this *)
 
   let default = {
@@ -260,9 +259,9 @@ module Inner = struct
     else
       update
       |> Base.Map.to_alist
-      |> List.map (fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
-      |> List.split
-      |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
+      |> List.map ~f:(fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
+      |> List.unzip
+      |> fun (xs,ys) -> "("^(String.concat ~sep:"," xs)^") -> ("^(String.concat ~sep:"," ys)^")"
 
   let cost_to_string label =
     if
@@ -287,10 +286,10 @@ module Inner = struct
       else
         update
         |> Base.Map.to_alist
-        |> List.map (fun (var,poly) -> (Var.to_string ~to_file var, (if to_file then (Polynomial.to_string_to_file poly) else (Polynomial.to_string poly))))
-        |> List.split
+        |> List.map ~f:(fun (var,poly) -> (Var.to_string ~to_file var, (if to_file then (Polynomial.to_string_to_file poly) else (Polynomial.to_string poly))))
+        |> List.unzip
         |> Tuple2.first
-        |> fun xs -> "("^(String.concat "," xs)^")"
+        |> fun xs -> "("^(String.concat ~sep:"," xs)^")"
 
   let update_to_string_lhs = update_to_string_lhs_ ~to_file:false
   let update_to_file_string_lhs = update_to_string_lhs_ ~to_file:true
@@ -302,10 +301,10 @@ module Inner = struct
       else
         update
         |> Base.Map.to_alist
-        |> List.map (fun (var,poly) -> (Var.to_string ~to_file var, (if to_file then (Polynomial.to_string_to_file poly) else (Polynomial.to_string poly))))
-        |> List.split
+        |> List.map ~f:(fun (var,poly) -> (Var.to_string ~to_file var, (if to_file then (Polynomial.to_string_to_file poly) else (Polynomial.to_string poly))))
+        |> List.unzip
         |> Tuple2.second
-        |> fun xs -> "("^(String.concat "," xs)^")"
+        |> fun xs -> "("^(String.concat ~sep:"," xs)^")"
 
   let update_to_string_rhs = update_to_string_rhs_ ~to_file:false
   let update_to_file_string_rhs = update_to_string_rhs_ ~to_file:true
@@ -317,10 +316,10 @@ module Inner = struct
       else
         update
         |> Base.Map.to_alist
-        |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
-        |> List.split
+        |> List.map ~f:(fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
+        |> List.unzip
         |> Tuple2.first
-        |> fun xs -> "("^(String.concat ", " xs)^")"
+        |> fun xs -> "("^(String.concat ~sep:", " xs)^")"
 
   let update_to_string_rhs_pretty t =
     let update = t.update in
@@ -329,10 +328,10 @@ module Inner = struct
       else
         update
         |> Base.Map.to_alist
-        |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
-        |> List.split
+        |> List.map ~f:(fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
+        |> List.unzip
         |> Tuple2.second
-        |> fun xs -> "("^(String.concat ", " xs)^")"
+        |> fun xs -> "("^(String.concat ~sep:", " xs)^")"
 
   let to_string ?(pretty = false) t =
     let guard = if Guard.is_true t.guard  then "" else " :|: " ^ Guard.to_string ~pretty t.guard in
@@ -373,8 +372,8 @@ module Inner = struct
   let rename_temp_vars t temp_vars =
     let temp_vars_of_label = Base.Set.diff (vars t) (input_vars t) in
     let rename_map =
-      List.mapi (fun i v -> v, LazyList.at temp_vars i) @@ Base.Set.to_list temp_vars_of_label
-      |> RenameMap.from
+      Base.Sequence.zip (Base.Set.to_sequence temp_vars_of_label) temp_vars
+      |> RenameMap.of_sequence
     in
     {
       id = t.id;
@@ -397,16 +396,16 @@ module Inner = struct
 
   let relax_guard ~non_static t =
     let is_static atom = Base.Set.is_subset (Atoms.Atom.vars atom) ~of_:(Base.Set.diff (input_vars t) non_static) in
-    {t with guard = List.filter is_static t.guard}
+    {t with guard = List.filter ~f:is_static t.guard}
 
   let remove_non_contributors non_contributors t =
-    let patterns = List.filter (Base.Set.mem (Base.Set.diff (input_vars t) non_contributors)) (Base.Set.to_list @@ input_vars t) in
-    let assignments = List.map (Base.Map.find_exn t.update) patterns in
+    let patterns = List.filter ~f:(Base.Set.mem (Base.Set.diff (input_vars t) non_contributors)) (Base.Set.to_list @@ input_vars t) in
+    let assignments = List.map ~f:(Base.Map.find_exn t.update) patterns in
     mk ~cost:t.cost ~assignments ~patterns:patterns ~guard:t.guard ~id:None
 
   (* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
-  let separate_guard_invariant t invariant' = {t with guard = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant' |> not) t.guard;
-                                                      invariant = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant') t.guard}
+  let separate_guard_invariant t invariant' = {t with guard = List.filter ~f:(fun atom -> List.exists ~f:(fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant' |> not) t.guard;
+                                                      invariant = List.filter ~f:(fun atom -> List.exists ~f:(fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant') t.guard}
 
 end
 

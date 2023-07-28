@@ -24,12 +24,23 @@ module Tuple3 = Batteries.Tuple3
 module Tuple4 = Batteries.Tuple4
 module Tuple5 = Batteries.Tuple5
 
+module Unique = struct
+  let mutex = Mutex.create ()
+  let counter = ref 0
+  let unique () =
+    Mutex.lock mutex;
+    let id = !counter in
+    counter := !counter+1;
+    Mutex.unlock mutex;
+    id
+end
+
 module List = struct
   include List
 
   (** Like zip2 but truncate the longer list if both are of uneven length *)
-  let rec zip2_truncate l1 l2 = match (l1,l2) with
-    | (x::xs,y::ys) -> (x,y) :: zip2_truncate xs ys
+  let rec zip_truncate l1 l2 = match (l1,l2) with
+    | (x::xs,y::ys) -> (x,y) :: zip_truncate xs ys
     | _           -> []
 
   (** Like map2 but truncate the longer list if both are of uneven length *)
@@ -64,6 +75,16 @@ end
 module Map = struct
   include Map
   let find_default m ~default key = Option.value ~default (find m key)
+
+  (** Adds the key or overwrites it if already present *)
+  let add_or_overwrite m ~key ~data = change m key ~f:(fun o -> Some data)
+end
+
+module Hashtbl = struct
+  include Hashtbl
+
+  (** Adds the key or overwrites it if already present *)
+  let add_or_overwrite m ~key ~data = change m key ~f:(fun o -> Some data)
 end
 
 module type SetCreators'0 = sig

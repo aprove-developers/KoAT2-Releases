@@ -128,8 +128,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
     let module GraphPrint = GraphPrint.Make(PM) in
     let color_map =
-      Base.Set.fold ~f:(fun colourmap t -> GraphPrint.TransitionMap.add t GraphPrint.Blue colourmap) non_increasing ~init:GraphPrint.TransitionMap.empty
-      |> GraphPrint.TransitionMap.add decreasing GraphPrint.Red
+      Base.Set.fold ~f:(fun colourmap t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue colourmap) non_increasing ~init:GraphPrint.TransitionMap.empty
+      |> OurBase.Map.add_or_overwrite ~key:decreasing ~data:GraphPrint.Red
     in
     let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in
     ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->

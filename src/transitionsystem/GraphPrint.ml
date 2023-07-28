@@ -48,7 +48,7 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
                                        end) in
     print_graph outdir (file ^ "_system") (Program.graph program) Dot.output_graph
 
-  open Batteries
+  open OurBase
 
   (* Compute an edge label from a TransitionLabel
      Whenever possible we use unicode representations of mathematic symbols.  *)
@@ -63,10 +63,10 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
             "&eta; (" ^ Var.to_string  ~pretty:true v ^ ") = " ^ UpdateElement.to_string_pretty p
         in
         TransitionLabel.update_map l
-        |> Base.Map.to_alist
-        |> List.map print_update
-        |> List.filter (not % String.is_empty)
-        |> String.concat "\n"
+        |> Map.to_alist
+        |> List.map ~f:print_update
+        |> List.filter ~f:(not % String.is_empty)
+        |> String.concat ~sep:"\n"
       in
       let guard =
         let g = TransitionLabel.guard l in
@@ -90,8 +90,8 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
       ; guard
       ; cost
       ]
-      |> List.filter (not % String.is_empty)
-      |> String.concat "\n"
+      |> List.filter ~f:(not % String.is_empty)
+      |> String.concat ~sep:"\n"
 
   type color = Black | Red | Blue | Green | Yellow | Purple | Brown | White [@@deriving ord, eq]
 
@@ -105,16 +105,15 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
     | Brown -> `Color 10824234
     | White -> `Color 16777215
 
-  module TransitionMap = Map.Make(Transition)
-
+  module TransitionMap = MakeMapCreators1(Transition)
 
   let print_system_pretty ?(format="pdf") ?(color_map = TransitionMap.empty) program =
     let module DotPretty = Graph.Graphviz.Dot(struct
                                                include TransitionGraph
                                                let edge_attributes (a, e, b) = [`Label (label e);
-                                                 if not (TransitionMap.mem (a, e, b) color_map) then
+                                                 if not (Map.mem color_map (a, e, b)) then
                                                    get_color Black else
-                                                   get_color (TransitionMap.find (a, e, b) color_map)]
+                                                   get_color (Map.find_exn color_map (a, e, b))]
                                                let default_edge_attributes _ = []
                                                let get_subgraph _ = None
                                                let vertex_attributes _ = [`Shape `Circle]
@@ -128,7 +127,7 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
  let print_system_pretty_html color_map program = match print_system_pretty ~format:"svg" ~color_map program with
    | None -> ""
    | Some system ->
-       let divid = unique () in
+       let divid = Unique.unique () in
        "<button onclick=\"showgraph" ^ string_of_int divid ^ "()\">Show Graph</button>\n" ^
        "<div id=\"graph" ^ string_of_int divid ^ "\" style=\"display:none\">\n" ^
        system ^

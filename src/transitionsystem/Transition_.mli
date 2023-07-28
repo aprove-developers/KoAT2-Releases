@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 
@@ -11,16 +11,16 @@ end
 
 module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location with type t = T.location): sig
   (** A set of transitions. *)
-  (* include module type of Base.Set with type ('a,'b) t :=  ('a,'b) base_set_t *)
+  (* include module type of Set with type ('a,'b) t :=  ('a,'b) base_set_t *)
 
-  include OurBase.SetCreators'0
+  include SetCreators'0
     with type elt = T.t
      and type comparator_witness = T.comparator_witness
 
   include ProgramTypes.TransitionSet
     with type elt = T.t
      and type comparator_witness = T.comparator_witness
-     and type location_set = (L.t, L.comparator_witness) Base.Set.t
+     and type location_set = (L.t, L.comparator_witness) Set.t
 
 end
 

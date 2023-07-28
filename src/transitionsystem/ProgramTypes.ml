@@ -1,9 +1,9 @@
-open Batteries
+open OurBase
 open Constraints
 open Polynomials
 (** Provides commonly used module types in programs *)
 
-type 'a var_map = (Var.t, 'a, Var.comparator_witness) Base.Map.t
+type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
 
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
@@ -20,12 +20,12 @@ module type Location = sig
   (** Returns a string representing a location. *)
   val to_string : t -> string
 
-  include OurBase.Comparator.S with type t := t
-  val sexp_of_t: t -> OurBase.Sexp.t
+  include Comparator.S with type t := t
+  val sexp_of_t: t -> Sexp.t
 end
 
 module type LocationSet = sig
-  include OurBase.SetCreators'0
+  include SetCreators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -34,7 +34,7 @@ end
 module type TransitionSet = sig
   (** A set of transitions. *)
 
-  include OurBase.SetCreators'0
+  include SetCreators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -132,8 +132,8 @@ module type TransitionLabel = sig
   (** TODO doc *)
   val rename : RenameMap.t -> t -> t
 
-  (** Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
-  val rename_temp_vars : t -> Var.t LazyList.t -> t
+  (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
+  val rename_temp_vars : t -> Var.t Sequence.t -> t
 
   (** Returns the set of variables. *)
   val vars : t -> VarSet.t
@@ -165,8 +165,8 @@ module type TransitionLabel = sig
 
   val remove_non_contributors : VarSet.t -> t -> t
 
-  include OurBase.Comparator.S with type t := t
-  val sexp_of_t : t -> OurBase.Sexp.t
+  include Comparator.S with type t := t
+  val sexp_of_t : t -> Sexp.t
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -223,8 +223,8 @@ module type Transition = sig
 
   val rename : RenameMap.t -> t -> t
 
-  include OurBase.Comparator.S with type t := t
-  val sexp_of_t: t -> OurBase.Sexp.t
+  include Comparator.S with type t := t
+  val sexp_of_t: t -> Sexp.t
 end
 
 (** This module represents a transition graph. *)
@@ -242,13 +242,13 @@ module type TransitionGraph = sig
       and type E.label = transition_label
 
   (** Creates a transition graph from an enum of transitions. *)
-  val mk : transition Base.Sequence.t -> t
+  val mk : transition Sequence.t -> t
 
   (** Adds all locations from an enum to a transtion graph. *)
-  val add_locations : location Base.Sequence.t -> t -> t
+  val add_locations : location Sequence.t -> t -> t
 
   (** Adds all transitions from an enum to a transtion graph. Implicitly adds locations when they do not exit. *)
-  val add_transitions : transition Base.Sequence.t -> t -> t
+  val add_transitions : transition Sequence.t -> t -> t
 
   (** Apply function to the graphs transitions  *)
   val map_transitions: (transition -> transition) -> t -> t
@@ -278,7 +278,7 @@ module type TransitionGraph = sig
   val sccs : t -> transition_set list
 
   (** Returns the (biggest) strongly connected components of the transitons. *)
-  val sccs_ : transition Base.Sequence.t -> transition_set list
+  val sccs_ : transition Sequence.t -> transition_set list
 end
 
 module type Program = sig
@@ -299,7 +299,7 @@ module type Program = sig
 
   (** Create a program from a start location and an enum of transitions. *)
   (** The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
-  val from_sequence: location -> transition Base.Sequence.t -> t
+  val from_sequence: location -> transition Sequence.t -> t
 
   (** Create a program from a start location and a graph *)
   val from_graph: location -> transition_graph -> t
@@ -335,7 +335,7 @@ module type Program = sig
       Corresponds to pre(t).
       Note that the computation involves calls to the SMT solver and is therefore expensive.
       The returned Sequence is lazy. *)
-  val pre : t -> transition -> transition Base.Sequence.t
+  val pre : t -> transition -> transition Sequence.t
 
   (** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
   val pre_transitionset_cached: t -> transition -> transition_set
@@ -408,8 +408,8 @@ module type RVTuple = sig
   (** Type of a result variable is a transiton and a variable. *)
   type t = transition * Var.t
 
-  include OurBase.Comparator.S with type t := t
-  val sexp_of_t : t -> OurBase.Sexp.t
+  include Comparator.S with type t := t
+  val sexp_of_t : t -> Sexp.t
 
   (** Comparison with IDs to compare transitions *)
   val compare: t -> t -> int
@@ -450,7 +450,7 @@ module type ProgramModules = sig
   module TransitionSet: TransitionSet
     with type elt = Transition.t
      and type comparator_witness = Transition.comparator_witness
-     and type location_set = (Location.t, Location.comparator_witness) Base.Set.t
+     and type location_set = (Location.t, Location.comparator_witness) Set.t
 
   module TransitionGraph: TransitionGraph
     with type location = Location.t

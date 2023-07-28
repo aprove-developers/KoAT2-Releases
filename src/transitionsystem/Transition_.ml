@@ -1,5 +1,5 @@
 (** Default Transition over simple locations *)
-include Batteries
+include OurBase
 include Constraints
 
 (** Creates a Transition module for a given location type *)
@@ -78,7 +78,7 @@ module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Locatio
   include Inner
 
   module DerivedComparator =
-    Base.Comparator.Derived(struct
+    Comparator.Derived(struct
       type 'a t = L.t * 'a * L.t
       let compare label_compare = fun (_,label1,_) (_,label2,_) -> label_compare label1 label2
       let sexp_of_t _ = Sexplib0.Sexp_conv.sexp_of_opaque
@@ -92,7 +92,7 @@ open OurBase
 module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location with type t = T.location) = struct
   include Set
 
-  include OurBase.MakeSetCreators0(T)
+  include MakeSetCreators0(T)
 
   let to_string s =
     Util.sequence_to_string ~f:T.to_id_string (Set.to_sequence s)
@@ -102,10 +102,10 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
 
   type location_set = (L.t, L.comparator_witness) Set.t
   let locations: t -> location_set =
-    Set.fold ~f:(fun set (l,_,l') -> Base.Set.add (Base.Set.add set l) l') ~init:(Set.empty (module L))
+    Set.fold ~f:(fun set (l,_,l') -> Set.add (Set.add set l) l') ~init:(Set.empty (module L))
 
   let targets: t -> location_set =
-    Base.Set.map (module L) ~f:T.target
+    Set.map (module L) ~f:T.target
 end
 
 include TransitionOver(TransitionLabel_)(Location)

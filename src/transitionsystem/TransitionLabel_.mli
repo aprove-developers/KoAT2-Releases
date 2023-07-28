@@ -1,5 +1,5 @@
 (** Modul handles labels of classical transitions. *)
-open Batteries
+open OurBase
 (** A transition is an edge of a transition system.
     It connects two locations and is annotated with a guard and an update.
     A guard has to be fulfiled for a state to reach another state via the transition.

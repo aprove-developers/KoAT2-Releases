@@ -37,7 +37,7 @@ let affects: type p. p t -> p t list = function
 
 (* Chaining might introduce MANY different temporary variables. To mitigate this we normalise their names*)
 let normalise_temp_vars program =
-  let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
+  let temp_vars = OurBase.Sequence.memoize @@ OurBase.Sequence.uniter (Var.fresh_id Var.Int) in
   Program.map_graph (fun graph ->
     let trans = TransitionGraph.transitions graph in
     Base.Set.fold

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open BoundsInst
 open Formulas
 open Polynomials
@@ -17,7 +17,7 @@ let rec binary_search ?(divisor=2.) (lowest: int) (highest: int) (p: int -> bool
   else
     (* We need to ensure that the result is always round down to prevent endless loops.
        Normal integer division rounds towards zero. *)
-    let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) divisor)) in
+    let newBound = Float.to_int @@ Float.round_down @@ Float.of_int (lowest + highest) /. divisor in
     if p newBound then
       binary_search ~divisor:(if newBound < 0 then 2. else divisor) lowest newBound p
     else
@@ -65,7 +65,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
 
   let vars t = t.vars
 
-  let is_constant = Base.Set.is_empty % vars
+  let is_constant = Set.is_empty % vars
 
   let to_string lsb =
     "{" ^
@@ -83,7 +83,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
     | Some (lsb,b) -> to_string lsb ^ " equality: " ^ Bool.to_string (Lazy.force b)
 
   let as_bound lsb =
-    let vars_sum = Bound.sum @@ Base.Sequence.map ~f:Bound.of_var (Base.Set.to_sequence lsb.vars) in
+    let vars_sum = Bound.sum @@ Sequence.map ~f:Bound.of_var (Set.to_sequence lsb.vars) in
     Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
 
   let option_lsb_as_bound = function
@@ -101,20 +101,20 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
 
   let is_of_equality_type t update_formula v' =
     (* Trivially holds for constant lsbs *)
-    if Base.Set.is_empty t.vars then true
+    if Set.is_empty t.vars then true
     else
       (* Trivially holds for identity lsbs *)
-      if t.factor > 1 && not (Base.Set.is_empty t.vars) then false
+      if t.factor > 1 && not (Set.is_empty t.vars) then false
       else
       (* Trivially does not hold if scaling > 1 and variables are present *)
-        if Base.Set.length t.vars = 1 && Int.equal 0 t.constant then true
+        if Set.length t.vars = 1 && Int.equal 0 t.constant then true
         else
           if Formula.is_linear update_formula then
             let solver = Solver.create ~model:false () in
             (* Find contra *)
             Solver.add solver update_formula;
-            Base.Set.to_list t.vars
-            |> List.iter (fun v -> Solver.add_bound_comparison solver `LT (Bound.of_var v) (Bound.of_var v'));
+            Set.to_list t.vars
+            |> List.iter ~f:(fun v -> Solver.add_bound_comparison solver `LT (Bound.of_var v) (Bound.of_var v'));
             Solver.add_bound_comparison solver `LT (Bound.of_int t.constant) (Bound.of_var v');
             let contra_exists = Solver.satisfiable solver in
             not contra_exists
@@ -141,17 +141,17 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
       let solver = Solver.create ~model:false () in
       Solver.add solver update_formula;
       let is_bounded b = is_bounded_with solver update_formula v' b in
-      Enum.seq 0 ((+) 1) ((>) (Base.Set.length update_vars + 1))
-      |> Enum.map (fun count ->
-          List.enum (VarSet.combinations count update_vars)
+      Sequence.range ~stride:1 ~start:`inclusive ~stop:`inclusive 0 (Set.length update_vars)
+      |> Sequence.map ~f:(fun count ->
+          Sequence.of_list (VarSet.combinations count update_vars)
         )
-      |> Enum.flatten
-      |> Enum.map (initial_lsb max_s max_c)
-      |> Enum.filter is_bounded
-      |> Enum.map (optimize_s max_s is_bounded)
-      |> Enum.map (optimize_c max_c is_bounded)
-      |> Enum.peek
-      |> Option.map (fun t -> t, Lazy.from_fun (fun () -> is_of_equality_type t update_formula v'))
+      |> Sequence.join
+      |> Sequence.map ~f:(initial_lsb max_s max_c)
+      |> Sequence.filter ~f:is_bounded
+      |> Sequence.map ~f:(optimize_s max_s is_bounded)
+      |> Sequence.map ~f:(optimize_c max_c is_bounded)
+      |> Sequence.hd
+      |> Option.map ~f:(fun t -> t, Lazy.from_fun (fun () -> is_of_equality_type t update_formula v'))
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> "find_bound", [ "update_vars", VarSet.to_string update_vars
@@ -159,13 +159,13 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
                               ; "max_s", Int.to_string max_s
                               ; "max_c", Int.to_string max_c
                               ; "update_formula", Formula.to_string update_formula])
-      ~result:(to_string_option % Option.map Tuple2.first)
+      ~result:(to_string_option % Option.map ~f:Tuple2.first)
       execute
 
   let compute_bound program_vars (l,t,l') var =
     let execute () =
       TL.update t var
-      |> flip Option.bind (fun ue ->
+      |> Option.bind ~f:(fun ue ->
           let v' = Var.fresh_id Var.Int () in
           let update_formula =
             (* Facilitate SMT call by removing non-linear constraints. *)
@@ -174,13 +174,13 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
               (Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue))
           in
           let update_vars =
-            Base.Set.union
+            Set.union
             (Polynomial.vars ue)
-            (Base.Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+            (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
           in
           try (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
             (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-            find_bound (Base.Set.inter program_vars update_vars) v' update_formula (s_range ue)
+            find_bound (Set.inter program_vars update_vars) v' update_formula (s_range ue)
           with
             SMT.SMTFailure _ -> None
         )
@@ -196,7 +196,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
     compute_bound (P.input_vars program) t v
 
   let sizebound_local program t v =
-      Option.map Tuple2.first @@ sizebound_local_with_equality program t v
+      Option.map ~f:Tuple2.first @@ sizebound_local_with_equality program t v
 
 end
 
