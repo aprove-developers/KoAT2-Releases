@@ -85,6 +85,8 @@ module Hashtbl = struct
 
   (** Adds the key or overwrites it if already present *)
   let add_or_overwrite m ~key ~data = change m key ~f:(fun o -> Some data)
+
+  let to_sequence tbl = Sequence.of_list (to_alist tbl)
 end
 
 module type SetCreators'0 = sig

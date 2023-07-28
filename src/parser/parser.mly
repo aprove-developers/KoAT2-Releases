@@ -53,7 +53,6 @@
 %type <Var.t list> variables
 
 %{
-  open BatTuple
   open Constraints
   open Atoms
   open Polynomials
@@ -66,11 +65,11 @@
 
 onlyProgram:
   | p_and_g = programAndGoal
-    { Tuple2.first p_and_g } ;
+    { OurBase.Tuple2.first p_and_g } ;
 
 onlyProbabilisticProgram:
   | p_and_g = probabilisticProgramAndGoal
-    { Tuple2.first p_and_g };
+    { OurBase.Tuple2.first p_and_g };
 
 programAndGoal:
   | g = goal
