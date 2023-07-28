@@ -89,6 +89,9 @@ let hash str =
 let cat_maybes l=
   List.map Option.get (List.filter Option.is_some l)
 
+let cat_maybes_sequence l =
+  OurBase.Sequence.map ~f:Option.get (OurBase.Sequence.filter ~f:Option.is_some l)
+
 let cat_maybes_enum e =
   Enum.map Option.get (Enum.filter Option.is_some e)
 

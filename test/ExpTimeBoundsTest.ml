@@ -1,6 +1,6 @@
-open Batteries
 open OUnit2
 open Koat2
+open OurBase
 open BoundsInst
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
@@ -17,7 +17,7 @@ let test_len = OUnitTest.Custom_length 5.
 let tests =
   "ExpTimeBoundsTests" >:::[
     "asymptotic" >:::
-      List.map (fun (name, complexity_exp, prog_dir) ->
+      List.map ~f:(fun (name, complexity_exp, prog_dir) ->
         (fun f  -> name >: test_case ~length:test_len f) @@ fun _ ->
             let prog =
               Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat")

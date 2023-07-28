@@ -1,5 +1,5 @@
-open Batteries
 open Koat2
+open OurBase
 open OUnit2
 open ProbabilisticProgramModules
 open BoundsInst
@@ -11,14 +11,14 @@ let tests =
   let one_half = RealBound.of_constant (OurFloat.of_float 0.5) in
   "ExpectedChangeBoundTests" >:::
     List.mapi
-      (fun i (gt, expected) ->
+      ~f:(fun i (gt, expected) ->
          Printf.sprintf "case %i:%s" i gt >:: fun _ ->
            let gt = Base.Set.choose_exn (Readers.read_general_transitions gt) in
            let program_vars = GeneralTransition.input_vars gt in
            let elcb =  ExpectedLocalChangeBound.compute_elcb program_vars ((gt,loc_g), var_first_arg) in
 
-           Helper.assert_equal_realpoly_smt (Option.get @@ RealBound.to_poly expected)
-                                            (Option.get @@ RealBound.to_poly elcb)
+           Helper.assert_equal_realpoly_smt (Option.value_exn @@ RealBound.to_poly expected)
+                                            (Option.value_exn @@ RealBound.to_poly elcb)
       )
       RealBound.(
         [

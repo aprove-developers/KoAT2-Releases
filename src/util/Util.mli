@@ -38,6 +38,8 @@ val hash: string -> int
 
 val cat_maybes : 'a option list -> 'a list
 
+val cat_maybes_sequence : 'a option OurBase.Sequence.t -> 'a OurBase.Sequence.t
+
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
 
 val map_maybe : ('a -> 'b) -> 'a option list -> 'b list
