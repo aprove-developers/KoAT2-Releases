@@ -2,6 +2,7 @@
 (* explicitly import required modules from Base *)
 module Array = Base.Array
 module Comparator = Base.Comparator
+module Exn = Base.Exn
 module Float = Base.Float
 module Fn = Base.Fn
 module Int = Base.Int
@@ -46,15 +47,27 @@ module Tuple3 = Batteries.Tuple3
 module Tuple4 = Batteries.Tuple4
 module Tuple5 = Batteries.Tuple5
 
-module Unique = struct
-  let mutex = Mutex.create ()
-  let counter = ref 0
-  let unique () =
+module Atomically: sig
+  type 'a t
+  val create: 'a -> 'a t
+  val run_atomically: 'a t -> ('a -> 'b) -> 'b
+end = struct
+  type 'a t = Mutex.t * 'a
+
+  let create a = Mutex.create (), a
+
+  let run_atomically (mutex,a) f =
     Mutex.lock mutex;
-    let id = !counter in
-    counter := !counter+1;
-    Mutex.unlock mutex;
-    id
+    Exn.protect ~f:(fun () -> f a) ~finally:(fun () -> Mutex.unlock mutex)
+end
+
+module Unique = struct
+  let counter = Atomically.create (ref 0)
+  let unique () = Atomically.run_atomically counter (fun counter ->
+      let id = !counter in
+      counter := !counter+1;
+      id
+    )
 end
 
 module List = struct

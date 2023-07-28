@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Formulas
 open Polynomials
 open BoundsInst
@@ -16,7 +16,7 @@ let from_poly context =
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
     (* Somehow Z3.Arithmetic.mk_power makes Z3 use real arithmetic.. *)
-    ~pow:(fun b e -> if e = 1 then b else if e > 1 then Z3.Arithmetic.mk_mul context (List.make e b) else failwith "Polynomial exponents should be between 1 and n")
+    ~pow:(fun b e -> if e = 1 then b else if e > 1 then Z3.Arithmetic.mk_mul context (List.init e ~f:(const b)) else failwith "Polynomial exponents should be between 1 and n")
 
 let from_real_poly context =
   RealPolynomial.fold
@@ -50,7 +50,7 @@ let from_real_bound context bound =
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
       ~exp:(fun b e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurFloat.to_string b) e)
   in
-  match Option.map from_finite_bound (RealBound.prove_finiteness bound) with
+  match Option.map ~f:from_finite_bound (RealBound.prove_finiteness bound) with
   | Some b -> b
   | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
@@ -74,7 +74,7 @@ let from_bound context bound =
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
       ~exp:(fun b e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string b) e)
   in
-  match Option.map from_finite_bound (Bound.prove_finiteness bound) with
+  match Option.map ~f:from_finite_bound (Bound.prove_finiteness bound) with
   | Some b -> b
   | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
@@ -104,18 +104,12 @@ module Z3Solver =
     module Valuation = Valuation.Make(OurInt)
 
     (** Ensure that the context is only exclusively accessible since it is *not* thread-safe *)
-    module GuardedContext: sig val with_context: (Z3.context -> 'a) -> 'a end = struct
-      let ctx = Z3.mk_context [("model","false"); ("proof", "false")]
-      let ctx_mutex = Mutex.create ()
+    let ctx =
+      Z3.mk_context [("model","false"); ("proof", "false")]
+      |> Atomically.create
 
-      let with_context f =
-        Mutex.lock ctx_mutex;
-        try
-          let res = f ctx in
-          Mutex.unlock ctx_mutex; res
-        with exn -> Mutex.unlock ctx_mutex; raise exn
-    end
-    include GuardedContext
+    let with_context (f: Z3.context -> 'a): 'a =
+      Atomically.run_atomically ctx f
 
     let version = Z3.Version.full_version
 
@@ -163,10 +157,10 @@ module Z3Solver =
         if status == Z3.Solver.SATISFIABLE then
           optimisation_goal
           |> Z3.Optimize.get_model
-          |> Option.map (fun model ->
+          |> Option.map ~f:(fun model ->
                 model
                 |> Z3.Model.get_const_decls
-                |> List.map (fun func_decl ->
+                |> List.map ~f:(fun func_decl ->
                         let var =
                           func_decl
                           |> Z3.FuncDecl.get_name
@@ -176,7 +170,7 @@ module Z3Solver =
                         let value =
                           func_decl
                           |> Z3.Model.get_const_interp model
-                          |> Option.get (* Should be fine here *)
+                          |> Option.value_exn (* Should be fine here *)
                           |> (fun expr ->
                             if Z3.Arithmetic.is_int expr then
                               Z3.Arithmetic.Integer.get_big_int expr
@@ -253,10 +247,10 @@ module Z3SolverTimeout =
       if status == Z3.Solver.SATISFIABLE then
         optimisation_goal
         |> Z3.Optimize.get_model
-        |> Option.map (fun model ->
+        |> Option.map ~f:(fun model ->
                model
                |> Z3.Model.get_const_decls
-               |> List.map (fun func_decl ->
+               |> List.map ~f:(fun func_decl ->
                       let var =
                         func_decl
                         |> Z3.FuncDecl.get_name
@@ -266,7 +260,7 @@ module Z3SolverTimeout =
                       let value =
                         func_decl
                         |> Z3.Model.get_const_interp model
-                        |> Option.get (* Should be fine here *)
+                        |> Option.value_exn (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             Z3.Arithmetic.Integer.get_big_int expr
@@ -357,7 +351,7 @@ module IncrementalZ3Solver =
         let extract_from_model model =
           model
           |> Z3.Model.get_const_decls
-          |> List.map (fun func_decl ->
+          |> List.map ~f:(fun func_decl ->
                 let var =
                   func_decl
                   |> Z3.FuncDecl.get_name
@@ -367,13 +361,13 @@ module IncrementalZ3Solver =
                 let value =
                   func_decl
                   |> Z3.Model.get_const_interp model
-                  |> Option.get (* Should be fine here *)
+                  |> Option.value_exn (* Should be fine here *)
                   |> get_z3_value
                 in
                 (var, value))
         in
         Z3.Solver.get_model slv
-        |> Option.map extract_from_model
+        |> Option.map ~f:extract_from_model
       else
         None
 
@@ -397,10 +391,10 @@ module IncrementalZ3Solver =
 
     let model t =
       extract_values t ~get_z3_value:get_int_expr_value
-      |> Option.map IntValuation.from
+      |> Option.map ~f:IntValuation.from
 
     let model_real t =
       extract_values t  ~get_z3_value:get_real_expr_value
-      |> Option.map RealValuation.from
+      |> Option.map ~f:RealValuation.from
 
   end
