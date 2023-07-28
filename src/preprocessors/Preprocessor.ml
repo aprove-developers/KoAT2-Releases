@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open ProgramModules
 
 let logger = Logging.(get Preprocessor)
@@ -83,29 +83,32 @@ let process (type p) (module P: ProgramTypes.ClassicalProgramModules with type P
     strat (module P) preprocessors subject
   in
   Logger.(with_log logger INFO
-            (fun () -> "running_preprocessors", ["preprocessors", Util.enum_to_string show (List.enum preprocessors)])
+            (fun () -> "running_preprocessors", ["preprocessors", Util.sequence_to_string ~f:show (Sequence.of_list preprocessors)])
               execute)
 
-let process_only_once: type p. p strategy = fun (module P) preprocessors ->
-  Set.fold (fun preprocessor subject -> MaybeChanged.unpack (transform (module P) subject preprocessor)) (Set.of_list preprocessors)
+let process_only_once: type p. p strategy = fun (module P) preprocessors p ->
+  Set.fold ~f:(fun subject preprocessor -> MaybeChanged.unpack (transform (module P) subject preprocessor)) (Set.Poly.of_list preprocessors) ~init:p
 
 let process_till_fixpoint_ (type p) (module P: ProgramTypes.ClassicalProgramModules with type Program.t = p)
-    ~(wanted:P.Program.t t Set.t) =
-  let rec iterate (todos: P.Program.t t Set.t) (subject: P.Program.t): P.Program.t =
+    ~(wanted:P.Program.t t Set.Poly.t) =
+  let rec iterate (todos: P.Program.t t Set.Poly.t) (subject: P.Program.t): P.Program.t =
     if Set.is_empty todos then subject
     else
-      let (preprocessor, others) = Set.pop_min todos in
+      let (preprocessor, others) =
+        let m = Set.Poly.min_elt_exn todos in
+        (m, Set.Poly.remove todos m)
+      in
       let maybe_changed = transform (module P) subject preprocessor in
       let new_preprocessor_set =
         if MaybeChanged.has_changed maybe_changed then
-          Set.(preprocessor |> affects |> of_list |> intersect wanted |> union others)
+          Set.Poly.(preprocessor |> affects |> of_list |> inter wanted |> union others)
         else others in
       iterate new_preprocessor_set (MaybeChanged.unpack maybe_changed)
   in
   iterate
 
 let process_till_fixpoint: type p. p strategy = fun (module P) preprocessors subject ->
-  let set = Set.of_list preprocessors in
+  let set = OurBase.Set.Poly.of_list preprocessors in
   process_till_fixpoint_ (module P) ~wanted:set set subject
 
 let all_strategies: 'p. 'p strategy list = [process_only_once; process_till_fixpoint]
