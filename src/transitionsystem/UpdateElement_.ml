@@ -254,6 +254,6 @@ let exp_value_abs_bound t =
   Sequence.of_list (monomials_with_coeffs simplified)
   |> Sequence.map
       ~f:(Tuple2.map2
-         (RealBound.product_sequence % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound) % Monomial_.to_sequence))
+         (RealBound.product % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound) % Monomial_.to_sequence))
   |> Sequence.map ~f:RealBound.(fun(c,p) -> mul (of_constant @@ OurFloat.of_ourint c) p)
-  |> RealBound.sum_sequence
+  |> RealBound.sum

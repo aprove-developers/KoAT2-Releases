@@ -72,7 +72,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
           List.iter (fun t -> TimeBoundTable.add time_bound_table t local_bounds) cycle;
           List.map (Tuple2.uncurry @@ lift (l,t,l') appr) local_bounds
-          |> List.enum
+          |> OurBase.Sequence.of_list
           |> Bound.sum
         else (
           TimeBoundTable.add time_bound_table (l,t,l') [(l,t,l'),Bound.infinity];

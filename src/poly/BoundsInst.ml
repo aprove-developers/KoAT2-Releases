@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Polynomials
 
 let logger = Logging.(get Bound)
@@ -45,7 +45,7 @@ module Make(Num : PolyTypes.OurNumber) =
         | Sum     (b1,b2) -> is_constant b1 && is_constant b2
         | Product (b1,b2) -> is_constant b1 && is_constant b2
       in
-      Option.default false % Option.map is_constant
+      Option.value ~default:false % Option.map ~f:is_constant
 
     let get_constant t =
       let rec get_constant_of_bound b = match b with
@@ -118,7 +118,7 @@ module Make(Num : PolyTypes.OurNumber) =
           match (x,y) with
           | (Inf,_) -> Inf
           | (_,Inf) -> Inf
-          | (Polynomial x, Polynomial y) -> Polynomial (Int.add x y)
+          | (Polynomial x, Polynomial y) -> Polynomial (Int.(+) x y)
           | (Exponential x, Exponential y) -> Exponential (Int.max x y)
           | (Polynomial x, Exponential y) -> Exponential y
           | (Exponential x, Polynomial y) -> Exponential x
@@ -185,8 +185,8 @@ module Make(Num : PolyTypes.OurNumber) =
       | Sum (b1, b2) ->
           (* Order terms by degree*)
           let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b1 @ get_op_chain_and_apply_to_atoms identity `Sum b2 in
-          let sorted_chain = List.sort (fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1)) sum_chain in
-          List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner ~pretty b else s^"+"^show_bound_inner ~pretty b) "" sorted_chain
+          let sorted_chain = List.sort ~compare:(fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1)) sum_chain in
+          List.foldi ~f:(fun i s b -> if i = 0 then show_bound_inner ~pretty b else s^"+"^show_bound_inner ~pretty b) ~init:"" sorted_chain
       | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner ~pretty (Sum (b1, b2)) ^ ")" ^ mul_sign ^ "(" ^ show_bound_inner ~pretty (Sum (b3, b4)) ^ ")"
       | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner ~pretty (Sum (b1, b2)) ^ ")" ^ mul_sign ^ show_bound_inner ~pretty b3
       | Product (b1, Sum (b2, b3)) -> show_bound_inner ~pretty b1 ^ mul_sign ^ "(" ^ show_bound_inner ~pretty (Sum (b2, b3)) ^ ")"
@@ -266,13 +266,13 @@ module Make(Num : PolyTypes.OurNumber) =
            By, again applying in reverse we obtain Product (Var X, Var Y) -> Product (Const 1, Product (Var X, Var Y)).
            The coefficient up-front then allows for better simplification later-on
          * *)
-        let sorted = List.sort (fun b1 b2 -> String.compare (show_bound_inner b2) (show_bound_inner b1)) bs in
+        let sorted = List.sort ~compare:(fun b1 b2 -> String.compare (show_bound_inner b2) (show_bound_inner b1)) bs in
         match t with
           | `Sum ->
-              (try List.reduce (fun b1 b2 -> Sum (b2,b1)) sorted
+              (try List.reduce_exn ~f:(fun b1 b2 -> Sum (b2,b1)) sorted
               with Invalid_argument _  -> bound_of_constant (Num.zero))
           | `Product ->
-              (try List.reduce (fun b1 b2 -> Product (b2,b1)) sorted
+              (try List.reduce_exn ~f:(fun b1 b2 -> Product (b2,b1)) sorted
               with Invalid_argument _  -> bound_of_constant (Num.one))
 
       and simplify_bound bound =
@@ -287,7 +287,7 @@ module Make(Num : PolyTypes.OurNumber) =
           | Sum (b1, b2) -> (
               let sum_chain =
                 get_op_chain `Sum b1 @ get_op_chain `Sum b2
-                |> List.filter (not % equal_bound (Const Num.zero))
+                |> List.filter ~f:(not % equal_bound (Const Num.zero))
               in
               (* Merge addends that are a product of the same bound with different coefficients *)
               let combine_chain_elements_with_coeffs =
@@ -298,15 +298,15 @@ module Make(Num : PolyTypes.OurNumber) =
                   | b                    -> (b,Num.one)
                 in
                 sum_chain
-                |> List.map get_coeff_elem
+                |> List.map ~f:get_coeff_elem
                 |> List.fold_left
-                    (fun l (b,c) ->
-                      try
-                        let i = fst @@ List.findi (fun i -> equal_bound b % fst) l in
-                        List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) l
-                      with Not_found -> List.cons (b,c) l)
-                    []
-                |> List.map (fun (b,c) -> simplify_bound @@ Product (Const c, b))
+                    ~f:(fun l (b,c) ->
+                      match List.findi ~f:(fun _ -> equal_bound b % fst) l with
+                      | Some (i,_) -> List.modify_at i ~f:(fun (b,c') -> (b,Num.(c + c'))) l
+                      | None -> List.cons (b,c) l
+                    )
+                    ~init:[]
+                |> List.map ~f:(fun (b,c) -> simplify_bound @@ Product (Const c, b))
               in
               (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
               construct_op_chain `Sum combine_chain_elements_with_coeffs
@@ -321,11 +321,11 @@ module Make(Num : PolyTypes.OurNumber) =
                 | Const c       -> Some c
                 | _             -> None
               in
-              let all_non_consts = List.filter (Option.is_none % get_const) chain in
-              let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain in
+              let all_non_consts = List.filter ~f:(Option.is_none % get_const) chain in
+              let all_consts = List.map ~f:(fun o -> Option.value_exn o) @@ List.filter ~f:Option.is_some @@ List.map ~f:get_const chain in
 
               (* Get the coefficient of the complete chain by multiplying all of its constant values *)
-              let const = List.fold_left Num.mul Num.one all_consts in
+              let const = List.fold_left ~f:Num.mul ~init:Num.one all_consts in
 
               (* Here we have to multiply through *)
               (* let non_const_chain = construct_op_chain `Product all_non_consts in *)
@@ -333,11 +333,11 @@ module Make(Num : PolyTypes.OurNumber) =
               let final_sum_chain multiply_with_const =
                 (* Here we expect all_non_consts to be sums or vars, or exponential terms.
                  * For all sums we have to multiply the corresponding chains *)
-                List.map (get_op_chain `Sum) all_non_consts
+                List.map ~f:(get_op_chain `Sum) all_non_consts
                 (* multiply through *)
-                |> List.n_cartesian_product
-                |> List.map (fun l -> if multiply_with_const then (Const const)::l else l)
-                |> List.map (construct_op_chain `Product)
+                |> List.Cartesian_product.all
+                |> List.map ~f:(fun l -> if multiply_with_const then (Const const)::l else l)
+                |> List.map ~f:(construct_op_chain `Product)
                 |> fun l -> (if Int.(List.length l > 1) then simplify_bound (construct_op_chain `Sum l) else construct_op_chain `Sum l)
               in
 
@@ -366,7 +366,7 @@ module Make(Num : PolyTypes.OurNumber) =
                         ~result:(to_string % OptionMonad.return)
                         execute
 
-    let simplify = Option.map simplify_bound
+    let simplify = Option.map ~f:simplify_bound
 
     let zero_bound = Const (Num.zero)
     let zero = Some zero_bound
@@ -386,13 +386,11 @@ module Make(Num : PolyTypes.OurNumber) =
       | _ -> OptionMonad.liftM2 mul_bound b1 b2
 
     let pow_bound bound n =
-      bound
-      |> Enum.repeat ~times:n
-      |> Enum.fold mul_bound one_bound
+      Util.iterate_n_times (mul_bound bound) n one_bound
       |> simplify_bound
 
     let pow bound n =
-      Option.map (flip pow_bound n) bound
+      Option.map ~f:(flip pow_bound n) bound
 
     (** Addition of two elements. *)
     let (+) = add
@@ -404,25 +402,15 @@ module Make(Num : PolyTypes.OurNumber) =
     let ( ** ) = pow
 
     let sum bounds =
-      try
-        bounds |> Enum.reduce add |> simplify
-      with Not_found -> zero
+      Sequence.reduce ~f:add bounds
+      |> Option.map ~f:simplify
+      |? zero
 
-    let sum_sequence (bounds: t Base.Sequence.t) =
-      Base.Sequence.reduce ~f:add bounds
-      |> Base.Option.map ~f:simplify
-       |? zero
-
-    let sum_list = sum % List.enum
+    let sum_list = sum % Sequence.of_list
 
     let product bounds =
-      try
-        bounds |> Enum.reduce mul |> simplify
-      with Not_found -> one
-
-    let product_sequence (bounds: t Base.Sequence.t) =
-      Base.Sequence.reduce ~f:mul bounds
-      |> Base.Option.map ~f:simplify
+      Sequence.reduce ~f:mul bounds
+      |> Option.map ~f:simplify
       |? one
 
     let of_poly =
@@ -442,7 +430,7 @@ module Make(Num : PolyTypes.OurNumber) =
     let is_finite = Option.is_some
 
     let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
-    let exp value b = Option.map (exp_bound value) b
+    let exp value b = Option.map ~f:(exp_bound value) b
 
     let substitute_f (substitution: Var.t -> t) (bound: t): t =
       OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp:exp)
@@ -455,19 +443,18 @@ module Make(Num : PolyTypes.OurNumber) =
     let substitute var ~replacement b = substitute_bound var ~replacement b
 
     let substitute_all substitution =
-      let module VarMap = Map.Make(Var) in
-      substitute_f (fun var -> VarMap.find_default (of_var var) var substitution)
+      substitute_f (fun var -> Map.find_default ~default:(of_var var) substitution var)
 
     let rec vars_bound = function
       | Var v -> VarSet.singleton v
       | Const _ -> VarSet.empty
       | Pow (v,b) -> vars_bound b
-      | Sum (b1, b2) -> Base.Set.union (vars_bound b1) (vars_bound b2)
-      | Product (b1, b2) -> Base.Set.union (vars_bound b1) (vars_bound b2)
+      | Sum (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
+      | Product (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
 
-    let vars = Option.default VarSet.empty % Option.map vars_bound
+    let vars = Option.value ~default:VarSet.empty % Option.map ~f:vars_bound
 
-    let indeterminates = Base.Set.to_list % vars
+    let indeterminates = Set.to_list % vars
 
     let keep_simpler_bound b1 b2 = match compare_asy b1 b2 with
       (* First compare asymptotic_complexity *)
@@ -475,7 +462,7 @@ module Make(Num : PolyTypes.OurNumber) =
       |  1 -> b2
       |  _ ->
           (* Now compare number of variables*)
-          match Int.compare (Base.Set.length @@ vars b1) (Base.Set.length @@ vars b2) with
+          match Int.compare (Set.length @@ vars b1) (Set.length @@ vars b2) with
           | -1 -> b1
           |  1 -> b2
           |  _ ->

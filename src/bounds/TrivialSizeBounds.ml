@@ -27,7 +27,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
         pre_transitions
         |> Base.Sequence.map ~f:substitute_with_prevalues
-        |> Bound.sum_sequence
+        |> Bound.sum
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "compute_highest_incoming_bound", ["lsb", Bound.to_string lsb;
                                                                      "transition", Transition.to_id_string t])

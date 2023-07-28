@@ -45,4 +45,4 @@ let compute_elcb program_vars ((gt,l),v) =
 
       RealBound.(of_constant (TransitionLabel.probability label) * ue_exp_abs_diff_bound )
     )
-  |> RealBound.sum_sequence
+  |> RealBound.sum

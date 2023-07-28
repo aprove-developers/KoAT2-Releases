@@ -83,7 +83,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
     | Some (lsb,b) -> to_string lsb ^ " equality: " ^ Bool.to_string (Lazy.force b)
 
   let as_bound lsb =
-    let vars_sum = Bound.sum_sequence @@ Base.Sequence.map ~f:Bound.of_var (Base.Set.to_sequence lsb.vars) in
+    let vars_sum = Bound.sum @@ Base.Sequence.map ~f:Bound.of_var (Base.Set.to_sequence lsb.vars) in
     Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
 
   let option_lsb_as_bound = function

@@ -4,7 +4,7 @@ module MakeOverIndeterminate(I : PolyTypes.Indeterminate)(Value : PolyTypes.Ring
   struct
     module Valuation_ = Valuation.MakeOverIndeterminate(I)(Value)
     type valuation = Valuation_.t
-    module M = OurBase.MakeMapCreators1(I)
+    module M = MakeMapCreators1(I)
 
     type t = int M.t  (*  [@@deriving ord] *)
     let equal t1 t2 = Map.equal Int.equal t1 t2
@@ -70,7 +70,7 @@ module MakeOverIndeterminate(I : PolyTypes.Indeterminate)(Value : PolyTypes.Ring
     let vars t =
       Map.keys t
       |> List.map ~f:I.vars
-      |> List.fold ~f:Base.Set.union ~init:VarSet.empty
+      |> List.fold ~f:Set.union ~init:VarSet.empty
 
     let mul =
       let addPowers ?(p1=0) ?(p2=0) _ = p1 + p2 in

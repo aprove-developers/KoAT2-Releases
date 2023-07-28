@@ -36,6 +36,19 @@ module List = struct
   let rec map2_truncate l1 l2 ~f = match (l1,l2) with
     | (x::xs,y::ys) -> f x y :: map2_truncate xs ys ~f
     | _ -> []
+
+  let rec modify_at i ~f l = match l with
+    | (x::xs) when i = 0 -> f x :: xs
+    | (x::xs) when i > 0 -> x :: modify_at (i-1) ~f xs
+    | _ -> raise (Invalid_argument "List.modify_at: Index does not exist")
+end
+
+module Sequence = struct
+  include Sequence
+
+  (** Counterpart to iter. E.g. construct a sequence by pulling from a function *)
+  let uniter f =
+    unfold ~init:() ~f:(fun () -> Some (f (), ()))
 end
 
 module Set = struct
@@ -46,6 +59,11 @@ module Set = struct
       Sequence.append result (Sequence.map ~f:(fun ys -> Base.Set.add ys x) result)
     in
     Base.Sequence.fold ~f:combine ~init:(Sequence.singleton (empty (module M))) (Base.Set.to_sequence set)
+end
+
+module Map = struct
+  include Map
+  let find_default m ~default key = Option.value ~default (find m key)
 end
 
 module type SetCreators'0 = sig

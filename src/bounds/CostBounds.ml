@@ -34,7 +34,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
               let inc_trans = Program.pre program transition in
               let inc_size v =
                 Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans
-                |> Bound.sum_sequence
+                |> Bound.sum
               in
               Bound.of_poly (Transition.cost transition)
               |> Bound.substitute_f inc_size

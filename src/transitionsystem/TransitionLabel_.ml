@@ -68,8 +68,7 @@ module Inner = struct
   let mk ~id ~cost ~assignments ~patterns ~guard =
     let map_to_arg_vars =
       Base.Sequence.zip (Base.Sequence.of_list patterns) Var.args
-      |> List.enum % Base.Sequence.to_list
-      |> RenameMap.of_enum
+      |> RenameMap.of_sequence
     in
     let update =
       Base.Sequence.of_list assignments

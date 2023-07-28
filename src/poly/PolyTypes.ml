@@ -27,7 +27,8 @@ module type OurNumber =
     val (+): t -> t -> t
 
     module Compare: sig
-      val (>): t ->t -> bool
+      val (>): t -> t -> bool
+      val (>=): t -> t -> bool
     end
 
 
@@ -63,7 +64,7 @@ module type Indeterminate = sig
 
   val equal: t -> t -> bool
 
-  include OurBase.Comparator.S with type t := t
+  include Comparator.S with type t := t
 end
 
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
@@ -147,7 +148,7 @@ module type Valuation =
     val vars: t -> Var.t list
 
     (** Returns the indeterminates to value bindings. *)
-    val bindings : t -> (indeterminate * value) OurBase.Sequence.t
+    val bindings : t -> (indeterminate * value) Sequence.t
 
     (** Converts the valuation into a string using the print function. *)
     val to_string : t -> string
@@ -210,10 +211,10 @@ module type Monomial =
     val is_integral: t -> bool
 
     (** Creates a monomial from a sequence of indeterminates and their exponents. *)
-    val of_sequence : (indeterminate * int) Base.Sequence.t -> t
+    val of_sequence : (indeterminate * int) Sequence.t -> t
 
     (** Returns a sequence of all occurring indeterminates with their degree *)
-    val to_sequence : t -> (indeterminate * int) OurBase.Sequence.t
+    val to_sequence : t -> (indeterminate * int) Sequence.t
 
     (** Creates a monomial from an indeterminate and a exponent. *)
     val lift : indeterminate -> int -> t
@@ -332,10 +333,10 @@ module type Math =
     include BaseMath
 
     (** Returns the sum of all sequence elements. *)
-    val sum : t OurBase.Sequence.t -> t
+    val sum : t Sequence.t -> t
 
     (** Returns the product of all sequence elements. *)
-    val product : t OurBase.Sequence.t -> t
+    val product : t Sequence.t -> t
 
     (** Subtracts the second element from the first one. *)
     val sub : t -> t -> t
@@ -362,10 +363,10 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     include Base
 
     (** Returns the sum of all enums elements. *)
-    let sum = OurBase.Sequence.fold ~f:add ~init:zero
+    let sum = Sequence.fold ~f:add ~init:zero
 
     (** Returns the product of all enums elements. *)
-    let product = OurBase.Sequence.fold ~f:mul ~init:one
+    let product = Sequence.fold ~f:mul ~init:one
 
     (** Subtracts the second element from the first one. *)
     let sub t1 t2 = add t1 (neg t2)

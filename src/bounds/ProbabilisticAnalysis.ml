@@ -23,7 +23,7 @@ let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
       |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
-      |> RealBound.of_intbound % Bound.sum_sequence
+      |> RealBound.of_intbound % Bound.sum
     in
     Set.to_sequence gts
     |> Sequence.fold ~f:(fun appr gt -> ExpApproximation.add_timebound (gt_timebound gt) gt appr) ~init:appr
@@ -33,7 +33,7 @@ let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
     let rv_sizebound ((gt,l),v) =
       Set.to_sequence (GeneralTransition.transitions gt)
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-      |> RealBound.of_intbound % Bound.sum_sequence
+      |> RealBound.of_intbound % Bound.sum
     in
     grvs_from_gts_and_vars gts program_vars
     |> List.fold ~f:(fun appr (rvt,v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt,v)) rvt v appr) ~init:appr
@@ -67,7 +67,7 @@ let knowledge_propagation program scc appr_mc: ExpApproximation.t MaybeChanged.t
         let new_bound =
           Set.to_sequence (Program.pre_gt_cached program gt)
           |> Sequence.map ~f:(ExpApproximation.timebound appr)
-          |> RealBound.sum_sequence
+          |> RealBound.sum
         in
         if RealBound.is_finite new_bound then
           MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr)
@@ -91,7 +91,7 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
       let pre_size_exp v =
         Set.to_sequence pre_gt
         |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
-        |> RealBound.sum_sequence
+        |> RealBound.sum
       in
       let pre_size_classical v =
         Set.to_sequence pre_gt
@@ -100,7 +100,7 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
                      % GeneralTransition.transitions)
         |> Sequence.join
         |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-        |> RealBound.of_intbound % Bound.sum_sequence
+        |> RealBound.of_intbound % Bound.sum
       in
       let var_overapprox = if Program.is_initial_gt program gt then RealBound.of_var v else pre_size_exp v in
       let elcb = ELCBMap.find ((gt,l),v) elcbs in
@@ -128,14 +128,14 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
       GeneralTransition.transitions gt
       |> Program.pre_transitionset_cached program % Base.Set.choose_exn
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Base.Set.to_sequence
-      |> RealBound.of_intbound % Bound.sum_sequence
+      |> RealBound.of_intbound % Bound.sum
     in
     let nontrivial_sizebound appr v =
       let execute = fun () ->
         let start_value =
           Sequence.of_list entry_rvts
           |> Sequence.map ~f:(fun rvt -> ExpApproximation.sizebound appr rvt v)
-          |> RealBound.sum_sequence
+          |> RealBound.sum
           |> tap (fun s -> Logger.log size_logger Logger.DEBUG (fun () -> "start_value", ["res", RealBound.to_string s]))
         in
         let acc_change_grv (gt,l) =
@@ -151,7 +151,7 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
         let acc_change =
           Sequence.of_list rvts_scc
           |> Sequence.map ~f:acc_change_grv
-          |> RealBound.sum_sequence
+          |> RealBound.sum
         in
         RealBound.(start_value + acc_change)
       in

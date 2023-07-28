@@ -35,7 +35,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let var_only_linear var = function
       | [] -> true
-      | p -> List.for_all ~f:((>=) 1) (List.map ~f:ScaledMonomial_.degree (List.filter ~f:(fun s -> Base.Set.mem (ScaledMonomial_.vars s) var) p))
+      | p -> List.for_all ~f:((>=) 1) (List.map ~f:ScaledMonomial_.degree (List.filter ~f:(fun s -> Set.mem (ScaledMonomial_.vars s) var) p))
 
     let coeff mon poly =
          poly
@@ -143,7 +143,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       monomials (simplify poly)
       |> List.map ~f:Monomial_.indeterminates
       |> List.join
-      |> OurBase.Set.stable_dedup_list (module I)
+      |> Set.stable_dedup_list (module I)
 
     let vars poly =
          poly
@@ -171,7 +171,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
                                        Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
     let is_univariate_linear poly =
-      degree poly <= 1 && Base.Set.length (vars poly) <= 1
+      degree poly <= 1 && Set.length (vars poly) <= 1
 
     let is_const poly = degree poly <= 0
 
@@ -186,7 +186,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       List.map ~f:(ScaledMonomial_.mult_with_const const) poly
 
     let degree_coeff_list (poly:t) =
-      if Base.Set.length (vars poly) <= 1 then
+      if Set.length (vars poly) <= 1 then
       let tuples_deg_coeff = List.map ~f:(fun s -> (ScaledMonomial_.degree s, ScaledMonomial_.coeff s)) poly in
       let missing_degrees =
         Set.diff
@@ -290,7 +290,7 @@ module PolynomialOver(Value: PolyTypes.Ring) = struct
 
   let substitute_all substitution t =
     substitute_f (fun var ->
-        Option.value ~default:(of_var var) @@ Base.Map.find substitution var
+        Option.value ~default:(of_var var) @@ Map.find substitution var
       ) t
 
 end

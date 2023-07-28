@@ -121,7 +121,7 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
             else
               timebound * rhs
         ))
-   |> Bound.sum_sequence
+   |> Bound.sum
  in
     let bound = execute () in
     Logger.with_log logger Logger.DEBUG
@@ -222,7 +222,7 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
           Program.pre_transitionset_cached program transition
           |> Base.Set.to_sequence
           |> Base.Sequence.map ~f:(Approximation.timebound appr)
-          |> Bound.sum_sequence
+          |> Bound.sum
         in
         let original_bound = get_bound `Time appr transition in
         if Bound.compare_asy original_bound new_bound = 1 then (
@@ -471,10 +471,10 @@ let handle_timeout_cfr method_name non_linear_transitions =
           in
           (*Calculates concrete bounds*)
           let handle_cfr_complexity =
-            let org_bound = Bound.sum_sequence (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))  in
-            let cfr_bound = Bound.sum (Enum.map
-                                      (fun scc -> Bound.sum_sequence (Base.Sequence.map ~f:(Approximation.timebound updated_appr_cfr) (Base.Set.to_sequence scc)))
-                                      (List.enum cfr_sccs))  in
+            let org_bound = Bound.sum (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))  in
+            let cfr_bound = Bound.sum (OurBase.Sequence.map
+                                      ~f:(fun scc -> Bound.sum (Base.Sequence.map ~f:(Approximation.timebound updated_appr_cfr) (Base.Set.to_sequence scc)))
+                                      (OurBase.Sequence.of_list cfr_sccs))  in
             if (Bound.compare_asy org_bound cfr_bound) < 1 then handle_no_improvement (Bound.to_string ~pretty:true org_bound) (Bound.show_complexity @@ Bound.asymptotic_complexity cfr_bound) else
               (f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
               program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)

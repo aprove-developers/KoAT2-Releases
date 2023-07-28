@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 let is_zero =
   Z.(equal zero)
@@ -8,7 +8,6 @@ let pow_ourint i n =
   let rec helper i m = if is_zero m then one else mul i (helper i (m - one)) in
   helper i n
 
-include Number.MakeNumeric(struct include Z let modulo = ((mod)) let pow = pow_ourint end)
 include Z
 
 let (=~=) = equal
@@ -35,4 +34,4 @@ let rec max_list = function
   | [] -> zero
   | x::xs -> max x (max_list xs)
 
-let sum_list = List.fold (+) zero
+let sum_list = List.fold ~f:(+) ~init:zero

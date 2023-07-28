@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 exception Div_Zero of string
 
@@ -16,20 +16,13 @@ let pow_ourint b e =
   else
     one / pow_ourint_tail_rec_pos_e one (Z.neg e)
 
-include Number.MakeNumeric(struct
-    include Q
-    let succ = Q.((+) one)
-    let pred a = Q.(a - one)
-    let modulo _ _  = failwith "modulo not defined for floats"
-    let pow b e = pow_ourint b (to_bigint e)
-  end)
 include Q
 
 let pow b e = pow_ourint b Z.(of_int e)
 
 let is_integral t = OurInt.equal OurInt.one t.den
-let sum = Enum.fold (+) zero
-let list_sum = sum % List.enum
+let sum = Sequence.fold ~f:(+) ~init:zero
+let list_sum = sum % Sequence.of_list
 
 let (=~=) = equal
 

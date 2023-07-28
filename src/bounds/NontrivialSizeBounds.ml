@@ -74,7 +74,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       scc
       |> Set.to_sequence % Set.union_list (module RV.RVTuple_) % List.map ~f:pre_out_scc
       |> Sequence.map ~f:(uncurry get_sizebound)
-      |> Bound.sum_sequence
+      |> Bound.sum
       |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
     in
 
@@ -106,14 +106,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             let scaling = transition_scaling_factor t in
             if (OurInt.(equal scaling one)) then Bound.one else Bound.exp scaling (get_timebound t)
          )
-      |> Bound.product_sequence
+      |> Bound.product
     in
 
     let incoming_constant rv v =
       Set.to_sequence (pre_out_scc rv)
       |> Sequence.filter ~f:(fun (_,v') -> Var.equal v v')
       |> Sequence.map ~f:(uncurry get_sizebound)
-      |> Bound.sum_sequence
+      |> Bound.sum
     in
 
     let rv_constant = Bound.of_int % LSB.constant % Tuple2.first % get_lsb in
@@ -125,7 +125,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           (VarSet.of_sequence @@ scc_variables rv)
         |> Set.to_sequence
       in
-      Bound.(rv_constant rv + (Sequence.map ~f:(incoming_constant rv) rv_vars |> sum_sequence))
+      Bound.(rv_constant rv + (Sequence.map ~f:(incoming_constant rv) rv_vars |> sum))
     in
 
     let transition_effect t =
@@ -145,7 +145,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
              else
                Bound.(get_timebound t * transition_effect t)
            )
-      |> Bound.sum_sequence
+      |> Bound.sum
     in
 
 

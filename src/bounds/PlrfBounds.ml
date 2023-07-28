@@ -30,7 +30,7 @@ let improve_with_plrf program (class_appr,appr) rank =
         let rank_size_bound v =
           Set.to_sequence entry_gts_to_loc
           |> Sequence.map ~f:(fun gt -> ExpApproximation.sizebound appr (gt,entry_loc) v)
-          |> RealBound.sum_sequence
+          |> RealBound.sum
         in
         let rank_at_loc = Plrf.rank rank entry_loc in
         let rank_bounded = RealBound.substitute_f rank_size_bound (RealBound.of_poly rank_at_loc) in
@@ -38,11 +38,11 @@ let improve_with_plrf program (class_appr,appr) rank =
         let inc_det_timebound =
           Sequence.of_list class_trans_to_loc
           |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
-          |> RealBound.of_intbound % Bound.sum_sequence
+          |> RealBound.of_intbound % Bound.sum
         in
         RealBound.(inc_det_timebound * rank_bounded)
       )
-    |> RealBound.sum_sequence
+    |> RealBound.sum
   in
   Logger.log logger Logger.DEBUG (fun () -> "improve_with_plrf", [ "rank", Plrf.to_string rank
                                                                 ; "bound", RealBound.to_string new_bound]) ;

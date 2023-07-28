@@ -1,6 +1,6 @@
 open OurBase
 
-include OurBase.MakeSetCreators0(Var)
+include MakeSetCreators0(Var)
 
 let equal = Set.equal
 

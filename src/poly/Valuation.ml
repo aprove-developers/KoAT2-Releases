@@ -9,32 +9,32 @@ module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring)
 
     let from entries =
       let addEntry entry = match entry with
-        | (key, value) -> Base.Map.add_exn ~key ~data:value in
+        | (key, value) -> Map.add_exn ~key ~data:value in
       List.fold_left ~f:(fun map keyadder -> keyadder map) ~init:M.empty (List.map ~f:addEntry entries)
 
     let zero vars = from (List.map ~f:(fun var -> (var, Value.zero)) vars)
 
-    let eval indet t = Base.Map.find_exn t indet
+    let eval indet t = Map.find_exn t indet
 
-    let eval_opt indet t = Base.Map.find t indet
+    let eval_opt indet t = Map.find t indet
 
     let is_defined valuation var =
-      Base.Map.mem valuation var
+      Map.mem valuation var
 
-    let indeterminates t = List.map ~f:Tuple2.first (Base.Map.to_alist t)
+    let indeterminates t = List.map ~f:Tuple2.first (Map.to_alist t)
 
     let vars valuation =
-      Sequence.map ~f:(Base.Set.to_sequence % I.vars % Tuple2.first) (Map.to_sequence valuation)
+      Sequence.map ~f:(Set.to_sequence % I.vars % Tuple2.first) (Map.to_sequence valuation)
       |> Sequence.join
       |> VarSet.stable_dedup_list % Sequence.to_list
 
     let bindings: t -> (indeterminate * value) Sequence.t =
-      Base.Map.to_sequence
+      Map.to_sequence
 
     let to_string (valuation: t) =
       let output = Buffer.create 100 in
       Buffer.add_string output "{\n";
-      Base.Map.iteri ~f:(fun ~key ~data -> Buffer.add_string output @@ "  "^I.to_string key ^ ": " ^ Value.to_string data ^ ",\n") valuation;
+      Map.iteri ~f:(fun ~key ~data -> Buffer.add_string output @@ "  "^I.to_string key ^ ": " ^ Value.to_string data ^ ",\n") valuation;
       Buffer.add_string output "}\n";
       Buffer.contents output
   end

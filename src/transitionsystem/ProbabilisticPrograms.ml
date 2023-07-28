@@ -73,7 +73,7 @@ module ProbabilisticTransitionLabel_ = struct
     let mk ~gt_id ~patterns ~probability ~assignments ~cost ~guard  =
       let map_to_arg_vars =
         Base.Sequence.zip (Base.Sequence.of_list patterns) Var.args
-        |> RenameMap.of_enum % List.enum % Base.Sequence.to_list
+        |> RenameMap.of_sequence
       in
       let update =
         Base.Sequence.of_list assignments
@@ -542,8 +542,8 @@ module GeneralTransition = struct
           ~(guard:Guard.t)
           ~(rhss: (OurFloat.t * UpdateElement_.t list * Location.t) list) : t =
       let total_prob =
-        List.enum rhss
-        |> Enum.map (Tuple3.first)
+        OurBase.Sequence.of_list rhss
+        |> OurBase.Sequence.map ~f:Tuple3.first
         |> OurFloat.sum
       in
       (if not (OurFloat.equal OurFloat.one total_prob) then raise ProbabilitiesDoNotSumToOne);
@@ -567,7 +567,7 @@ module GeneralTransition = struct
       in
 
       (* rename program vars to arg vars *)
-      let rename_map = RenameMap.of_enum % List.enum % Base.Sequence.to_list @@ Base.Sequence.zip (Base.Sequence.of_list patterns) Var.args in
+      let rename_map = RenameMap.of_sequence @@ Base.Sequence.zip (Base.Sequence.of_list patterns) Var.args in
       let rhss = List.map (Tuple2.map1 (ProbabilisticTransitionLabel_.rename rename_map)) rhss in
 
       { transitions = ProbabilisticTransitionSet.of_list @@
