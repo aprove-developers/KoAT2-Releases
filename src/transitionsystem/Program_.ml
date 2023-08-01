@@ -231,6 +231,12 @@ struct
 
   let remove_non_contributors vset = map_labels (TL.remove_non_contributors vset)
 
+  module InternalTest = struct
+    let get_pre_cache program = with_pre_cache program @@ fun pre_cache ->
+      Hashtbl.copy pre_cache
+    let compute_pre = compute_pre
+  end
+
 end
 
 module ProgramOverLocation(L: ProgramTypes.Location) =

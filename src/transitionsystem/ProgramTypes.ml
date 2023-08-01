@@ -398,6 +398,16 @@ module type Program = sig
 
   (** Remove the given variables that do not contribute to the problem *)
   val remove_non_contributors: VarSet.t -> t -> t
+
+  (** This module exposes internal structure. *)
+  (** Useful for tests. *)
+  module InternalTest: sig
+    (** Obtain the internal cache of pre transitions *)
+    val get_pre_cache: t -> (transition, transition_set) Hashtbl.t
+
+    (** Compute pre transitions by ignoring the cache. *)
+    val compute_pre: t -> transition -> transition Sequence.t
+  end
 end
 
 (** This can be helpfun in regards with Set.Make, Map.Make and coercion of result variables *)
