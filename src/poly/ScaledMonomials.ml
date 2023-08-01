@@ -1,5 +1,4 @@
-open Batteries
-open Big_int.Infix
+open OurBase
 
 module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring) =
   struct
@@ -47,7 +46,7 @@ module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring)
 
         let (>) s1 s2 = match (s1, s2) with
           (* TODO Find some rules to compare *)
-          | (s1, s2) -> if Monomial.(monomial s1 =~= monomial s2) && (coeff s1 > coeff s2) then
+          | (s1, s2) -> if Monomial.(monomial s1 =~= monomial s2) && Value.compare (coeff s1) (coeff s2) > 0 then
                           Some true
                         else None
 

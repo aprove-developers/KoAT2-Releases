@@ -1,6 +1,6 @@
-open Batteries
+open OurBase
 open ConstraintTypes
-open Lexing
+open Caml.Lexing
 
 let position_string lexbuf =
   let pos = lexbuf.lex_curr_p in
@@ -9,7 +9,7 @@ let position_string lexbuf =
                  (pos.pos_cnum - pos.pos_bol + 1)
                  (lexeme lexbuf)
 
-let read_ rule lexbuf =
+let read_ rule (lexbuf: Caml.Lexing.lexbuf) =
   ParserUtil.empty_cache ();
   try rule Lexer.read lexbuf with
   | Lexer.SyntaxError msg ->
@@ -18,7 +18,7 @@ let read_ rule lexbuf =
      raise (ParserUtil.Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
 
 let read_target_from_file_ target path =
-  read_ target (Lexing.from_channel @@ File.open_in path)
+  read_ target (Lexing.from_channel @@ Stdio.In_channel.create ~binary:false path)
 
 let read_file =
   read_target_from_file_ Parser.onlyProgram

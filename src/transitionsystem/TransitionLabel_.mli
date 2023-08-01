@@ -1,5 +1,5 @@
 (** Modul handles labels of classical transitions. *)
-open Batteries
+open OurBase
 (** A transition is an edge of a transition system.
     It connects two locations and is annotated with a guard and an update.
     A guard has to be fulfiled for a state to reach another state via the transition.
@@ -22,7 +22,7 @@ val mk : id:int option ->
 val append : t -> t -> t
 
 (** Returns the update map of the transitionlabel *)
-val update_map : t -> Polynomials.Polynomial.t Map.Make(Var).t
+val update_map : t -> Polynomials.Polynomial.t ProgramTypes.var_map
 
 (** Returns the update of a variable. *)
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t

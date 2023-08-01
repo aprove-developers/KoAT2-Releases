@@ -9,6 +9,8 @@ homepage: "https://github.com/aprove-developers/Koat2"
 bug-reports: "https://github.com/aprove-developers/Koat2/issues"
 depends: [
   "apron"
+  "base"
+  "stdio"
   "batteries"
   "cmdliner"
   "conf-gmp"
@@ -26,6 +28,7 @@ depends: [
   "parmap"
   "ppx_deriving"
   "ppx_deriving_cmdliner"
+  "ppx_sexp_conv"
   "zarith"
   "z3" {= "4.12.2"}
 ]

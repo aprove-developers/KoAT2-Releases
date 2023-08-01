@@ -1,5 +1,5 @@
 (** Main Module *)
-open Batteries
+open Base
 open Koat2
 open ProgramModules
 open RVGTypes
@@ -26,7 +26,7 @@ let subcommands =
 
 let default_cmd params =
   if params.version then
-    `Ok (Printf.printf "%s\n" VersionString.version)
+    `Ok (Stdio.printf "%s\n" VersionString.version)
   else `Help (`Pager, None)
 
 let () =

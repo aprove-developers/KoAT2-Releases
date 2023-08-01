@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open BoundsInst
 open Polynomials
 open ProgramModules
@@ -6,21 +6,21 @@ open ProgramTypes
 module Automorphism =
   struct
   type t = {
-    poly : RationalPolynomial.t VarMap.t;
-    inv_poly :  RationalPolynomial.t VarMap.t;
+    poly : RationalPolynomial.t var_map;
+    inv_poly :  RationalPolynomial.t var_map;
   }
 
   let to_string t =
-    "Automorphism:\n" ^ VarMap.fold (fun var poly str -> str ^ (Var.to_string var) ^ " -> " ^ (RationalPolynomial.to_string poly) ^ "\n") t.poly "" ^
-    "Inverse: \n" ^     VarMap.fold (fun var poly str -> str ^ (Var.to_string var) ^ " -> " ^ (RationalPolynomial.to_string poly) ^ "\n") t.inv_poly ""
+    "Automorphism:\n" ^ Base.Map.fold ~f:(fun ~key ~data str -> str ^ (Var.to_string key) ^ " -> " ^ (RationalPolynomial.to_string data) ^ "\n") t.poly ~init:"" ^
+    "Inverse: \n" ^     Base.Map.fold ~f:(fun ~key ~data str -> str ^ (Var.to_string key) ^ " -> " ^ (RationalPolynomial.to_string data) ^ "\n") t.inv_poly ~init:""
 
-  let identity = {poly = VarMap.empty; inv_poly = VarMap.empty}
+  let identity = {poly = Base.Map.empty (module Var); inv_poly = Base.Map.empty (module Var)}
 
   let apply_to_bound bound = function
     | None -> bound
-    | Some t -> List.fold_right (fun var bound ->
+    | Some t -> List.fold_right ~f:(fun var bound ->
       let bound_of_inv_poly =
-        Bound.of_poly @@ RationalPolynomial.overapprox (VarMap.find var t.inv_poly)
+        Bound.of_poly @@ RationalPolynomial.overapprox (Base.Map.find_exn t.inv_poly var)
       in
-        Bound.substitute var ~replacement:bound_of_inv_poly bound) (List.of_enum @@ VarMap.keys t.inv_poly) bound
+        Bound.substitute var ~replacement:bound_of_inv_poly bound) (Base.Map.keys t.inv_poly) ~init:bound
 end

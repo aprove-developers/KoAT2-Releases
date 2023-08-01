@@ -31,7 +31,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   (** Tries to find a suitable multiphase ranking function for the given transitions T'.
   * The int corresponds to the maximum depth of the mprf *)
-  val find : measure -> PM.Program.t -> int -> t Enum.t
+  val find : measure -> PM.Program.t -> int -> t Base.Sequence.t
 
   val find_scc : measure -> PM.Program.t ->
     (PM.Transition.t -> bool) ->  (* Is the transition time-bounded? *)

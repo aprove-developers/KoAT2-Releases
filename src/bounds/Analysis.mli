@@ -6,31 +6,34 @@ open RVGTypes
 
 (** These types are used to limit certain analyses methods to the specified underlying types. *)
 (** Together with the GADTs they are used to prove type equalities *)
-type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
+type ('prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
   | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
               -> ( ProgramModules.Program.t
-                , ProgramModules.TransitionSet.t
+                , ProgramModules.Transition.comparator_witness
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
                 , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
-type ('prog, 'tset, 'appr) closed_form_size_bounds =
-  | NoClosedFormSizeBounds: ('prog,'trans_set,'appr) closed_form_size_bounds
-  | ComputeClosedFormSizeBounds: (ProgramModules.Program.t,ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
+type ('trans, 'prog, 'trans_compare, 'appr) closed_form_size_bounds =
+  | NoClosedFormSizeBounds: ('trans, 'prog,'trans_compare,'appr) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds: ( ProgramModules.Transition.t
+                                 , ProgramModules.Program.t
+                                 , ProgramModules.Transition.comparator_witness
+                                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
 
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
-  ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
+  ; closed_form_size_bounds: ('trans, 'prog, 'tset,'appr) closed_form_size_bounds
   ; analysis_type: [`Complexity | `Termination]
   }
 
 type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , ProgramModules.Program.t
-                                   , ProgramModules.TransitionSet.t
+                                   , ProgramModules.Transition.comparator_witness
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
                                    , Loop.Make(ProgramModules).t
@@ -45,7 +48,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   (** The type of the configuration for the program *)
   type conf_type =
-    (PM.Transition.t,PM.Program.t,PM.TransitionSet.t,
+    (PM.Transition.t,PM.Program.t,PM.Transition.comparator_witness,
      MakeRVG(PM).t,MakeRVG(PM).scc,Loop.Make(PM).t, Approximation.MakeForClassicalAnalysis(PM).t) analysis_configuration
 
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)

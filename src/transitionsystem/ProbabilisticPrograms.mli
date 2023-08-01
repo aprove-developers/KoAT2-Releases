@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module ProbabilisticTransitionLabel: sig
   include ProgramTypes.TransitionLabel
@@ -13,14 +13,18 @@ module ProbabilisticTransitionLabelNonProbOverappr: sig
 end
 
 module ProbabilisticTransition: sig
-  include module type of Transition_.TransitionOver(ProbabilisticTransitionLabel)(Location)
+  include ProgramTypes.Transition
+    with type location = Location.t
+     and type transition_label = ProbabilisticTransitionLabel.t
 
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
   val same_gt: t -> t -> bool
 end
 
 module ProbabilisticTransitionNonProbOverappr: sig
-  include module type of Transition_.TransitionOver(ProbabilisticTransitionLabelNonProbOverappr)(Location)
+  include ProgramTypes.Transition
+    with type location = Location.t
+     and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
 end
 
 module GeneralTransition: sig
@@ -54,7 +58,12 @@ module GeneralTransition: sig
   val ids_to_string: ?pretty:bool -> t -> string
 
   (** compare gt_ids*)
+  val equal: t -> t -> bool
   val compare: t -> t -> int
+
+  val hash: t -> int
+
+  val sexp_of_t: t -> Sexplib0.Sexp.t
 
   val vars: t -> VarSet.t
   val input_vars: t -> VarSet.t
@@ -66,13 +75,26 @@ module GeneralTransition: sig
 
   (** map over all contained probabilistic transitions *)
   val map_transitions: (ProbabilisticTransition.t -> ProbabilisticTransition.t) -> t -> t
+
+  include Comparator.S with type t := t
 end
 
 module GeneralTransitionSet: sig
   include ProgramTypes.TransitionSet
     with type elt = GeneralTransition.t
-     and type t = Set.Make(GeneralTransition).t
-     and type location_set = Location.LocationSetOver(Location).t
+     and type comparator_witness = GeneralTransition.comparator_witness
+     and type location_set = (Location.t, Location.comparator_witness) Set.t
+
+  include module type of MakeSetCreators0(GeneralTransition)
+
+  (** Returns a string representing the transition set. *)
+  val to_string : t -> string
+
+  (** Returns a short string representing the transition set. *)
+  val to_id_string : t -> string
+
+  type location_set = (Location.t, Location.comparator_witness) Set.t
+  val locations: t -> location_set
 
   val all_transitions: t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
 end
@@ -101,7 +123,7 @@ module ProbabilisticProgram: sig
   (** At least one transition of the general transition needs to be contained in the SCC so that *)
   (** the general transition itself is also viewed as part of the SCC. *)
   (** The resulting enum is in topological order *)
-  val sccs_gts : t -> GeneralTransitionSet.t Enum.t
+  val sccs_gts : t -> GeneralTransitionSet.t List.t
 
   val pre_gt_cached: t -> GeneralTransition.t -> GeneralTransitionSet.t
 

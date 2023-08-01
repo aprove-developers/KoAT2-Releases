@@ -1,5 +1,5 @@
 (** Module provides mapping from variables to other variables. *)
-open Batteries
+open OurBase
 
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
 
@@ -13,7 +13,7 @@ type var = Var.t
 val from : (var * var) list -> t
 
 (** Creates a rename map from a two variable association enum *)
-val of_enum : (var * var) Enum.t -> t
+val of_sequence : (var * var) Sequence.t -> t
 
 (** Creates a rename map from a two strings (vars) association list *)
 val from_native : (string * string) list -> t

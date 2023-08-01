@@ -1,9 +1,11 @@
-open Batteries
+open OurBase
 open Polynomials
 
 module UpdateValue : sig
   type t = Var of Var.t
          | Dist of ProbabilityDistribution.t [@@deriving eq,ord]
+
+  val sexp_of_t : t -> OurBase.Sexp.t
 
   val to_string: ?pretty:bool -> ?to_file:bool -> t -> string
 
@@ -28,6 +30,8 @@ module UpdateValue : sig
 
   (* Get a polynomial representing the corresponding non-central moment, i.e. E(d^i) *)
   val moment_poly : t -> int -> RealPolynomial.t
+
+  include Comparator.S with type t := t
 end
 
 include module type of PolynomialOverIndeterminate(UpdateValue)(OurInt)

@@ -1,4 +1,3 @@
-
 open Batteries
 open BoundsInst
 open Constraints
@@ -20,8 +19,6 @@ module VT = struct
   let hash = Hashtbl.hash
 end
 
-module VarMap = Map.Make(Var)
-
 module SizeBoundTable = Hashtbl.Make(VT)
 
 let size_bound_table: (Transition.t * Bound.t) list option SizeBoundTable.t = SizeBoundTable.create 10
@@ -37,7 +34,7 @@ let lift appr t var = function
   | None -> Bound.infinity
   | Some xs -> xs
                |> List.map (fun (entry,local_size) -> Bound.substitute_f (Approximation.sizebound appr entry) local_size)
-               |> List.enum
+               |> OurBase.Sequence.of_list
                |> Bound.sum
                |> tap (fun b -> TWN_Proofs.proof_append FormattedString.(mk_str_header_small @@ "TWN Size Bound - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " and " ^ Var.to_string ~pretty:true var ^ ": " ^ Bound.to_string ~pretty:true b))
 
@@ -51,7 +48,7 @@ let compute_time_bound loop =
 
 let improve_t program trans t appr =
   TWN_Proofs.proof_reset();
-  VarSet.fold (fun var appr ->
+  Base.Set.fold ~f:(fun appr var ->
     if Polynomial.is_linear (TransitionLabel.update (Transition.label t) var |? Polynomial.of_var var) then
       appr
     else
@@ -83,7 +80,7 @@ let improve_t program trans t appr =
                   TWN_Proofs.proof_append FormattedString.(mk_str_line @@ "loop: " ^ Loop.to_string loop_red <> mk_str_line @@ "closed-form: " ^ PE.to_string_pretty closed_form <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
                   List.map (fun (entry,traversal) -> entry,
                     PE.overapprox closed_form time_bound
-                    |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var))) entries_traversal
+                    |> Bound.substitute_f (fun var -> Bound.of_poly @@ (Base.Map.find traversal var |? Polynomial.of_var var))) entries_traversal
                     |> Option.some)
             in
             SizeBoundTable.add size_bound_table (t,var) local_bound;
@@ -95,9 +92,8 @@ let improve_t program trans t appr =
         else
           appr)
       else
-        appr) (TransitionLabel.input_vars (Transition.label t)) appr
+        appr) (TransitionLabel.input_vars (Transition.label t)) ~init:appr
 
 let improve program ?(scc = None) appr =
-  let trans = scc |? TransitionSet.filter (Approximation.is_time_bounded appr) @@ Program.transitions program in
-  TransitionSet.fold (improve_t program trans) trans appr
-
+  let trans = scc |? Base.Set.filter ~f:(Approximation.is_time_bounded appr) @@ Program.transitions program in
+  Base.Set.fold ~f:(flip @@ improve_t program trans) trans ~init:appr

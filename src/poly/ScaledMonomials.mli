@@ -1,5 +1,5 @@
 (** Provides default implementation of a scaled monomial, i.e., a finite product of powers (e.g.: 5xy^2, y but not 5xy^2 + 7). *)
-open Batteries
+open OurBase
 
 module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value: PolyTypes.Ring):
   PolyTypes.ScaledMonomial

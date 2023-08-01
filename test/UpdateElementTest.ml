@@ -1,5 +1,5 @@
-open Batteries
 open Koat2
+open OurBase
 open OUnit2
 open Helper
 open Formulas
@@ -9,7 +9,7 @@ let tests =
   "UpdateElementTests" >::: [
     "check_update_as_guard_of_max_degree" >:::
         List.mapi
-          (fun i (guard, updated_var, update, expected_result) ->
+          ~f:(fun i (guard, updated_var, update, expected_result) ->
              "case "^Int.to_string i >:: fun _ ->
                let guard           = Readers.read_constraint guard in
                let updated_var     = Var.of_string updated_var in

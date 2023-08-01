@@ -1,5 +1,5 @@
 (** Provides a unified interface of the parser and lexer for transition graphs. *)
-open Batteries
+open OurBase
 open BoundsInst
 
 (** Provides a unified interface of the parser and lexer for transition graphs.

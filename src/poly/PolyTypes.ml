@@ -1,5 +1,5 @@
 (** Provides all modules related to polynomials. *)
-open Batteries
+open OurBase
 
 module type OurNumber =
   sig
@@ -27,7 +27,8 @@ module type OurNumber =
     val (+): t -> t -> t
 
     module Compare: sig
-      val (>): t ->t -> bool
+      val (>): t -> t -> bool
+      val (>=): t -> t -> bool
     end
 
 
@@ -62,6 +63,8 @@ module type Indeterminate = sig
   val of_var: Var.t -> t
 
   val equal: t -> t -> bool
+
+  include Comparator.S with type t := t
 end
 
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
@@ -107,8 +110,8 @@ module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := 
       if b1 =~= b2 then
         Some true
       else b1 > b2
-    let (<) b1 b2 = Option.map not (b1 >= b2)
-    let (<=) b1 b2 = Option.map not (b1 > b2)
+    let (<) b1 b2 = Option.map ~f:not (b1 >= b2)
+    let (<=) b1 b2 = Option.map ~f:not (b1 > b2)
   end
 
 (** A valuation is a function which maps from a finite set of variables to values. *)
@@ -145,7 +148,7 @@ module type Valuation =
     val vars: t -> Var.t list
 
     (** Returns the indeterminates to value bindings. *)
-    val bindings : t -> (indeterminate * value) Enum.t
+    val bindings : t -> (indeterminate * value) Sequence.t
 
     (** Converts the valuation into a string using the print function. *)
     val to_string : t -> string
@@ -173,7 +176,7 @@ module type Evaluable =
     val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
     (* Get all indeterminates occuring in the evaluable *)
-    val indeterminates: t -> indeterminate Enum.t
+    val indeterminates: t -> indeterminate list
 
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
@@ -207,11 +210,11 @@ module type Monomial =
     (* Can the monomial take integral values only, i.e., all vars are of sort Var.Int? *)
     val is_integral: t -> bool
 
-    (** Creates a monomial from an enum of indeterminates and their exponents. *)
-    val of_enum : (indeterminate * int) Enum.t -> t
+    (** Creates a monomial from a sequence of indeterminates and their exponents. *)
+    val of_sequence : (indeterminate * int) Sequence.t -> t
 
-    (** Returns an enum of all occurring indeterminates with their degree *)
-    val to_enum : t -> (indeterminate * int) Enum.t
+    (** Returns a sequence of all occurring indeterminates with their degree *)
+    val to_sequence : t -> (indeterminate * int) Sequence.t
 
     (** Creates a monomial from an indeterminate and a exponent. *)
     val lift : indeterminate -> int -> t
@@ -329,11 +332,11 @@ module type Math =
 
     include BaseMath
 
-    (** Returns the sum of all enums elements. *)
-    val sum : t Enum.t -> t
+    (** Returns the sum of all sequence elements. *)
+    val sum : t Sequence.t -> t
 
-    (** Returns the product of all enums elements. *)
-    val product : t Enum.t -> t
+    (** Returns the product of all sequence elements. *)
+    val product : t Sequence.t -> t
 
     (** Subtracts the second element from the first one. *)
     val sub : t -> t -> t
@@ -360,10 +363,10 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     include Base
 
     (** Returns the sum of all enums elements. *)
-    let sum = Enum.fold add zero
+    let sum = Sequence.fold ~f:add ~init:zero
 
     (** Returns the product of all enums elements. *)
-    let product = Enum.fold mul one
+    let product = Sequence.fold ~f:mul ~init:one
 
     (** Subtracts the second element from the first one. *)
     let sub t1 t2 = add t1 (neg t2)
@@ -470,8 +473,6 @@ module type Polynomial =
 
     (** Creates a polynomial from a coefficient list and a corresponding indeterminate list. *)
     val of_coeff_list : value list -> indeterminate list -> t
-
-    val of_coeffs_list_univariate : indeterminate -> value list -> t
 
     (** {1 {L Following methods return information over the polynomial.}} *)
 

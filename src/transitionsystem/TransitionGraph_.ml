@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 module Make_(T: ProgramTypes.Transition)
             (L: ProgramTypes.Location with type t = T.location)
@@ -12,23 +12,24 @@ module Make_(T: ProgramTypes.Transition)
   type location_set = Location.LocationSetOver(L).t
   type transition_label = T.transition_label
   type transition = T.t
-  type transition_set = Transition_.TransitionSetOver(T)(L).t
+  type transition_set = (T.t, T.comparator_witness) Base.Set.t
 
-  module LocationSet = Location.LocationSetOver(L)
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
   module Location = L
 
   include G
 
-  let add_locations locations graph = Enum.fold add_vertex graph locations
+  let add_locations locations graph =
+    Base.(Sequence.fold ~f:add_vertex ~init:graph locations)
 
-  let add_transitions transitions graph = Enum.fold add_edge_e graph transitions
+  let add_transitions transitions graph =
+    Base.(Sequence.fold ~f:add_edge_e ~init:graph transitions)
 
   let mk transitions = empty |> add_transitions transitions
 
-  let locations graph = fold_vertex LocationSet.add graph LocationSet.empty
+  let locations graph = fold_vertex (flip Base.Set.add) graph (Base.Set.empty (module L))
 
-  let transitions graph = fold_edges_e TransitionSet.add graph TransitionSet.empty
+  let transitions graph = fold_edges_e (flip Base.Set.add) graph TransitionSet.empty
 
   let map_transitions f t =
     let module MapModule = Graph.Gmap.Edge(G)(struct include G let empty () = empty end) in
@@ -38,17 +39,19 @@ module Make_(T: ProgramTypes.Transition)
 
   let loc_transitions graph locations =
     transitions graph
-    |> TransitionSet.filter (fun (l,_,l') ->
-           List.mem_cmp Location.compare l locations
-           && List.mem_cmp Location.compare l' locations)
+    |> Base.Set.filter ~f:(fun (l,_,l') ->
+           List.mem ~equal:Location.equal locations l
+           && List.mem ~equal:Location.equal locations l')
 
   let equivalent graph1 graph2 =
-    let module Equivalence_TransitionSet =
-      Set.Make(struct include T let compare = T.compare_equivalent end)
+    let module Equivalence_TransitionSet = struct
+      include T
+      include Base.Comparator.Make(struct include T let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque let compare = T.compare_equivalent end)
+      end
     in
-    LocationSet.equal (locations graph1) (locations graph2)
-    && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
-         (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
+    Base.Set.equal (locations graph1) (locations graph2)
+    && Base.Set.equal (graph1 |> transitions |> Base.Set.to_sequence |> Base.Set.of_sequence (module Equivalence_TransitionSet))
+         (graph2 |> transitions |> Base.Set.to_sequence |> Base.Set.of_sequence (module Equivalence_TransitionSet))
 
   let replace_edge_e old_transition new_transition graph =
     add_edge_e (remove_edge_e graph old_transition) new_transition
@@ -56,14 +59,14 @@ module Make_(T: ProgramTypes.Transition)
   let add_invariant location invariant graph =
     location
     |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
-    |> List.fold_left (fun result transition ->
+    |> List.fold_left ~f:(fun result transition ->
            replace_edge_e transition (T.add_invariant invariant transition) result
-         ) graph
+         ) ~init:graph
 
   let sccs graph =
     let module SCC = Graph.Components.Make(G) in
-    List.map (loc_transitions graph) @@ SCC.scc_list graph
-    |> List.filter (not % TransitionSet.is_empty)
+    List.map ~f:(loc_transitions graph) @@ SCC.scc_list graph
+    |> List.filter ~f:(not % Base.Set.is_empty)
 
   let sccs_ trans =
     let graph = add_transitions trans empty in

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 (* Momentan ignorieren wir Nenner die 0 sind. *)
 
@@ -39,9 +39,9 @@ let of_int_tuple (n,d) =
 let of_string (s:string) =
   let fraction = Str.split (Str.regexp "[^0-9.\\-]+") s in
   if List.length fraction == 1 then
-    of_int @@ int_of_string @@ List.first fraction
+    of_int @@ int_of_string @@ List.hd_exn fraction
   else
-    of_int_tuple (int_of_string @@  List.at fraction 0, int_of_string @@  List.at fraction 1)
+    of_int_tuple (int_of_string @@  List.nth_exn fraction 0, int_of_string @@  List.nth_exn fraction 1)
 
 let to_int (n,d) = OurInt.div n d |> OurInt.to_int
 

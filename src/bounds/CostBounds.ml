@@ -1,5 +1,5 @@
 (** Implementation of cost-bounds.*)
-open Batteries
+open OurBase
 open BoundsInst
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -20,21 +20,20 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         else
           let overappr_cost =
             (* Precompute and Cache *)
-            let temp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
+            let temp_vars = Base.Set.diff (Program.vars program) (Program.input_vars program) in
 
             (* We can not look at the size bounds for predecessor transitions if transition is initial *)
             if Program.is_initial program transition then
-              if VarSet.exists (flip VarSet.mem temp_vars) (Polynomials.Polynomial.vars (Transition.cost transition)) then
+              if Set.exists ~f:(Set.mem temp_vars) (Polynomials.Polynomial.vars (Transition.cost transition)) then
                 Bound.infinity
               else
                 Bound.of_poly (Transition.cost transition)
 
             (* Overapproximate the cost by looking at the sizes of incoming transitions *)
             else
-              let inc_trans = List.of_enum @@ Program.pre program transition in
+              let inc_trans = Program.pre program transition in
               let inc_size v =
-                List.enum inc_trans
-                |> Enum.map (fun t -> Approximation.sizebound appr t v)
+                Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans
                 |> Bound.sum
               in
               Bound.of_poly (Transition.cost transition)

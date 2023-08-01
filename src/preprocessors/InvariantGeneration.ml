@@ -1,5 +1,5 @@
 (** Implemenation of a preprocessor which adds invariants to transitions.*)
-open Batteries
+open OurBase
 open Polynomials
 open Constraints
 
@@ -13,14 +13,14 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
   open M
 
   (** A map from program locations to anything. *)
-  module LocationMap = Hashtbl.Make(Location)
-  module TransitionMap = Hashtbl.Make(Transition)
+  type 'a location_map = (Location.t,'a) Hashtbl.t
+  type 'a transition_map = (Transition.t,'a) Hashtbl.t
 
   (* The number of steps per transition to be performed during fixpoint iteration without widening*)
   let max_steps_without_widening = 5
 
   (** An abstract value for all values of variable at every program location. *)
-  type 'a program_abstract = ('a Apron.Abstract1.t) LocationMap.t
+  type 'a program_abstract = ('a Apron.Abstract1.t) location_map
 
   let transform_program_ program_ (program: Program.t) =
     let open ApronInterface.Koat2Apron in
@@ -29,7 +29,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
     let transitions = Program.transitions program_ in
     let locations = Program.locations program_ in
 
-    let vars = List.fold (fun vars (_,t,_) -> VarSet.union vars (TransitionLabel.vars_without_memoization t)) VarSet.empty (TransitionSet.to_list transitions) in
+    let vars = List.fold ~f:(fun vars (_,t,_) -> Set.union vars (TransitionLabel.vars_without_memoization t)) ~init:VarSet.empty (Set.to_list transitions) in
 
     (** Creates the apron environment where all program_ variables are integer variables. *)
     let environment: Apron.Environment.t =
@@ -54,9 +54,9 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
       let assignments =
         vars
-        |> VarSet.to_array
-        |> Array.map update
-        |> Array.map (Option.map_default (poly_to_apron environment) any_value)
+        |> Set.to_array
+        |> Array.map ~f:update
+        |> Array.map ~f:(Option.value_map ~f:(poly_to_apron environment) ~default:any_value)
       in
       Apron.Abstract1.assign_texpr_array manager abstract (vars_to_apron vars) assignments None
       (* This is somehow necessary otherwise apron gets confused over variables with the same name (i.e. the same variables).  *)
@@ -79,15 +79,14 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
         All other values at other program locations are undefined in the beginning.
         This will change through assignments in the program. *)
     let bottom(*: 'a program_abstract*) =
-      locations
-      |> (LocationSet.enum: LocationSet.t -> Location.t Enum.t)
-      |> Enum.map (fun location ->
+      Set.to_list locations
+      |> List.map ~f:(fun location ->
             if Program.is_initial_location program_ location then
                 (location, Apron.Abstract1.top manager environment)
             else
               (location, Apron.Abstract1.bottom manager environment)
           )
-      |> LocationMap.of_enum
+      |> Hashtbl.of_alist_exn (module Location)
     in
 
     let find_fixpoint (program_abstract: 'a program_abstract): 'a program_abstract =
@@ -96,52 +95,50 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       (* TODO Maybe it is better to recompute transitions instead of locations. *)
       (** We use a modifiable stack here for performance reasons. *)
       let worklist: Transition.t Stack.t =
-        transitions
-        |> TransitionSet.enum
-        |> Stack.of_enum
+        Set.to_list transitions
+        |> Stack.of_list
       in
       let transition_steps =
-        TransitionMap.create (TransitionSet.cardinal transitions)
-        |> tap (fun m -> TransitionSet.iter (fun t -> TransitionMap.add m t 0) transitions)
+        Hashtbl.create ~size:(Set.length transitions) (module Transition)
+        |> tap (fun m -> Set.iter ~f:(fun t -> Hashtbl.add_exn m ~key:t ~data:0) transitions)
       in
 
       let narrowing_abstract =
         let location_abstract l =
-          TransitionSet.filter (fun (_,_,l') -> Location.equal l l') transitions
-          |> TransitionSet.enum
-          |> Enum.map (fun t -> apply_transition t (Apron.Abstract1.top manager environment))
-          |> Enum.fold (Apron.Abstract1.join manager) (Apron.Abstract1.bottom manager environment)
+          Set.filter ~f:(fun (_,_,l') -> Location.equal l l') transitions
+          |> Set.to_sequence
+          |> Sequence.map ~f:(fun t -> apply_transition t (Apron.Abstract1.top manager environment))
+          |> Sequence.fold ~f:(Apron.Abstract1.join manager) ~init:(Apron.Abstract1.bottom manager environment)
         in
-        LocationSet.enum locations
+        Set.to_list locations
         (* The initial location does not have any ingoing transitions *)
-        |> Enum.filter (not % Program.is_initial_location program_)
-        |> Enum.map (fun location -> (location, location_abstract location))
-        |> LocationMap.of_enum
+        |> List.filter ~f:(not % Program.is_initial_location program_)
+        |> List.map ~f:(fun location -> (location, location_abstract location))
+        |> Hashtbl.of_alist_exn (module Location)
       in
 
       while not (Stack.is_empty worklist) do
-        let (l,t,l') = Stack.pop worklist in
-        let transfered_l_abstract = apply_transition (l,t,l') (LocationMap.find program_abstract l) in
-        let old_abstract = LocationMap.find program_abstract l' in
+        let (l,t,l') = Stack.pop_exn worklist in
+        let transfered_l_abstract = apply_transition (l,t,l') (Hashtbl.find_exn program_abstract l) in
+        let old_abstract = Hashtbl.find_exn program_abstract l' in
 
         if not (Apron.Abstract1.is_leq manager transfered_l_abstract old_abstract) then (
-          LocationMap.modify l' (fun _ ->
-            if TransitionMap.find transition_steps (l,t,l') < max_steps_without_widening then (
-              TransitionMap.modify (l,t,l') (Int.add 1) transition_steps;
+          Hashtbl.update program_abstract l' ~f:(fun _ ->
+            if Hashtbl.find_exn transition_steps (l,t,l') < max_steps_without_widening then (
+              Hashtbl.update transition_steps (l,t,l') ~f:((+) 1 % Option.value_exn);
               Apron.Abstract1.join manager old_abstract transfered_l_abstract
             ) else
               Apron.Abstract1.meet manager
                 (Apron.Abstract1.widening manager old_abstract transfered_l_abstract)
-                (LocationMap.find narrowing_abstract l')
-          ) program_abstract;
+                (Hashtbl.find_exn narrowing_abstract l')
+          );
 
           (* add succesor transitons to worklist *)
           TransitionGraph.succ_e (Program.graph program_) l'
-          |> List.enum
-          |> Enum.iter (fun transition ->
+          |> List.iter ~f:(fun transition ->
                 (*TODO comparison faster with 2 component transition id*)
-                if not (Enum.exists (Transition.equal transition) (Stack.enum worklist)) then
-                  Stack.push transition worklist
+                if not (List.exists ~f:(Transition.equal transition) (Stack.to_list worklist)) then
+                  Stack.push worklist transition
               )
         );
       done;
@@ -159,11 +156,11 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
     let invariants =
       bottom
       |> find_fixpoint
-      |> LocationMap.map (fun _ -> extract_invariant)
-      |> LocationMap.filter (not % Constraint.is_true)
+      |> Hashtbl.map ~f:extract_invariant
+      |> Hashtbl.filter ~f:(not % Constraint.is_true)
     in
 
-    if LocationMap.is_empty invariants then
+    if Hashtbl.is_empty invariants then
       MaybeChanged.same program
     else
       let add location invariant program =
@@ -171,8 +168,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
         ProofOutput.add_str_paragraph_to_proof (fun () -> "Found invariant " ^ Constraint.to_string ~pretty:true invariant ^ " for location "^Location.to_string location);
         Program.add_invariant location invariant program
       in
-      program
-      |> LocationMap.fold add invariants
+      Hashtbl.fold ~f:(fun ~key ~data -> add key data) invariants ~init:program
       |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
 
   let transform_program program =

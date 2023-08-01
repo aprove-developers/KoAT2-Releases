@@ -57,6 +57,10 @@ let enum_to_string content_to_string enum =
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
 
+let sequence_to_string sequence ~f =
+  let open OurBase in
+  let list = Sequence.to_list @@ Sequence.map ~f sequence in
+  "[" ^ String.concat ~sep:"; " list ^ "]"
 
 let memoize cache ~extractor f =
   let g x =
@@ -68,12 +72,25 @@ let memoize cache ~extractor f =
        y
   in g
 
+let memoize_base_hashtbl cache ~extractor f =
+  let g x =
+    match Base.Hashtbl.find cache (extractor x) with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Base.Hashtbl.add_exn cache ~key:(extractor x) ~data:y;
+       y
+  in g
+
 (* TODO: Hash a string into an integer. https://stackoverflow.com/questions/2624192/good-hash-function-for-strings *)
 let hash str =
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1
 
 let cat_maybes l=
   List.map Option.get (List.filter Option.is_some l)
+
+let cat_maybes_sequence l =
+  OurBase.Sequence.map ~f:Option.get (OurBase.Sequence.filter ~f:Option.is_some l)
 
 let cat_maybes_enum e =
   Enum.map Option.get (Enum.filter Option.is_some e)
@@ -133,6 +150,10 @@ let rec read_from_channel inp_chann =
 let read_process cmd =
   let chan = Unix.open_process_in cmd in
   read_from_channel chan
+
+let rec iterate_n_times (f: 'a -> 'a) (n: int) (a: 'a): 'a =
+  if n < 0 then raise (Invalid_argument "iterate_n_times: Negative Argument")
+  else if n = 0 then a else iterate_n_times f (n-1) (f a)
 
 module TypeEq = struct
   type (_,_) t =  | Refl: ('a,'a) t

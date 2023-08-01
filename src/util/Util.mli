@@ -23,16 +23,22 @@ val option_to_string : ('a -> string) -> 'a Option.t -> string
 
 val enum_to_string : ('a -> string) -> 'a Enum.t -> string
 
+val sequence_to_string: 'a OurBase.Sequence.t -> f:('a -> string) -> string
+
 val powerset : 'a Set.t -> ('a Set.t) Enum.t
 
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
 
 val memoize : ('a,'b) Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b
 
+val memoize_base_hashtbl : ('a,'b) Base.Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b
+
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int
 
 val cat_maybes : 'a option list -> 'a list
+
+val cat_maybes_sequence : 'a option OurBase.Sequence.t -> 'a OurBase.Sequence.t
 
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
 
@@ -53,6 +59,8 @@ val natural_to_superscript : int -> string
 val read_from_channel: BatInnerIO.input -> string
 
 val read_process: string -> string
+
+val iterate_n_times: ('a -> 'a) -> int -> 'a -> 'a
 
 (** Reasoning about type equalities *)
 module TypeEq: sig

@@ -40,14 +40,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> tap @@ fun b ->
       Logger.log logger Logger.INFO (fun () -> "lift",
             Bound.vars bound
-            |> VarSet.to_list
+            |> Base.Set.to_list
             |> List.map (fun v -> ("t: " ^ (Transition.to_id_string entry)  ^ ", yvar: " ^ Var.to_string v) , (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)));
       Logger.log logger Logger.INFO (fun () -> "lift", [("RB of entry", Approximation.timebound appr entry |> Bound.to_string); ("Result", Bound.to_string b)]);
       TWN_Proofs.proof_append @@ (
       (mk_str_header_small ("TWN - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " of " ^ (Bound.to_string ~pretty:true bound))) <>
       (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
             Bound.vars bound
-            |> VarSet.to_list
+            |> Base.Set.to_list
             |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true))
             |> List.map mk_str_line
             |> mappend) <>
@@ -72,7 +72,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
           List.iter (fun t -> TimeBoundTable.add time_bound_table t local_bounds) cycle;
           List.map (Tuple2.uncurry @@ lift (l,t,l') appr) local_bounds
-          |> List.enum
+          |> OurBase.Sequence.of_list
           |> Bound.sum
         else (
           TimeBoundTable.add time_bound_table (l,t,l') [(l,t,l'),Bound.infinity];

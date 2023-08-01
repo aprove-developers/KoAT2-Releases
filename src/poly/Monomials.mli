@@ -1,5 +1,5 @@
 (** Provides default implementation of a monomial. *)
-open Batteries
+open OurBase
 
 module MakeOverIndeterminate(I : PolyTypes.Indeterminate)(Value : PolyTypes.Ring)
   : PolyTypes.Monomial with type value = Value.t

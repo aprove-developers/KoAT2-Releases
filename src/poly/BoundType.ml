@@ -1,5 +1,5 @@
 (** Implementation of bounds, i.e., polynomials, exponential terms and max/min terms.*)
-open Batteries
+open OurBase
 open Polynomials
 
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
@@ -85,14 +85,14 @@ module type Bound =
     (** Returns element to the power of some provided integer value. *)
     val pow : t -> int -> t
 
-    (** Returns the sum of all enums elements. *)
-    val sum : t Enum.t -> t
+    (** Returns the sum of all sequence elements. *)
+    val sum : t Sequence.t -> t
 
     (** Returns the sum of all list elements. *)
     val sum_list : t list -> t
 
-    (** Returns the product of all enums elements. *)
-    val product : t Enum.t -> t
+    (** Returns the product of all sequence elements. *)
+    val product : t Sequence.t -> t
 
     (** Addition of two elements. *)
     val (+) : t -> t -> t
@@ -114,7 +114,7 @@ module type Bound =
 
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
             Leaves all variables unchanged which are not in the replacement map.  *)
-    val substitute_all : t Map.Make(Var).t -> t -> t
+    val substitute_all : (Var.t,t,Var.comparator_witness) Map.t -> t -> t
 
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
     val substitute_f : (Var.t -> t) -> t -> t

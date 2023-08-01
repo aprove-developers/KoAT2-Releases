@@ -20,7 +20,7 @@ module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(Transition
 
 module SCCSetCompare = struct
   type t = TransitionSet.t
-  let compare t1 t2 = TransitionSet.compare t1 t2
+  let compare t1 t2 = Base.Set.compare_direct t1 t2
 end
 
 module SCCSet = Set.Make(SCCSetCompare)
@@ -44,25 +44,25 @@ let time_cfr = ref 180.
 
 (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
 let compute_timeout_time program appr scc =
-  if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+  if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
    0.
   else (
     let toplogic_later_trans = program
       |> Program.transitions
-      |> flip TransitionSet.diff scc
-      |> TransitionSet.filter (fun t -> Bound.is_infinity (Approximation.timebound appr t)) in
+      |> flip Base.Set.diff scc
+      |> Base.Set.filter ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) in
     !time_cfr *.
-    (float_of_int (TransitionSet.cardinal scc)) /.
-    (float_of_int ((TransitionSet.cardinal toplogic_later_trans) + (TransitionSet.cardinal scc))))
+    (float_of_int (Base.Set.length scc)) /.
+    (float_of_int ((Base.Set.length toplogic_later_trans) + (Base.Set.length scc))))
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   Program.sccs program
-  |> Enum.filter (fun scc ->
+  |> Base.List.filter ~f:(fun scc ->
       (nonLinearTransitions
-       |> TransitionSet.exists (fun nonLinearTransition ->
+       |> Base.Set.exists ~f:(fun nonLinearTransition ->
           scc
-          |> TransitionSet.mem nonLinearTransition)))
+          |> flip Base.Set.mem nonLinearTransition)))
 
 (* Transforms (non-minimal) TransitionSets (i.e. our SCCs) to TransitionGraphs to apply Djikstra as the next step. *)
 let getTransitionGraph (nonLinearSCCs: TransitionSet.t list)  =
@@ -70,26 +70,25 @@ let getTransitionGraph (nonLinearSCCs: TransitionSet.t list)  =
                                 (fun () -> "getTransitionGraph", ["input: " ^ (String.concat "\n" (List.map (TransitionSet.to_string) nonLinearSCCs)), ""]);
   nonLinearSCCs
   |> List.map (fun nonLinearSCC ->
-      TransitionGraph.empty
-      |> TransitionSet.fold (fun transition graph ->
+      nonLinearSCC
+      |> Base.Set.fold ~f:(fun graph transition->
             transition
-            |> TransitionGraph.add_edge_e graph) nonLinearSCC )
+            |> TransitionGraph.add_edge_e graph) ~init:TransitionGraph.empty)
 
 (* Apply Dijkstra on ProgramGraph and get shortest l2 -> l1 path
 and add transition l1 -> l2 (thus, we get a circle, a minimal SCC) on all SCCs *)
 let applyDijkstra (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   let allNonLinearSCCs = program
-                    |> (nonLinearSCCs nonLinearTransitions) in
-                    Logger.log logger Logger.INFO
-                                (fun () -> "applyDijkstra", ["non-linear sccs: " ^ (Enum.fold (fun str1 str2 -> str1 ^ "\n" ^str2) "" (Enum.map (TransitionSet.to_string) (Enum.clone allNonLinearSCCs))), ""]);
+                         |> (nonLinearSCCs nonLinearTransitions) in
+  Logger.log logger Logger.INFO
+    (fun () -> "applyDijkstra", ["non-linear sccs: " ^ (Base.List.fold ~f:(fun str1 str2 -> str1 ^ "\n" ^str2) ~init:"" (Base.List.map ~f:TransitionSet.to_string allNonLinearSCCs)), ""]);
 
   let graphs = allNonLinearSCCs
-                |> List.of_enum
                 |> getTransitionGraph in
                 Logger.log logger Logger.INFO
                                 (fun () -> "applyDijkstra", ["non-linear sccs graph: " ^ String.concat "\n" (List.map (TransitionSet.to_string%TransitionGraph.transitions) graphs), "program:" ^ (Program.to_string program)]);
   nonLinearTransitions
-  |> TransitionSet.to_list
+  |> Base.Set.to_list
   |> List.map (fun (l1,x,l2) ->
                       let (path, _) =
                           DjikstraTransitionGraph.shortest_path (graphs
@@ -100,7 +99,7 @@ let parallelTransitions (program: Program.t) scc =
   TransitionSet.empty
   |> List.fold_right (fun transition res ->
         res
-        |> TransitionSet.union (transition
+        |> Base.Set.union (transition
                                 |> Program.parallel_transitions program)) scc
 
 (* Constructs minimal SCCs containing a non-linear transition and all parallel edges. *)
@@ -111,18 +110,18 @@ let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
 
 let rec disjoint_sccs original_sccs merged_scc =
   let disjoint, non_disjoint = List.partition (fun scc ->
-    LocationSet.disjoint (TransitionSet.locations scc) (TransitionSet.locations merged_scc)) original_sccs in
+    Base.Set.are_disjoint (TransitionSet.locations scc) (TransitionSet.locations merged_scc)) original_sccs in
   if List.is_empty non_disjoint then
     merged_scc
   else
-    disjoint_sccs disjoint (List.fold TransitionSet.union merged_scc non_disjoint)
+    disjoint_sccs disjoint (List.fold Base.Set.union merged_scc non_disjoint)
 
 (* Merges non-disjoint SCCS *)
 let minimalDisjointSCCs (original_sccs: TransitionSet.t list) =
   original_sccs
   |> List.map (disjoint_sccs original_sccs)
   |> SCCSet.of_list
-  |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> TransitionSet.subset scc1 scc2 && not (TransitionSet.equal scc1 scc2)) tmp)) tmp
+  |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> Base.Set.is_subset scc1 ~of_:scc2 && not (Base.Set.equal scc1 scc2)) tmp)) tmp
 
 (** Counts file and creates always a new file useful for debugging. *)
 let counter = ref 0
@@ -135,8 +134,8 @@ let uid = ref ""
 (** Then we have to correspondingly rename the argument variables from iRankFinder *)
 let rename_arg_vars original_program program_cfr =
   let rename_map =
-    Enum.combine (LazyList.enum Var.args) (VarSet.enum @@ Program.input_vars original_program)
-    |> RenameMap.from % List.of_enum
+    Base.Sequence.zip Var.args (Base.Set.to_sequence ~order:`Increasing @@ Program.input_vars original_program)
+    |> RenameMap.from % Base.Sequence.to_list
   in
   Program.map_transitions (Transition.rename rename_map) program_cfr
 
@@ -161,12 +160,12 @@ let applyIrankFinder (scc_program: Program.t) =
 
 let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitions =
   transitions
-  |> TransitionSet.map (fun (l,g,l') ->
+  |> TransitionSet.map ~f:(fun (l,g,l') ->
                                     if Location.equal l l_cfr then
                                       (l_original,g,l')
                                     else
                                       (l,g,l'))
-  |> TransitionSet.map (fun (l,g,l') ->
+  |> TransitionSet.map ~f:(fun (l,g,l') ->
                                     if Location.equal l' l_cfr then
                                      (l,g,l_original)
                                     else
@@ -176,46 +175,46 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
     We assume that we only get transitions starting in the initial location of cfr program*)
 let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
-  |> TransitionSet.enum
-  |> Enum.filter (fun (_,_,l'_cfr) -> String.exists (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__"))
-  |> Enum.map (fun (_,_,l') -> l')
-  |> LocationSet.of_enum
+  |> Base.Set.to_sequence
+  |> Base.Sequence.filter ~f:(fun (_,_,l'_cfr) -> String.exists (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__"))
+  |> Base.Sequence.map ~f:(fun (_,_,l') -> l')
+  |> LocationSet.of_sequence
 
 
 let rename_entry_transition (entry_locations: LocationSet.t) (initial_location: Location.t) (transitions: TransitionSet.t) =
-  transitions
-  |> LocationSet.fold (fun location merged_trans ->
+  entry_locations
+  |> Base.Set.fold ~f:(fun merged_trans location ->
     let all_l' = find_matching_locations location
-        (TransitionSet.filter
-          (fun (l,_,_) ->
+        (Base.Set.filter
+          ~f:(fun (l,_,_) ->
             Location.equal l (Location.of_string ("n_" ^ (Location.to_string initial_location))))
             transitions) in
-          merged_trans
-          |> LocationSet.fold (fun l' -> rename_matching_trans location l') all_l') entry_locations
+          all_l'
+          |> Base.Set.fold ~f:(fun tset l' -> rename_matching_trans location l' tset) ~init:merged_trans) ~init:transitions
 (* ------------------------------------- *)
 
 (** Adds original outgoing transitions, i.e.,  program and program_cfr are path equivalent. *)
 let outgoing_transitions (outgoing_trans: Transition.t list) (scc_cfr: TransitionSet.t) =
-  let locations_cfr = TransitionSet.fold (fun (l,_,l') locations -> locations
-                                                                       |> LocationSet.add l
-                                                                       |> LocationSet.add l') scc_cfr LocationSet.empty in
+  let locations_cfr = Base.Set.fold ~f:(fun locations (l,_,l') -> locations
+                                                                       |> flip Base.Set.add l
+                                                                       |> flip Base.Set.add l') scc_cfr ~init:LocationSet.empty in
   TransitionSet.empty
   |> List.fold_right (fun (l,t,l') set -> locations_cfr
-                                          |> LocationSet.filter (fun l_cfr -> String.exists (Location.to_string l_cfr) ("_" ^ (Location.to_string l) ^ "__"))
-                                          |> LocationSet.enum
-                                          |> TransitionSet.create (function l_cfr ->(l_cfr, TransitionLabel.fresh_id t,l'))
-                                          |> TransitionSet.union set) outgoing_trans
+                                          |> Base.Set.filter ~f:(fun l_cfr -> String.exists (Location.to_string l_cfr) ("_" ^ (Location.to_string l) ^ "__"))
+                                          |> Base.Set.to_sequence
+                                          |> TransitionSet.of_sequence % Base.Sequence.map ~f:(function l_cfr ->(l_cfr, TransitionLabel.fresh_id t,l'))
+                                          |> Base.Set.union set) outgoing_trans
 
 
 (* We just output guard && invariant. Hence we need to separate invariants after irankfinder call. *)
 let restore_invariants (program: Program.t) trans =
   let org_trans = Program.transitions program in
-  let trans_without_entry = TransitionSet.filter (not % String.equal ("n_"^Location.to_string (Program.start program)) % Location.to_string % Transition.src) trans in
-  let matching_trans (l,_,l') = TransitionSet.filter (fun (l_org,_,l'_org) -> String.exists (Location.to_string l) ("n_" ^ (Location.to_string l_org) ^ "__")
+  let trans_without_entry = Base.Set.filter ~f:(not % String.equal ("n_"^Location.to_string (Program.start program)) % Location.to_string % Transition.src) trans in
+  let matching_trans (l,_,l') = Base.Set.filter ~f:(fun (l_org,_,l'_org) -> String.exists (Location.to_string l) ("n_" ^ (Location.to_string l_org) ^ "__")
                                                                            && String.exists (Location.to_string l') ("n_" ^ (Location.to_string l'_org) ^ "__")) org_trans
-                             |> TransitionSet.any in
-  TransitionSet.map (fun (l,t,l') -> let (_,t_org,_) = matching_trans (l,t,l') in (l, TransitionLabel.separate_guard_invariant t (TransitionLabel.invariant t_org), l')) trans_without_entry
-  |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
+                             |> Base.Set.choose_exn in
+  TransitionSet.map ~f:(fun (l,t,l') -> let (_,t_org,_) = matching_trans (l,t,l') in (l, TransitionLabel.separate_guard_invariant t (TransitionLabel.invariant t_org), l')) trans_without_entry
+  |> Base.Set.union (Base.Set.diff trans trans_without_entry)
 
 
 let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
@@ -232,48 +231,48 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
       let merged_program = MaybeChanged.unpack mc in
       (fun sccs ->
       Logger.log logger Logger.INFO
-                                (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
-      let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
+                                (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (Base.Set.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+      let unit_cost = Base.Set.for_all ~f:(fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
-      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then
+      if not (unit_cost scc) || (Base.Set.is_empty (Program.input_vars merged_program)) then
          mc
       else
         let scc_list =
-          TransitionSet.to_list scc
+          Base.Set.to_list scc
           in
         Program.reset_pre_cache ();
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
         let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
         try
           let program_cfr =
-          Program.from_enum initial_location (List.enum @@ entry_transitions@scc_list)
+          Program.from_sequence initial_location (Base.Sequence.of_list @@ entry_transitions@scc_list)
           |> applyIrankFinder
 
           (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
           and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
-                                                                Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
+                                                                Var.to_string var)) (Program.input_vars merged_program |> Base.Set.to_list))  in
           let transitions_cfr = program_cfr
           |> Program.transitions
           |> restore_invariants merged_program
           |> rename_entry_transition entry_locations initial_location
-          |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
-          |> TransitionSet.map (fun t -> Transition.rename map t) in
+          |> Base.Set.filter ~f:(fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
+          |> TransitionSet.map ~f:(fun t -> Transition.rename map t) in
 
           let removable_loc =
-            let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in
-            LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations
-            |> LocationSet.diff locations in
+            let locations = List.fold_right (fun (l,_,l') locations -> Base.Set.add locations l |> flip Base.Set.add l') scc_list LocationSet.empty in
+            Base.Set.filter ~f:(fun l -> Base.Set.exists ~f:(fun (_,_,l') -> Location.equal l l') (Base.Set.diff (Program.transitions merged_program) scc)) locations
+            |> Base.Set.diff locations in
 
           (** Merges irankfinder and original program. *)
           let processed_program =
           merged_program
           |> Program.transitions
-          |> TransitionSet.union transitions_cfr
-          |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger merged_program scc_list) transitions_cfr)
-          |> flip TransitionSet.diff scc
-          |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
-          |> TransitionSet.to_list
-          |> Program.from_enum initial_location % List.enum
+          |> Base.Set.union transitions_cfr
+          |> Base.Set.union (outgoing_transitions (Program.outgoing_transitions logger merged_program scc_list) transitions_cfr)
+          |> flip Base.Set.diff scc
+          |> Base.Set.filter ~f:(fun (l,_,_) -> not (Base.Set.mem removable_loc l))
+          |> Base.Set.to_list
+          |> Program.from_sequence initial_location % Base.Sequence.of_list
           in
           MaybeChanged.changed processed_program
         with CFRefinementCRASH -> mc

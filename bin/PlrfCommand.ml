@@ -1,6 +1,6 @@
 (** Handles shell arguments and computes ranking functions for a program. *)
-open Batteries
 open Koat2
+open Koat2.OurBase
 open Readers
 open ProbabilisticProgramModules
 
@@ -27,11 +27,11 @@ let run (params: params) =
   in
 
   let gts = Program.gts prog in
-  Printf.printf "prog %s\n\n" (Program.to_string_pretty prog);
+  Stdio.printf "prog %s\n\n" (Program.to_string_pretty prog);
   let plrfs =
-    GeneralTransitionSet.to_list gts
-    |> List.map (Plrf.find prog)
-    |> List.map Option.get % List.filter Option.is_some
+    Set.to_list gts
+    |> List.map ~f:(Plrf.find prog)
+    |> List.filter_opt
   in
-  Printf.printf "\n";
-  List.iter (Printf.printf "%s\n" % Plrf.to_string) plrfs
+  Stdio.printf "\n";
+  List.iter ~f:(Stdio.printf "%s\n" % Plrf.to_string) plrfs

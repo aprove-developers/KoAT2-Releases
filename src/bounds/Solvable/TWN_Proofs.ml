@@ -24,8 +24,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let add_to_proof_graph program cycle entries =
     let color_map =
-    List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
-    |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
+    List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
+    |> fun m -> List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Red) entries m in
       proof_append @@ mk_paragraph (
         match ProofOutput.get_format () with
           | Html -> mk_raw_str (GraphPrint.print_system_pretty_html color_map program)

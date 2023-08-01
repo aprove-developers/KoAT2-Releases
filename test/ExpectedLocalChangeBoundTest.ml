@@ -1,24 +1,24 @@
-open Batteries
 open Koat2
+open OurBase
 open OUnit2
 open ProbabilisticProgramModules
 open BoundsInst
 
 let tests =
-  let var_first_arg = LazyList.hd Var.args in
+  let var_first_arg = Base.Sequence.hd_exn Var.args in
   let bound_first_arg = RealBound.of_var var_first_arg in
   let loc_g = Location.of_string "g" in
   let one_half = RealBound.of_constant (OurFloat.of_float 0.5) in
   "ExpectedChangeBoundTests" >:::
     List.mapi
-      (fun i (gt, expected) ->
+      ~f:(fun i (gt, expected) ->
          Printf.sprintf "case %i:%s" i gt >:: fun _ ->
-           let gt = GeneralTransitionSet.any (Readers.read_general_transitions gt) in
+           let gt = Base.Set.choose_exn (Readers.read_general_transitions gt) in
            let program_vars = GeneralTransition.input_vars gt in
            let elcb =  ExpectedLocalChangeBound.compute_elcb program_vars ((gt,loc_g), var_first_arg) in
 
-           Helper.assert_equal_realpoly_smt (Option.get @@ RealBound.to_poly expected)
-                                            (Option.get @@ RealBound.to_poly elcb)
+           Helper.assert_equal_realpoly_smt (Option.value_exn @@ RealBound.to_poly expected)
+                                            (Option.value_exn @@ RealBound.to_poly elcb)
       )
       RealBound.(
         [
@@ -39,7 +39,7 @@ let tests =
 
 
         ; "(RULES g(X,Y) -> 0.5:g(X-1,Y+X) :+: 0.5:g(X,Y+X) :|: X>0) )", zero
-        ; "(RULES g(X,Y) -> 0.5:g(X+Y,Y-1) :+: 0.5:g(X+Y,Y) :|: Y>0) )", of_var (LazyList.at Var.args 1)
+        ; "(RULES g(X,Y) -> 0.5:g(X+Y,Y-1) :+: 0.5:g(X+Y,Y) :|: Y>0) )", of_var (Base.Sequence.nth_exn Var.args 1)
 
         ; "(RULES f(X) -> g(UNIFORM(X,X+1)) )", one_half
 

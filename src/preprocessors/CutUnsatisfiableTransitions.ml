@@ -1,5 +1,5 @@
 (** Implemenation of a preprocessor which removes all unsatisfiable transitions. *)
-open Batteries
+open OurBase
 open Formulas
 
 (** This preprocessor removes all unsatisfiable transitions from the graph.
@@ -17,14 +17,14 @@ module Make(M: ProgramTypes.ProgramModules) = struct
     let combine (l,t,l') set =
       if Program.is_initial_location program l then
         if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
-          TransitionSet.add (l,t,l') set
+          Base.Set.add set (l,t,l')
         else set
       else
         (* There needs to be a transition distinct from (l,t,l') to enter (l,t,l') *)
         (* Note that the enum returned by Program.pre is lazy. Hence, we only have to compute the first value of this enum *)
-        let intrans = Enum.filter (not % Transition.equal (l,t,l')) @@ Program.pre program (l,t,l') in
-        if Enum.is_empty intrans then
-          TransitionSet.add (l,t,l') set
+        let intrans = Sequence.filter ~f:(not % Transition.equal (l,t,l')) @@ Program.pre program (l,t,l') in
+        if Sequence.is_empty intrans then
+          Base.Set.add set (l,t,l')
         else set
     in
     TransitionGraph.fold_edges_e combine graph TransitionSet.empty
@@ -32,7 +32,7 @@ module Make(M: ProgramTypes.ProgramModules) = struct
   (** Returns program without unsatisfiable transitions. *)
   let transform_program program =
     let unsatisfiable_transitions = unsatisfiable_transitions program (Program.graph program) in
-    if TransitionSet.is_empty unsatisfiable_transitions then
+    if Base.Set.is_empty unsatisfiable_transitions then
       MaybeChanged.same program
     else
       let remove (transition: Transition.t) (program: Program.t) =
@@ -40,7 +40,7 @@ module Make(M: ProgramTypes.ProgramModules) = struct
         ProofOutput.add_str_paragraph_to_proof(fun () -> "Cut unsatisfiable transition "^Transition.to_id_string_pretty transition);
         Program.remove_transition program transition
       in
-      MaybeChanged.changed (TransitionSet.fold remove unsatisfiable_transitions program)
+      MaybeChanged.changed (Base.Set.fold ~f:(flip remove) unsatisfiable_transitions ~init:program)
 end
 
 include Make(ProgramModules)

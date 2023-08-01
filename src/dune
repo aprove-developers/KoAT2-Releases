@@ -9,10 +9,13 @@
      ppx_deriving.eq
      lens.ppx_deriving
      ppx_deriving.ord
+     ppx_sexp_conv
      ppx_deriving.show))
  (libraries
    batteries
    netstring
+   base
+   stdio
    z3
    ocamlgraph
    parmap

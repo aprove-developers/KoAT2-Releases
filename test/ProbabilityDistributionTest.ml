@@ -1,5 +1,5 @@
-open Batteries
 open Koat2
+open OurBase
 open OUnit2
 open Helper
 open Formulas
@@ -11,7 +11,7 @@ let tests =
   "ProbabilityDistributionTests" >::: [
     "moment_poly" >:::
         List.map
-          (fun (order, dist_str, expected_result) ->
+          ~f:(fun (order, dist_str, expected_result) ->
              let order_string = if order = 1 then "" else "^" ^ Int.to_string order in
              Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
              (* "E(" ^ dist_str ^ order_string ^ ")" >:: fun _ -> *)
@@ -49,7 +49,7 @@ let tests =
 
     "moment_abs_bound" >:::
         List.map
-          (fun (order, dist_str, expected_result) ->
+          ~f:(fun (order, dist_str, expected_result) ->
              let order_string = if order = 1 then "" else "^" ^ Int.to_string order in
              Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
                let dist = Readers.read_probability_distribution dist_str in

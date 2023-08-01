@@ -1,6 +1,6 @@
 (** Handles shell arguments and computes an upper time-bound. *)
-open Batteries
 open Koat2
+open OurBase
 open ProgramModules
 open RVGTypes
 open Readers
@@ -129,7 +129,7 @@ type params = {
 
 (** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
-  String.concat "" ["s: ";
+  String.concat ~sep:"" ["s: ";
                     Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
                     "\n";
                     TransitionLabel.to_string label]
@@ -137,20 +137,20 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
 (** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)
 let bounded_rv_to_string (program: Program.t) (appr: Approximation.t) (t,v) =
   let get_lsb (t, v) =
-    LocalSizeBound.(sizebound_local program t v |> Option.map as_bound |? Bound.infinity)
+    LocalSizeBound.(sizebound_local program t v |> Option.map ~f:as_bound |? Bound.infinity)
   in
-  String.concat "" [RV.to_id_string (t, v);
-                    "\n";
-                    "Global: ";
-                    Approximation.sizebound appr t v |> Bound.to_string;
-                    "\n";
-                    "Local: ";
-                    get_lsb (t,v) |> Bound.show ~complexity:false
+  String.concat ~sep:"" [RV.to_id_string (t, v);
+                         "\n";
+                         "Global: ";
+                         Approximation.sizebound appr t v |> Bound.to_string;
+                         "\n";
+                         "Local: ";
+                         get_lsb (t,v) |> Bound.show ~complexity:false
     ]
 
 (** Returns a local size-bound for a specified transition and a specified variable. *)
 let get_lsb program (t, v) =
-  LocalSizeBound.(sizebound_local program t v |> Option.map as_bound |? Bound.infinity)
+  LocalSizeBound.(sizebound_local program t v |> Option.map ~f:as_bound |? Bound.infinity)
 
 
 let program_to_formatted_string prog = function
@@ -166,9 +166,9 @@ let analysis_type b = if b then `Termination else `Complexity
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
-  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
+  let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
-  let input = Option.default_delayed read_line params.input in
+  let input = Option.value_or_thunk ~default:read_line params.input in
   let preprocess = Preprocessor.process (module ProgramModules) params.preprocessing_strategy params.preprocessors in
 
   (* TODO improve parser arguments to avoid the case of multiple twns *)
@@ -178,12 +178,12 @@ let run (params: params) =
       raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
     in
     {
-      run_mprf_depth = if List.mem `MPRF params.local then Some params.depth else None;
-      twn_configuration = List.fold_left (fun twn_conf -> function
+      run_mprf_depth = if List.mem ~equal:Poly.(=) params.local `MPRF then Some params.depth else None;
+      twn_configuration = List.fold_left ~f:(fun twn_conf -> function
           | `TWN -> (check_twn_already_set twn_conf; Some `NoTransformation)
           | `TWNTransform -> (check_twn_already_set twn_conf; Some `Transformation)
           | _ -> twn_conf
-      ) None params.local;
+      ) ~init:None params.local;
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
       analysis_type = analysis_type params.termination;
       cfr_configuration = match params.cfr with
@@ -197,7 +197,7 @@ let run (params: params) =
     else
       input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
   and output_dir =
-    Option.map Fpath.v params.output_dir
+    Option.map ~f:Fpath.v params.output_dir
     |? (if params.simple_input then
           Fpath.v "."
         else
@@ -208,7 +208,7 @@ let run (params: params) =
       if params.simple_input then
         input
       else
-        input |> File.lines_of |> List.of_enum |> String.concat "\n"
+        Stdio.In_channel.read_lines input |> String.concat ~sep:"\n"
     in
     print_string (program_str ^ "\n\n")
   );
@@ -216,7 +216,7 @@ let run (params: params) =
   ProofOutput.proof_format params.proof_format;
   let program =
     input
-    |> Readers.read_input ~rename:(List.mem `PartialEvaluation params.cfr || params.rename) params.simple_input
+    |> Readers.read_input ~rename:(List.mem ~equal:Poly.(=) params.cfr `PartialEvaluation || params.rename) params.simple_input
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
           FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string ~pretty:true prog)
             <> program_to_formatted_string prog params.proof_format))
@@ -241,7 +241,7 @@ let run (params: params) =
 
                if params.no_boundsearch then
                 (program, appr)
-               else if TransitionSet.exists (TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
+               else if Base.Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
                 (program, appr)
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
@@ -258,5 +258,5 @@ let run (params: params) =
           ))
     |> ignore;
     if params.show_proof then (print_string "\n\n"; ProofOutput.print_proof params.proof_format);
-    if params.log_level == NONE && not (List.mem `PartialEvaluation params.cfr) then
+    if params.log_level == NONE && not (List.mem ~equal:Poly.(=) params.cfr `PartialEvaluation) then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !PartialEvaluation.uid))

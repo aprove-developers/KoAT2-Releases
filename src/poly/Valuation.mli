@@ -1,5 +1,5 @@
 (** Provides valuations which are functions mapping from variables to values. *)
-open Batteries
+open OurBase
 open PolyTypes
 (** Provides valuations which are functions mapping from variables to values. *)
 

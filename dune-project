@@ -22,6 +22,8 @@
  (synopsis "KoAT2: Runtime Analysis of Integer Programs")
  (depends
    apron
+   base
+   stdio
    batteries
    cmdliner
    conf-gmp
@@ -39,6 +41,7 @@
    parmap
    ppx_deriving
    ppx_deriving_cmdliner
+   ppx_sexp_conv
    zarith
    (z3 (= 4.12.2))
    )

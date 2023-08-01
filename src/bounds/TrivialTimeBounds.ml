@@ -24,9 +24,9 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
     in
     let one_bounded_transitions =
       TransitionGraph.transitions graph
-      |> TransitionSet.filter (fun (l,t,l') -> not (same_scc l l'))
+      |> Base.Set.filter ~f:(fun (l,t,l') -> not (same_scc l l'))
     in
-    TransitionSet.fold (Approximation.add_timebound Bound.one) one_bounded_transitions appr
+    Base.Set.fold ~f:(flip @@ Approximation.add_timebound Bound.one) one_bounded_transitions ~init:appr
 end
 
 include Make(ProgramModules)

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open Constraints
 open Formulas
 open Util
@@ -24,7 +24,6 @@ struct
   type transition_set = Transition_.TransitionSetOver(T)(L).t
   type transition_graph = G.t
 
-  module LocationSet = Location.LocationSetOver(L)
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
   open GenericProgram
@@ -49,7 +48,7 @@ struct
 
   (* Removes the transitions from a certain transitionset to a program *)
   let remove_transition_set (transitions:  TransitionSet.t) (program: t)  =
-    TransitionSet.fold (flip remove_transition) transitions program
+    Set.fold ~f:remove_transition transitions ~init:program
 
   let map_graph f program =
     { program with graph = f program.graph }
@@ -68,27 +67,27 @@ struct
 
   let vars program =
     transitions program
-    |> TransitionSet.enum
-    |> Enum.map T.label
-    |> Enum.map TL.vars
-    |> Enum.fold VarSet.union VarSet.empty
+    |> Set.to_sequence
+    |> Sequence.map ~f:T.label
+    |> Sequence.map ~f:TL.vars
+    |> Sequence.fold ~f:Set.union ~init:VarSet.empty
 
   let input_vars program =
     transitions program
-    |> TransitionSet.enum
-    |> Enum.map T.label
-    |> Enum.map TL.input_vars
-    |> Enum.fold VarSet.union VarSet.empty
+    |> Set.to_sequence
+    |> Sequence.map ~f:T.label
+    |> Sequence.map ~f:TL.input_vars
+    |> Sequence.fold ~f:Set.union ~init:VarSet.empty
 
   let tmp_vars =
-    fun program -> VarSet.diff (vars program) (input_vars program)
+    fun program -> Set.diff (vars program) (input_vars program)
 
   let from_graph start graph =
     if G.is_empty graph || List.is_empty (G.pred_e graph start) then
       { start; graph; }
     else raise (Failure "Transition leading back to the initial location.")
 
-  let from_enum start =
+  let from_sequence start =
     from_graph start % G.mk
 
   let pre program (l,t,_) =
@@ -98,20 +97,20 @@ struct
     in
     l
     |> G.pred_e (graph program)
-    |> List.enum
-    |> Enum.filter (fun (_,t',_) ->
+    |> Sequence.of_list
+    |> Sequence.filter ~f:(fun (_,t',_) ->
            TL.chain_guards t' t
            |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*)
          )
 
-  let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create 10
-  let pre_transitionset_cached program = Util.memoize pre_cache ~extractor:T.id (TransitionSet.of_enum % pre program)
+  let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create ~size:10 (module Int)
+  let pre_transitionset_cached program = Util.memoize_base_hashtbl pre_cache ~extractor:T.id (TransitionSet.of_sequence % pre program)
   let reset_pre_cache () = Hashtbl.clear pre_cache
 
   let succ program (_,t,l') =
     G.succ_e (graph program) l'
-    |> List.enum
-    |> Enum.filter (fun (_,t',_) ->
+    |> Sequence.of_list
+    |> Sequence.filter ~f:(fun (_,t',_) ->
            TL.chain_guards t t'
            |> Formula.mk
            |> SMT.Z3Solver.satisfiable
@@ -120,14 +119,13 @@ struct
   let sccs program =
     G.sccs program.graph
     |> List.rev (* scc_list is in reverse topological order *)
-    |> List.enum
 
   let parallel_transitions graph (l,_,l') =
     transitions graph
-      |> TransitionSet.filter (fun (l1,_,l1') ->  L.equal l l1 && L.equal l' l1')
+      |> Set.filter ~f:(fun (l1,_,l1') ->  L.equal l l1 && L.equal l' l1')
 
   let non_trivial_transitions: t -> transition_set =
-    Enum.fold TransitionSet.union TransitionSet.empty % sccs
+    TransitionSet.union_list % sccs
 
   let add_invariant location invariant =
     map_graph (G.add_invariant location invariant)
@@ -141,17 +139,17 @@ struct
   let to_formatted_string ?(pretty=false) program =
     let transitions =
       G.fold_edges_e (fun t str -> str @ [if pretty then T.to_string_pretty t else T.to_string t]) program.graph []
-      |> FormattedString.mappend % List.map FormattedString.mk_str_line
+      |> FormattedString.mappend % List.map ~f:FormattedString.mk_str_line
     in
-    let locations = String.concat ", " (G.fold_vertex (fun l str -> str @ [(L.to_string l)]) program.graph []) in
+    let locations = String.concat ~sep:", " (G.fold_vertex (fun l str -> str @ [(L.to_string l)]) program.graph []) in
     FormattedString.format_append (
       [
         "Start:  "^L.to_string program.start;
-        "Program_Vars:  "^(input_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
-        "Temp_Vars:  "^(tmp_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
+        "Program_Vars:  "^(input_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ~sep:", ");
+        "Temp_Vars:  "^(tmp_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ~sep:", ");
         "Locations:  "^locations;
         "Transitions:";
-      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)
+      ] |> List.map ~f:(FormattedString.mk_str_line) |> FormattedString.mappend)
     transitions
 
   let to_string = FormattedString.render_string % to_formatted_string
@@ -163,35 +161,32 @@ struct
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
   let entry_transitions logger (program: t) (rank_transitions: T.t list): T.t List.t =
     rank_transitions
-    |> List.enum
-    |> Enum.map (pre program)
-    |> Enum.flatten
-    |> Enum.filter (fun r ->
+    |> Sequence.of_list
+    |> Sequence.map ~f:(pre program)
+    |> Sequence.join
+    |> Sequence.filter ~f:(fun r ->
            rank_transitions
-           |> List.enum
-           |> Enum.for_all (not % T.equal r)
+           |> List.for_all ~f:(not % T.equal r)
          )
-    |> Enum.uniq_by T.equal
-    |> List.of_enum
+    |> TransitionSet.stable_dedup_list % Sequence.to_list
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
-                                 (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string T.to_id_string]))
+                                 (fun () -> "entry_transitions", ["result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string]))
 
   (** All outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately after one of the transitions, but are not themselves part of the given transitions. *)
   let outgoing_transitions logger (program: t) (rank_transitions: T.t list): T.t List.t =
     rank_transitions
-    |> List.enum
-    |> Enum.map (succ program)
-    |> Enum.flatten
-    |> Enum.filter (fun r ->
+    |> Sequence.of_list
+    |> Sequence.map ~f:(succ program)
+    |> Sequence.join
+    |> Sequence.filter ~f:(fun r ->
            rank_transitions
-           |> List.enum
-           |> Enum.for_all (not % T.equal r)
+           |> List.for_all ~f:(not % T.equal r)
          )
-    |> Enum.uniq_by T.equal
-    |> List.of_enum
+    |> Sequence.to_list
+    |> List.dedup_and_sort ~compare:T.compare
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
-                                 (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string T.to_id_string]))
+                                 (fun () -> "outgoing_transitions", ["result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string]))
 
   let remove_non_contributors vset = map_labels (TL.remove_non_contributors vset)
 
@@ -205,8 +200,8 @@ open GenericProgram
 include ProgramOverLocation(Location)
 
 let from_com_transitions com_transitions start =
-  let all_trans = List.flatten com_transitions in
-  let start_locs = LocationSet.of_list @@ List.map Transition_.src all_trans in
+  let all_trans = List.join com_transitions in
+  let start_locs = Set.of_list (module Location) @@ List.map ~f:Transition_.src all_trans in
 
   (* Try to eliminate recursion. When there is a Com_k transition we aim to construct a Com_1 transition by eliminating
    * all targets that do not appear on the left hand side of a rule.
@@ -217,36 +212,36 @@ let from_com_transitions com_transitions start =
   else
     let cleaned_com_k_transitions =
       List.map
-        (fun ts ->
+        ~f:(fun ts ->
           if List.length ts > 1 then
-            let arb_trans = List.hd ts in
-            let cleaned = List.filter (flip LocationSet.mem start_locs % Transition_.target) ts in
+            let arb_trans = List.hd_exn ts in
+            let cleaned = List.filter ~f:(Set.mem start_locs % Transition_.target) ts in
             if List.is_empty cleaned then [arb_trans] else cleaned
             |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
-                "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition_.to_id_string (List.enum ts)
-                                      ; "new_targets", Util.enum_to_string Transition_.to_id_string (List.enum new_ts)]) else ())
+                "eliminate_recursion",[ "old_targets", Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list ts)
+                                      ; "new_targets", Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list new_ts)]) else ())
           else ts
         )
         com_transitions
     in
-    if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
+    if List.exists ~f:(not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
       let transs =
-        let all = List.flatten cleaned_com_k_transitions in
+        let all = List.join cleaned_com_k_transitions in
         let num_arg_vars =
-          List.max ~cmp:Int.compare @@ List.map (TransitionLabel_.input_size % Transition_.label) all
+          Option.value_exn @@ List.max_elt ~compare:Int.compare @@ List.map ~f:(TransitionLabel_.input_size % Transition_.label) all
         in
-        List.map (Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
+        List.map ~f:(Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
       in
-      from_enum start (List.enum transs)
+      from_sequence start (Sequence.of_list transs)
 
 let rename program =
   let counter: int ref = ref 0 in
-  let map = Hashtbl.create 10 in
+  let map = Hashtbl.create ~size:10 (module Location) in
   let name location =
-    Hashtbl.find_option map location
-    |> Option.default_delayed (fun () ->
+    Hashtbl.find map location
+    |> Option.value_or_thunk ~default:(fun () ->
            let new_name = ("l" ^ string_of_int !counter) in
-           Hashtbl.add map location new_name;
+           Hashtbl.add_exn map ~key:location ~data:new_name;
            counter := !counter + 1;
            Logger.(log Logging.(get Preprocessor) INFO (fun () -> "renaming", ["original", Location.to_string location; "new", new_name]));
            new_name
@@ -261,9 +256,9 @@ let rename program =
 
 (* Prints the program to the file "file.koat" *)
 let to_file program file =
-  let oc = open_out (file ^ ".koat") in
-    Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
-                    (Location.to_string (start program))
-                    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
-                    (TransitionGraph_.fold_edges_e (fun t str-> str ^ " " ^Transition_.to_file_string t ^ "\n") program.graph "");
-    close_out oc
+  let oc = Stdio.Out_channel.create (file ^ ".koat") in
+  Stdio.Out_channel.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+                  (Location.to_string (start program))
+                  (Set.fold ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ~init:"")
+                  (TransitionGraph_.fold_edges_e (fun t str-> str ^ " " ^Transition_.to_file_string t ^ "\n") program.graph "");
+  Stdio.Out_channel.close oc

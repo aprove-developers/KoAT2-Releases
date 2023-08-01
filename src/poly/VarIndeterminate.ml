@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 (** Variables as indeterminates for polynomials, monomials, ... *)
 include Var

@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open BoundsInst
 
 let logger = Logging.(get Size)
@@ -10,8 +10,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
   module RVG = RVGTypes.MakeRVG(PM)
 
-  module RVSet = Set.Make(RV.RVTuple_)
-
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
    * *)
   let compute_
@@ -21,62 +19,61 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         (get_sizebound: Transition.t -> Var.t -> Bound.t)
         (scc: RV.t List.t) =
 
-    let scc_rvset = RVSet.of_list scc in
-    let (rvs_equality, rvs_non_equality) = List.partition (Tuple2.second % get_lsb) scc in
+    let scc_rvset = Set.of_list (module RV.RVTuple_) scc in
+    let (rvs_equality, rvs_non_equality) = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
 
     (** All transitions that are present in the scc and that are not of equality type.
         Corresponds to T_C in the thesis. *)
     let transitions =
       rvs_non_equality
-      |> List.map (fun (t,v) -> t)
-      |> List.unique ~eq:Transition.equal
-      |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
+      |> List.map ~f:(fun (t,v) -> t)
+      |> TransitionSet.stable_dedup_list
+      |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.sequence_to_string ~f:Transition.to_id_string (Sequence.of_list transitions)]))
     in
 
     (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
     let get_scc_vars transition =
       rvs_non_equality
-      |> List.filter (fun (t,v) -> Transition.equal t transition)
-      |> List.map (fun (t,v) -> v)
-      |> List.unique ~eq:Var.equal
-      |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))
-      |> List.enum
+      |> List.filter ~f:(fun (t,v) -> Transition.equal t transition)
+      |> List.map ~f:(fun (t,v) -> v)
+      |> VarSet.stable_dedup_list
+      |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.sequence_to_string ~f:Var.to_string (Sequence.of_list scc_vars)]))
     in
 
     (** Returns all result variables that may influence the given result variable and that are part of the scc. *)
-    let pre_in_scc rv =
+    let pre_in_scc (rv: RV.t) =
       rv
       |> RVG.pre rvg
-      |> RVSet.of_enum
-      |> RVSet.inter scc_rvset
+      |> Set.of_list (module RV.RVTuple_)
+      |> Set.inter scc_rvset
     in
 
     (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
     let pre_out_scc rv =
       rv
       |> RVG.pre rvg
-      |> RVSet.of_enum
-      |> fun pre -> RVSet.diff pre scc_rvset
+      |> Set.of_list (module RV.RVTuple_)
+      |> fun pre -> Set.diff pre scc_rvset
     in
 
     (** Returns all result variables that may influence the given result variable from within the scc.
         Corresponds to V_rv in the thesis. *)
     let scc_variables rv =
       rv
-      |> RVSet.enum % pre_in_scc
-      |> Enum.map (fun (t,v) -> v)
-      |> Enum.uniq_by Var.equal
+      |> Set.to_sequence % pre_in_scc
+      |> Sequence.map ~f:(fun (t,v) -> v)
+      |> Sequence.of_list % VarSet.stable_dedup_list % Sequence.to_list
     in
 
 
     let starting_value =
       let rvs_equality_type_max_constant =
-        List.map (LSB.constant % Tuple2.first % get_lsb) rvs_equality
-        |> List.fold_left max 0
+        List.map ~f:(LSB.constant % Tuple2.first % get_lsb) rvs_equality
+        |> List.fold ~f:max ~init:0
       in
-      List.enum scc
-      |> RVSet.enum % Enum.fold RVSet.union RVSet.empty % Enum.map pre_out_scc
-      |> Enum.map (uncurry get_sizebound)
+      scc
+      |> Set.to_sequence % Set.union_list (module RV.RVTuple_) % List.map ~f:pre_out_scc
+      |> Sequence.map ~f:(uncurry get_sizebound)
       |> Bound.sum
       |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
     in
@@ -84,18 +81,18 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let transition_scaling_factor t =
       let affecting_variables =
         get_scc_vars t
-        |> Enum.map (fun v -> scc_variables (t,v))
-        |> Enum.map Enum.count
-        |> Util.max_option (>)
+        |> List.map ~f:(fun v -> scc_variables (t,v))
+        |> List.map ~f:Sequence.length
+        |> List.max_elt ~compare:Int.compare
         |? 1
       in
 
       let scaling_explicit =
         t
         |> get_scc_vars
-        |> Enum.map (fun v -> Tuple2.first @@ get_lsb (t,v))
-        |> Enum.map LSB.factor
-        |> Util.max_option (>)
+        |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (t,v))
+        |> List.map ~f:LSB.factor
+        |> List.max_elt ~compare:Int.compare
         |? 1
         |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "extreme_scaling_factor", ["result", Int.to_string result]))
       in
@@ -104,8 +101,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     in
 
     let loop_scaling =
-      List.enum transitions
-      |> Enum.map (fun t ->
+      Sequence.of_list transitions
+      |> Sequence.map ~f:(fun t ->
             let scaling = transition_scaling_factor t in
             if (OurInt.(equal scaling one)) then Bound.one else Bound.exp scaling (get_timebound t)
          )
@@ -113,9 +110,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     in
 
     let incoming_constant rv v =
-      RVSet.enum (pre_out_scc rv)
-      |> Enum.filter (fun (_,v') -> Var.equal v v')
-      |> Enum.map (uncurry get_sizebound)
+      Set.to_sequence (pre_out_scc rv)
+      |> Sequence.filter ~f:(fun (_,v') -> Var.equal v v')
+      |> Sequence.map ~f:(uncurry get_sizebound)
       |> Bound.sum
     in
 
@@ -123,22 +120,23 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
     let rv_effect rv =
       let rv_vars =
-        Tuple2.first (get_lsb rv)
-        |> VarSet.enum % LSB.vars
-        |> Util.without Var.equal (scc_variables rv)
+        Set.diff
+          (LSB.vars @@ Tuple2.first @@ get_lsb rv)
+          (VarSet.of_sequence @@ scc_variables rv)
+        |> Set.to_sequence
       in
-      Bound.(rv_constant rv + (Enum.map (incoming_constant rv) rv_vars |> sum))
+      Bound.(rv_constant rv + (Sequence.map ~f:(incoming_constant rv) rv_vars |> sum))
     in
 
     let transition_effect t =
       get_scc_vars t
-      |> Enum.map (fun v -> rv_effect (t,v))
-      |> Bound.sum
+      |> List.map ~f:(fun v -> rv_effect (t,v))
+      |> Bound.sum_list
     in
 
     let loop_effect =
-      List.enum transitions
-      |> Enum.map (fun t ->
+      Sequence.of_list transitions
+      |> Sequence.map ~f:(fun t ->
              if Bound.is_infinity (get_timebound t) then
                if Bound.(equal zero (transition_effect t)) then
                  Bound.zero
@@ -168,9 +166,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       Corresponds to 'SizeBounds for nontrivial SCCs'. *)
   let compute program rvg get_timebound get_sizebound scc get_lsb =
     let lsb_fun =
-      let lsbs = List.map (fun(t,v) -> (t,v), get_lsb (t,v)) scc in
-      if List.for_all (Option.is_some % Tuple2.second) lsbs then
-        Some (fun k -> Tuple2.map2 Lazy.force % Option.get @@ List.assoc k lsbs)
+      let lsbs = List.map ~f:(fun(t,v) -> (t,v), get_lsb (t,v)) scc in
+      if List.for_all ~f:(Option.is_some % Tuple2.second) lsbs then
+        Some (fun k -> Tuple2.map2 Lazy.force % Option.value_exn @@ List.Assoc.find_exn lsbs ~equal:RV.RVTuple_.equal k)
       else None
     in
 
