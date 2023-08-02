@@ -457,7 +457,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
                                                         ["original bound", org_bound; method_name ^ " bound", cfr_bound]);
             (program, appr, rvg_with_sccs)
           in
-          let handle_cfr_termination =
+          let handle_cfr_termination () =
             let org_terminates = Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr) scc in
             let cfr_terminates = List.for_all
               (fun scc -> Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound updated_appr_cfr) scc) cfr_sccs in
@@ -469,7 +469,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
               program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)
           in
           (*Calculates concrete bounds*)
-          let handle_cfr_complexity =
+          let handle_cfr_complexity () =
             let org_bound = Bound.sum (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))  in
             let cfr_bound = Bound.sum (OurBase.Sequence.map
                                       ~f:(fun scc -> Bound.sum (Base.Sequence.map ~f:(Approximation.timebound updated_appr_cfr) (Base.Set.to_sequence scc)))
@@ -479,8 +479,8 @@ let handle_timeout_cfr method_name non_linear_transitions =
               program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)
           in
           match conf.analysis_type with
-          | `Termination -> handle_cfr_termination
-          | `Complexity  -> handle_cfr_complexity)
+          | `Termination -> handle_cfr_termination ()
+          | `Complexity  -> handle_cfr_complexity ())
       in
       let partial_evaluation (program, appr, rvg) =
           let non_linear_transitions =
@@ -496,14 +496,16 @@ let handle_timeout_cfr method_name non_linear_transitions =
       let non_linear_transitions =
         Base.Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc
       in
-        let chaining =
+        let chaining () =
         Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
             (fun () -> apply_cfr "chaining" (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc))) (fun _ _ -> ()) rvg 10. non_linear_transitions ~preprocess program appr)
         |> Option.map_default Tuple2.first (program, appr, rvg)
       in
-      if not (Base.Set.is_empty non_linear_transitions) && List.mem `Chaining cfr then
-        chaining
-      else (program, appr, rvg)
+      (
+        if not (Base.Set.is_empty non_linear_transitions) && List.mem `Chaining cfr then
+          chaining ()
+        else (program, appr, rvg)
+      )
       |> if !PartialEvaluation.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) && List.mem `PartialEvaluation cfr then
           partial_evaluation
         else identity
