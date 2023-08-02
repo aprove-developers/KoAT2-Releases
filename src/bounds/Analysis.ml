@@ -521,7 +521,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
     let program, appr =
       program
       |> Program.sccs
-      |> List.fold_left (fun (program, appr, rvg) scc_orig ->
+      |> List.fold_left (fun (program, appr, opt_rvg) scc_orig ->
              let improve_scc scc =
                if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
@@ -542,7 +542,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
              | NoCFR        -> improve_scc scc_orig
              | PerformCFR _ ->
                 let scc = Base.Set.inter scc_orig (Program.transitions program) in
-                if Base.Set.is_empty scc then (program,appr,rvg)
+                if Base.Set.is_empty scc then (program,appr,opt_rvg)
                 else improve_scc scc
            ) (program, appr, opt_rvg)
       |> Tuple3.get12
