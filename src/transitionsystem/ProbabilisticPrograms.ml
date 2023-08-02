@@ -169,7 +169,7 @@ module ProbabilisticTransitionLabel_ = struct
     type vars_type = VarsOverapproximated
                    | VarsNonOverapproximated [@@deriving ord,sexp]
 
-    let vars_ vars_type t =
+    let vars vars_type t =
       let update_and_guard_vars = match vars_type with
         | VarsOverapproximated ->
           Set.union
@@ -194,9 +194,6 @@ module ProbabilisticTransitionLabel_ = struct
     let clear_memoized_vars_for_id id =
       Hashtbl.remove vars_memoization (VarsNonOverapproximated,id);
       Hashtbl.remove vars_memoization (VarsOverapproximated,id)
-
-    let vars vars_cache_type = Util.memoize_base_hashtbl vars_memoization ~extractor:(fun t-> vars_cache_type,t.id) (vars_ vars_cache_type)
-    let vars_without_memoization = vars_ (** TODO remove this *)
 
     let rename_update rename_ue update rename_map =
       update
@@ -344,7 +341,6 @@ module ProbabilisticTransitionLabel = struct
       (fun t -> t.update) (fun t -> t.guard)
 
   let vars = vars VarsNonOverapproximated
-  let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
   let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
 
   let tmp_vars t =
@@ -406,7 +402,6 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       (fun t -> t.overappr_nonprob_update) (fun t -> t.overappr_guard)
 
   let vars = vars VarsOverapproximated
-  let vars_without_memoization = vars_without_memoization VarsOverapproximated
 
   let tmp_vars t = Set.diff (vars t) (input_vars t)
 

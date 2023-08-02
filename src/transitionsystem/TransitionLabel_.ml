@@ -229,17 +229,12 @@ module Inner = struct
 
   let only_update t = {t with cost = Polynomial.one; guard = Guard.mk_true; invariant = Invariant.mk_true}
 
-  let vars_ {update; guard; invariant; cost; _} =
+  let vars {update; guard; invariant; cost; _} =
     Base.Map.fold ~f:(fun ~key ~data -> Base.Set.union (Polynomial.vars data)) update ~init:VarSet.empty
     |> (Base.Set.union % VarSet.of_list % Base.Map.keys) update
     |> (Base.Set.union % Guard.vars) guard
     |> (Base.Set.union % Invariant.vars) invariant
     |> (Base.Set.union % Polynomial.vars) cost
-
-  (* TODO May invalidate through invariant generation! *)
-  let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create ~size:10 (module Int)
-  let vars = Util.memoize_base_hashtbl vars_memoization ~extractor:id vars_
-  let vars_without_memoization = vars_ (** TODO remove this *)
 
   let default = {
       id = 0;
@@ -382,7 +377,6 @@ module Inner = struct
       invariant = Invariant.rename t.invariant rename_map;
       cost = Polynomial.rename rename_map t.cost;
     }
-    |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
   let rename rename_map t =
     {
@@ -392,7 +386,6 @@ module Inner = struct
       invariant = Invariant.rename t.invariant rename_map;
       cost = Polynomial.rename rename_map t.cost;
     }
-    |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
   let relax_guard ~non_static t =
     let is_static atom = Base.Set.is_subset (Atoms.Atom.vars atom) ~of_:(Base.Set.diff (input_vars t) non_static) in

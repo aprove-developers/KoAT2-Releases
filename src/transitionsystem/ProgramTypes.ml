@@ -138,8 +138,6 @@ module type TransitionLabel = sig
   (** Returns the set of variables. *)
   val vars : t -> VarSet.t
 
-  val vars_without_memoization : t -> VarSet.t
-
   (** Returns the set of input variables of the transition, i.e. the non temporary variables  *)
   val input_vars : t -> VarSet.t
 

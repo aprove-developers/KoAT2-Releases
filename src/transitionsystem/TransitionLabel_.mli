@@ -33,8 +33,6 @@ val fresh_id : t -> t
 (** We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 val separate_guard_invariant : t -> Invariant.t -> t
 
-val vars_without_memoization : t -> VarSet.t
-
 (** Sets costs to 1, and guard and invariant to true *)
 val only_update: t -> t
 

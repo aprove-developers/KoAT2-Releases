@@ -29,7 +29,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
     let transitions = Program.transitions program_ in
     let locations = Program.locations program_ in
 
-    let vars = List.fold ~f:(fun vars (_,t,_) -> Set.union vars (TransitionLabel.vars_without_memoization t)) ~init:VarSet.empty (Set.to_list transitions) in
+    let vars = List.fold ~f:(fun vars (_,t,_) -> Set.union vars (TransitionLabel.vars t)) ~init:VarSet.empty (Set.to_list transitions) in
 
     (** Creates the apron environment where all program_ variables are integer variables. *)
     let environment: Apron.Environment.t =
