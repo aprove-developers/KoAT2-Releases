@@ -51,6 +51,7 @@ module Atomically: sig
   type 'a t
   val create: 'a -> 'a t
   val run_atomically: 'a t -> ('a -> 'b) -> 'b
+  val map_atomically: 'a t -> ('a -> 'a) -> 'a t
 end = struct
   type 'a t = Mutex.t * 'a
 
@@ -59,6 +60,10 @@ end = struct
   let run_atomically (mutex,a) f =
     Mutex.lock mutex;
     Exn.protect ~f:(fun () -> f a) ~finally:(fun () -> Mutex.unlock mutex)
+
+  let map_atomically (m,a) f =
+    run_atomically (m,a) f
+    |> fun a' -> (m,a')
 end
 
 module Unique = struct
@@ -133,6 +138,8 @@ module type SetCreators'0 = sig
      and type ('a, 'cmp) set = ('a, 'cmp) Set.t
      and type t = (elt, comparator_witness) Set.t
      and type tree = (elt, comparator_witness) Set.Using_comparator.Tree.t
+
+  val powerset: t -> t Sequence.t
 end
 
 module type MapCreators'1 = sig
@@ -167,6 +174,8 @@ module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and 
   let filter_map (type a) (s: (a,_) Set.t) ~(f:a -> elt option): t =
     Set.filter_map (module M) s ~f
   let of_tree = Set.Using_comparator.of_tree ~comparator:M.comparator
+
+  let powerset = Set.powerset (module M)
 end
 
 module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t = struct

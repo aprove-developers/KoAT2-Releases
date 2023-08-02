@@ -276,7 +276,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let entry_transitions_from_non_increasing program non_increasing =
     let all_possible_pre_trans =
       Stack.enum non_increasing
-      |> Enum.fold (fun tset -> Base.Set.union tset % Program.pre_transitionset_cached program) TransitionSet.empty
+      |> Enum.fold (fun tset -> Base.Set.union tset % Program.pre program) TransitionSet.empty
     in
     Base.Set.diff all_possible_pre_trans (TransitionSet.of_list @@ List.of_enum @@ Stack.enum non_increasing)
 
@@ -372,7 +372,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let rec helper min_applicable =
       (* get time_unbounded pre transitions *)
       Base.Set.to_sequence min_applicable
-      |> Base.Sequence.map ~f:(Program.pre_transitionset_cached mprf_problem.program)
+      |> Base.Sequence.map ~f:(Program.pre mprf_problem.program)
       (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
       |> Base.Sequence.map ~f:Base.Set.to_sequence
       |> Base.Sequence.join

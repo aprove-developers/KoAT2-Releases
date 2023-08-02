@@ -240,7 +240,6 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
         let scc_list =
           Base.Set.to_list scc
           in
-        Program.reset_pre_cache ();
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
         let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
         try

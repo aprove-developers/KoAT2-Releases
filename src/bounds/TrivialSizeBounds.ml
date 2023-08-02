@@ -44,7 +44,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     incoming_bound pre_transitions get_sizebound lsb t v
 
   let incoming_bound_lifted_update program get_sizebound upd t v =
-    let pre_transitions = Program.pre program t in
+    let pre_transitions = Base.Set.to_sequence (Program.pre program t) in
     incoming_bound pre_transitions get_sizebound (Bound.of_poly upd) t v
 
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.

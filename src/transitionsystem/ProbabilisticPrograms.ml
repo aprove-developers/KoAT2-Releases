@@ -714,10 +714,10 @@ module ProbabilisticProgram = struct
     |> Sequence.map ~f:(fun l -> { GeneralTransition.transitions = ProbabilisticTransitionSet.of_list l })
     |> GeneralTransitionSet.of_sequence
 
-  let pre_gt_cached t gt =
+  let pre_gt t gt =
     (* All transitions in a gt have the same guard and hence the same pre transitions *)
     let pre_t =
-      pre_transitionset_cached t (Set.choose_exn @@ GeneralTransition.transitions gt)
+      pre t (Set.choose_exn @@ GeneralTransition.transitions gt)
     in
     Set.filter
       ~f:(Set.exists ~f:(Set.mem pre_t) % GeneralTransition.transitions)

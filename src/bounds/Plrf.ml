@@ -240,7 +240,7 @@ type plrf_problem = {
 let entry_transitions_from_non_increasing program (non_increasing: GeneralTransition.t Stack.t) =
   let all_possible_pre_trans =
     Stack.to_array non_increasing
-    |> Array.fold ~f:(fun gts -> Set.union gts % Program.pre_gt_cached program) ~init:(Set.empty (module GeneralTransition))
+    |> Array.fold ~f:(fun gts -> Set.union gts % Program.pre_gt program) ~init:(Set.empty (module GeneralTransition))
   in
   (* TODO  *)
   Set.diff all_possible_pre_trans (GeneralTransitionSet.of_array @@ Stack.to_array non_increasing)

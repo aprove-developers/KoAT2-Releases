@@ -125,7 +125,7 @@ module ProbabilisticProgram: sig
   (** The resulting enum is in topological order *)
   val sccs_gts : t -> GeneralTransitionSet.t List.t
 
-  val pre_gt_cached: t -> GeneralTransition.t -> GeneralTransitionSet.t
+  val pre_gt: t -> GeneralTransition.t -> GeneralTransitionSet.t
 
   (* Restores legacy semantics for updates with distributions, i.e. updates of the form X->UNIFORM(0,1) are interpreted as X->X+UNIFORM(0,1) *)
   val restore_legacy_distribution_update_semantics: t -> t
