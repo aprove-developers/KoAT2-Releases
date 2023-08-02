@@ -264,16 +264,6 @@ module Inner = struct
     else
       "{"^(Polynomial.to_string label.cost)^"}"
 
-  let normalise t (input_vars:VarSet.t) = {
-      id = t.id;
-      update = Base.Set.fold ~f:(fun fold_update var -> if (Base.Map.mem fold_update var)
-                                              then fold_update
-                                              else Base.Map.add_exn fold_update ~key:var ~data:(Polynomial.of_var var)) input_vars ~init:t.update;
-      guard = t.guard;
-      invariant = t.invariant;
-      cost = t.cost;
-    }
-
   let update_to_string_lhs_ ?(to_file = false) t =
     let update = t.update in
       if Base.Map.is_empty update then

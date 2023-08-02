@@ -55,10 +55,6 @@ module ProbabilisticTransitionLabel_ = struct
           else Map.add_exn fold_update ~key:var ~data:(to_update_value var)
         ) vars ~init:update_map
 
-    let normalise t (input_vars: VarSet.t) =
-      { t with update = add_self_updates_if_missing UpdateElement_.of_var input_vars t.update;
-              overappr_nonprob_update = add_self_updates_if_missing Polynomial.of_var input_vars t.overappr_nonprob_update; }
-
     let equal t1 t2 = t1.id = t2.id
 
     let fill_up_update_arg_vars_up_to_num from_var n update =

@@ -64,9 +64,6 @@ module type TransitionLabel = sig
   (** Returns the update of a variable. *)
   val update : t -> Var.t -> update_element Option.t
 
-  (** TODO doc *)
-  val normalise : t -> VarSet.t -> t
-
   (** Returns if the two labels describe the same transition *)
   val equivalent: t -> t -> bool
 
