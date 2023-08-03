@@ -22,6 +22,8 @@
 
 %start <Program.t> onlyProgram
 
+%start <Program.t> onlyProgramTermination
+
 %start <ProbabilisticPrograms.ProbabilisticProgram.t> onlyProbabilisticProgram
 
 %start <Program.t> onlyProgram_simple
@@ -43,6 +45,8 @@
 %start <BoundsInst.Bound.t> onlyBound
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoal
+
+%start <Program.t * Goal.classical Goal.goal> programAndGoalTermination
 
 %start <ProbabilisticPrograms.ProbabilisticProgram.t * Goal.probabilistic Goal.goal> probabilisticProgramAndGoal
 
@@ -67,6 +71,10 @@ onlyProgram:
   | p_and_g = programAndGoal
     { OurBase.Tuple2.first p_and_g } ;
 
+onlyProgramTermination:
+  | p_and_g = programAndGoalTermination
+    { OurBase.Tuple2.first p_and_g } ;
+
 onlyProbabilisticProgram:
   | p_and_g = probabilisticProgramAndGoal
     { OurBase.Tuple2.first p_and_g };
@@ -77,6 +85,13 @@ programAndGoal:
     variables = variables
     transitions = transitions; EOF
     { Program.from_com_transitions (transitions variables) start, g } ;
+
+programAndGoalTermination:
+  | g = goal
+    start = start
+    variables = variables
+    transitions = transitions; EOF
+    { Program.from_com_transitions ~termination:true (transitions variables) start, g } ;
 
 probabilisticProgramAndGoal:
   | g = probabilisticGoal

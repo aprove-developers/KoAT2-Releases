@@ -246,7 +246,7 @@ module ProgramOverLocation(L: ProgramTypes.Location) =
 open GenericProgram
 include ProgramOverLocation(Location)
 
-let from_com_transitions com_transitions start =
+let from_com_transitions ?(termination = false) com_transitions start =
   let all_trans = List.join com_transitions in
   let start_locs = Set.of_list (module Location) @@ List.map ~f:Transition_.src all_trans in
 
@@ -271,9 +271,11 @@ let from_com_transitions com_transitions start =
         )
         com_transitions
     in
-    if List.exists ~f:(not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
+    if (not termination) && List.exists ~f:(not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
       let transs =
         let all = List.join cleaned_com_k_transitions in
+        if termination && List.exists ~f:(not % Int.equal 1 % List.length) cleaned_com_k_transitions then
+          Logger.log Logging.(get Program) INFO (fun () -> "eliminate_recursion for termination", ["new_transitions",Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list all)]);
         let num_arg_vars =
           Option.value_exn @@ List.max_elt ~compare:Int.compare @@ List.map ~f:(TransitionLabel_.input_size % Transition_.label) all
         in

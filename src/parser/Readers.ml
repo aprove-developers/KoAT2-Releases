@@ -20,8 +20,11 @@ let read_ rule (lexbuf: Caml.Lexing.lexbuf) =
 let read_target_from_file_ target path =
   read_ target (Lexing.from_channel @@ Stdio.In_channel.create ~binary:false path)
 
-let read_file =
-  read_target_from_file_ Parser.onlyProgram
+let read_file ?(termination=false) =
+  if termination then
+    read_target_from_file_ Parser.onlyProgramTermination
+  else
+    read_target_from_file_ Parser.onlyProgram
 
 let read rule str =
   read_ rule (Lexing.from_string str)
@@ -56,7 +59,7 @@ let read_polynomial str =
 let read_bound =
   read Parser.onlyBound
 
-let read_input ?(rename=false) simple program_str =
+let read_input ?(termination=false) ?(rename=false) simple program_str =
   if simple then
     program_str
     |> read_program_simple
@@ -64,7 +67,7 @@ let read_input ?(rename=false) simple program_str =
   else
     try
       program_str
-      |> read_file
+      |> read_file ~termination
       |> (if rename then Program_.rename else identity)
     with Program_.RecursionNotSupported ->
       failwith "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."

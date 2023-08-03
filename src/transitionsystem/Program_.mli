@@ -44,7 +44,7 @@ include module type of ProgramOverLocation(Location)
 (**  A list of k transitions makes up a Com_k transition *)
 (**  Since KoAT currently does not support recursion we try to eliminate it. *)
 (**  If this is not possible we throw a RecursionNotSupportedException *)
-val from_com_transitions : Transition_.t list list -> Location.t -> t
+val from_com_transitions : ?termination:bool -> Transition_.t list list -> Location.t -> t
 
 (** TODO doc *)
 val rename : t -> t

@@ -8,7 +8,7 @@ open BoundsInst
 (** Constructs a reader for the given transition graph *)
 
 (** Reads a file associated to the given path and returns a program. *)
-val read_file : string -> Program_.t
+val read_file : ?termination:bool -> string -> Program_.t
 
 val read_program : string -> Program_.t
 
@@ -30,7 +30,7 @@ val read_bound : string -> Bound.t
 
 val read_general_transitions: string -> ProbabilisticProgramModules.GeneralTransitionSet.t
 
-val read_input : ?rename:bool -> bool -> string -> Program_.t
+val read_input : ?termination:bool -> ?rename:bool -> bool -> string -> Program_.t
 
 val read_prog_goal_file : ?rename:bool -> string -> Program_.t * Goal.classical Goal.goal
 val read_probabilistic_prog_goal_file : string
