@@ -83,12 +83,11 @@ module Make(B: BoundType.Bound)
     mk_str_header_big "All Bounds" <>
 
       (if not termination_only then
-          if show_initial then
-            mk_paragraph (
-            (mk_str_header_small "Initial Complexity Problem (after preprocessing)"
-                <> (Program.to_formatted_string program) <> mk_newline
-            ) )
-          else FormattedString.Empty
+          (if show_initial then
+             mk_paragraph (
+               (mk_str_header_small "Initial Complexity Problem (after preprocessing)"
+                <> (Program.to_formatted_string program) <> mk_newline) )
+           else FormattedString.Empty )
           
         <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
             mk_str_line ("Overall timebound:" ^ B.to_string ~pretty overall_timebound)
