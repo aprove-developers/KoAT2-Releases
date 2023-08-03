@@ -207,7 +207,7 @@ let perform_analysis ?(conf=default_configuration) program class_appr: ExpApprox
         ~f:(fun appr scc_with_locs -> improve_scc ~conf program gts program_vars scc_with_locs (class_appr,appr))
         ~init:appr sccs
 
-module ClassicalBounds = Bounds.Make(NonProbOverappr)
+module ClassicalBounds = ComputeClassicalBounds.Make(NonProbOverappr)
 
 let perform_classic_and_probabilistic_analysis ?(classic_conf=Analysis.default_configuration) ?(conf=default_configuration) ~preprocess program=
   let program, class_appr =

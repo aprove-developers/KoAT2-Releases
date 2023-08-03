@@ -5,7 +5,7 @@ open Readers
 open ProbabilisticProgramModules
 
 module OverapprAnalysis = Analysis.Make(NonProbOverappr)
-module ClassicalBounds = Bounds.Make(NonProbOverappr)
+module ClassicalBounds = ComputeClassicalBounds.Make(NonProbOverappr)
 
 open Approximation.Probabilistic
 
