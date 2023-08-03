@@ -18,9 +18,9 @@ module Make(B: BoundType.Bound)
     } [@@deriving lens { submodule = true }]
 
   let empty transitioncount varcount = {
-      time = TransitionApproximation.empty "time" transitioncount;
+      time = TransitionApproximation.empty "time";
       size = SizeApproximation.empty (2 * transitioncount * varcount);
-      cost = TransitionApproximation.empty "cost" transitioncount;
+      cost = TransitionApproximation.empty "cost";
     }
 
   let create program =
@@ -119,14 +119,20 @@ module Coerce(B: BoundType.Bound)
              (E: sig
                 val trans_proof: (PM.Transition.t,PM'.Transition.t) Type_equal.t
                 val rvtuple__proof: (PM.RV.RVTuple_.t,PM'.RV.RVTuple_.t) Type_equal.t
+                val trans_cmp_wit_proof: (PM.Transition.comparator_witness,PM'.Transition.comparator_witness) Type_equal.t
               end) = struct
   let trans_appr_proof =
-    let module L = Type_equal.Lift2(struct type ('a,'b) t = ('a,'b) TransitionApproximationType.transition_approximation_t end) in
-    L.lift E.trans_proof Type_equal.T
+    let module L =
+      Type_equal.Lift3(struct
+        type ('trans,'bound,'trans_cmp_wit) t =
+          ('trans,'bound,'trans_cmp_wit) TransitionApproximationType.transition_approximation_t
+      end)
+    in
+    L.lift E.trans_proof Type_equal.refl E.trans_cmp_wit_proof
 
   let size_appr_proof =
     let module L = Type_equal.Lift2(struct type ('a,'b) t = ('a,'b) SizeApproximationType.size_approximation_t end) in
-    L.lift E.rvtuple__proof Type_equal.T
+    L.lift E.rvtuple__proof Type_equal.refl
 
   let coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t = fun appr ->
     Type_equal.{ size = conv size_appr_proof  appr.size
@@ -162,6 +168,7 @@ module Probabilistic = struct
         (struct
           let trans_proof = ProbabilisticPrograms.Equalities.trans_eq
           let rvtuple__proof = ProbabilisticPrograms.Equalities.rvtuple__eq
+          let trans_cmp_wit_proof = ProbabilisticPrograms.Equalities.trans_cmp_wit_eq
         end)
     in
     M.coerce

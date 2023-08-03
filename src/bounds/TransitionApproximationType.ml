@@ -1,6 +1,6 @@
 open OurBase
 
-type ('trans,'bound) transition_approximation_t = string * ('trans, 'bound) Hashtbl.t
+type ('trans,'bound,'trans_cmp_wit) transition_approximation_t = string * ('trans, 'bound, 'trans_cmp_wit) Map.t
 
 module type ApproximableTransition = sig
   type program
@@ -12,8 +12,7 @@ module type ApproximableTransition = sig
   val all_from_program: program -> t Sequence.t
   val ids_to_string: ?pretty:bool -> t -> string
 
-  val sexp_of_t: t -> Sexp.t
-  val hash: t -> int
+  include Comparator.S with type t := t
 end
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = struct
@@ -32,12 +31,12 @@ module Make(B : BoundType.Bound)
     let logger = Logging.(get Approximation)
 
     (** TODO improve type safety by making a hash table over transitions *)
-    type t = (T.t,B.t) transition_approximation_t
+    type t = (T.t,B.t,T.comparator_witness) transition_approximation_t
 
-    let empty name size = (name, Hashtbl.create (module T) ~size)
+    let empty name = (name, Map.empty (module T))
 
     let get (name,map) t =
-      let execute () = Hashtbl.find map t |? B.infinity in
+      let execute () = Map.find map t |? B.infinity in
       Logger.with_log logger Logger.DEBUG
                          (fun () -> name ^ "bound", ["transition", T.to_id_string t])
                          ~result:B.to_string
@@ -47,8 +46,10 @@ module Make(B : BoundType.Bound)
       Sequence.fold ~f:(fun result trans -> B.(get appr trans + result)) ~init:B.zero (T.all_from_program program)
 
     let add ?(simplifyfunc=identity) bound transition (name,map) =
-      Hashtbl.change map transition
-        ~f:(Option.some % Option.value_map ~f:(simplifyfunc % B.keep_simpler_bound bound) ~default:(simplifyfunc bound));
+      let map =
+        Map.change map transition
+          ~f:(Option.some % Option.value_map ~f:(simplifyfunc % B.keep_simpler_bound bound) ~default:(simplifyfunc bound))
+      in
       Logger.log logger Logger.INFO
         (fun () -> "add_" ^ name ^ "_bound", ["transition", T.to_id_string transition; "bound", B.to_string bound]);
       (name, map)

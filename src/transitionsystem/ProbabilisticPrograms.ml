@@ -862,7 +862,9 @@ end
 
 module Equalities = struct
   let trans_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Type_equal.t =
-    Type_equal.T
+    Type_equal.refl
   let rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t =
-    Type_equal.T
+    Type_equal.refl
+  let trans_cmp_wit_eq: (ProbabilisticTransitionNonProbOverappr.comparator_witness, ProbabilisticTransition.comparator_witness) Type_equal.t =
+    Type_equal.refl
 end

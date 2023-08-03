@@ -11,25 +11,25 @@ module type ApproximableTransition = sig
   val all_from_program: program -> t Base.Sequence.t
   val ids_to_string: ?pretty:bool -> t -> string
 
-  val sexp_of_t: t -> Sexp.t
-  val hash: t -> int
+  include Comparator.S with type t := t
 end
-
-(** The type of transition approximations *)
-type ('trans,'bound) transition_approximation_t
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules):
   ApproximableTransition with type program = PM.Program.t
                           and type t = PM.Transition.t
+                          and type comparator_witness = PM.Transition.comparator_witness
+
+(** The type of transition approximations *)
+type ('trans,'bound,'trans_cmp_wit) transition_approximation_t
 
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
 module Make(B : BoundType.Bound)
            (T: ApproximableTransition):
    sig
-     type t = (T.t,B.t) transition_approximation_t
+     type t = (T.t,B.t,T.comparator_witness) transition_approximation_t
 
-     val empty : string -> int -> t
+     val empty : string -> t
 
      val get : t -> T.t -> B.t
 
