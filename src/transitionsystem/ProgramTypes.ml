@@ -441,7 +441,7 @@ module type ProgramModules = sig
   module Location: Location
   module LocationSet: LocationSet
     with type elt = Location.t
-     and type comparator_witness = Location.comparator_witness
+     and type elt_comparator_witness = Location.comparator_witness
 
   module UpdateElement: PolyTypes.Polynomial
     with type value = OurInt.t
@@ -455,7 +455,7 @@ module type ProgramModules = sig
 
   module TransitionSet: TransitionSet
     with type elt = Transition.t
-     and type comparator_witness = Transition.comparator_witness
+     and type elt_comparator_witness = Transition.comparator_witness
      and type location_set = (Location.t, Location.comparator_witness) Set.t
 
   module TransitionGraph: TransitionGraph

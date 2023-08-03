@@ -131,13 +131,13 @@ end
 
 module type SetCreators'0 = sig
   type elt
-  type comparator_witness
+  type elt_comparator_witness
   include Set.Creators0
     with type elt := elt
-     and type comparator_witness := comparator_witness
+     and type comparator_witness := elt_comparator_witness
      and type ('a, 'cmp) set = ('a, 'cmp) Set.t
-     and type t = (elt, comparator_witness) Set.t
-     and type tree = (elt, comparator_witness) Set.Using_comparator.Tree.t
+     and type t = (elt, elt_comparator_witness) Set.t
+     and type tree = (elt, elt_comparator_witness) Set.Using_comparator.Tree.t
 
   val powerset: t -> t Sequence.t
 end
@@ -153,12 +153,12 @@ module type MapCreators'1 = sig
 end
 
 (** Does this already exist somewhere? I could not find it… *)
-module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and type comparator_witness = M.comparator_witness = struct
+module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and type elt_comparator_witness = M.comparator_witness = struct
   type ('a, 'cmp) set = ('a, 'cmp) Set.t
   type t = (M.t, M.comparator_witness) Set.t
   type tree = (M.t, M.comparator_witness) Set.Using_comparator.Tree.t
   type elt = M.t
-  type comparator_witness = M.comparator_witness
+  type elt_comparator_witness = M.comparator_witness
 
   let empty = Set.empty (module M)
   let singleton = Set.singleton (module M)

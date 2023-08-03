@@ -4,7 +4,7 @@ open OurBase
 module LocationSetOver(L: ProgramTypes.Location) : sig
   include ProgramTypes.LocationSet
     with type elt = L.t
-     and type comparator_witness = L.comparator_witness
+     and type elt_comparator_witness = L.comparator_witness
 end
 
 include ProgramTypes.Location

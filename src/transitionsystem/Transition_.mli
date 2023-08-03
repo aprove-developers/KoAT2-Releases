@@ -11,19 +11,19 @@ end
 
 module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location with type t = T.location): sig
   (** A set of transitions. *)
-  (* include module type of Set with type ('a,'b) t :=  ('a,'b) base_set_t *)
+
+  type elt = T.t
+  type elt_comparator_witness = T.comparator_witness
 
   include SetCreators'0
-    with type elt = T.t
-     and type comparator_witness = T.comparator_witness
+    with type elt := elt
+     and type elt_comparator_witness := elt_comparator_witness
 
   include ProgramTypes.TransitionSet
-    with type elt = T.t
-     and type comparator_witness = T.comparator_witness
+    with type elt := elt
+     and type elt_comparator_witness := elt_comparator_witness
      and type location_set = (L.t, L.comparator_witness) Set.t
-
 end
-
 
 include ProgramTypes.Transition
   with type location = Location.t
