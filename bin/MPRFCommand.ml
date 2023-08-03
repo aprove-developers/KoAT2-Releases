@@ -4,9 +4,9 @@ open OurBase
 open ProgramModules
 open Readers
 
-let description = "Search for a linear ranking function"
+let description = "Search for a multiphase linear ranking function"
 
-let command = "prf"
+let command = "mprf"
 
 type params = {
     input : string; [@aka ["i"]] [@pos 0]
@@ -17,11 +17,13 @@ type params = {
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
 
+    depth : int [@default 1] [@aka ["d"]]
+    (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
+
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
-  let depth = 1 in
   params.input
   |> Readers.read_input params.simple_input
   |> (fun program ->
@@ -34,6 +36,6 @@ let run (params: params) =
                      |> TransitionGraph.transitions
                      |> Base.Set.filter ~f:(not % Approximation.is_time_bounded appr)
                    in
-                   MultiphaseRankingFunction.find `Time program depth
+                   MultiphaseRankingFunction.find `Time program params.depth
                    |> Base.Sequence.filter ~f:(Base.Set.mem transitions % MultiphaseRankingFunction.decreasing)
                    |> Base.Sequence.iter ~f:(fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))))
