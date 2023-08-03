@@ -19,8 +19,6 @@ module Make(B: BoundType.Bound)(RV: ProgramTypes.RV):
 
     val to_string : t -> string
 
-    val equivalent : t -> t -> bool
-
     val enum: t -> (RV.t * B.t) Enum.t
     val of_enum: (RV.t * B.t) Enum.t -> t
   end

@@ -59,24 +59,6 @@ module Make(B : BoundType.Bound)
     let to_string size =
       FormattedString.render_string @@ to_formatted size
 
-    (** Very slow equality, only for testing purposes *)
-    let equivalent size1 size2 =
-      let module Set =
-        Set.Make(struct type t = RV.t * B.t
-                        let compare (rv1,bound1) (rv2,bound2) =
-                          if RV.compare rv1 rv2 != 0 then
-                            RV.compare rv1 rv2
-                          else if B.(bound1 < bound2) |? false then
-                            -1
-                          else if B.(bound1 > bound2) |? false then
-                            1
-                          else
-                            0
-                 end)
-      in
-      let to_set = Set.of_enum % Map.enum in
-      Set.equal (to_set size1) (to_set size2)
-
   end
 
 module EqMake(B: BoundType.Bound)

@@ -17,10 +17,6 @@ module Make(B: BoundType.Bound)
       cost: TransitionApproximation.t;
     } [@@deriving lens { submodule = true }]
 
-  let equivalent appr1 appr2 =
-    TransitionApproximation.equivalent appr1.time appr2.time
-    && SizeApproximation.equivalent appr1.size appr2.size
-
   let empty transitioncount varcount = {
       time = TransitionApproximation.empty "time" transitioncount;
       size = SizeApproximation.empty (2 * transitioncount * varcount);

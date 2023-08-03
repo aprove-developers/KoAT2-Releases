@@ -66,24 +66,6 @@ module Make(B : BoundType.Bound)
 
     let to_string ?(termination_only=false) transitions (name, map) =
       FormattedString.render_string @@ to_formatted ~termination_only transitions (name, map)
-
-    (** Very slow equality, only for testing purposes *)
-    let equivalent (name1,map1) (name2,map2) =
-      let module Set =
-        Set.Make(struct type t = int * B.t
-                        let compare (id1,bound1) (id2,bound2) =
-                          if Int.compare id1 id2 != 0 then
-                            Int.compare id1 id2
-                          else if B.(bound1 < bound2) |? false then
-                            -1
-                          else if B.(bound1 > bound2) |? false then
-                            1
-                          else
-                            0
-                 end)
-      in
-      let to_set = Set.of_enum % Hashtbl.enum in
-      Set.equal (to_set map1) (to_set map2)
   end
 
 module EqMake(B: BoundType.Bound)

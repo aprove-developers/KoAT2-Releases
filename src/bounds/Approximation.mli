@@ -25,10 +25,6 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
   (**  Creates a string containing time,size and cost-bounds. *)
   val to_string : ?termination_only:bool -> PM.Program.t -> t -> string
 
-  (** Returns true iff. time and size-bounds are equivalent. Costs-bounds are not considered. *)
-  val equivalent : t -> t -> bool
-
-
   (** {1  {L Timebound related methods}} *)
 
   (** Returns a timebound for the transition. *)

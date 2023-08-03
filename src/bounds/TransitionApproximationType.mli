@@ -37,8 +37,6 @@ module Make(B : BoundType.Bound)
      val to_formatted : ?pretty:bool -> ?termination_only:bool -> T.t list -> t -> FormattedString.t
 
      val to_string : ?termination_only:bool -> T.t list -> t -> string
-
-     val equivalent : t -> t -> bool
    end
 
 module EqMake(B: BoundType.Bound)
