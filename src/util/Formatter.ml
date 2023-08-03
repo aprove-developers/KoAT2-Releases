@@ -6,6 +6,7 @@ type format = Plain
             | Html
             | Markdown
 
+let all_formats = [ Html; Markdown; Plain ]
 
 let format_to_string = function
   | Plain -> "plain"

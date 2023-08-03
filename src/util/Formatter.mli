@@ -3,6 +3,8 @@ open FormatMonad
 
 type format = Plain | Html | Markdown
 
+val all_formats: format List.t
+
 val format_to_string: format -> string
 
 val is_html: format -> bool
