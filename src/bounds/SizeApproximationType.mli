@@ -1,11 +1,13 @@
-open Batteries
+open OurBase
 open BoundsInst
 open ProgramModules
 open RVGTypes
 
+type ('rvtuple_,'bound) size_approximation_t
+
 module Make(B: BoundType.Bound)(RV: ProgramTypes.RV):
   sig
-    type t
+    type t = (RV.RVTuple_.t,B.t) size_approximation_t
 
     val empty : int -> t
 
@@ -19,16 +21,6 @@ module Make(B: BoundType.Bound)(RV: ProgramTypes.RV):
 
     val to_string : t -> string
 
-    val enum: t -> (RV.t * B.t) Enum.t
-    val of_enum: (RV.t * B.t) Enum.t -> t
+    val to_sequence: t -> (RV.t * B.t) Sequence.t
+    val of_sequence: (RV.t * B.t) Sequence.t -> t
   end
-
-module EqMake(B: BoundType.Bound)
-             (RV: ProgramTypes.RV)(RV': ProgramTypes.RV)
-             (_: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
-                val proof: (F(RV.RVTuple_).t, F(RV'.RVTuple_).t) Util.TypeEq.t
-              end): sig
-
-  val proof: (Make(B)(RV).t, Make(B)(RV').t) Util.TypeEq.t
-
-end

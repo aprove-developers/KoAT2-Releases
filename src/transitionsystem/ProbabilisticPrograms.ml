@@ -861,17 +861,8 @@ module ProbabilisticRVNonProbOverappr = struct
 end
 
 module Equalities = struct
-  let t_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Util.TypeEq.t =
-    Util.TypeEq.Refl
-
-  module RVTupleTypeCoercion = struct
-    module A = ProbabilisticRVNonProbOverappr.RVTuple_
-    module B = ProbabilisticRV.RVTuple_
-
-    module Coerce(F: functor(_:ProgramTypes.RVTuple) -> sig type t end): sig
-      val proof: (F(A).t, F(B).t) Util.TypeEq.t
-    end = struct
-      let proof: (F(A).t,F(B).t) Util.TypeEq.t = Util.TypeEq.Refl
-    end
-  end
+  let trans_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Type_equal.t =
+    Type_equal.T
+  let rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t =
+    Type_equal.T
 end

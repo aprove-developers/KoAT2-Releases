@@ -154,16 +154,3 @@ let read_process cmd =
 let rec iterate_n_times (f: 'a -> 'a) (n: int) (a: 'a): 'a =
   if n < 0 then raise (Invalid_argument "iterate_n_times: Negative Argument")
   else if n = 0 then a else iterate_n_times f (n-1) (f a)
-
-module TypeEq = struct
-  type (_,_) t =  | Refl: ('a,'a) t
-
-  let trans: type a b c. (a,b) t -> (b,c) t -> (a,c) t =
-    fun Refl -> fun Refl -> Refl
-
-  let sym: type a b. (a,b) t -> (b,a) t =
-    fun Refl -> Refl
-
-  let coerce: type a b. (a,b) t -> a -> b =
-    fun Refl -> fun a -> a
-end

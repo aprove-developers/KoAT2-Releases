@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 
 (** Module type of transitions for which we can create approximations *)
 module type ApproximableTransition = sig
@@ -10,7 +10,13 @@ module type ApproximableTransition = sig
   val compare: t -> t -> int
   val all_from_program: program -> t Base.Sequence.t
   val ids_to_string: ?pretty:bool -> t -> string
+
+  val sexp_of_t: t -> Sexp.t
+  val hash: t -> int
 end
+
+(** The type of transition approximations *)
+type ('trans,'bound) transition_approximation_t
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules):
   ApproximableTransition with type program = PM.Program.t
@@ -21,7 +27,7 @@ module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules):
 module Make(B : BoundType.Bound)
            (T: ApproximableTransition):
    sig
-     type t
+     type t = (T.t,B.t) transition_approximation_t
 
      val empty : string -> int -> t
 
@@ -32,14 +38,9 @@ module Make(B : BoundType.Bound)
 
      val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> T.t -> t -> t
 
-     val all_bounded : t -> T.t Enum.t -> bool
+     val all_bounded : t -> T.t Sequence.t -> bool
 
      val to_formatted : ?pretty:bool -> ?termination_only:bool -> T.t list -> t -> FormattedString.t
 
      val to_string : ?termination_only:bool -> T.t list -> t -> string
    end
-
-module EqMake(B: BoundType.Bound)
-             (T: ApproximableTransition)(T': ApproximableTransition): sig
-  val proof: (Make(B)(T).t, Make(B)(T').t) Util.TypeEq.t
-end

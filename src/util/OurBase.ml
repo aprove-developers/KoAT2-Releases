@@ -12,6 +12,7 @@ module Sexp = Base.Sexp
 module Sexpable = Base.Sexpable
 module Stack = Base.Stack
 module String = Base.String
+module Type_equal = Base.Type_equal
 
 let bool_of_sexp = Base.bool_of_sexp
 let float_of_sexp = Base.float_of_sexp

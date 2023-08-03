@@ -72,14 +72,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     (Transition.t,Program.t,Transition.comparator_witness,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
 
   let proof_program_is_standard
-      ~(eq_proof_prog:(Program.t, ProgramModules.Program.t) Util.TypeEq.t): (Program.t, ProgramModules.Program.t) Util.TypeEq.t =
+      ~(eq_proof_prog:(Program.t, ProgramModules.Program.t) OurBase.Type_equal.t): (Program.t, ProgramModules.Program.t) OurBase.Type_equal.t =
     eq_proof_prog
 
   let proof_tset_is_standard
-      ~(eq_proof_trans:(Transition.t, ProgramModules.Transition.t) Util.TypeEq.t)
-      ~(eq_proof_trans_comparator:(Transition.comparator_witness, ProgramModules.Transition.comparator_witness) Util.TypeEq.t):
-        (TransitionSet.t, ProgramModules.TransitionSet.t) Util.TypeEq.t =
-    let Refl = eq_proof_trans in let Refl = eq_proof_trans_comparator in Refl
+      ~(eq_proof_trans:(Transition.t, ProgramModules.Transition.t) OurBase.Type_equal.t)
+      ~(eq_proof_trans_comparator:(Transition.comparator_witness, ProgramModules.Transition.comparator_witness) OurBase.Type_equal.t):
+        (TransitionSet.t, ProgramModules.TransitionSet.t) OurBase.Type_equal.t =
+    let T = eq_proof_trans in let T = eq_proof_trans_comparator in T
 
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
@@ -340,8 +340,8 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
   match conf.closed_form_size_bounds with
   | NoClosedFormSizeBounds -> appr
   | ComputeClosedFormSizeBounds ->
-    let Util.TypeEq.Refl = proof_program_is_standard ~eq_proof_prog:Refl                                  in
-    let Util.TypeEq.Refl = proof_tset_is_standard    ~eq_proof_trans:Refl ~eq_proof_trans_comparator:Refl in
+    let OurBase.Type_equal.T = proof_program_is_standard ~eq_proof_prog:T                               in
+    let OurBase.Type_equal.T = proof_tset_is_standard    ~eq_proof_trans:T ~eq_proof_trans_comparator:T in
     TWNSizeBounds.improve program ~scc:(Option.some scc) appr
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
@@ -402,7 +402,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
     match conf.cfr_configuration with
     | NoCFR -> program,appr,opt_rvg
     | PerformCFR cfr -> (
-      let Util.TypeEq.Refl = proof_tset_is_standard ~eq_proof_trans:Refl ~eq_proof_trans_comparator:Refl in
+      let OurBase.Type_equal.T = proof_tset_is_standard ~eq_proof_trans:T ~eq_proof_trans_comparator:T in
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
       let lsbs = opt_lsbs |? LSB_Table.create 0 in

@@ -1,13 +1,11 @@
 (** Implementation of approximations containing time, size and cost-bounds. *)
-open Batteries
+open OurBase
 open BoundsInst
 
 (** Provides default implementations of an approximation *)
 
 module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
            (T: TransitionApproximationType.ApproximableTransition with type program = PM.Program.t): sig
-  (* module TransitionApproximation: module type of TransitionApproximationType.Make(B)(PM) *)
-  (* module SizeApproximation: module type of SizeApproximationType.Make(B)(RV) *)
   type t
 
   (** Returns an empty approximation that does not contain any non-trivial information.
@@ -23,7 +21,7 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
   val to_formatted : ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> FormattedString.t
 
   (**  Creates a string containing time,size and cost-bounds. *)
-  val to_string : ?termination_only:bool -> PM.Program.t -> t -> string
+  val to_string : ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> string
 
   (** {1  {L Timebound related methods}} *)
 
@@ -38,7 +36,7 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
   val add_timebound : B.t -> T.t -> t -> t
 
   (** Returns true iff. all transitions from a given list of transitions are bounded and not infinity. *)
-  val all_times_bounded : t -> T.t Enum.t -> bool
+  val all_times_bounded : t -> T.t OurBase.Sequence.t -> bool
 
   (** Returns true iff. a given transition is bounded and not infinity. *)
   val is_time_bounded : t -> T.t -> bool
@@ -82,21 +80,6 @@ module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules):
 
 include module type of MakeForClassicalAnalysis(ProgramModules)
 
-
-module Coerce(B: BoundType.Bound)
-             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
-             (_: sig
-
-                val t_eq: ( TransitionApproximationType.MakeDefaultApproximableTransition(PM).t
-                          , TransitionApproximationType.MakeDefaultApproximableTransition(PM').t) Util.TypeEq.t
-
-                module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
-                  val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
-                 end
-              end): sig
-
-  val coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t
-end
 
 module Probabilistic: sig
   module NonProbOverapprApproximation:

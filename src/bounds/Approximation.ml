@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open BoundsInst
 open Formatter
 open FormattedString
@@ -25,7 +25,7 @@ module Make(B: BoundType.Bound)
 
   let create program =
     empty (TransitionGraph.nb_edges (Program.graph program))
-          (Base.Set.length (Program.vars program))
+          (Set.length (Program.vars program))
 
   let time appr = appr.time
 
@@ -46,7 +46,7 @@ module Make(B: BoundType.Bound)
     Lens.size ^%= SizeApproximation.add_all bound scc
 
   let is_size_bounded program appr t =
-    not @@ Base.Set.exists ~f:(fun v -> B.is_infinity @@ sizebound appr t v ) (Program.input_vars program)
+    not @@ Set.exists ~f:(fun v -> B.is_infinity @@ sizebound appr t v ) (Program.input_vars program)
 
   (** Timebound related methods *)
 
@@ -77,7 +77,7 @@ module Make(B: BoundType.Bound)
     Lens.cost ^%= TransitionApproximation.add bound transition
 
   let to_formatted ?(show_initial=false) ?(pretty=false) ?(termination_only=false) (program: Program.t) appr =
-    let approximable_transitions = Base.Sequence.to_list (T.all_from_program program) in
+    let approximable_transitions = Sequence.to_list (T.all_from_program program) in
 
     let overall_timebound = program_timebound appr program in
     mk_str_header_big "All Bounds" <>
@@ -103,29 +103,9 @@ module Make(B: BoundType.Bound)
           mk_str_line ("Overall termination: " ^ B.to_string ~pretty ~termination_only overall_timebound)
           <> TransitionApproximation.to_formatted ~pretty ~termination_only approximable_transitions appr.time) ))
 
-
-
   (* TODO: use to_formatted *)
-  let to_string ?(termination_only=false) program appr =
-    let approximable_transitions = Base.Sequence.to_list (T.all_from_program program) in
-    let overall_costbound = program_costbound appr program in
-    let output = IO.output_string () in
-      if (not (B.is_infinity overall_costbound)) then
-        IO.nwrite output ("YES( ?, " ^ B.to_string ~termination_only (overall_costbound) ^ ")\n\n")
-      else
-        IO.nwrite output "MAYBE\n\n";
-      IO.nwrite output "Initial Complexity Problem After Preprocessing:\n";
-      IO.nwrite output (Program.to_string program^"\n");
-      IO.nwrite output "Timebounds: \n";
-      IO.nwrite output ("  Overall timebound: " ^ B.to_string ~termination_only (program_timebound appr program) ^ "\n");
-      appr.time |> TransitionApproximation.to_string ~termination_only approximable_transitions |> IO.nwrite output;
-      if not termination_only then
-        IO.nwrite output "\nCostbounds:\n";
-        IO.nwrite output ("  Overall costbound: " ^ B.to_string (overall_costbound) ^ "\n");
-        appr.cost |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
-      IO.nwrite output "\nSizebounds:\n";
-      appr.size |> SizeApproximation.to_string |> IO.nwrite output;
-      IO.close_out output
+  let to_string ?(show_initial=false) ?(pretty=true) ?(termination_only=false) program appr =
+    FormattedString.render_string @@ to_formatted ~show_initial:true ~pretty ~termination_only program appr
 end
 
 module MakeWithDefaultTransition(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) =
@@ -137,21 +117,22 @@ module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
 module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (E: sig
-                module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
-                  val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
-                 end
+                val trans_proof: (PM.Transition.t,PM'.Transition.t) Type_equal.t
+                val rvtuple__proof: (PM.RV.RVTuple_.t,PM'.RV.RVTuple_.t) Type_equal.t
               end) = struct
+  let trans_appr_proof =
+    let module L = Type_equal.Lift2(struct type ('a,'b) t = ('a,'b) TransitionApproximationType.transition_approximation_t end) in
+    L.lift E.trans_proof Type_equal.T
 
-  module SizeApproximationEq = SizeApproximationType.EqMake(B)(PM.RV)(PM'.RV)(E.RVTupleEq)
-  module TransitionApproximationEq =
-    TransitionApproximationType.EqMake(B)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
-                                         (TransitionApproximationType.MakeDefaultApproximableTransition(PM'))
+  let size_appr_proof =
+    let module L = Type_equal.Lift2(struct type ('a,'b) t = ('a,'b) SizeApproximationType.size_approximation_t end) in
+    L.lift E.rvtuple__proof Type_equal.T
 
   let coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t = fun appr ->
-    match SizeApproximationEq.proof, TransitionApproximationEq.proof with
-    | Refl,Refl ->
-      (* type equality does not seem to be lifted to records *)
-      { size = appr.size; time = appr.time; cost = appr.cost; }
+    Type_equal.{ size = conv size_appr_proof  appr.size
+               ; time = conv trans_appr_proof appr.time
+               ; cost = conv trans_appr_proof appr.cost
+               }
 end
 
 include MakeForClassicalAnalysis(ProgramModules)
@@ -172,14 +153,15 @@ module Probabilistic = struct
           type program = Program.t
           include GeneralTransition
           let id = gt_id
-          let all_from_program = Base.Set.to_sequence % Program.gts
+          let all_from_program = Set.to_sequence % Program.gts
         end)
 
   let coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t =
     let module M = Coerce(BoundsInst.Bound)
                          (ProbabilisticProgramModules.NonProbOverappr)(ProbabilisticProgramModules)
         (struct
-          module RVTupleEq = ProbabilisticPrograms.Equalities.RVTupleTypeCoercion.Coerce
+          let trans_proof = ProbabilisticPrograms.Equalities.trans_eq
+          let rvtuple__proof = ProbabilisticPrograms.Equalities.rvtuple__eq
         end)
     in
     M.coerce

@@ -171,13 +171,6 @@ module ProbabilisticRVNonProbOverappr:
 
 module Equalities: sig
   (** Some Equalities *)
-  val t_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Util.TypeEq.t
-  module RVTupleTypeCoercion: sig
-    module A = ProbabilisticRVNonProbOverappr.RVTuple_
-    module B = ProbabilisticRV.RVTuple_
-
-    module Coerce(F: functor(_:ProgramTypes.RVTuple) -> sig type t end): sig
-      val proof: (F(A).t,F(B).t) Util.TypeEq.t
-    end
-  end
+  val trans_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Type_equal.t
+  val rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t
 end

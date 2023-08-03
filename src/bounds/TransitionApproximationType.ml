@@ -1,4 +1,6 @@
-open Batteries
+open OurBase
+
+type ('trans,'bound) transition_approximation_t = string * ('trans, 'bound) Hashtbl.t
 
 module type ApproximableTransition = sig
   type program
@@ -7,14 +9,17 @@ module type ApproximableTransition = sig
   val id: t -> int
   val to_id_string: t -> string
   val compare: t -> t -> int
-  val all_from_program: program -> t Base.Sequence.t
+  val all_from_program: program -> t Sequence.t
   val ids_to_string: ?pretty:bool -> t -> string
+
+  val sexp_of_t: t -> Sexp.t
+  val hash: t -> int
 end
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = struct
   type program = PM.Program.t
   let all_from_program =
-    Base.Set.to_sequence % PM.Program.transitions
+    Set.to_sequence % PM.Program.transitions
 
   include PM.Transition
   let ids_to_string ?(pretty=false) =
@@ -27,48 +32,37 @@ module Make(B : BoundType.Bound)
     let logger = Logging.(get Approximation)
 
     (** TODO improve type safety by making a hash table over transitions *)
-    type t = string * (int, B.t) Hashtbl.t
+    type t = (T.t,B.t) transition_approximation_t
 
-    let empty name size = (name, Hashtbl.create size)
+    let empty name size = (name, Hashtbl.create (module T) ~size)
 
-    let get_id (name,map) id =
-      let execute () =
-        Hashtbl.find_option map id |? B.infinity
-      in Logger.with_log logger Logger.DEBUG
-                         (fun () -> name ^ "bound", ["transition", string_of_int id])
+    let get (name,map) t =
+      let execute () = Hashtbl.find map t |? B.infinity in
+      Logger.with_log logger Logger.DEBUG
+                         (fun () -> name ^ "bound", ["transition", T.to_id_string t])
                          ~result:B.to_string
                          execute
 
-    let get (name,map) transition =
-      get_id (name,map) (T.id transition)
-
     let sum appr program =
-      Base.Sequence.fold ~f:(fun result trans -> B.(get appr trans + result)) ~init:B.zero (T.all_from_program program)
+      Sequence.fold ~f:(fun result trans -> B.(get appr trans + result)) ~init:B.zero (T.all_from_program program)
 
     let add ?(simplifyfunc=identity) bound transition (name,map) =
-      (try
-         Hashtbl.modify (T.id transition) (simplifyfunc % B.keep_simpler_bound bound) map
-       with
-       | Not_found -> Hashtbl.add map (T.id transition) (simplifyfunc bound));
+      Hashtbl.change map transition
+        ~f:(Option.some % Option.value_map ~f:(simplifyfunc % B.keep_simpler_bound bound) ~default:(simplifyfunc bound));
       Logger.log logger Logger.INFO
         (fun () -> "add_" ^ name ^ "_bound", ["transition", T.to_id_string transition; "bound", B.to_string bound]);
       (name, map)
 
     let all_bounded appr =
-      Enum.for_all (fun t -> not (B.equal (get appr t) B.infinity))
+      Sequence.for_all ~f:(fun t -> not (B.equal (get appr t) B.infinity))
 
-    let to_formatted ?(pretty=false) ?(termination_only=false) transitions (name, map) =
+    let to_formatted ?(pretty=false) ?(termination_only=false) transitions t =
       transitions
-      |> List.sort T.compare
-      |> List.map (fun t -> t, Hashtbl.find_option map (T.id t) |? B.infinity)
-      |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string ~pretty ~termination_only b)
+      |> List.sort ~compare:T.compare
+      |> List.map ~f:(fun trans -> trans, get t trans)
+      |> List.map ~f:(fun (trans,b) -> FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty trans ^ ": " ^ B.to_string ~pretty ~termination_only b)
       |> FormattedString.mappend
 
-    let to_string ?(termination_only=false) transitions (name, map) =
-      FormattedString.render_string @@ to_formatted ~termination_only transitions (name, map)
+    let to_string ?(termination_only=false) transitions t =
+      FormattedString.render_string @@ to_formatted ~termination_only transitions t
   end
-
-module EqMake(B: BoundType.Bound)
-             (T: ApproximableTransition)(T': ApproximableTransition) = struct
-  let proof: (Make(B)(T).t, Make(B)(T').t) Util.TypeEq.t = Util.TypeEq.Refl
-end
