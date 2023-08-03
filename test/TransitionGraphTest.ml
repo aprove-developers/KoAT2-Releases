@@ -66,7 +66,7 @@ let suite =
       );
       (
         "Print" >:: (fun _ ->
-          GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat");
+          GraphPrint.print_system ~format:"png" ~label:(TransitionLabel.to_string % Transition.label) ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat");
           "../../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
           |> tap (fun program -> GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)

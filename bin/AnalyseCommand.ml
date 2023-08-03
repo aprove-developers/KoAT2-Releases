@@ -128,11 +128,11 @@ type params = {
 
 
 (** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)
-let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
+let bounded_label_to_string (appr: Approximation.t) (trans: Transition.t): string =
   String.concat ~sep:"" ["s: ";
-                    Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
+                    Approximation.timebound appr trans |> Bound.to_string;
                     "\n";
-                    TransitionLabel.to_string label]
+                    TransitionLabel.to_string (Transition.label trans)]
 
 (** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)
 let bounded_rv_to_string (program: Program.t) (appr: Approximation.t) (t,v) =
@@ -231,7 +231,7 @@ let run (params: params) =
             <> program_to_formatted_string prog params.proof_format))
      |> tap (fun (program, appr) ->
             if params.print_system then
-              GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+              GraphPrint.print_system ~format:"png" ~label:(TransitionLabel.to_string % Transition.label) ~outdir:output_dir ~file:input_filename program)
      |> tap (fun (program, appr) ->
             if params.print_rvg then (
               GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program

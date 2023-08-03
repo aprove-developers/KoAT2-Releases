@@ -38,7 +38,7 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
     (* Definition of some graphviz options how it should be layout *)
     let module Dot = Graph.Graphviz.Dot(struct
                                          include TransitionGraph
-                                         let edge_attributes (a, e, b) = [`Label (label e); `Color 4711]
+                                         let edge_attributes (a, e, b) = [`Label (label (a,e,b)); `Color 4711]
                                          let default_edge_attributes _ = []
                                          let get_subgraph _ = None
                                          let vertex_attributes _ = [`Shape `Box]
