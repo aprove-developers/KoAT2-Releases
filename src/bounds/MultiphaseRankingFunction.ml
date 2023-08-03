@@ -3,7 +3,7 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open BoundsInst
+open Bounds
 
 module Solver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)

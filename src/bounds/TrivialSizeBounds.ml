@@ -1,6 +1,6 @@
 (** Modules used to infer size-bounds for trivial components. *)
 open OurBase
-open BoundsInst
+open Bounds
 
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'.*)

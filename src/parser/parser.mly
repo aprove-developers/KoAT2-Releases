@@ -42,7 +42,7 @@
 
 %start <ProbabilisticPrograms.GeneralTransitionSet.t> general_transitions
 
-%start <BoundsInst.Bound.t> onlyBound
+%start <Bounds.Bound.t> onlyBound
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoal
 
@@ -62,7 +62,7 @@
   open Polynomials
   open Formulas
   open ProgramModules
-  open BoundsInst
+  open Bounds
 %}
 
 %%

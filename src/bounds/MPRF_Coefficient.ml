@@ -1,5 +1,5 @@
 open Batteries
-open BoundsInst
+open Bounds
 
 let logger = Logging.(get Time)
 

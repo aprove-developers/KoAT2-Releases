@@ -1,5 +1,5 @@
 open Atoms
-open BoundsInst
+open Bounds
 
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   module Loop: module type of Loop.Make(PM)

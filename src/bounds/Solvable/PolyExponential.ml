@@ -431,7 +431,7 @@ module PE = struct
         else
             x::xs, [] *)
 
-    open BoundsInst
+    open Bounds
 
     let overapprox t runtime_bound =
         List.map (fun (c, p, d, b) ->

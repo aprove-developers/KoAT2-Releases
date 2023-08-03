@@ -3,7 +3,7 @@ open ProgramTypes
 open ProgramModules
 open Polynomials
 open PolyExponential
-open BoundsInst
+open Bounds
 open Constraints
 
 module Check_Solvable = Check_Solvable.Make(ProgramModules)

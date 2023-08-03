@@ -1,6 +1,6 @@
 open Koat2
 open Batteries
-open BoundsInst
+open Bounds
 open OUnit2
 open Helper
 open ProgramModules

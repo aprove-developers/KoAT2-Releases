@@ -1,5 +1,5 @@
 open OurBase
-open BoundsInst
+open Bounds
 open Formulas
 open Polynomials
 open Constraints

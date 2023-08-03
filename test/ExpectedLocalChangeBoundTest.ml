@@ -2,7 +2,7 @@ open Koat2
 open OurBase
 open OUnit2
 open ProbabilisticProgramModules
-open BoundsInst
+open Bounds
 
 let tests =
   let var_first_arg = Base.Sequence.hd_exn Var.args in

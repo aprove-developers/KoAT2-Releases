@@ -1,5 +1,5 @@
 open OurBase
-open BoundsInst
+open Bounds
 open ProgramModules
 open RVGTypes
 

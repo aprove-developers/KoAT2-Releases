@@ -1,5 +1,5 @@
 open OurBase
-open BoundsInst
+open Bounds
 open Formatter
 open FormattedString
 open Lens.Infix
@@ -112,7 +112,7 @@ module MakeWithDefaultTransition(B: BoundType.Bound)(PM: ProgramTypes.ProgramMod
   Make(B)(PM)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
 
 module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
-  MakeWithDefaultTransition(BoundsInst.Bound)(PM)
+  MakeWithDefaultTransition(Bounds.Bound)(PM)
 
 module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
@@ -147,9 +147,9 @@ include MakeForClassicalAnalysis(ProgramModules)
 module Probabilistic = struct
   module NonProbOverapprApproximation = MakeForClassicalAnalysis(ProbabilisticProgramModules.NonProbOverappr)
   module ClassicalApproximation =
-    MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
+    MakeWithDefaultTransition(Bounds.Bound)(ProbabilisticProgramModules)
   module ExpApproximation =
-    Make(BoundsInst.RealBound)
+    Make(Bounds.RealBound)
         (struct
           include ProbabilisticProgramModules
           module RV = GRV
@@ -163,7 +163,7 @@ module Probabilistic = struct
         end)
 
   let coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t =
-    let module M = Coerce(BoundsInst.Bound)
+    let module M = Coerce(Bounds.Bound)
                          (ProbabilisticProgramModules.NonProbOverappr)(ProbabilisticProgramModules)
         (struct
           let trans_proof = ProbabilisticPrograms.Equalities.trans_eq

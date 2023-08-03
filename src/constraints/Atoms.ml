@@ -1,6 +1,6 @@
 open OurBase
 open Polynomials
-open BoundsInst
+open Bounds
 
 module AtomOver(P : ConstraintTypes.Atomizable) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)

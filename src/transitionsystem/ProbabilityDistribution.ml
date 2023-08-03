@@ -93,7 +93,7 @@ let moment_poly d i =
           | _ -> failwith @@ Int.to_string i^". moment of uniform distribution not yet implemented."
   )
 
-open BoundsInst
+open Bounds
 
 let exp_value_abs_bound = function
   | Uniform        (a,b)      -> RealBound.(of_constant (OurFloat.of_float 0.5) * (of_intpoly a + of_intpoly b))

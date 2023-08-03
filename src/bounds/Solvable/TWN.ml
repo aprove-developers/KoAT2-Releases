@@ -1,7 +1,7 @@
 open Automorphism
 open Atoms
 open Batteries
-open BoundsInst
+open Bounds
 open Constraints
 open Formulas
 open FormattedString

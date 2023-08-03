@@ -3,7 +3,7 @@ open Polynomials
 open Atoms
 open Constraints
 open ProgramModules
-open BoundsInst
+open Bounds
 
 exception CFRefinementCRASH
 

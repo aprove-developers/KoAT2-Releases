@@ -1,6 +1,6 @@
 open OurBase
 open ProbabilisticProgramModules
-open BoundsInst
+open Bounds
 
 let compute_ue_diff label v  =
   let ue = Option.value_exn (TransitionLabel.update label v) in

@@ -3,7 +3,7 @@ open Batteries
 open Polynomials
 open ProgramModules
 open Formulas
-open BoundsInst
+open Bounds
 
 module ConstantConstraint:
 sig

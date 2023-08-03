@@ -57,7 +57,7 @@ let tests =
 
                assert_ge_realbound_smt result expected_result
           )
-          (let open BoundsInst.RealBound in
+          (let open Bounds.RealBound in
             [
 
               ( 1

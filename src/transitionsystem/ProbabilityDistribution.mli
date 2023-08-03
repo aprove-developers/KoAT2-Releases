@@ -25,7 +25,7 @@ val moment_poly: t -> int -> RealPolynomial.t
 val admissibility_constraint: t -> Guard.t
 
 (** A bound on the expected absolute value (i.e., the expectation of the absolute value of the random variable)*)
-val exp_value_abs_bound: t -> BoundsInst.RealBound.t
+val exp_value_abs_bound: t -> Bounds.RealBound.t
 
 (** A bound on the corresponding moment of the absolute value (i.e., the expectation of the absolute value of the random variable)*)
-val moment_abs_bound: t -> int -> BoundsInst.RealBound.t
+val moment_abs_bound: t -> int -> Bounds.RealBound.t

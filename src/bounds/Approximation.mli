@@ -1,6 +1,6 @@
 (** Implementation of approximations containing time, size and cost-bounds. *)
 open OurBase
-open BoundsInst
+open Bounds
 
 (** Provides default implementations of an approximation *)
 
@@ -75,7 +75,7 @@ module MakeWithDefaultTransition(B: BoundType.Bound)(PM: ProgramTypes.ProgramMod
   module type of Make(B)(PM)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
 
 module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules):
-  module type of MakeWithDefaultTransition(BoundsInst.Bound)(PM)
+  module type of MakeWithDefaultTransition(Bounds.Bound)(PM)
 
 
 include module type of MakeForClassicalAnalysis(ProgramModules)
@@ -86,10 +86,10 @@ module Probabilistic: sig
     module type of MakeForClassicalAnalysis(ProbabilisticProgramModules.NonProbOverappr)
   module ClassicalApproximation:
     module type of
-      MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
+      MakeWithDefaultTransition(Bounds.Bound)(ProbabilisticProgramModules)
   module ExpApproximation:
     module type of
-      Make(BoundsInst.RealBound)
+      Make(Bounds.RealBound)
           (struct include ProbabilisticProgramModules module RV = GRV end)
           (struct
             open ProbabilisticProgramModules

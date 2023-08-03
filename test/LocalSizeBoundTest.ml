@@ -24,7 +24,7 @@ let tests =
                               assert_equal_bool exp_equality (Lazy.force equality)
 
                           | _ ->
-                              assert_equal_bound (LocalSizeBound.as_bound expected) BoundsInst.Bound.infinity;
+                              assert_equal_bound (LocalSizeBound.as_bound expected) Bounds.Bound.infinity;
                )
          )
                   [

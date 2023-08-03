@@ -4,7 +4,7 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramModules
-open BoundsInst
+open Bounds
 
 (** Implementation of multiphase ranking function based on Linear Ranking Functions, flag --mrf has to be set to use multiphase ranking function. *)
 

@@ -1,6 +1,6 @@
 (** Implementation of local size-bounds. *)
 open OurBase
-open BoundsInst
+open Bounds
 open Formulas
 open Polynomials
 open ProgramTypes

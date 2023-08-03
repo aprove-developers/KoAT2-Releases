@@ -4,7 +4,7 @@ open OurBase
 open ProgramModules
 open RVGTypes
 open Readers
-open BoundsInst
+open Bounds
 open Formatter
 
 let command = "analyse"

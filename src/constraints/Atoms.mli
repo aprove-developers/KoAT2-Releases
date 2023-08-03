@@ -1,7 +1,7 @@
 (** Provides default implementations of atoms. *)
 open OurBase
 open Polynomials
-open BoundsInst
+open Bounds
 
 (** Provides default implementations of atoms, i.e., for two objects q and p (e.g. polynomials, bounds), and a comparator ~, the expression  q ~ p is an atom. *)
 

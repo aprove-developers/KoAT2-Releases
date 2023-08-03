@@ -1,6 +1,6 @@
 open OurBase
 open ProbabilisticProgramModules
-open BoundsInst
+open Bounds
 open Approximation.Probabilistic
 
 type configuration = { compute_refined_plrfs: bool }

@@ -1,6 +1,6 @@
 (** Provides a unified interface of the parser and lexer for transition graphs. *)
 open OurBase
-open BoundsInst
+open Bounds
 
 (** Provides a unified interface of the parser and lexer for transition graphs.
     With this module it is possible to abstract from the details of parsing and lexing *)

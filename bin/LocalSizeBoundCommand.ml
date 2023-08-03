@@ -3,7 +3,7 @@ open Koat2
 open OurBase
 open Polynomials
 open Formulas
-open BoundsInst
+open Bounds
 
 let description = "Search for a local size bound"
 

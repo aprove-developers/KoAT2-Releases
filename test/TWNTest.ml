@@ -5,7 +5,7 @@ open Helper
 open ProgramModules
 open PolyExponential
 open Polynomials
-open BoundsInst
+open Bounds
 
 module Check_TWN = Check_TWN.Make(ProgramModules)
 module TWN_Complexity = TWN_Complexity.Make(ProgramModules)

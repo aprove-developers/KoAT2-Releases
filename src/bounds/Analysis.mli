@@ -1,6 +1,6 @@
 (** Performs improvement steps for the whole program to find better time-bounds. *)
 open Batteries
-open BoundsInst
+open Bounds
 open ProgramTypes
 open RVGTypes
 

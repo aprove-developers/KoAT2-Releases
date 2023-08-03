@@ -1,6 +1,6 @@
 (** Modules used to infer time-bounds for transitions which are not part of a scc. *)
 open Batteries
-open BoundsInst
+open Bounds
 open ProgramModules
 
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.

@@ -1,5 +1,5 @@
 open Batteries
-open BoundsInst
+open Bounds
 open Constraints
 open Polynomials
 open PolyExponential

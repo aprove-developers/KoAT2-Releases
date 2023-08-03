@@ -1,6 +1,6 @@
 (** Implementation of cost-bounds.*)
 open OurBase
-open BoundsInst
+open Bounds
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM

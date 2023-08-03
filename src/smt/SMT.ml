@@ -1,7 +1,7 @@
 open OurBase
 open Formulas
 open Polynomials
-open BoundsInst
+open Bounds
 
 exception SMTFailure of string
 
