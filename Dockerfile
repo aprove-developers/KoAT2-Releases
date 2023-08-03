@@ -14,28 +14,19 @@ ARG OCAML_VERSION=4.14.0
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
 
 RUN wget https://ftp.gnu.org/gnu/make/make-4.3.tar.gz &&\
-    tar -xf make-4.3.tar.gz
-
-RUN cd make-4.3 &&\
-    ./configure
-
-RUN cd make-4.3 && \
-    make
-
-RUN cd make-4.3 && \
+    tar -xf make-4.3.tar.gz && \
+    cd make-4.3 && \
+    ./configure && \
+    make -j$(nproc) && \
     sudo make install && \
-    make -j$(nproc) installcheck
+    make installcheck
+
 # PPL
 RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
-    tar xfv ppl-1.2.tar.xz
-
-RUN cd ppl-1.2 && \
-    ./configure
-
-RUN cd ppl-1.2 && \
-    make -j$(nproc)
-
-RUN cd ppl-1.2 && \
+    tar xfv ppl-1.2.tar.xz && \
+    cd ppl-1.2 && \
+    ./configure && \
+    make -j$(nproc) && \
     sudo make install && \
     make -j$(nproc) installcheck
 
@@ -45,22 +36,25 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     rm irankfinder.zip
 
 # Use our fork of opam-repository for static Z3
-RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
-RUN opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda
-RUN opam repo remove default
+RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git && \
+    opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda && \
+    opam repo remove default
 
 COPY --chown=opam:opam koat2.opam .
 RUN opam install -j $(nproc) . --deps-only
 
-COPY --chown=opam:opam bin ./bin
-COPY --chown=opam:opam dune ./dune
-COPY --chown=opam:opam dune-project ./dune-project
-COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam examples ./examples
-COPY --chown=opam:opam test ./test
 
 ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
 ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
+
+
+COPY --chown=opam:opam dune ./dune
+COPY --chown=opam:opam dune-project ./dune-project
+
+COPY --chown=opam:opam test ./test
+COPY --chown=opam:opam bin ./bin
+COPY --chown=opam:opam src ./src
 
 # Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
@@ -100,7 +94,7 @@ RUN git clone https://github.com/aprove-developers/SMTPushdown.git && \
     opam install ocamlbuild ocamlfind sexplib && \
     eval $(opam env) && \
     cd SMTPushdown/ && \
-    make && \
+    make -j$(nproc) && \
     cp _build/convert.native SMTPushdown
 
 #-------------------------------------------
@@ -118,8 +112,6 @@ WORKDIR /koat2
 COPY examples/Complexity_ITS ./examples/Complexity_ITS
 COPY examples/Complexity_C_Integer ./examples/Complexity_C_Integer
 
-COPY --from=koat2_build /home/opam/koat2 bin/koat2
-COPY --from=koat2_build /home/opam/irankfinder ./irankfinder
 # COPY source code for sympy python script
 COPY python/SizeBoundSolvable.py ./python/SizeBoundSolvable.py
 
@@ -132,8 +124,12 @@ COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
 COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
 
+ENV PATH=$PATH:/koat2/bin:/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder
+
+COPY --from=koat2_build /home/opam/koat2 bin/koat2
+COPY --from=koat2_build /home/opam/irankfinder ./irankfinder
+
 RUN chmod +x /koat2/irankfinder/1.3.1/irankfinder/CFRefinement
 
-ENV PATH=$PATH:/koat2/bin:/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder
 # ENV LD_LIBRARY_PATH=/lib:/usr/local/lib:/usr/lib
 ENTRYPOINT ["wrapper_script.sh"]
