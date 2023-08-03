@@ -57,9 +57,6 @@ module Make(B: BoundType.Bound)
   let timebound =
     TransitionApproximation.get % time
 
-  let timebound_id =
-    TransitionApproximation.get_id % time
-
   let program_timebound =
     TransitionApproximation.sum % time
 

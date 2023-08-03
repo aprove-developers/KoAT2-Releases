@@ -27,8 +27,6 @@ module Make(B : BoundType.Bound)
 
      val get : t -> T.t -> B.t
 
-     val get_id : t -> int -> B.t
-
      (** Returns a timebound for the execution of all given transitions *)
      val sum : t -> T.program -> B.t
 

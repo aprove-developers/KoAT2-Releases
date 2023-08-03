@@ -34,9 +34,6 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
   (** Returns a timebound for the transition. *)
   val timebound : t -> T.t -> B.t
 
-  (** Returns a timebound for the transition id. *)
-  val timebound_id : t -> int -> B.t
-
   (** Returns a timebound for the program. *)
   val program_timebound : t -> PM.Program.t -> B.t
 
