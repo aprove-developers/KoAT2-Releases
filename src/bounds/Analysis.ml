@@ -59,6 +59,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Approximation_ = Approximation
   module Approximation = Approximation.MakeForClassicalAnalysis(PM)
+  module TrivialTimeBounds = TrivialTimeBounds.Make(PM)
   module CostBounds = CostBounds.Make(PM)
   module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
   module LSB_Table = Hashtbl.Make(PM.RV.RVTuple_)
@@ -512,8 +513,10 @@ let handle_timeout_cfr method_name non_linear_transitions =
     )
     |> Tuple3.map3 Option.some
 
-  let improve ~conf ~preprocess program appr =
+  let improve ?(time_cfr = 180) ~conf ~preprocess program appr =
     (* let appr = List.fold (fun appr (v,t) -> Approximation.add_sizebound (Bound.of_var v) t v appr) appr (List.cartesian_product (Program.input_vars program |> VarSet.to_list) (Program.transitions program |> TransitionSet.to_list)) in *) (*TODO Remove and make unhacky (heuristic entry transition terminates instead of sizebounds)*)
+    PartialEvaluation.time_cfr := float_of_int time_cfr;
+    let trivial_appr = TrivialTimeBounds.compute program appr in
     let opt_lsbs = match conf.analysis_type with
       |`Termination -> None
       |`Complexity  -> Option.some @@ compute_lsbs program in
@@ -546,7 +549,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
                 let scc = Base.Set.inter scc_orig (Program.transitions program) in
                 if Base.Set.is_empty scc then (program,appr,opt_rvg)
                 else improve_scc scc
-           ) (program, appr, opt_rvg)
+           ) (program, trivial_appr, opt_rvg)
       |> Tuple3.get12
     in
     program, match conf.analysis_type with

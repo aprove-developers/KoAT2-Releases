@@ -9,14 +9,13 @@ let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Prep
 
 let conf = Analysis.default_configuration
 module Analysis = Analysis.Make(ProgramModules)
-module ComputeClassicalBounds = ComputeClassicalBounds.Make(ProgramModules)
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    ComputeClassicalBounds.find_bounds ~preprocess ~conf:({conf with run_mprf_depth = Some mprf_max_depth}) program appr
+    Analysis.improve ~preprocess ~conf:({conf with run_mprf_depth = Some mprf_max_depth}) program appr
     |> fun (program,appr) -> Approximation.program_timebound appr program
   )
 
@@ -25,7 +24,7 @@ let find_costbound (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    ComputeClassicalBounds.find_bounds ~preprocess ~conf program appr
+    Analysis.improve ~preprocess ~conf program appr
     |> fun (program,appr) -> Approximation.program_costbound appr program
   )
 

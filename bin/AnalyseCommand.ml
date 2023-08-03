@@ -244,7 +244,8 @@ let run (params: params) =
                else if Base.Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
                 (program, appr)
                else
-                 ComputeClassicalBounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
+                 let module Analysis = Analysis.Make(ProgramModules) in
+                 Analysis.improve ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                )
      |> tap (fun (program, appr) -> params.result (analysis_type params.termination) program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination program appr))

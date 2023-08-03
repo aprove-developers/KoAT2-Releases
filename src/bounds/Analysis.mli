@@ -52,7 +52,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
      MakeRVG(PM).t,MakeRVG(PM).scc,Loop.Make(PM).t, Approximation.MakeForClassicalAnalysis(PM).t) analysis_configuration
 
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
-  val improve : conf:conf_type
+  val improve : ?time_cfr:int
+              -> conf:conf_type
               -> preprocess:(PM.Program.t -> PM.Program.t)
               -> PM.Program.t -> Approximation.MakeForClassicalAnalysis(PM).t
               -> PM.Program.t * Approximation.MakeForClassicalAnalysis(PM).t
