@@ -379,58 +379,6 @@ module PE = struct
                                      |> simplify
                                      |> tap (fun pe -> ClosedFormTable.add closed_form_table var pe)) var_poly
 
-
-    (* Monotonic Kernel *)
-    (* module SMTSolver = SMT.Z3Solver *)
-
-    (* let red_gt poly_list = *)
-    (*     let rec constraint_eq_zero i = function *)
-    (*     | [] -> Constraint.mk_true *)
-    (*     | x::xs when i == 0 -> Constraint.mk_true *)
-    (*     | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constraint_eq_zero (i - 1) xs))  in *)
-    (*     let rec formula i = function *)
-    (*     | [] -> Formula.mk_false *)
-    (*     | x::xs -> Formula.(mk_or (mk_and (mk_gt x Polynomial.zero) (constraint_eq_zero (i - 1) poly_list |> Formula.mk)) (formula (i + 1) xs))  in *)
-    (*     formula 1 poly_list *)
-
-    (* let negative_dominated invariant guard npe =
-    let formula = red_gt (List.map (RationalPolynomial.normalize % Tuple4.second) npe) in (* npe > 0 *)
-    SMTSolver.satisfiable Formula.(mk_and (mk_and invariant guard) formula |> simplify) (* there exist a model sat. guard && inv && red(npe > 0) *)
-    |> not
-
-    module ScaledMonomialRational = ScaledMonomials.Make(OurRational)
-    module MonomialRational = Monomials.Make(OurRational) *)
-
-    (* let monotonic_kernel precondition guard = function
-        | [] -> [], []
-        | [x] -> [x], []
-        | x::xs ->
-        let f_matching_monomial scm = List.find_opt (fun (c,p,d,b) ->
-            List.exists (fun scm2 ->
-            OurRational.sign (ScaledMonomialRational.coeff scm) != (OurRational.sign (ScaledMonomialRational.coeff scm2)) &&
-            MonomialRational.equal (ScaledMonomialRational.monomial scm) (ScaledMonomialRational.monomial scm2)) (RationalPolynomial.scaled_monomials p)) xs in
-        let ys, mths = List.fold_right (fun (c0,p0,d0,b0) (tmp, mths) (* t1 *) ->
-            let (c,p,d,b) = (c0,p0,d0,b0)::tmp |> simplify |> List.first
-            and ys = (c0,p0,d0,b0)::tmp |> simplify |> List.tl in
-            List.fold_right (fun scm (zs, mths_inner) ->
-                if SMTSolver.tautology Formula.(implies precondition (mk_gt (RationalPolynomial.normalize (RationalPolynomial.of_scaled [scm])) Polynomial.zero)) then
-                    (** positive |= pre -> mon > 0*)
-                    let matching_monomial = f_matching_monomial scm in
-                    if Option.is_some matching_monomial then
-                        let (c1,p1,d1,b1) = Option.get matching_monomial in
-                        ((c1, [scm |> ScaledMonomialRational.mult_with_const OurRational.minus_one] |> RationalPolynomial.of_scaled,d1,b1)::zs |> simplify, ((b1,d1),(b,d))::mths_inner)
-                    else
-                        ((c,RationalPolynomial.of_scaled [scm],d,b)::zs, mths_inner)
-                else if SMTSolver.tautology Formula.(implies precondition (mk_le (RationalPolynomial.normalize (RationalPolynomial.of_scaled [scm])) Polynomial.zero)) then
-                    (** negative |= pre -> mon <= 0 *)
-                    (zs, ((b,d),(0,0))::mths_inner)
-                else
-                    ((c,RationalPolynomial.of_scaled [scm],d,b)::zs), mths_inner) (RationalPolynomial.scaled_monomials p) (ys, mths)) xs ([],[]) in
-        if negative_dominated precondition guard (x::ys) then
-            (x::ys |> simplify), mths
-        else
-            x::xs, [] *)
-
     open Bounds
 
     let overapprox t runtime_bound =
