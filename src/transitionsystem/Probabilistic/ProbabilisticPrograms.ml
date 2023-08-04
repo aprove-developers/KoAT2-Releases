@@ -867,4 +867,7 @@ module Equalities = struct
     Type_equal.refl
   let trans_cmp_wit_eq: (ProbabilisticTransitionNonProbOverappr.comparator_witness, ProbabilisticTransition.comparator_witness) Type_equal.t =
     Type_equal.refl
+  let rvtuple__cmp_wit_eq:
+    ( ProbabilisticRVNonProbOverappr.RVTuple_.comparator_witness
+    , ProbabilisticRV.RVTuple_.comparator_witness) Type_equal.t = Type_equal.refl
 end

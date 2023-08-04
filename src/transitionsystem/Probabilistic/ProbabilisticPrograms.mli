@@ -175,4 +175,6 @@ module Equalities: sig
   val rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t
   val trans_cmp_wit_eq: ( ProbabilisticTransitionNonProbOverappr.comparator_witness
                         , ProbabilisticTransition.comparator_witness) Type_equal.t
+  val rvtuple__cmp_wit_eq: ( ProbabilisticRVNonProbOverappr.RVTuple_.comparator_witness
+                           , ProbabilisticRV.RVTuple_.comparator_witness ) Type_equal.t
 end

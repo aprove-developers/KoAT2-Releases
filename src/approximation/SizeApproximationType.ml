@@ -2,26 +2,27 @@ open OurBase
 open ProgramTypes
 open RVGTypes
 
-type ('rvtuple_,'bound) size_approximation_t = ('rvtuple_,'bound) Hashtbl.t
+type ('rvtuple_,'bound,'rvtuple__cmp_wit) size_approximation_t = ('rvtuple_,'bound,'rvtuple__cmp_wit) Map.t
 
 module Make(B : BoundType.Bound)
            (RV: ProgramTypes.RV) =
   struct
     let logger = Logging.(get Approximation)
 
-    type t = (RV.RVTuple_.t,B.t) size_approximation_t
+    type t = (RV.RVTuple_.t,B.t,RV.RVTuple_.comparator_witness) size_approximation_t
 
-    let empty size = Hashtbl.create (module RV.RVTuple_) ~size
+    let empty = Map.empty (module RV.RVTuple_)
 
     let get map rv =
       let execute () =
-        Hashtbl.find map rv |? B.infinity
+        Map.find map rv |? B.infinity
       in Logger.with_log logger Logger.DEBUG
                          (fun () -> "sizebound", ["rv", RV.to_id_string rv])
                          ~result:B.to_string
                          execute
-    let to_sequence = Hashtbl.to_sequence
-    let of_sequence sequence = Hashtbl.of_alist_exn (module RV.RVTuple_) (Sequence.to_list sequence)
+
+    let to_sequence m = Map.to_sequence m
+    let of_sequence seq = Map.of_sequence_exn (module RV.RVTuple_) seq
 
     let add ?(simplifyfunc=identity) bound rv map =
       if not (B.is_infinity bound) then (
@@ -39,16 +40,14 @@ module Make(B : BoundType.Bound)
                                              ; "new_bound", B.to_string new_bound]);
             Some new_bound
         in
-        Hashtbl.change map rv ~f:update_or_add_entry
-      );
-      map
+        Map.change map rv ~f:update_or_add_entry
+      ) else map
 
     let add_all ?(simplifyfunc=identity) bound scc map =
-      List.iter ~f:(fun rv -> ignore (add ~simplifyfunc:simplifyfunc bound rv map)) scc;
-      map
+      List.fold ~f:(fun map rv -> add ~simplifyfunc:simplifyfunc bound rv map) scc ~init:map
 
     let to_formatted ?(pretty=false) size =
-      Hashtbl.to_alist size
+      Map.to_alist size
       |> List.sort ~compare:(fun (rv1,_) (rv2,_) -> RV.compare rv1 rv2)
       |> List.map
            ~f:(fun (rv, bound) -> FormattedString.mk_str_line @@

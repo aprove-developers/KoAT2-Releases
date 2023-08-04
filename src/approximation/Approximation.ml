@@ -19,7 +19,7 @@ module Make(B: BoundType.Bound)
 
   let empty transitioncount varcount = {
       time = TransitionApproximation.empty "time";
-      size = SizeApproximation.empty (2 * transitioncount * varcount);
+      size = SizeApproximation.empty;
       cost = TransitionApproximation.empty "cost";
     }
 
@@ -117,9 +117,10 @@ module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
 module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (E: sig
-                val trans_proof: (PM.Transition.t,PM'.Transition.t) Type_equal.t
-                val rvtuple__proof: (PM.RV.RVTuple_.t,PM'.RV.RVTuple_.t) Type_equal.t
-                val trans_cmp_wit_proof: (PM.Transition.comparator_witness,PM'.Transition.comparator_witness) Type_equal.t
+                val trans_eq: (PM.Transition.t,PM'.Transition.t) Type_equal.t
+                val rvtuple__eq: (PM.RV.RVTuple_.t,PM'.RV.RVTuple_.t) Type_equal.t
+                val trans_cmp_wit_eq: (PM.Transition.comparator_witness,PM'.Transition.comparator_witness) Type_equal.t
+                val rvtuple__cmp_wit_eq: (PM.RV.RVTuple_.comparator_witness,PM'.RV.RVTuple_.comparator_witness) Type_equal.t
               end) = struct
   let trans_appr_proof =
     let module L =
@@ -128,11 +129,16 @@ module Coerce(B: BoundType.Bound)
           ('trans,'bound,'trans_cmp_wit) TransitionApproximationType.transition_approximation_t
       end)
     in
-    L.lift E.trans_proof Type_equal.refl E.trans_cmp_wit_proof
+    L.lift E.trans_eq Type_equal.refl E.trans_cmp_wit_eq
 
   let size_appr_proof =
-    let module L = Type_equal.Lift2(struct type ('a,'b) t = ('a,'b) SizeApproximationType.size_approximation_t end) in
-    L.lift E.rvtuple__proof Type_equal.refl
+    let module L =
+      Type_equal.Lift3(struct
+        type ('rvtuple_,'bound,'rvtuple__cmp_wit) t =
+          ('rvtuple_,'bound,'rvtuple__cmp_wit) SizeApproximationType.size_approximation_t end
+      )
+    in
+    L.lift E.rvtuple__eq Type_equal.refl E.rvtuple__cmp_wit_eq
 
   let coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t = fun appr ->
     Type_equal.{ size = conv size_appr_proof  appr.size
@@ -165,11 +171,7 @@ module Probabilistic = struct
   let coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t =
     let module M = Coerce(Bounds.Bound)
                          (ProbabilisticProgramModules.NonProbOverappr)(ProbabilisticProgramModules)
-        (struct
-          let trans_proof = ProbabilisticPrograms.Equalities.trans_eq
-          let rvtuple__proof = ProbabilisticPrograms.Equalities.rvtuple__eq
-          let trans_cmp_wit_proof = ProbabilisticPrograms.Equalities.trans_cmp_wit_eq
-        end)
+                         (ProbabilisticPrograms.Equalities)
     in
     M.coerce
 
