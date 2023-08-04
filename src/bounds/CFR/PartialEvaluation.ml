@@ -35,7 +35,7 @@ let add_to_proof program bound =
       mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str bound) <>
       mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string ~pretty:true program)) <>
       match format with
-      | Formatter.Html -> mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty program)
+      | Formatter.Html -> mk_raw_str GraphPrint.(print_system_pretty_html empty_color_map program)
       | _ -> FormattedString.Empty )
 
 (** Timeouts *)

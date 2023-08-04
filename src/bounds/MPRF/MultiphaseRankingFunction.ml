@@ -126,9 +126,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
   let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
-    let module GraphPrint = GraphPrint.Make(PM) in
+    let module GraphPrint = GraphPrint.MakeFromClassical(PM) in
     let color_map =
-      Base.Set.fold ~f:(fun colourmap t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue colourmap) non_increasing ~init:GraphPrint.TransitionMap.empty
+      Base.Set.fold ~f:(fun colourmap t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue colourmap) non_increasing ~init:GraphPrint.empty_color_map
       |> OurBase.Map.add_or_overwrite ~key:decreasing ~data:GraphPrint.Red
     in
     let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in

@@ -1,4 +1,5 @@
 (** Module provides methods to print a program or a result variable graph to png file. *)
+open OurBase
 open ProgramModules
 open RVGTypes
 
@@ -29,30 +30,19 @@ with
     (* Some Programs lead to huge graphs and huge edge labels that dot cannot handle. *)
     Sys_error e -> None
 
+module type LabelPrint = sig
+  type label
+  val print_label: label -> string
+end
 
-module Make(PM: ProgramTypes.ProgramModules) = struct
+module MakeDefaultLabelPrint(PM: ProgramTypes.ProgramModules) = struct
   open PM
-  (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
-          For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-  let print_system ~label ~outdir ~file program =
-    (* Definition of some graphviz options how it should be layout *)
-    let module Dot = Graph.Graphviz.Dot(struct
-                                         include TransitionGraph
-                                         let edge_attributes (a, e, b) = [`Label (label (a,e,b)); `Color 4711]
-                                         let default_edge_attributes _ = []
-                                         let get_subgraph _ = None
-                                         let vertex_attributes _ = [`Shape `Box]
-                                         let vertex_name v = "\""^Location.to_string v^"\""
-                                         let default_vertex_attributes _ = []
-                                         let graph_attributes _ = []
-                                       end) in
-    print_graph outdir (file ^ "_system") (Program.graph program) Dot.output_graph
 
-  open OurBase
+  type label = TransitionLabel.t
 
   (* Compute an edge label from a TransitionLabel
      Whenever possible we use unicode representations of mathematic symbols.  *)
-  let label l =
+  let all_default_fields_as_strings l =
       let t_ids_str =
         TransitionLabel.ids_to_string ~pretty:true l
       in
@@ -84,14 +74,47 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
           "\\{" ^ cost_poly ^ "\\}"
       in
 
-
       [ t_ids_str
       ; updates
       ; guard
       ; cost
       ]
-      |> List.filter ~f:(not % String.is_empty)
-      |> String.concat ~sep:"\n"
+
+  let print_label_from_fields fields =
+    fields
+    |> List.filter ~f:(not % String.is_empty)
+    |> String.concat ~sep:"\n"
+
+  (* Compute an edge label from a TransitionLabel
+     Whenever possible we use unicode representations of mathematic symbols.  *)
+  let print_label = print_label_from_fields % all_default_fields_as_strings
+end
+
+module ProbabilisticLabelPrint = struct
+  include MakeDefaultLabelPrint(ProbabilisticProgramModules)
+
+  open ProbabilisticProgramModules
+
+  let all_fields l =
+    let classical_fields = all_default_fields_as_strings l in
+    let prob_field = "p = " ^ OurFloat.to_string (TransitionLabel.probability l) in
+    prob_field :: classical_fields
+
+  let print_label = print_label_from_fields % all_fields
+end
+
+module Make
+    (PM: ProgramTypes.ProgramModules)
+    (LabelPrint : LabelPrint with type label = PM.TransitionLabel.t) = struct
+  open PM
+
+  type location = PM.Location.t
+  type transition = PM.Transition.t
+  type transition_label = PM.TransitionLabel.t
+  type transition_comparator_witness = PM.Transition.comparator_witness
+  type program = PM.Program.t
+
+  module TransitionMap = MakeMapCreators1(Transition)
 
   type color = Black | Red | Blue | Green | Yellow | Purple | Brown | White [@@deriving ord, eq]
 
@@ -105,12 +128,28 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
     | Brown -> `Color 10824234
     | White -> `Color 16777215
 
-  module TransitionMap = MakeMapCreators1(Transition)
+  let empty_color_map = TransitionMap.empty
 
-  let print_system_pretty ?(format="pdf") ?(color_map = TransitionMap.empty) program =
+  (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
+          For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+  let print_system ~label ~outdir ~file program =
+    (* Definition of some graphviz options how it should be layout *)
+    let module Dot = Graph.Graphviz.Dot(struct
+                                         include TransitionGraph
+                                         let edge_attributes (a, e, b) = [`Label (label (a,e,b)); `Color 4711]
+                                         let default_edge_attributes _ = []
+                                         let get_subgraph _ = None
+                                         let vertex_attributes _ = [`Shape `Box]
+                                         let vertex_name v = "\""^Location.to_string v^"\""
+                                         let default_vertex_attributes _ = []
+                                         let graph_attributes _ = []
+                                       end) in
+    print_graph outdir (file ^ "_system") (Program.graph program) Dot.output_graph
+
+  let print_system_pretty ?(file_format="pdf") ?(color_map = TransitionMap.empty) program =
     let module DotPretty = Graph.Graphviz.Dot(struct
                                                include TransitionGraph
-                                               let edge_attributes (a, e, b) = [`Label (label e);
+                                               let edge_attributes (a, e, b) = [`Label (LabelPrint.print_label e);
                                                  if not (Map.mem color_map (a, e, b)) then
                                                    get_color Black else
                                                    get_color (Map.find_exn color_map (a, e, b))]
@@ -122,9 +161,9 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
                                                let graph_attributes _ = []
                                      end)
     in
-    print_graph_to_string ~format:format (Program.graph program) DotPretty.output_graph
+    print_graph_to_string ~format:file_format (Program.graph program) DotPretty.output_graph
 
- let print_system_pretty_html color_map program = match print_system_pretty ~format:"svg" ~color_map program with
+ let print_system_pretty_html color_map program = match print_system_pretty ~file_format:"svg" ~color_map program with
    | None -> ""
    | Some system ->
        let divid = Unique.unique () in
@@ -144,9 +183,13 @@ module Make(PM: ProgramTypes.ProgramModules) = struct
        </script>"
 end
 
+module MakeFromClassical(PM: ProgramTypes.ClassicalProgramModules) = Make(PM)(MakeDefaultLabelPrint(PM))
+
+module ProbabilisticGraphPrint = Make(ProbabilisticProgramModules)(ProbabilisticLabelPrint)
+
 (** RVGs are only defined for classical programs, since otherwise we do not know the local size bounds *)
-module MakeFromClassical(PM: ProgramTypes.ClassicalProgramModules) = struct
-    include Make(PM)
+module MakeForRVGFromClassical(PM: ProgramTypes.ClassicalProgramModules) = struct
+    include MakeFromClassical(PM)
 
     module RVG = MakeRVG(PM)
     module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
@@ -154,30 +197,31 @@ module MakeFromClassical(PM: ProgramTypes.ClassicalProgramModules) = struct
     (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
             For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
     let print_rvg ~label ~outdir ~file program =
-    let graph =
-      RVG.rvg
-        (fun(t,v) ->
-          LSB.compute_bound (PM.Program.input_vars program) t v
-          |> Option.map Batteries.(LSB.vars % Batteries.Tuple2.first))
-        program
-    in
-    let module C = Graph.Components.Make(RVG) in
-    let (_,scc_number) = C.scc graph in
-    let rv_color (rv: PM.RV.t) =
-        scc_number rv * 424242
-    in
-    (* Definition of some graphviz options how it should be layout *)
-    let module Dot = Graph.Graphviz.Dot(struct
-                        include RVG
-                        let edge_attributes _ = [`Label ""; `Color 4711]
-                        let default_edge_attributes _ = []
-                        let get_subgraph _ = None
-                        let vertex_attributes v = [`Shape `Box; `Color (rv_color v)]
-                        let vertex_name v = "\"" ^ label v ^ "\""
-                        let default_vertex_attributes _ = []
-                        let graph_attributes _ = []
-                        end) in
-    print_graph outdir (file ^ "_rvg") graph Dot.output_graph
+        let graph =
+        RVG.rvg
+            (fun(t,v) ->
+            LSB.compute_bound (PM.Program.input_vars program) t v
+            |> Option.map ~f:(LSB.vars % Tuple2.first))
+            program
+        in
+        let module C = Graph.Components.Make(RVG) in
+        let (_,scc_number) = C.scc graph in
+        let rv_color (rv: PM.RV.t) =
+            scc_number rv * 424242
+        in
+        (* Definition of some graphviz options how it should be layout *)
+        let module Dot = Graph.Graphviz.Dot(struct
+                            include RVG
+                            let edge_attributes _ = [`Label ""; `Color 4711]
+                            let default_edge_attributes _ = []
+                            let get_subgraph _ = None
+                            let vertex_attributes v = [`Shape `Box; `Color (rv_color v)]
+                            let vertex_name v = "\"" ^ label v ^ "\""
+                            let default_vertex_attributes _ = []
+                            let graph_attributes _ = []
+                            end) in
+        print_graph outdir (file ^ "_rvg") graph Dot.output_graph
 end
 
 include MakeFromClassical(ProgramModules)
+include MakeForRVGFromClassical(ProgramModules)

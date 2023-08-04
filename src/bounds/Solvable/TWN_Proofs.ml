@@ -20,11 +20,11 @@ let proof_reset () = proof := Empty
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module GraphPrint = GraphPrint.Make(PM)
+  module GraphPrint = GraphPrint.MakeFromClassical(PM)
 
   let add_to_proof_graph program cycle entries =
     let color_map =
-    List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
+    List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue) cycle GraphPrint.empty_color_map
     |> fun m -> List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Red) entries m in
       proof_append @@ mk_paragraph (
         match ProofOutput.get_format () with
