@@ -17,5 +17,5 @@ val to_string : ?pretty:bool -> t -> string
 (** Creates a set of variables from a list of strings. *)
 val of_string_list : string list -> t
 
-(** TODO doc *)
-val combinations : int -> t -> t list
+(* (\** TODO doc *\) *)
+(* val combinations : int -> t -> t list *)

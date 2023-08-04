@@ -141,11 +141,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
       let solver = Solver.create ~model:false () in
       Solver.add solver update_formula;
       let is_bounded b = is_bounded_with solver update_formula v' b in
-      Sequence.range ~stride:1 ~start:`inclusive ~stop:`inclusive 0 (Set.length update_vars)
-      |> Sequence.map ~f:(fun count ->
-          Sequence.of_list (VarSet.combinations count update_vars)
-        )
-      |> Sequence.join
+      VarSet.powerset update_vars
       |> Sequence.map ~f:(initial_lsb max_s max_c)
       |> Sequence.filter ~f:is_bounded
       |> Sequence.map ~f:(optimize_s max_s is_bounded)
