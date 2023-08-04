@@ -177,12 +177,12 @@ end
 
 module type MapCreators'1 = sig
   type key
-  type comparator_witness
+  type key_comparator_witness
   include Map.Creators1
     with type key := key
-    and type comparator_witness := comparator_witness
-    and type 'a t = (key,'a,comparator_witness) Base.Map.t
-    and type 'a tree = (key, 'a, comparator_witness) Map.Using_comparator.Tree.t
+    and type comparator_witness := key_comparator_witness
+    and type 'a t = (key, 'a, key_comparator_witness) Base.Map.t
+    and type 'a tree = (key, 'a, key_comparator_witness) Map.Using_comparator.Tree.t
 end
 
 (** Does this already exist somewhere? I could not find it… *)
@@ -213,11 +213,11 @@ module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and 
   let combinations = Set.combinations (module M)
 end
 
-module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t = struct
+module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t and type key_comparator_witness = M.comparator_witness = struct
   type key = M.t
-  type comparator_witness = M.comparator_witness
-  type 'a t = (key, 'a, comparator_witness) Map.t
-  type 'a tree =  (key,'a,comparator_witness) Map.Using_comparator.Tree.t
+  type key_comparator_witness = M.comparator_witness
+  type 'a t = (key, 'a, key_comparator_witness) Map.t
+  type 'a tree =  (key, 'a, key_comparator_witness) Map.Using_comparator.Tree.t
 
   let empty = Map.empty (module M)
   let singleton k v = Map.singleton (module M) k v
