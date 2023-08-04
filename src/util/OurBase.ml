@@ -106,11 +106,42 @@ end
 module Set = struct
   include Base.Set
 
-  let powerset (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) =
-    let combine result x =
-      Sequence.append result (Sequence.map ~f:(fun ys -> Base.Set.add ys x) result)
+  (** All subsets of the given specific size *)
+  let combinations (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) (k:int) =
+    let empty_set = empty (module M) in
+    let arr = to_array set in
+    let set_length = Array.length arr in
+    let next (i,rem_choices, state_stack, curr_set) =
+      if i < set_length then
+        let rem_elements = set_length - i in
+        if rem_choices = rem_elements then
+          let remaining_set =
+            Sequence.range i set_length
+            |> Sequence.map ~f:(Array.get arr)
+            |> of_sequence (module M)
+          in
+          Sequence.Step.Skip (i+1, rem_choices-1, state_stack, union curr_set remaining_set)
+        else if rem_choices > 0 then
+          Sequence.Step.Skip (i+1, rem_choices-1, (i,rem_choices,curr_set)::state_stack, add curr_set (Array.get arr i))
+        else Sequence.Step.Skip (set_length, rem_choices, state_stack, curr_set)
+
+      else if i = set_length then
+        match state_stack with
+        | [] -> Sequence.Step.Yield (curr_set, (i+1, -1, [], empty_set))
+        | (prev_state::rem) ->
+          let (i',rem_choices',curr_set') = prev_state in
+          Sequence.Step.Yield (curr_set, (i'+1, rem_choices', rem, curr_set'))
+
+      else Sequence.Step.Done
     in
-    Base.Sequence.fold ~f:combine ~init:(Sequence.singleton (empty (module M))) (Base.Set.to_sequence set)
+    Sequence.unfold_step ~init:(0,k,[],empty_set) ~f:(next)
+
+  (** The powerset in ascending order of subset cardinality *)
+  let powerset (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) =
+    Sequence.range ~stop:`inclusive 0 (length set)
+    |> Sequence.map ~f:(combinations (module M) set)
+    |> Sequence.join
+
 end
 
 module Map = struct
@@ -141,6 +172,7 @@ module type SetCreators'0 = sig
      and type tree = (elt, elt_comparator_witness) Set.Using_comparator.Tree.t
 
   val powerset: t -> t Sequence.t
+  val combinations: t -> int -> t Sequence.t
 end
 
 module type MapCreators'1 = sig
@@ -177,6 +209,8 @@ module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and 
   let of_tree = Set.Using_comparator.of_tree ~comparator:M.comparator
 
   let powerset = Set.powerset (module M)
+
+  let combinations = Set.combinations (module M)
 end
 
 module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t = struct
