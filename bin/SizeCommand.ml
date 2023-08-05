@@ -19,7 +19,7 @@ module LSB = LocalSizeBound.Make(TransitionLabel)(Transition)(Program)
 
 let run (params: params) =
   Logging.(use_loggers [Size, Logger.DEBUG]);
-  let appr = Approximation.empty 10 3
+  let appr = Approximation.empty
   and program = Readers.read_file params.program in
   let input_vars = Program.input_vars program in
 

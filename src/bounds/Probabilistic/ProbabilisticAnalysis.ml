@@ -201,7 +201,7 @@ let perform_analysis ?(conf=default_configuration) program class_appr: ExpApprox
   let program_vars = Program.input_vars program in
   let sccs = Program.sccs_gts program in
 
-  lift_bounds gts program_vars (class_appr, ExpApproximation.create program)
+  lift_bounds gts program_vars (class_appr, ExpApproximation.empty)
   |> fun appr ->
       List.fold
         ~f:(fun appr scc_with_locs -> improve_scc ~conf program gts program_vars scc_with_locs (class_appr,appr))
@@ -212,7 +212,7 @@ module ClassicAnalysis = Analysis.Make(NonProbOverappr)
 let perform_classic_and_probabilistic_analysis ?(classic_conf=Analysis.default_configuration) ?(conf=default_configuration) ~preprocess program=
   let program, class_appr =
   ClassicAnalysis.improve
-      ~preprocess ~conf:classic_conf program (NonProbOverapprApproximation.create program)
+      ~preprocess ~conf:classic_conf program NonProbOverapprApproximation.empty
     |> Tuple2.map2 coerce_from_nonprob_overappr_approximation
   in
 

@@ -27,7 +27,7 @@ let run (params: params) =
   params.input
   |> Readers.read_input params.simple_input
   |> (fun program ->
-         Approximation.create program
+         Approximation.empty
          |> TrivialTimeBounds.compute program
          |> (fun appr ->
                    let transitions =

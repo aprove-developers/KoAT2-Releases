@@ -17,15 +17,11 @@ module Make(B: BoundType.Bound)
       cost: TransitionApproximation.t;
     } [@@deriving lens { submodule = true }]
 
-  let empty transitioncount varcount = {
+  let empty = {
       time = TransitionApproximation.empty "time";
       size = SizeApproximation.empty;
       cost = TransitionApproximation.empty "cost";
     }
-
-  let create program =
-    empty (TransitionGraph.nb_edges (Program.graph program))
-          (Set.length (Program.vars program))
 
   let time appr = appr.time
 

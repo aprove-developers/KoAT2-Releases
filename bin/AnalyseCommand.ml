@@ -223,7 +223,7 @@ let run (params: params) =
   in
   Timeout.timed_run params.timeout
     ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
-     (program , Approximation.create program)
+     (program , Approximation.empty)
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
      |> Tuple2.map1 preprocess
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->

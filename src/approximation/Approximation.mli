@@ -12,10 +12,7 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
       That means, that every upper bound is infinite and every lower bound is minus infinite.
       The first parameter should be the count of transitions in the program.
       The second parameter should be the count of program variables. *)
-  val empty : int -> int -> t
-
-  (** Creates an empty approximation of a given program. *)
-  val create : PM.Program.t -> t
+  val empty : t
 
   (**  Creates a formatted string containing time,size and cost-bounds. *)
   val to_formatted : ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> FormattedString.t

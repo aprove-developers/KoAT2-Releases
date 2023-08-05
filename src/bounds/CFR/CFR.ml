@@ -5,8 +5,7 @@ open ProgramModules
 let merge_appr (program: Program.t) (program_cfr: Program.t) appr =
   let unchanged_trans = Base.Set.inter (Program.transitions program) (Program.transitions program_cfr) in
   let appr =
-    program_cfr
-    |> Approximation.create
+    Approximation.empty
     |> TrivialTimeBounds.compute program_cfr
   in
   unchanged_trans

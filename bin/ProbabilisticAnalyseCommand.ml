@@ -60,7 +60,7 @@ let run (params: params) =
   let program, class_appr =
     preprocess program
     |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
-    |> fun prog -> OverapprAnalysis.improve ~preprocess ~conf:classical_analysis_conf prog (NonProbOverapprApproximation.create prog)
+    |> fun prog -> OverapprAnalysis.improve ~preprocess ~conf:classical_analysis_conf prog NonProbOverapprApproximation.empty
     |> Tuple2.map2 coerce_from_nonprob_overappr_approximation
   in
   let prob_appr = ProbabilisticAnalysis.perform_analysis program class_appr in

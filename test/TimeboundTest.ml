@@ -12,7 +12,7 @@ module Analysis = Analysis.Make(ProgramModules)
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
-  (program, Approximation.create program)
+  (program, Approximation.empty)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
     Analysis.improve ~preprocess ~conf:({conf with run_mprf_depth = Some mprf_max_depth}) program appr
@@ -21,7 +21,7 @@ let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
 
 (** Returns an overall costbound for the given program. *)
 let find_costbound (program: Program.t): Bound.t =
-  (program, Approximation.create program)
+  (program, Approximation.empty)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
     Analysis.improve ~preprocess ~conf program appr
