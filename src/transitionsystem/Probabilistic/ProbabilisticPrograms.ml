@@ -421,8 +421,10 @@ module ProbabilisticTransitionShared = struct
     module GenericTransition = Transition_.TransitionOver(ProbabilisticTransitionLabel)(Location)
 
     type location = GenericTransition.location
+    type location_comparator_witness = Location.comparator_witness
     type t = GenericTransition.t
     type transition_label = GenericTransition.transition_label
+    type transition_label_comparator_witness = GenericTransition.transition_label_comparator_witness
 
     let src = GenericTransition.src
     let label = GenericTransition.label
@@ -439,11 +441,13 @@ module ProbabilisticTransitionShared = struct
     let add_invariant = GenericTransition.add_invariant
     let cost = GenericTransition.cost
     let rename = GenericTransition.rename
-    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
   end
 
   include Inner
-  include Comparator.Make(Inner)
+
+  type comparator_witness = (transition_label_comparator_witness,location_comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
+  let comparator = ProgramTypes.TransitionComparator.comparator ProbabilisticTransitionLabel.comparator Location.comparator
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 end
 
 module ProbabilisticTransition = struct
@@ -654,6 +658,9 @@ end
 module GeneralTransitionSet = struct
   module LocationSet = Location.LocationSetOver(Location)
   module GeneralTransition = GeneralTransition
+
+  type location = Location.t
+  type location_comparator_witness = Location.comparator_witness
   type location_set = LocationSet.t
 
 

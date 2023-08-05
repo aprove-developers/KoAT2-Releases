@@ -12,18 +12,24 @@ module GenericProgram = struct
 end
 
 module Make(TL: ProgramTypes.TransitionLabel)
-           (T: ProgramTypes.Transition with type transition_label = TL.t)
-           (L: ProgramTypes.Location with type t = T.location)
+           (T: ProgramTypes.Transition with type transition_label = TL.t and type transition_label_comparator_witness = TL.comparator_witness)
+           (L: ProgramTypes.Location with type t = T.location and type comparator_witness = T.location_comparator_witness)
            (G: ProgramTypes.TransitionGraph with type location = L.t
-                                             and type location_set = Location.LocationSetOver(L).t
+                                             and type location_comparator_witness = L.comparator_witness
                                              and type transition_label = TL.t
-                                             and type transition_set = Transition_.TransitionSetOver(T)(L).t) =
+                                             and type transition_label_comparator_witness = TL.comparator_witness) =
 struct
   type location = L.t
+  type location_comparator_witness = L.comparator_witness
+  type location_set = (location,location_comparator_witness) Set.t
+
   type transition_label = TL.t
+  type transition_label_comparator_witness = TL.comparator_witness
+
   type transition = L.t * TL.t * L.t
-  type location_set = Location.LocationSetOver(L).t
-  type transition_set = Transition_.TransitionSetOver(T)(L).t
+  type transition_comparator_witness = T.comparator_witness
+  type transition_set = (transition,transition_comparator_witness) Set.t
+
   type transition_graph = G.t
 
   module TransitionSet = Transition_.TransitionSetOver(T)(L)

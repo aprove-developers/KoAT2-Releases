@@ -5,6 +5,16 @@ open Polynomials
 
 type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
 
+(** TransitionComparators only depend on Label & Location Comparators *)
+module TransitionComparator =
+  Comparator.Derived2(struct
+    type (!'trans_label,!'loc) t = 'loc * 'trans_label * 'loc
+    let compare label_compare loc_compar =
+      fun (_,label1,_) (_,label2,_) -> label_compare label1 label2
+    let sexp_of_t _ _ = Sexplib0.Sexp_conv.sexp_of_opaque
+  end)
+
+
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
   (** Type of location, we use strings. *)
@@ -42,7 +52,10 @@ module type TransitionSet = sig
   (** Returns a short string representing the transition set. *)
   val to_id_string : t -> string
 
-  type location_set
+  type location
+  type location_comparator_witness
+  type location_set = (location,location_comparator_witness) Set.t
+
   val locations: t -> location_set
 
   (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
@@ -167,7 +180,10 @@ end
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 module type Transition = sig
   type location
+  type location_comparator_witness
+
   type transition_label
+  type transition_label_comparator_witness
 
   (** Type of a transition, i.e., two connected locations and a label. *)
   type t = location * transition_label * location
@@ -218,17 +234,27 @@ module type Transition = sig
 
   val rename : RenameMap.t -> t -> t
 
-  include Comparator.S with type t := t
+  include Comparator.S
+    with type t := t
+     and type comparator_witness =
+           ( transition_label_comparator_witness
+           , location_comparator_witness) TransitionComparator.comparator_witness
   val sexp_of_t: t -> Sexp.t
 end
 
 (** This module represents a transition graph. *)
 module type TransitionGraph = sig
   type location
-  type location_set
+  type location_comparator_witness
+  type location_set = (location,location_comparator_witness) Set.t
+
   type transition_label
+  type transition_label_comparator_witness
+
   type transition = location * transition_label * location
-  type transition_set
+  type transition_comparator_witness = (transition_label_comparator_witness,location_comparator_witness) TransitionComparator.comparator_witness
+
+  type transition_set = (transition,transition_comparator_witness) Set.t
 
 
   include Graph.Sig.P with type V.t = location
@@ -278,12 +304,16 @@ end
 
 module type Program = sig
   type location
+  type location_comparator_witness
+
   type transition_label
+  type transition_label_comparator_witness
 
   type transition = location * transition_label * location
+  type transition_comparator_witness = (transition_label_comparator_witness,location_comparator_witness) TransitionComparator.comparator_witness
 
-  type location_set
-  type transition_set
+  type location_set = (location,location_comparator_witness) Set.t
+  type transition_set = (transition,transition_comparator_witness) Set.t
 
   type transition_graph
 
@@ -451,26 +481,29 @@ module type ProgramModules = sig
 
   module Transition: Transition
     with type location = Location.t
+     and type location_comparator_witness = Location.comparator_witness
      and type transition_label = TransitionLabel.t
+     and type transition_label_comparator_witness = TransitionLabel.comparator_witness
 
   module TransitionSet: TransitionSet
     with type elt = Transition.t
-     and type elt_comparator_witness = Transition.comparator_witness
-     and type location_set = (Location.t, Location.comparator_witness) Set.t
+     and type elt_comparator_witness = (TransitionLabel.comparator_witness,Location.comparator_witness) TransitionComparator.comparator_witness
+     and type location = Location.t
+     and type location_comparator_witness = Location.comparator_witness
 
   module TransitionGraph: TransitionGraph
     with type location = Location.t
-     and type location_set = LocationSet.t
+     and type location_comparator_witness = Location.comparator_witness
      and type transition_label = TransitionLabel.t
+     and type transition_label_comparator_witness = TransitionLabel.comparator_witness
      and type transition = Transition.t
-     and type transition_set = TransitionSet.t
 
   module Program: Program
     with type location = Location.t
-     and type location_set = LocationSet.t
+     and type location_comparator_witness = Location.comparator_witness
      and type transition_label = TransitionLabel.t
+     and type transition_label_comparator_witness = TransitionLabel.comparator_witness
      and type transition = Transition.t
-     and type transition_set = TransitionGraph.transition_set
      and type transition_graph = TransitionGraph.t
 
   module RV: RV

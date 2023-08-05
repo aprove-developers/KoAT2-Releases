@@ -14,17 +14,17 @@ module GenericProgram: sig
 end
 
 module Make(TL: ProgramTypes.TransitionLabel)
-           (T: ProgramTypes.Transition with type transition_label = TL.t)
-           (L: ProgramTypes.Location with type t = T.location)
+           (T: ProgramTypes.Transition with type transition_label = TL.t and type transition_label_comparator_witness = TL.comparator_witness)
+           (L: ProgramTypes.Location with type t = T.location and type comparator_witness = T.location_comparator_witness)
            (G: ProgramTypes.TransitionGraph with type location = L.t
-                                             and type location_set = Location.LocationSetOver(L).t
+                                             and type location_comparator_witness = L.comparator_witness
                                              and type transition_label = TL.t
-                                             and type transition_set = Transition_.TransitionSetOver(T)(L).t): sig
+                                             and type transition_label_comparator_witness = TL.comparator_witness): sig
   include ProgramTypes.Program
     with type location = L.t
+     and type location_comparator_witness = L.comparator_witness
      and type transition_label = TL.t
-     and type location_set = Location.LocationSetOver(L).t
-     and type transition_set = Transition_.TransitionSetOver(T)(L).t
+     and type transition_label_comparator_witness = TL.comparator_witness
      and type transition_graph = G.t
      and type t = (L.t, G.t, T.t, T.comparator_witness) GenericProgram.t
 end
@@ -32,9 +32,9 @@ end
 module ProgramOverLocation(L: ProgramTypes.Location) : sig
   include ProgramTypes.Program
     with type location = L.t
+     and type location_comparator_witness = L.comparator_witness
      and type transition_label = TransitionLabel_.t
-     and type location_set = Location.LocationSetOver(L).t
-     and type transition_set = Transition_.TransitionSetOver(Transition_.TransitionOver(TransitionLabel_)(L))(L).t
+     and type transition_label_comparator_witness = TransitionLabel_.comparator_witness
      and type transition_graph = TransitionGraph_.TransitionGraphOverLocation(L).t
 end
 

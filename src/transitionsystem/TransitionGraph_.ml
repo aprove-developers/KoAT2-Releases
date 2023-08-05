@@ -1,7 +1,7 @@
 open OurBase
 
 module Make_(T: ProgramTypes.Transition)
-            (L: ProgramTypes.Location with type t = T.location)
+            (L: ProgramTypes.Location with type t = T.location and type comparator_witness = T.location_comparator_witness)
             (G: Graph.Sig.P with type V.t = L.t
                              and type V.label = L.t
                              and type E.t = L.t * T.transition_label * L.t
@@ -9,10 +9,16 @@ module Make_(T: ProgramTypes.Transition)
 
 
   type location = L.t
-  type location_set = Location.LocationSetOver(L).t
+  type location_comparator_witness = L.comparator_witness
+  type location_set = (location,location_comparator_witness) Set.t
+
   type transition_label = T.transition_label
+  type transition_label_comparator_witness = T.transition_label_comparator_witness
+
   type transition = T.t
-  type transition_set = (T.t, T.comparator_witness) Base.Set.t
+  type transition_comparator_witness = ( transition_label_comparator_witness
+                                       , location_comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
+  type transition_set = (transition,transition_comparator_witness) Set.t
 
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
   module Location = L

@@ -6,7 +6,10 @@ include Constraints
 module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Location) = struct
   module Inner = struct
     type location = L.t
+    type location_comparator_witness = L.comparator_witness
+
     type transition_label = TL.t
+    type transition_label_comparator_witness = TL.comparator_witness
     type t = location * transition_label * location
 
     let equal_ equal_lbl (l1,t1,l1') (l2,t2,l2') =
@@ -77,14 +80,8 @@ module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Locatio
 
   include Inner
 
-  module DerivedComparator =
-    Comparator.Derived(struct
-      type 'a t = L.t * 'a * L.t
-      let compare label_compare = fun (_,label1,_) (_,label2,_) -> label_compare label1 label2
-      let sexp_of_t _ = Sexplib0.Sexp_conv.sexp_of_opaque
-    end)
-  type comparator_witness = TL.comparator_witness DerivedComparator.comparator_witness
-  let comparator = DerivedComparator.comparator TL.comparator
+  type comparator_witness = (TL.comparator_witness,L.comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
+  let comparator = ProgramTypes.TransitionComparator.comparator TL.comparator L.comparator
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 end
 
@@ -93,6 +90,9 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
   include Set
 
   include MakeSetCreators0(T)
+
+  type location = L.t
+  type location_comparator_witness = L.comparator_witness
 
   let to_string s =
     Util.sequence_to_string ~f:T.to_id_string (Set.to_sequence s)
