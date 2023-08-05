@@ -41,7 +41,8 @@ RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opa
     opam repo remove default
 
 COPY --chown=opam:opam koat2.opam .
-RUN opam install -j $(nproc) . --deps-only
+RUN opam update && \
+    opam install -j $(nproc) . --deps-only
 
 COPY --chown=opam:opam examples ./examples
 
