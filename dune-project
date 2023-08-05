@@ -22,7 +22,7 @@
  (synopsis "KoAT2: Runtime Analysis of Integer Programs")
  (depends
    apron
-   base
+   (base (> v0.16.0))
    stdio
    batteries
    cmdliner
