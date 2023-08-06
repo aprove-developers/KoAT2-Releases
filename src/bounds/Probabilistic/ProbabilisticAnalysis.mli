@@ -12,8 +12,7 @@ val perform_analysis: ?conf:configuration
                       -> ClassicalApproximation.t
                       -> ExpApproximation.t
 
-val perform_classic_and_probabilistic_analysis: ?classic_conf:Analysis.Make(NonProbOverappr).conf_type
+val perform_classic_and_probabilistic_analysis: ?classic_conf: NonProbOverappr.program_modules_t Analysis.analysis_configuration
                                                 -> ?conf:configuration
-                                                -> preprocess:(Program.t -> Program.t)
                                                 -> Program.t
                                                 -> Program.t * (ClassicalApproximation.t * ExpApproximation.t)

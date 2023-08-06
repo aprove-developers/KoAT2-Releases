@@ -7,7 +7,7 @@ type ('rvtuple_,'bound,'rvtuple__cmp_wit) size_approximation_t
 
 module Make(B: BoundType.Bound)(RV: ProgramTypes.RV):
   sig
-    type t = (RV.RVTuple_.t,B.t,RV.RVTuple_.comparator_witness) size_approximation_t
+    type t = (RV.t,B.t,RV.comparator_witness) size_approximation_t
 
     val empty : t
 

@@ -15,6 +15,8 @@ module GeneralTransitionSet = ProbabilisticPrograms.GeneralTransitionSet
 
 module GRV = ProbabilisticPrograms.GRV
 
+type program_modules_t = (TransitionLabel.t * TransitionLabel.comparator_witness  * Location.t * Location.comparator_witness * TransitionGraph.t)  ProgramTypes.program_modules_meta
+
 module NonProbOverappr = struct
   module Program = ProbabilisticPrograms.ProbabilisticProgramNonProbOverappr
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
@@ -30,4 +32,6 @@ module NonProbOverappr = struct
   module TransitionLabel = ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr
 
   module RV = ProbabilisticPrograms.ProbabilisticRVNonProbOverappr
+
+  type program_modules_t = (TransitionLabel.t * TransitionLabel.comparator_witness  * Location.t * Location.comparator_witness * TransitionGraph.t)  ProgramTypes.program_modules_meta
 end

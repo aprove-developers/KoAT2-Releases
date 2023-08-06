@@ -10,7 +10,7 @@ let conf = ProbabilisticAnalysis.default_configuration
 
 
 let preprocess =
-  Preprocessor.process (module NonProbOverappr)
+  Preprocessor.ProbabilisticWithOverappr.process
     Preprocessor.process_till_fixpoint Preprocessor.all_probabilistic
 
 let test_len = OUnitTest.Custom_length 5.
@@ -25,7 +25,7 @@ let tests =
             in
             let prog, (_, appr) =
             ProbabilisticAnalysis.perform_classic_and_probabilistic_analysis
-                ~classic_conf ~conf ~preprocess prog
+                ~classic_conf ~conf prog
             in
 
             let bound  = ExpApproximation.program_timebound appr prog in

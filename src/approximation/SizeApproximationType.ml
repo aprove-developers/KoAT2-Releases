@@ -9,9 +9,9 @@ module Make(B : BoundType.Bound)
   struct
     let logger = Logging.(get Approximation)
 
-    type t = (RV.RVTuple_.t,B.t,RV.RVTuple_.comparator_witness) size_approximation_t
+    type t = (RV.t,B.t,RV.comparator_witness) size_approximation_t
 
-    let empty = Map.empty (module RV.RVTuple_)
+    let empty = Map.empty (module RV)
 
     let get map rv =
       let execute () =
@@ -22,7 +22,7 @@ module Make(B : BoundType.Bound)
                          execute
 
     let to_sequence m = Map.to_sequence m
-    let of_sequence seq = Map.of_sequence_exn (module RV.RVTuple_) seq
+    let of_sequence seq = Map.of_sequence_exn (module RV) seq
 
     let add ?(simplifyfunc=identity) bound rv map =
       if not (B.is_infinity bound) then (

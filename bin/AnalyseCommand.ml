@@ -96,7 +96,7 @@ type params = {
     preprocessors : Program.t Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all_classical)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors; EliminateTempVars])]
     (** The preprocessors which should be applied before running the actual algorithm. *)
 
-    preprocessing_strategy : Program.t Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
+    preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
     local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform);]] [@default [`MPRF]] [@sep ',']
@@ -169,7 +169,7 @@ let run (params: params) =
   let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.value_or_thunk ~default:read_line params.input in
-  let preprocess = Preprocessor.process (module ProgramModules) params.preprocessing_strategy params.preprocessors in
+  let preprocess = Preprocessor.StandardProgram.process params.preprocessing_strategy params.preprocessors in
 
   (* TODO improve parser arguments to avoid the case of multiple twns *)
   let bounds_conf =

@@ -80,8 +80,8 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
                      let result =
-                       (Preprocessor.process_till_fixpoint (module ProgramModules)
-                          Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
+                       Preprocessor.(StandardProgram.process process_till_fixpoint
+                          [CutUnreachableLocations; CutUnsatisfiableTransitions]
                           (Readers.read_program_simple program))
                      in
                      assert_equal_program (Readers.read_program_simple expected_program) result))

@@ -79,7 +79,7 @@ let knowledge_propagation program scc appr_mc: ExpApproximation.t MaybeChanged.t
   MaybeChanged.(appr_mc >>= iter)
 
 
-module ELCBMap = Batteries.Map.Make(GRV.RVTuple_)
+module ELCBMap = Batteries.Map.Make(GRV)
 
 (* TODO rvs_in instead of rvs_out  *)
 let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_appr,appr): ExpApproximation.t =
@@ -209,11 +209,18 @@ let perform_analysis ?(conf=default_configuration) program class_appr: ExpApprox
 
 module ClassicAnalysis = Analysis.Make(NonProbOverappr)
 
-let perform_classic_and_probabilistic_analysis ?(classic_conf=Analysis.default_configuration) ?(conf=default_configuration) ~preprocess program=
+let perform_classic_and_probabilistic_analysis ?(classic_conf=Analysis.default_configuration) ?(conf=default_configuration) (program: Program.t) =
+  let overappr_classical_program =
+    Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
+  in
+
   let program, class_appr =
   ClassicAnalysis.improve
-      ~preprocess ~conf:classic_conf program NonProbOverapprApproximation.empty
-    |> Tuple2.map2 coerce_from_nonprob_overappr_approximation
+      ~preprocess:identity ~conf:classic_conf overappr_classical_program NonProbOverapprApproximation.empty
+      (* preprocess is only needed for CFR currently *)
+    |> Tuple2.map
+        Type_equal.(conv (sym ProbabilisticPrograms.Equalities.program_equalities))
+        coerce_from_nonprob_overappr_approximation
   in
 
   let prob_appr = perform_analysis program class_appr in

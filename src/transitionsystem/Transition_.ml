@@ -80,8 +80,8 @@ module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Locatio
 
   include Inner
 
-  type comparator_witness = (TL.comparator_witness,L.comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
-  let comparator = ProgramTypes.TransitionComparator.comparator TL.comparator L.comparator
+  type comparator_witness = (TL.comparator_witness,L.comparator_witness) TransitionComparator.comparator_witness
+  let comparator = TransitionComparator.comparator TL.comparator L.comparator
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 end
 

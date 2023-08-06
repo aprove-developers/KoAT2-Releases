@@ -4,12 +4,12 @@ open Formulas
 open Constraints
 open Polynomials
 
-module Make(M: ProgramTypes.ClassicalProgramModules) = struct
+module Make(M: ProgramTypes.ProgramModules) = struct
     open M
     let logger = Logging.(get Preprocessor)
 
     let depends var label =
-        Set.exists ~f:(fun x -> (TransitionLabel.update label x |? Polynomial.zero |> Polynomial.vars |> flip Set.mem var)
+        Set.exists ~f:(fun x -> (TransitionLabel.update label x |? UpdateElement.zero |> UpdateElement.vars |> flip Set.mem var)
                             || (TransitionLabel.cost label |> Polynomial.vars |> flip Set.mem var))
 
 

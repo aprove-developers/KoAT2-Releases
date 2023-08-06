@@ -154,31 +154,32 @@ module ProbabilisticProgramNonProbOverappr: sig
      and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
      and type transition_label_comparator_witness = ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
      and type transition_graph = ProbabilisticTransitionGraphNonProbOverappr.t
-     and type t = ProbabilisticProgram.t
 end
 
 (** RV Types for transitions *)
 
 (** General Transitions *)
-module GRV: ProgramTypes.RV with type RVTuple_.transition = GeneralTransition.t * Location.t
-
-module RVTuple_:
-  ProgramTypes.RVTuple with type transition = ProbabilisticTransition.t
-module RVTupleNonProbOverappr_:
-  ProgramTypes.RVTuple with type transition = ProbabilisticTransitionNonProbOverappr.t
+module GRV: ProgramTypes.RV
+  with type transition = GeneralTransition.t * Location.t
 
 
-module ProbabilisticRV: ProgramTypes.RV with type RVTuple_.transition = ProbabilisticTransition.t
+module ProbabilisticRV:
+  ProgramTypes.RV with type transition = ProbabilisticTransition.t
+                   and type transition_comparator_witness = ProbabilisticTransition.comparator_witness
+
 
 module ProbabilisticRVNonProbOverappr:
-  ProgramTypes.RV with type RVTuple_.transition = ProbabilisticTransitionNonProbOverappr.t
+  ProgramTypes.RV with type transition = ProbabilisticTransitionNonProbOverappr.t
+                   and type transition_comparator_witness = ProbabilisticTransitionNonProbOverappr.comparator_witness
 
 module Equalities: sig
   (** Some Equalities *)
   val trans_eq: (ProbabilisticTransitionNonProbOverappr.t, ProbabilisticTransition.t) Type_equal.t
-  val rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t
+  val rvtuple__eq: (ProbabilisticRVNonProbOverappr.t, ProbabilisticRV.t) Type_equal.t
   val trans_cmp_wit_eq: ( ProbabilisticTransitionNonProbOverappr.comparator_witness
                         , ProbabilisticTransition.comparator_witness) Type_equal.t
-  val rvtuple__cmp_wit_eq: ( ProbabilisticRVNonProbOverappr.RVTuple_.comparator_witness
-                           , ProbabilisticRV.RVTuple_.comparator_witness ) Type_equal.t
+  val rvtuple__cmp_wit_eq: ( ProbabilisticRVNonProbOverappr.comparator_witness
+                           , ProbabilisticRV.comparator_witness ) Type_equal.t
+
+  val program_equalities: (ProbabilisticProgram.t, ProbabilisticProgramNonProbOverappr.t) Type_equal.t
 end

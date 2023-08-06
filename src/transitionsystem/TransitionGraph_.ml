@@ -17,7 +17,7 @@ module Make_(T: ProgramTypes.Transition)
 
   type transition = T.t
   type transition_comparator_witness = ( transition_label_comparator_witness
-                                       , location_comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
+                                       , location_comparator_witness) TransitionComparator.comparator_witness
   type transition_set = (transition,transition_comparator_witness) Set.t
 
   module TransitionSet = Transition_.TransitionSetOver(T)(L)

@@ -6,22 +6,9 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t): sig
   (** Module handling result variables. *)
 
-  include ProgramTypes.RV with type RVTuple_.transition = T.t
-
-  (** TODO doc *)
-  val equivalent : t -> t -> bool
-
-  (** TODO doc *)
-  val compare_equivalent : t -> t -> int
-
-  (** Returns a string representing a result variable consisting of the transition-id string and the variable string. *)
-  val to_id_string : t -> string
-
-  (** Returns the transition of the result variable. *)
-  val transition : t -> T.t
-
-  (** Returns the variable of the result variable. *)
-  val variable : t -> Var.t
+  include ProgramTypes.RV
+    with type transition = T.t
+     and type transition_comparator_witness = T.comparator_witness
 end
 
 module RV: module type of MakeRV(TransitionLabel_)(Transition_)

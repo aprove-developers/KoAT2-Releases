@@ -28,7 +28,7 @@ let run (params: params) =
       (Set.to_list @@ Program.transitions program)
       (Set.to_list input_vars)
     |> List.map ~f:(fun(t,v) -> (t,v), LSB.compute_bound input_vars t v)
-    |> Hashtbl.of_alist_exn (module ProgramModules.RV.RVTuple_)
+    |> Hashtbl.of_alist_exn (module ProgramModules.RV)
   in
 
 

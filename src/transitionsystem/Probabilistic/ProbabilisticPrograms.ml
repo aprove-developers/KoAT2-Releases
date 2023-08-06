@@ -445,8 +445,8 @@ module ProbabilisticTransitionShared = struct
 
   include Inner
 
-  type comparator_witness = (transition_label_comparator_witness,location_comparator_witness) ProgramTypes.TransitionComparator.comparator_witness
-  let comparator = ProgramTypes.TransitionComparator.comparator ProbabilisticTransitionLabel.comparator Location.comparator
+  type comparator_witness = (transition_label_comparator_witness,location_comparator_witness) TransitionComparator.comparator_witness
+  let comparator = TransitionComparator.comparator ProbabilisticTransitionLabel.comparator Location.comparator
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 end
 
@@ -773,44 +773,32 @@ module ProbabilisticProgramNonProbOverappr = struct
       (Location)(ProbabilisticTransitionGraphNonProbOverappr)
 end
 
-
-let compare_rv compare_transition (t1,v1) (t2,v2) =
-  if compare_transition t1 t2 != 0 then
-    compare_transition t1 t2
-  else if Var.compare v1 v2 != 0 then
-    Var.compare v1 v2
-  else
-    0
-
 module GRV = struct
-  module RVTuple_ = struct
-    module Inner = struct
-      type transition = GeneralTransition.t * Location.t
-      type t = transition * Var.t
-      let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-      let equal ((gt1,l1),v1) ((gt2,l2),v2) =
-        GeneralTransition.equal gt1 gt2
-        && Location.equal l1 l2
-        && Var.equal v1 v2
-      let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
-      let compare =
-        let cmp (gt1,l1) (gt2,l2) =
-          match GeneralTransition.compare gt1 gt2 with
-          | 0 -> Location.compare l1 l2
-          | r -> r
-        in
-        compare_rv cmp
-    end
-
-    include Inner
-    include Comparator.Make(Inner)
+  module Trans = struct
+    type t = GeneralTransition.t * Location.t
+    let compare (gt1,l1) (gt2,l2) =
+      match GeneralTransition.compare gt1 gt2 with
+      | 0 -> Location.compare l1 l2
+      | r -> r
+    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
   end
+  module TransComp = Comparator.Make(Trans)
 
-  type transition = RVTuple_.transition
-  type t = RVTuple_.t
-  let equal = RVTuple_.equal
-  let hash = RVTuple_.hash
-  let compare = RVTuple_.compare
+  type transition = Trans.t
+  type transition_comparator_witness = TransComp.comparator_witness
+  type t = transition * Var.t
+
+  type comparator_witness = (transition_comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
+  let comparator = RVComparator.comparator TransComp.comparator Var.comparator
+  let compare = Comparator.compare_of_comparator comparator
+  let equal = Comparator.equal_of_comparator comparator
+
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+
+  let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
+
+  let variable (_,v) = v
+  let transition (t,_) = t
 
   let to_id_string ((gt,l),v) =
     "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"
@@ -821,28 +809,23 @@ module GRV = struct
 end
 
 module RVTuple_ = struct
-  module Inner = struct
-    type transition = ProbabilisticTransition.t
-    type t = transition * Var.t
-    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-    let equal (t1,v1) (t2,v2) = ProbabilisticTransition.equal t1 t2 && Var.equal v1 v2
-    let hash (t1,v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
-    let compare = compare_rv ProbabilisticTransition.compare
-  end
+  type transition = ProbabilisticTransition.t
+  type transition_comparator_witness = ProbabilisticTransition.comparator_witness
+  type t = transition * Var.t
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+  let hash (t1,v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
 
-  include Inner
-  include Comparator.Make(Inner)
+  let transition (t,_) = t
+  let variable (_,v) = v
+
+  type comparator_witness = (ProbabilisticTransition.comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
+  let comparator = RVComparator.comparator ProbabilisticTransition.comparator Var.comparator
+  let compare = Comparator.compare_of_comparator comparator
+  let equal = Comparator.equal_of_comparator comparator
 end
-module RVTupleNonProbOverappr_ = RVTuple_
 
 module ProbabilisticRV = struct
-  module RVTuple_ = RVTuple_
-
-  type transition = RVTuple_.transition
-  type t = RVTuple_.t
-  let equal = RVTuple_.equal
-  let hash = RVTuple_.hash
-  let compare = compare_rv ProbabilisticTransition.compare
+  include RVTuple_
 
   let to_id_string (t,v) =
     "|" ^ ProbabilisticTransition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
@@ -850,14 +833,9 @@ module ProbabilisticRV = struct
   let ids_to_string ?(pretty=false) (t,v) =
     ProbabilisticTransitionLabel.ids_to_string ~pretty (ProbabilisticTransition.label t) ^ ", " ^ Var.to_string ~pretty v
 end
-module ProbabilisticRVNonProbOverappr = struct
-  module RVTuple_ = RVTupleNonProbOverappr_
 
-  type transition = RVTupleNonProbOverappr_.transition
-  type t = RVTupleNonProbOverappr_.t
-  let equal = RVTupleNonProbOverappr_.equal
-  let hash = RVTupleNonProbOverappr_.hash
-  let compare = compare_rv ProbabilisticTransitionNonProbOverappr.compare
+module ProbabilisticRVNonProbOverappr = struct
+  include RVTuple_
 
   let to_id_string (t,v) =
     "|" ^ ProbabilisticTransitionNonProbOverappr.to_id_string t ^ "," ^ Var.to_string v ^ "|"
@@ -870,11 +848,12 @@ end
 module Equalities = struct
   let trans_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Type_equal.t =
     Type_equal.refl
-  let rvtuple__eq: (ProbabilisticRVNonProbOverappr.RVTuple_.t, ProbabilisticRV.RVTuple_.t) Type_equal.t =
+  let rvtuple__eq: (ProbabilisticRVNonProbOverappr.t, ProbabilisticRV.t) Type_equal.t =
     Type_equal.refl
   let trans_cmp_wit_eq: (ProbabilisticTransitionNonProbOverappr.comparator_witness, ProbabilisticTransition.comparator_witness) Type_equal.t =
     Type_equal.refl
   let rvtuple__cmp_wit_eq:
-    ( ProbabilisticRVNonProbOverappr.RVTuple_.comparator_witness
-    , ProbabilisticRV.RVTuple_.comparator_witness) Type_equal.t = Type_equal.refl
+    ( ProbabilisticRVNonProbOverappr.comparator_witness
+    , ProbabilisticRV.comparator_witness) Type_equal.t = Type_equal.refl
+  let program_equalities: (ProbabilisticProgram.t, ProbabilisticProgramNonProbOverappr.t) Type_equal.t = Type_equal.refl
 end

@@ -9,36 +9,24 @@ open ProgramModules
 open RVGTypes
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
-(* TODO simpliy somehow? *)
-type ('prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
-  | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
+type !'prog_modules_t cfr_configuration =
+  | NoCFR: 'a cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
-              -> ( Program.t
-                , Transition.comparator_witness
-                , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
-                , Loop.Make(ProgramModules).t
-                , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
+              -> ProgramModules.program_modules_t cfr_configuration
 
-type ('trans, 'prog, 'trans_compare, 'appr) closed_form_size_bounds =
-  | NoClosedFormSizeBounds: ('trans, 'prog,'trans_compare,'appr) closed_form_size_bounds
-  | ComputeClosedFormSizeBounds: (Transition.t, Program.t,Transition.comparator_witness,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
+type !'prog_modules_t closed_form_size_bounds =
+  | NoClosedFormSizeBounds: 'a closed_form_size_bounds
+  | ComputeClosedFormSizeBounds: ProgramModules.program_modules_t closed_form_size_bounds
 
-type ('trans,'prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
+type !'prog_modules_t analysis_configuration =
   { run_mprf_depth: int option
   ; twn_configuration: TWN.configuration option
-  ; cfr_configuration: ('prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
-  ; closed_form_size_bounds: ('trans, 'prog, 'trans_compare,'appr) closed_form_size_bounds
+  ; cfr_configuration: 'prog_modules_t cfr_configuration
+  ; closed_form_size_bounds: 'prog_modules_t closed_form_size_bounds
   ; analysis_type: [`Termination | `Complexity]
   }
 
-type classical_program_conf_type = ( Transition.t
-                                   , Program.t
-                                   , Transition.comparator_witness
-                                   , RVGTypes.MakeRVG(ProgramModules).t
-                                   , RVGTypes.MakeRVG(ProgramModules).scc
-                                   , Loop.Make(ProgramModules).t
-                                   , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
-
+type classical_program_conf_type = ProgramModules.program_modules_t analysis_configuration
 
 type measure = [ `Cost | `Time ] [@@deriving show]
 
@@ -46,7 +34,7 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
+let default_configuration: 'a analysis_configuration =
   { run_mprf_depth = Some 1
   ; twn_configuration = None
   ; cfr_configuration = NoCFR
@@ -62,25 +50,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TrivialTimeBounds = TrivialTimeBounds.Make(PM)
   module CostBounds = CostBounds.Make(PM)
   module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
-  module LSB_Table = Hashtbl.Make(PM.RV.RVTuple_)
+  module LSB_Table = Hashtbl.Make(PM.RV)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make(PM)
   module RVG = RVGTypes.MakeRVG(PM)
   module SizeBounds = SizeBounds.Make(PM)
   module SizeBounds_ = SizeBounds
   module TWN = TWN.Make(PM)
 
-  type conf_type =
-    (Transition.t,Program.t,Transition.comparator_witness,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
-
-  let proof_program_is_standard
-      ~(eq_proof_prog:(Program.t, ProgramModules.Program.t) OurBase.Type_equal.t): (Program.t, ProgramModules.Program.t) OurBase.Type_equal.t =
-    eq_proof_prog
-
-  let proof_tset_is_standard
-      ~(eq_proof_trans:(Transition.t, ProgramModules.Transition.t) OurBase.Type_equal.t)
-      ~(eq_proof_trans_comparator:(Transition.comparator_witness, ProgramModules.Transition.comparator_witness) OurBase.Type_equal.t):
-        (TransitionSet.t, ProgramModules.TransitionSet.t) OurBase.Type_equal.t =
-    let T = eq_proof_trans in let T = eq_proof_trans_comparator in T
+  type allowed_conf_type = PM.program_modules_t analysis_configuration
 
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
@@ -337,12 +314,10 @@ let improve_timebound (scc: TransitionSet.t) measure program appr =
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
 
-let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.t) (appr: Approximation.t) =
+let twn_size_bounds ~(conf: allowed_conf_type) (scc: TransitionSet.t) (program: Program.t) (appr: Approximation.t) =
   match conf.closed_form_size_bounds with
   | NoClosedFormSizeBounds -> appr
   | ComputeClosedFormSizeBounds ->
-    let OurBase.Type_equal.T = proof_program_is_standard ~eq_proof_prog:T                               in
-    let OurBase.Type_equal.T = proof_tset_is_standard    ~eq_proof_trans:T ~eq_proof_trans_comparator:T in
     TWNSizeBounds.improve program ~scc:(Option.some scc) appr
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
@@ -398,12 +373,11 @@ let handle_timeout_cfr method_name non_linear_transitions =
     |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound vars t v)
     |> LSB_Table.of_enum
 
-  let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: TransitionSet.t)
+  let handle_cfr ~(conf: allowed_conf_type) ~(preprocess: Program.t -> Program.t) (scc: TransitionSet.t)
     program opt_rvg opt_lsbs appr: Program.t * Approximation.t * ((RVG.t * RVG.scc list lazy_t) option) =
     match conf.cfr_configuration with
     | NoCFR -> program,appr,opt_rvg
     | PerformCFR cfr -> (
-      let OurBase.Type_equal.T = proof_tset_is_standard ~eq_proof_trans:T ~eq_proof_trans_comparator:T in
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
       let lsbs = opt_lsbs |? LSB_Table.create 0 in
@@ -412,7 +386,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
           (method_name: string)
           (f_cfr: Program.t -> Program.t MaybeChanged.t)
           (f_proof: Program.t -> string -> unit)
-          (rvg_with_sccs: RVGTypes.MakeRVG(ProgramModules).t * RVGTypes.MakeRVG(ProgramModules).scc list Lazy.t)
+          (rvg_with_sccs: RVG.t * RVG.scc list Lazy.t)
           (time: float)
           (non_linear_transitions: TransitionSet.t)
           ~(preprocess: Program.t -> Program.t)

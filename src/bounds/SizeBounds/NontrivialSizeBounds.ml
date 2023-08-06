@@ -19,7 +19,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         (get_sizebound: Transition.t -> Var.t -> Bound.t)
         (scc: RV.t List.t) =
 
-    let scc_rvset = Set.of_list (module RV.RVTuple_) scc in
+    let scc_rvset = Set.of_list (module RV) scc in
     let (rvs_equality, rvs_non_equality) = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
 
     (** All transitions that are present in the scc and that are not of equality type.
@@ -44,7 +44,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let pre_in_scc (rv: RV.t) =
       rv
       |> RVG.pre rvg
-      |> Set.of_list (module RV.RVTuple_)
+      |> Set.of_list (module RV)
       |> Set.inter scc_rvset
     in
 
@@ -52,7 +52,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let pre_out_scc rv =
       rv
       |> RVG.pre rvg
-      |> Set.of_list (module RV.RVTuple_)
+      |> Set.of_list (module RV)
       |> fun pre -> Set.diff pre scc_rvset
     in
 
@@ -72,7 +72,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         |> List.fold ~f:max ~init:0
       in
       scc
-      |> Set.to_sequence % Set.union_list (module RV.RVTuple_) % List.map ~f:pre_out_scc
+      |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:pre_out_scc
       |> Sequence.map ~f:(uncurry get_sizebound)
       |> Bound.sum
       |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
@@ -168,7 +168,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let lsb_fun =
       let lsbs = List.map ~f:(fun(t,v) -> (t,v), get_lsb (t,v)) scc in
       if List.for_all ~f:(Option.is_some % Tuple2.second) lsbs then
-        Some (fun k -> Tuple2.map2 Lazy.force % Option.value_exn @@ List.Assoc.find_exn lsbs ~equal:RV.RVTuple_.equal k)
+        Some (fun k -> Tuple2.map2 Lazy.force % Option.value_exn @@ List.Assoc.find_exn lsbs ~equal:RV.equal k)
       else None
     in
 

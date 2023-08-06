@@ -2,11 +2,13 @@
 open OurBase
 open Bounds
 
-(** Provides default implementations of an approximation *)
+type ('trans,'bound,'rv,'trans_cmp_wit,'rv_comp_wit) approximation_t
 
+(** Provides default implementations of an approximation *)
 module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
            (T: TransitionApproximationType.ApproximableTransition with type program = PM.Program.t): sig
-  type t
+  (* type t = (T.t,Bound.t,PM.RV.t,T.comparator_witness,PM.RV.RVTuple_.comparator_witness) approximation_t *)
+  type t = (T.t,B.t,PM.RV.t,T.comparator_witness,PM.RV.comparator_witness) approximation_t
 
   (** Returns an empty approximation that does not contain any non-trivial information.
       That means, that every upper bound is infinite and every lower bound is minus infinite.

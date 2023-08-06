@@ -29,7 +29,7 @@ type params = {
   classic_local : classic_local list; [@enum [("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform);]] [@default [`MPRF]] [@sep ',']
   (** Choose methods to compute local runtime-bounds: mprf, twn *)
 
-  preprocessing_strategy : Program.t Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
+  preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
   (** The strategy which should be used to apply the preprocessors. *)
 
 } [@@deriving cmdliner]
@@ -42,7 +42,7 @@ let run (params: params) =
   in
 
   let preprocess =
-    Preprocessor.process (module NonProbOverappr) params.preprocessing_strategy params.preprocessors
+    Preprocessor.ProbabilisticWithOverappr.process params.preprocessing_strategy params.preprocessors
   in
 
   Stdio.printf "prog %s\n\n" (Program.to_string_pretty program);
@@ -57,12 +57,21 @@ let run (params: params) =
       ~init:Analysis.default_configuration params.classic_local
   in
 
-  let program, class_appr =
+  let program =
+    ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing"));
     preprocess program
-    |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
-    |> fun prog -> OverapprAnalysis.improve ~preprocess ~conf:classical_analysis_conf prog NonProbOverapprApproximation.empty
-    |> Tuple2.map2 coerce_from_nonprob_overappr_approximation
   in
+
+  let program, class_appr =
+    let overappr =
+      Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
+    in
+    OverapprAnalysis.improve ~preprocess:identity ~conf:classical_analysis_conf overappr NonProbOverapprApproximation.empty
+    |> Tuple2.map
+        Type_equal.(conv (sym ProbabilisticPrograms.Equalities.program_equalities))
+        coerce_from_nonprob_overappr_approximation
+  in
+
   let prob_appr = ProbabilisticAnalysis.perform_analysis program class_appr in
   print_endline (ClassicalApproximation.to_string program class_appr);
   print_endline (ExpApproximation.to_string program prob_appr);

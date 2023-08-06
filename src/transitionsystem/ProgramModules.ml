@@ -14,8 +14,9 @@ module ProgramModulesOver(L: ProgramTypes.Location): ProgramTypes.ProgramModules
   module Program = Program_.ProgramOverLocation(L)
 
   module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
-end
 
+  type program_modules_t = (TransitionLabel.t * TransitionLabel.comparator_witness  * Location.t * Location.comparator_witness * TransitionGraph.t)  ProgramTypes.program_modules_meta
+end
 (* here we can not simply use include ProgramModulesOver(Location) since we rely on the specialized versions *)
 module Program = Program_
 module UpdateElement = Polynomials.Polynomial
@@ -26,3 +27,5 @@ module TransitionSet = Transition_.TransitionSetOver(Transition)(Location)
 module LocationSet = Location.LocationSetOver(Location)
 module Location = Location
 module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
+
+type program_modules_t = (TransitionLabel.t * TransitionLabel.comparator_witness * Location.t * Location.comparator_witness * TransitionGraph.t)  ProgramTypes.program_modules_meta

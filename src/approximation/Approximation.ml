@@ -4,6 +4,12 @@ open Formatter
 open FormattedString
 open Lens.Infix
 
+type ('trans,'bound,'rv,'trans_cmp_wit,'rv_comp_wit) approximation_t = {
+  time: ('trans,'bound,'trans_cmp_wit) TransitionApproximationType.transition_approximation_t;
+  size: ('rv,'bound,'rv_comp_wit) SizeApproximationType.size_approximation_t;
+  cost: ('trans,'bound,'trans_cmp_wit) TransitionApproximationType.transition_approximation_t;
+} [@@deriving lens { submodule = true }]
+
 module Make(B: BoundType.Bound)
            (PM: ProgramTypes.ProgramModules)
            (T: TransitionApproximationType.ApproximableTransition with type program = PM.Program.t) = struct
@@ -11,11 +17,7 @@ module Make(B: BoundType.Bound)
   module TransitionApproximation = TransitionApproximationType.Make(B)(T)
   module SizeApproximation = SizeApproximationType.Make(B)(RV)
 
-  type t = {
-      time: TransitionApproximation.t;
-      size: SizeApproximation.t;
-      cost: TransitionApproximation.t;
-    } [@@deriving lens { submodule = true }]
+  type t = (T.t,B.t,RV.t,T.comparator_witness,RV.comparator_witness) approximation_t
 
   let empty = {
       time = TransitionApproximation.empty "time";
@@ -46,7 +48,7 @@ module Make(B: BoundType.Bound)
 
   (** Timebound related methods *)
 
-  let timebound =
+  let timebound: t -> T.t -> B.t =
     TransitionApproximation.get % time
 
   let program_timebound =
@@ -55,7 +57,7 @@ module Make(B: BoundType.Bound)
   let add_timebound bound transition =
     Lens.time ^%= TransitionApproximation.add bound transition
 
-  let all_times_bounded =
+  let all_times_bounded: t -> T.t Sequence.t -> bool =
     TransitionApproximation.all_bounded % time
 
   let is_time_bounded appr =
@@ -63,7 +65,7 @@ module Make(B: BoundType.Bound)
 
   (** Costbound related methods *)
 
-  let costbound =
+  let costbound: t -> T.t -> B.t =
     TransitionApproximation.get % cost
 
   let program_costbound =
@@ -114,9 +116,9 @@ module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (E: sig
                 val trans_eq: (PM.Transition.t,PM'.Transition.t) Type_equal.t
-                val rvtuple__eq: (PM.RV.RVTuple_.t,PM'.RV.RVTuple_.t) Type_equal.t
+                val rvtuple__eq: (PM.RV.t,PM'.RV.t) Type_equal.t
                 val trans_cmp_wit_eq: (PM.Transition.comparator_witness,PM'.Transition.comparator_witness) Type_equal.t
-                val rvtuple__cmp_wit_eq: (PM.RV.RVTuple_.comparator_witness,PM'.RV.RVTuple_.comparator_witness) Type_equal.t
+                val rvtuple__cmp_wit_eq: (PM.RV.comparator_witness,PM'.RV.comparator_witness) Type_equal.t
               end) = struct
   let trans_appr_proof =
     let module L =

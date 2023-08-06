@@ -1,7 +1,6 @@
 
 (* explicitly import required modules from Base *)
 module Array = Base.Array
-module Comparator = Base.Comparator
 module Exn = Base.Exn
 module Float = Base.Float
 module Fn = Base.Fn
@@ -74,6 +73,13 @@ module Unique = struct
       counter := !counter+1;
       id
     )
+end
+
+module Comparator = struct
+  include Base.Comparator
+
+  let compare_of_comparator comparator = comparator.compare
+  let equal_of_comparator comparator a b = comparator.compare a b = 0
 end
 
 module List = struct

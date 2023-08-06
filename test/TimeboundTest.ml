@@ -5,7 +5,12 @@ open OUnit2
 open Helper
 open ProgramModules
 
-let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
+let preprocess =
+  Preprocessor.(
+    StandardProgram.process
+      process_till_fixpoint
+      [InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations]
+  )
 
 let conf = Analysis.default_configuration
 module Analysis = Analysis.Make(ProgramModules)

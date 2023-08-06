@@ -5,16 +5,6 @@ open Polynomials
 
 type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
 
-(** TransitionComparators only depend on Label & Location Comparators *)
-module TransitionComparator =
-  Comparator.Derived2(struct
-    type (!'trans_label,!'loc) t = 'loc * 'trans_label * 'loc
-    let compare label_compare loc_compar =
-      fun (_,label1,_) (_,label2,_) -> label_compare label1 label2
-    let sexp_of_t _ _ = Sexplib0.Sexp_conv.sexp_of_opaque
-  end)
-
-
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
   (** Type of location, we use strings. *)
@@ -317,10 +307,11 @@ module type Program = sig
 
   type transition_graph
 
-  (* TODO type type = () *)
-
   (** Type of a program consisting of a program graph and a start location. *)
-  type t
+  type t =
+    ( transition_label, transition_label_comparator_witness
+    , location, location_comparator_witness
+    , transition_graph) GenericProgram_.t
 
   (** Create a program from a start location and an enum of transitions. *)
   (** The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
@@ -435,37 +426,33 @@ module type Program = sig
   end
 end
 
-(** This can be helpfun in regards with Set.Make, Map.Make and coercion of result variables *)
-module type RVTuple = sig
-  (** RV transition type.
-       Note that for probabilistic programs one might also want to consider tuples of general transitions and locations here *)
+module type RV = sig
   type transition
+  type transition_comparator_witness
 
-  (** Type of a result variable is a transiton and a variable. *)
   type t = transition * Var.t
 
-  include Comparator.S with type t := t
-  val sexp_of_t : t -> Sexp.t
+  include Comparator.S
+    with type t := t
+     and type comparator_witness = ( transition_comparator_witness
+                                   , Var.comparator_witness) RVComparator.comparator_witness
 
-  (** Comparison with IDs to compare transitions *)
-  val compare: t -> t -> int
+  (** Returns the transition of the result variable. *)
+  val transition : t -> transition
 
-  val equal: t -> t -> bool
-  val hash: t -> int
-end
-
-module type RV = sig
-  module RVTuple_: RVTuple
-
-  type transition = RVTuple_.transition
-  type t = RVTuple_.t
+  (** Returns the variable of the result variable. *)
+  val variable : t -> Var.t
 
   val to_id_string: t -> string
   val equal: t -> t -> bool
   val hash: t -> int
   val compare: t -> t -> int
   val ids_to_string: ?pretty:bool -> t -> string
+
+  val sexp_of_t : t -> Sexp.t
 end
+
+type !'a program_modules_meta
 
 module type ProgramModules = sig
   module Location: Location
@@ -507,10 +494,18 @@ module type ProgramModules = sig
      and type transition_graph = TransitionGraph.t
 
   module RV: RV
+
+  type program_modules_t = ( TransitionLabel.t
+                           * TransitionLabel.comparator_witness
+                           * Location.t
+                           * Location.comparator_witness
+                           * TransitionGraph.t)  program_modules_meta
 end
 
 (** For classical/non-probabilistic programs we want polynomial updates only and RV.transition = Transition.t *)
 module type ClassicalProgramModules = sig
   include ProgramModules with module UpdateElement = Polynomial
-  module RV: RV with type RVTuple_.transition = Transition.t
+  module RV: RV
+    with type transition = Transition.t
+     and type transition_comparator_witness = Transition.comparator_witness
 end

@@ -3,43 +3,11 @@ open OurBase
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
 struct
-  let compare_ compare_transition (t1,v1) (t2,v2) =
-    if compare_transition t1 t2 != 0 then
-      compare_transition t1 t2
-    else if Var.compare v1 v2 != 0 then
-      Var.compare v1 v2
-    else
-      0
+  type transition = T.t
+  type transition_comparator_witness = T.comparator_witness
+  type t = T.t * Var.t
 
-  module RVTuple_: ProgramTypes.RVTuple with type transition = T.t = struct
-    module Inner = struct
-      type transition = T.t
-      type t = T.t * Var.t
-      let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-      let equal (t1,v1) (t2,v2)= T.equal t1 t2 && Var.equal v1 v2
-      let hash (t,v) = Hashtbl.hash (T.id t, Var.to_string v)
-      let compare = compare_ T.compare
-    end
-    include Inner
-    include Comparator.Make(Inner)
-  end
-
-  type transition = RVTuple_.transition
-  type t = RVTuple_.t
-
-  let equal = RVTuple_.equal
-
-  let equivalent (t1,v1) (t2,v2) =
-    T.equivalent t1 t2
-    && Var.equal v1 v2
-
-  let hash = RVTuple_.hash
-
-  let compare =
-    compare_ T.compare
-
-  let compare_equivalent =
-    compare_ T.compare_equivalent
+  let hash (t,v) = Hashtbl.hash (T.id t, Var.to_string v)
 
   let transition (t,_) = t
 
@@ -51,6 +19,13 @@ struct
   let ids_to_string ?(pretty=false) (t,v) =
     TL.ids_to_string ~pretty (T.label t) ^ ", " ^ Var.to_string ~pretty v
 
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+
+  type comparator_witness = (T.comparator_witness,Var.comparator_witness) RVComparator.comparator_witness
+  let comparator = RVComparator.comparator T.comparator Var.comparator
+
+  let compare = Comparator.compare_of_comparator comparator
+  let equal = Comparator.equal_of_comparator comparator
 end
 
 module RV = MakeRV(TransitionLabel_)(Transition_)

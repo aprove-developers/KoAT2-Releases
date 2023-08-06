@@ -19,11 +19,12 @@ let run (params: params) =
     Readers.read_probabilistic_prog_goal_file params.input
   in
 
-  let prog =
-    Preprocessor.process_till_fixpoint
-      (module NonProbOverappr)
-      [ Preprocessor.InvariantGeneration; Preprocessor.CutUnsatisfiableTransitions ]
-      prog
+  let prog = Preprocessor.(
+      ProbabilisticWithOverappr.process
+        process_till_fixpoint
+        [ Preprocessor.InvariantGeneration; Preprocessor.CutUnsatisfiableTransitions ]
+        prog
+    )
   in
 
   let gts = Program.gts prog in

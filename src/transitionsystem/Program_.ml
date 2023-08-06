@@ -5,12 +5,6 @@ open Util
 
 exception RecursionNotSupported
 
-module GenericProgram = struct
-  type ('trans, 'trans_cmp) pre_cache = ('trans, ('trans, 'trans_cmp) Set.t) Hashtbl.t
-  type ('loc, 'graph, 'trans, 'trans_cmp) t =
-    { start: 'loc; graph: 'graph; pre_cache: ('trans, 'trans_cmp) pre_cache Atomically.t }
-end
-
 module Make(TL: ProgramTypes.TransitionLabel)
            (T: ProgramTypes.Transition with type transition_label = TL.t and type transition_label_comparator_witness = TL.comparator_witness)
            (L: ProgramTypes.Location with type t = T.location and type comparator_witness = T.location_comparator_witness)
@@ -34,14 +28,16 @@ struct
 
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
-  open GenericProgram
-  type t = (location, transition_graph, transition, T.comparator_witness) GenericProgram.t
+  open GenericProgram_
+  type t = ( transition_label, transition_label_comparator_witness
+           , location, location_comparator_witness
+           , transition_graph) GenericProgram_.t
 
   let start program = program.start
 
   let graph g = g.graph
 
-  let equal equal_graph program1 program2 =
+  let equal equal_graph (program1:t) (program2:t) =
     equal_graph program1.graph program2.graph
     && L.equal program1.start program2.start
 
@@ -249,7 +245,7 @@ module ProgramOverLocation(L: ProgramTypes.Location) =
   Make(TransitionLabel_) (Transition_.TransitionOver(TransitionLabel_)(L)) (L)
       (TransitionGraph_.TransitionGraphOverLocation(L))
 
-open GenericProgram
+open GenericProgram_
 include ProgramOverLocation(Location)
 
 let from_com_transitions ?(termination = false) com_transitions start =
