@@ -213,12 +213,6 @@ module ProbabilisticTransitionLabel_ = struct
       in
       rename rename_map t
 
-    let remove_non_contributors non_contributors t =
-      let update_ = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:t.update in
-      { t with
-        update = update_;
-      }
-
     let update_admissibility_constraint t: Guard.t =
       Map.to_sequence t.update
       |> Sequence.map ~f:(UpdateElement_.admissibility_constraint % Tuple2.second)
@@ -340,6 +334,12 @@ module ProbabilisticTransitionLabel = struct
     |> Set.filter ~f:(fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
 
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
+
+  let remove_non_contributors non_contributors t =
+    let update_ = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:t.update in
+    { t with
+      update = update_;
+    }
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
@@ -400,6 +400,12 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let changed_vars t =
     input_vars t
     |> Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
+  let remove_non_contributors non_contributors t =
+    let update_ = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:t.overappr_nonprob_update in
+    { t with
+      overappr_nonprob_update = update_;
+    }
+
 end
 
 (** Shared definitions between ProbabilisticTransition and ProbabilisticTransitionNonProbOverAppr *)
