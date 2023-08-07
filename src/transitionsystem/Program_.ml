@@ -312,7 +312,7 @@ let rename program =
 
 (* Prints the program to the file "file.koat" *)
 let to_file program file =
-  let oc = Stdio.Out_channel.create (file ^ ".koat") in
+  let oc = Stdio.Out_channel.create file in
   Stdio.Out_channel.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
                   (Location.to_string (start program))
                   (Set.fold ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ~init:"")

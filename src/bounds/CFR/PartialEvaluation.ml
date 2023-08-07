@@ -145,7 +145,7 @@ let applyIrankFinder (scc_program: Program.t) =
     uid := (string_of_int (Unix.getpid ())) ^ "_" ^ (string_of_float (Unix. gettimeofday ()));
     try Unix.mkdir ("./tmp_" ^ !uid) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
-  Program.to_file scc_program ("./tmp_" ^ !uid ^ "/tmp_scc" ^ (string_of_int !counter));
+  Program.to_file scc_program ("./tmp_" ^ !uid ^ "/tmp_scc" ^ (string_of_int !counter) ^ ".koat");
   let tmp = (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-head-deep --no-unfold all --output-format koat --output-destination ./tmp_"
                ^ !uid
                ^ "/tmp --file ./tmp_"
