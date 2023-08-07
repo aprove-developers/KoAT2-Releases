@@ -85,7 +85,7 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
          if depth = 1 then
            List.nth evaluated_ranking_funcs 0
          else
-           Bound.(one + (of_int (MPRF_Coefficient.coefficient depth) * Bound.sum_list evaluated_ranking_funcs))
+           Bound.(one + (of_constant (MPRF_Coefficient.coefficient depth) * Bound.sum_list evaluated_ranking_funcs))
        in
         Bound.(
           if is_infinity timebound then

@@ -493,7 +493,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     if Option.is_some rankfuncs then
       let rankfuncs = Option.get rankfuncs in
       let bounds = rankfuncs.rank |> List.map Bound.of_poly in
-      Bound.(one + (of_int (MPRF_Coefficient.coefficient rankfuncs.depth) * Bound.sum_list bounds))
+      Bound.(one + (of_constant (MPRF_Coefficient.coefficient rankfuncs.depth)) * Bound.sum_list bounds)
     else
       Bound.infinity
 
