@@ -32,11 +32,18 @@ type params = {
   preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
   (** The strategy which should be used to apply the preprocessors. *)
 
+  show_proof: bool;
+  (** Displays the complexity proof. *)
+
+  proof_format: Formatter.format; [@enum Formatter.all_formats |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
+  (** What should be the output format of the proof. html, markdown, or plain? *)
+
 } [@@deriving cmdliner]
 
 let run (params: params) =
-  (* Logging.(use_loggers [PRF, Logger.DEBUG; Preprocessor, Logger.DEBUG]); *)
-  Logging.(use_loggers [ Preprocessor, Logger.DEBUG; ExpSize, Logger.DEBUG]);
+  ProofOutput.enable_proof params.show_proof;
+  ProofOutput.proof_format params.proof_format;
+
   let (program,_) = (* TODO respect goals *)
     Readers.read_probabilistic_prog_goal_file params.input
   in
@@ -44,8 +51,6 @@ let run (params: params) =
   let preprocess =
     Preprocessor.ProbabilisticWithOverappr.process params.preprocessing_strategy params.preprocessors
   in
-
-  Stdio.printf "prog %s\n\n" (Program.to_string_pretty program);
 
   let classical_analysis_conf =
     let open TWN in
@@ -58,13 +63,22 @@ let run (params: params) =
   in
 
   let program =
-    ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing"));
+    ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_big "Preprocessing");
     preprocess program
   in
 
   let program, class_appr =
+    ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_big "Classical Analysis");
     let overappr =
+      ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_small "Classical Program after Preprocessing");
       Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
+      |> tap (fun program -> ProofOutput.add_to_proof_with_format FormattedString.(fun format ->
+          let module GP = GraphPrint.MakeFromClassical(NonProbOverappr) in
+          NonProbOverappr.Program.to_formatted_string ~pretty:true program
+          <> match format with
+          | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
+          | _              -> Empty
+        ))
     in
     OverapprAnalysis.improve ~preprocess:identity ~conf:classical_analysis_conf overappr NonProbOverapprApproximation.empty
     |> Tuple2.map
@@ -72,6 +86,27 @@ let run (params: params) =
         coerce_from_nonprob_overappr_approximation
   in
 
+  ProofOutput.add_to_proof FormattedString.(fun () ->
+      mk_str_header_big "Results of Classical Analysis"
+      <> FormattedString.reduce_header_sizes (ClassicalApproximation.to_formatted ~pretty:true program class_appr)
+    );
+
+  ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_big "Probabilistic Analysis");
+  ProofOutput.add_to_proof_with_format FormattedString.(fun format ->
+      let module GP = GraphPrint.ProbabilisticGraphPrint in
+      mk_str_header_small "Probabilistic Program after Preprocessing"
+      <> Program.to_formatted_string ~pretty:true program
+      <> match format with
+      | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
+      | _              -> Empty
+    );
+
   let prob_appr = ProbabilisticAnalysis.perform_analysis program class_appr in
-  print_endline (ClassicalApproximation.to_string program class_appr);
-  print_endline (ExpApproximation.to_string program prob_appr);
+
+  ProofOutput.add_to_proof FormattedString.(fun () ->
+      mk_str_header_big "Results of Probabilistic Analysis"
+      <> FormattedString.reduce_header_sizes ~levels_to_reduce:1 (ExpApproximation.to_formatted ~pretty:true program prob_appr)
+    );
+  Printf.printf "Overall expected time bound: %s\n"
+    (Bounds.RealBound.to_string @@ ExpApproximation.program_timebound prob_appr program);
+  ProofOutput.print_proof params.proof_format

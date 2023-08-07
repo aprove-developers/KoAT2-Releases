@@ -18,7 +18,7 @@ let grvs_from_gts_and_vars gts vars =
   rvts_from_gts gts
   |> fun rvts -> List.cartesian_product rvts (Base.Set.to_list vars)
 
-let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
+let lift_bounds program gts program_vars (class_appr, appr): ExpApproximation.t =
   let lift_time_bounds appr =
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
@@ -39,6 +39,10 @@ let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
     |> List.fold ~f:(fun appr (rvt,v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt,v)) rvt v appr) ~init:appr
   in
   lift_size_bounds (lift_time_bounds appr)
+  |> tap (fun appr -> ProofOutput.add_to_proof FormattedString.(fun () ->
+      mk_str_header_small "Results obtained by lifting Classical Analysis"
+      <> reduce_header_sizes ~levels_to_reduce:2 (ExpApproximation.to_formatted ~pretty:true program appr)
+    ))
 
 let improve_timebounds ~conf program scc (class_appr,appr): ExpApproximation.t MaybeChanged.t =
   let is_exptime_bounded = ExpApproximation.is_time_bounded appr in
@@ -69,8 +73,12 @@ let knowledge_propagation program scc appr_mc: ExpApproximation.t MaybeChanged.t
           |> Sequence.map ~f:(ExpApproximation.timebound appr)
           |> RealBound.sum
         in
-        if RealBound.is_finite new_bound then
+        if RealBound.is_finite new_bound then (
+          ProofOutput.add_str_paragraph_to_proof FormattedString.(fun () ->
+              "knowledge_propagation leads to new time bound "^RealBound.to_string ~pretty:true new_bound^" for transition "^GeneralTransition.to_string_pretty gt
+            );
           MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr)
+        )
         else MaybeChanged.same appr
       ) ~init:appr gtset
     |> fun appr_mc ->
@@ -201,7 +209,7 @@ let perform_analysis ?(conf=default_configuration) program class_appr: ExpApprox
   let program_vars = Program.input_vars program in
   let sccs = Program.sccs_gts program in
 
-  lift_bounds gts program_vars (class_appr, ExpApproximation.empty)
+  lift_bounds program gts program_vars (class_appr, ExpApproximation.empty)
   |> fun appr ->
       List.fold
         ~f:(fun appr scc_with_locs -> improve_scc ~conf program gts program_vars scc_with_locs (class_appr,appr))

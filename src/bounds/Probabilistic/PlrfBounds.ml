@@ -47,8 +47,8 @@ let improve_with_plrf program (class_appr,appr) rank =
   Logger.log logger Logger.DEBUG (fun () -> "improve_with_plrf", [ "rank", Plrf.to_string rank
                                                                 ; "bound", RealBound.to_string new_bound]) ;
 
-  if RealBound.is_finite new_bound then
-    (* TODO add to proof *)
-    MaybeChanged.changed (ExpApproximation.add_timebound new_bound (Plrf.decreasing rank) appr)
+  if RealBound.is_finite new_bound then (
+    Plrf.add_to_proof rank new_bound program;
+    MaybeChanged.changed (ExpApproximation.add_timebound new_bound (Plrf.decreasing rank) appr) )
   else
     MaybeChanged.same appr

@@ -19,3 +19,5 @@ val find : ?refined:bool -> ?timeout:float option -> Program.t -> GeneralTransit
 
 val to_string: t -> string
 
+(**  This function adds an explanation to the the proof that using the Plrf of the first argument the given bound was computed for the given Program *)
+val add_to_proof : t -> Bounds.RealBound.t -> Program.t -> unit

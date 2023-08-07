@@ -325,7 +325,7 @@ module ProbabilisticTransitionLabel = struct
 
   let ids_to_string ?(pretty=false) t =
     if pretty then
-      "t"^Util.natural_to_subscript (id t)^" &isin; g"^Util.natural_to_subscript (gt_id t)
+        "t"^Util.natural_to_subscript (id t)^" ∈ g"^Util.natural_to_subscript (gt_id t)
     else
       "t"^Int.to_string (id t)^" in g"^Int.to_string (gt_id t)
 
