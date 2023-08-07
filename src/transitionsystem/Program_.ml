@@ -121,9 +121,13 @@ struct
     fun program -> Set.diff (vars program) (input_vars program)
 
   let from_graph start graph =
-    if G.is_empty graph || List.is_empty (G.pred_e graph start) then
-      { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T) }
-    else raise (Failure "Transition leading back to the initial location.")
+    try
+      if G.is_empty graph || List.is_empty (G.pred_e graph start) then
+        { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T) }
+      else raise (Failure "Transition leading back to the initial location.")
+    with Invalid_argument _ -> (* G.pred_e throws it if start location does not occur on left side.*)
+      let graph = G.empty in
+      { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T)}
 
   let from_sequence start =
     from_graph start % G.mk
@@ -256,7 +260,7 @@ let from_com_transitions ?(termination = false) com_transitions start =
    * all targets that do not appear on the left hand side of a rule.
    * However, we need to keep at least on target for each transition, such that the transition itself is not eliminated and it
    * still incurs a cost of 1. *)
-  if List.is_empty all_trans then
+  if List.is_empty all_trans || not @@ Set.exists ~f:(Location.equal start) start_locs then
     from_graph start (TransitionGraph_.empty)
   else
     let cleaned_com_k_transitions =
