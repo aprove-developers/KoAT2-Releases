@@ -48,6 +48,26 @@ type metadata = {
 
 let set_title str = fun meta -> { title = Some str; }
 
+let map_t_field f = function
+  | Empty    as e           -> e
+  | Str _    as s           -> s
+  | RawStr _ as s           -> s
+  | Paragraph t             -> Paragraph (f t)
+  | Block t                 -> Block (f t)
+  | NewLine  as n           -> n
+  | Header (s,t)            -> Header (s, f t)
+  | SequentialComp (t1, t2) -> SequentialComp (f t1, f t2)
+
+(** Supply negative arguments to increase header sizes *)
+let rec reduce_header_sizes ?(levels_to_reduce=1) t =
+  let size_to_int = function
+    | Big -> 3              | Small -> 2   | Smaller  -> 1  | Smallest -> 0
+  in
+  let int_to_size = function
+    | i when i >= 3 -> Big   | 2 -> Small   | 1 -> Smaller   | _ -> Smallest in
+  match t with
+  | Header (size, t) -> Header (int_to_size (size_to_int size - levels_to_reduce) , reduce_header_sizes t)
+  | s                   -> map_t_field (reduce_header_sizes ~levels_to_reduce) s
 
 let render_string =
   let rec helper ~indent f =
