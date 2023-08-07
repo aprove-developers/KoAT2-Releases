@@ -163,7 +163,7 @@ module ProbabilisticTransitionLabel_ = struct
     let input_size = Set.length % input_vars
 
     type vars_type = VarsOverapproximated
-                   | VarsNonOverapproximated [@@deriving ord,sexp]
+                   | VarsNonOverapproximated
 
     let vars vars_type t =
       let update_and_guard_vars = match vars_type with
@@ -180,16 +180,6 @@ module ProbabilisticTransitionLabel_ = struct
       |> Set.union (Guard.vars t.invariant)
       |> Set.union (Polynomial.vars t.cost)
       |> Set.union (VarSet.of_list @@ Map.keys t.update)
-
-    module VarsForMemoization = struct
-      type t = vars_type * int [@@deriving ord,sexp]
-      let hash = Hashtbl.hash
-    end
-    (* TODO May invalidate through invariant generation! *)
-    let vars_memoization: (vars_type*int,VarSet.t) Hashtbl.t = Hashtbl.create ~size:10 (module VarsForMemoization)
-    let clear_memoized_vars_for_id id =
-      Hashtbl.remove vars_memoization (VarsNonOverapproximated,id);
-      Hashtbl.remove vars_memoization (VarsOverapproximated,id)
 
     let rename_update rename_ue update rename_map =
       update
@@ -208,7 +198,6 @@ module ProbabilisticTransitionLabel_ = struct
 
         cost = Polynomial.rename rename_map t.cost;
       }
-      |> tap (fun _ -> clear_memoized_vars_for_id t.id)
 
     let rename_temp_vars t temp_vars =
       (* whenever we have a temp variable with the same name occur in both the overapproximated and the
@@ -229,7 +218,6 @@ module ProbabilisticTransitionLabel_ = struct
       { t with
         update = update_;
       }
-      |> tap (fun _ -> clear_memoized_vars_for_id t.id)
 
     let update_admissibility_constraint t: Guard.t =
       Map.to_sequence t.update
