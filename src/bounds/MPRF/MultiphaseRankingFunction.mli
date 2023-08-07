@@ -29,6 +29,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Returns the depth of a multiphase ranking function (i.e. returns d if MRF has form f1,f2,...,fd).*)
   val depth : t -> int
 
+  (** Extracts an unlifted (local) bound from the MPRF *)
+  val to_unlifted_bound: PM.Program.t -> t
+    -> (PM.Transition.t,Bound.t,PM.Transition.comparator_witness) UnliftedBounds.UnliftedTimeBound.unlifted_time_bound
   (** Tries to find a suitable multiphase ranking function for the given transitions T'.
   * The int corresponds to the maximum depth of the mprf *)
   val find : measure -> PM.Program.t -> int -> t Base.Sequence.t

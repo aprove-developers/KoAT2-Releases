@@ -59,54 +59,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   type allowed_conf_type = PM.program_modules_t analysis_configuration
 
-let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
-
-
 let entry_transitions program tset =
   let all_possible_entry_trans =
     Base.Set.to_sequence tset
     |> Base.Sequence.fold ~f:(fun tset -> Base.Set.union tset % Program.pre program) ~init:TransitionSet.empty
   in
   Base.Set.diff all_possible_entry_trans tset
-
-(* Computes new bounds*)
-let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunction.t): Bound.t =
- let execute () =
-   rank
-   |> MultiphaseRankingFunction.non_increasing
-   |> entry_transitions program
-   |> Base.Set.to_sequence
-   |> Base.Sequence.map ~f:(fun (l,t,l') ->
-       let timebound = Approximation.timebound appr (l,t,l') in
-       let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
-       let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
-       let depth = MultiphaseRankingFunction.depth rank in
-       let rhs =
-         if depth = 1 then
-           List.nth evaluated_ranking_funcs 0
-         else
-           Bound.(one + (of_constant (MPRF_Coefficient.coefficient depth) * Bound.sum_list evaluated_ranking_funcs))
-       in
-        Bound.(
-          if is_infinity timebound then
-            if equal zero rhs then
-              zero
-            else
-              infinity
-          else
-            if is_infinity rhs then
-              infinity
-            else
-              timebound * rhs
-        ))
-   |> Bound.sum
- in
-    let bound = execute () in
-    Logger.with_log logger Logger.DEBUG
-      (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
-                                   "non_increasing", Util.sequence_to_string ~f:Transition.to_id_string (Base.Set.to_sequence (MultiphaseRankingFunction.non_increasing rank));
-                                   "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
-                    ~result:Bound.to_string (fun () -> bound)
 
 let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunction.t): bool =
   let execute () =
@@ -138,17 +96,31 @@ let get_bound = function
   | `Time -> Approximation.timebound
   | `Cost -> Approximation.costbound
 
+module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make(PM)(Bound)
+
+let improve_with_unlifted_time_bound measure appr unlifted_bound =
+  let new_bound,proof_hook =
+    UnliftedTimeBound.lift_and_get_hook
+      ~get_sizebound:(Approximation.sizebound appr) ~get_timebound:(Approximation.timebound appr)
+      unlifted_bound
+  in
+  let decr_transitions = UnliftedTimeBound.measure_decr_transitions unlifted_bound in
+  let result_appr_mc =
+      OurBase.Set.fold decr_transitions
+        ~f:(fun appr_mc t ->
+            (* check if bound has improved *)
+            if Bound.compare_asy (get_bound measure appr t) new_bound = 1 then
+              MaybeChanged.flat_map (MaybeChanged.changed % add_bound measure new_bound t) appr_mc
+            else appr_mc
+          )
+        ~init:(MaybeChanged.same appr)
+    in
+  if MaybeChanged.has_changed result_appr_mc then proof_hook ();
+  result_appr_mc
+
 let improve_with_rank_mprf measure program appr rank =
-  let bound = compute_bound_mprf program appr rank in
-  let orginal_bound = get_bound measure appr (MultiphaseRankingFunction.decreasing rank) in
-  if (Bound.compare_asy orginal_bound bound) = 1 then (
-    MultiphaseRankingFunction.add_to_proof rank (Some bound) program;
-    rank
-    |> MultiphaseRankingFunction.decreasing
-    |> (fun t -> add_bound measure bound t appr)
-    |> MaybeChanged.changed)
-  else
-    MaybeChanged.same appr
+  let unlifted_bound = MultiphaseRankingFunction.to_unlifted_bound program rank in
+  improve_with_unlifted_time_bound measure appr unlifted_bound
 
 let improve_with_twn program scc conf appr =
   let compute appr_ t =
