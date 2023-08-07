@@ -75,8 +75,6 @@ module GeneralTransition: sig
   (** all locations, i.e. the input location and all target locations *)
   val locations: t -> Location.LocationSetOver(Location).t
 
-  val remove_non_contributors: VarSet.t -> t -> t
-
   (** map over all contained probabilistic transitions *)
   val map_transitions: (ProbabilisticTransition.t -> ProbabilisticTransition.t) -> t -> t
 

@@ -630,16 +630,6 @@ module GeneralTransition = struct
       let arrow = if String.is_empty cost_str then "→"  else "-"^cost_str^">" in
       id_string ^ Location.to_string (src t) ^ vars ^ " " ^ arrow ^ " " ^ trans_string ^ " :|: " ^ Guard.to_string ~pretty:true (guard t)
 
-    let remove_non_contributors non_contributors gt =
-      let transitions' =
-        ProbabilisticTransitionSet.map ~f:(fun (l,label,l') ->
-            let update' = Set.fold ~f:Map.remove non_contributors ~init:label.update in
-            (l,{ label with update = update' },l')
-          )
-          gt.transitions
-      in
-      { transitions = transitions' }
-
     let ids_to_string ?(pretty=false) gt =
       if pretty then "g" ^ Util.natural_to_subscript (gt_id gt)
       else "g" ^ Int.to_string (gt_id gt)
