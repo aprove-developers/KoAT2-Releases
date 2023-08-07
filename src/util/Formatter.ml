@@ -58,7 +58,7 @@ let render_html meta f =
   let rec render_f_only f' =
     match f' with
     | Empty                   -> ""
-    | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () s ^ "\n"
+    | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () s
     | RawStr s                -> s ^ "\n"
     | Paragraph f''           -> "<p>\n" ^ render_f_only f'' ^ "</p>\n"
     | NewLine                 -> "<br/>\n"
