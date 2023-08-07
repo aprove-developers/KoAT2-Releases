@@ -207,16 +207,15 @@ struct
 
   (** All entry transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  let entry_transitions logger (program: t) (rank_transitions: T.t list): T.t List.t =
-    rank_transitions
-    |> Sequence.of_list
-    |> Sequence.map ~f:(Set.to_sequence % pre program)
-    |> Sequence.join
-    |> Sequence.filter ~f:(fun r ->
-           rank_transitions
-           |> List.for_all ~f:(not % T.equal r)
-         )
-    |> TransitionSet.stable_dedup_list % Sequence.to_list
+  let entry_transitions logger (program: t) (transitions: T.t list): T.t List.t =
+    let transitions_set = TransitionSet.of_list transitions in
+    let all_possible_pre_transitions =
+      transitions
+      |> List.map ~f:(pre program)
+      |> TransitionSet.union_list
+    in
+    Set.diff all_possible_pre_transitions transitions_set
+    |> Set.to_list
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "entry_transitions", ["result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string]))
 
