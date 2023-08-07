@@ -399,7 +399,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   let changed_vars t =
     input_vars t
-    |> Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
+    |> Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (Map.find t.overappr_nonprob_update v |? of_var v)))
+
   let remove_non_contributors non_contributors t =
     let update_ = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:t.overappr_nonprob_update in
     { t with
