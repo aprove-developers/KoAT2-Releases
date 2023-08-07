@@ -98,9 +98,9 @@ let cat_maybes_enum e =
 let map_maybe f = List.map f % cat_maybes
 
 (* Returns the fixpoint of f *)
-let find_fixpoint f x = 
-  let rec to_same x = 
-    match f x with 
+let find_fixpoint f x =
+  let rec to_same x =
+    match f x with
     | MaybeChanged.Same, value -> value
     | MaybeChanged.Changed, value -> to_same value in
   to_same x

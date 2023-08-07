@@ -198,7 +198,7 @@ module Make(Num : PolyTypes.OurNumber) =
         | None -> "inf"
 
     let show ?(pretty=false) ?(complexity=true) ?(termination_only=false) bound =
-      if termination_only then 
+      if termination_only then
         if Option.is_some bound then "yes" else "maybe"
       else
       let complexity_str =
