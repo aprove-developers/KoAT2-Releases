@@ -22,15 +22,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             (* Precompute and Cache *)
             let temp_vars = Base.Set.diff (Program.vars program) (Program.input_vars program) in
 
-            (* We can not look at the size bounds for predecessor transitions if transition is initial *)
             if Program.is_initial program transition then
-              if Set.exists ~f:(Set.mem temp_vars) (Polynomials.Polynomial.vars (Transition.cost transition)) then
-                Bound.infinity
-              else
-                Bound.of_poly (Transition.cost transition)
-
-            (* Overapproximate the cost by looking at the sizes of incoming transitions *)
+              (* We can not look at the size bounds for predecessor transitions if transition is initial *)
+              Bound.of_poly (Transition.cost transition)
+              |> Bound.substitute_f (fun v -> if Set.mem temp_vars v then Bound.infinity else Bound.of_var v)
             else
+              (* Overapproximate the cost by looking at the sizes of incoming transitions *)
               let inc_trans = Base.Set.to_sequence @@ Program.pre program transition in
               let inc_size v =
                 Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans
