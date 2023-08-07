@@ -1,6 +1,6 @@
 open OurBase
 
-type header_size = Small | Big
+type header_size = Smallest | Smaller | Small | Big
 
 type t = Empty
        | Str of String.t
@@ -30,6 +30,8 @@ let mk_str_line str = mk_str str <> mk_newline
 
 let mk_header size f = Header (size, f)
 
+let mk_header_smallest f = Header (Smallest,f)
+let mk_header_smaller f = Header (Smaller,f)
 let mk_header_small f = Header (Small, f)
 let mk_header_big f = Header (Big, f)
 

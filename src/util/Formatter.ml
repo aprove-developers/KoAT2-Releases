@@ -66,7 +66,9 @@ let render_html meta f =
     | Header (s,f')           ->
         (match s with
         | Big -> "<h3>" ^ render_f_only f' ^ "</h3>\n"
-        | Small -> "<h4>" ^ render_f_only f' ^ "</h4>\n")
+        | Small -> "<h4>" ^ render_f_only f' ^ "</h4>\n"
+        | Smaller -> "<h5>" ^ render_f_only f' ^ "</h5>\n"
+        | Smallest -> "<h6>" ^ render_f_only f' ^ "</h6>\n")
     | SequentialComp (f1, f2) -> render_f_only f1 ^ render_f_only f2
   in
   String.concat ~sep:""
@@ -100,7 +102,9 @@ let rec render_markdown meta f =
   | Header (s,f')  ->
       (match s with
       | Big -> "\n# " ^ render_markdown meta f' ^ "\n"
-      | Small -> "\n## " ^ render_markdown meta f' ^ "\n")
+      | Small -> "\n## " ^ render_markdown meta f' ^ "\n"
+      | Smaller -> "\n### " ^ render_markdown meta f' ^ "\n"
+      | Smallest -> "\n#### " ^ render_markdown meta f' ^ "\n")
   | SequentialComp (f1, f2) -> render_markdown meta f1 ^ render_markdown meta f2
 
 let render_monad ~(format: format) (expr: 'a FormatMonad.t) initial_meta =
