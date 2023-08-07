@@ -22,5 +22,5 @@ module type GraphPrint = sig
 
   val print_system_pretty: ?file_format:string -> ?color_map:(transition,color,transition_comparator_witness) Map.t -> program -> string option
 
-  val print_system_pretty_html:  (transition,color,transition_comparator_witness) Map.t -> program -> string
+  val print_system_pretty_html:  ?color_map:(transition,color,transition_comparator_witness) Map.t -> program -> string
 end

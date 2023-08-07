@@ -28,7 +28,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     |> fun m -> List.fold_right (fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Red) entries m in
       proof_append @@ mk_paragraph (
         match ProofOutput.get_format () with
-          | Html -> mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
+          | Html -> mk_raw_str (GraphPrint.print_system_pretty_html ~color_map program)
           | _    -> Empty);
     proof_append @@ mk_str_line @@ "  cycle: " ^ (Util.enum_to_string Transition.to_id_string_pretty @@ List.enum cycle)
 end

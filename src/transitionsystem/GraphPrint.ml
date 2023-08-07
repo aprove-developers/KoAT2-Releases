@@ -163,7 +163,7 @@ module Make
     in
     print_graph_to_string ~format:file_format (Program.graph program) DotPretty.output_graph
 
- let print_system_pretty_html color_map program = match print_system_pretty ~file_format:"svg" ~color_map program with
+ let print_system_pretty_html ?(color_map=empty_color_map) program = match print_system_pretty ~file_format:"svg" ~color_map program with
    | None -> ""
    | Some system ->
        let divid = Unique.unique () in

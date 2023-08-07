@@ -141,7 +141,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         mk_str "MPRF:" <> mk_newline <>
           (locations |> List.map (fun l -> "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <>
           match format with
-          | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
+          | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html ~color_map program)
           | _    -> FormattedString.Empty
     )
 

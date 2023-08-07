@@ -154,7 +154,7 @@ let get_lsb program (t, v) =
 
 
 let program_to_formatted_string prog = function
-  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.empty_color_map prog)
+  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html prog)
   | _ -> FormattedString.Empty
 
 let local_to_string = function
