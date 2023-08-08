@@ -123,13 +123,23 @@ let improve_with_rank_mprf measure program appr rank =
   improve_with_unlifted_time_bound measure appr unlifted_bound
 
 let improve_with_twn program scc conf appr =
-  let compute appr_ t =
-   let bound = TWN.time_bound conf t scc program appr_ in
-   let orginal_bound = get_bound `Time appr_ t in
-    if (Bound.compare_asy orginal_bound bound) = 1 then
-      MaybeChanged.changed (add_bound `Time bound t appr_)
-    else
-      MaybeChanged.same appr_ in
+  let compute appr t =
+    match TWN.time_bound conf t scc program appr with
+    | None -> MaybeChanged.same appr
+    | Some unlifted_time_bound ->
+      let bound,proof_hook =
+        UnliftedTimeBound.lift_and_get_hook
+          ~get_timebound:(Approximation.timebound appr)
+          ~get_sizebound:(Approximation.sizebound appr)
+          unlifted_time_bound
+      in
+      let original_bound = get_bound `Time appr t in
+      if (Bound.compare_asy original_bound bound) = 1 then (
+        MaybeChanged.changed (add_bound `Time bound t appr)
+      )
+      else
+        MaybeChanged.same appr
+  in
   MaybeChanged.fold compute appr (Base.Set.to_list (Base.Set.filter ~f:(Bound.is_infinity % Approximation.timebound appr) scc))
 
 (** Checks if a transition is bounded *)
