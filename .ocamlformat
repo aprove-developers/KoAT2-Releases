@@ -1,0 +1,6 @@
+profile = default
+version = 0.25.1
+let-binding-spacing = sparse
+if-then-else = vertical
+break-cases = all
+margin = 110
