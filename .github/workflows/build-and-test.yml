@@ -25,3 +25,21 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
+  format:
+    name: Format with Ocamlformat
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v4
+        with:
+          context: .github/workflows/ocamlformat/.
+          load: true
+          tags: ocamlformat:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+      # We have to work around a weird permission error below, hence sudo and for some reason we have to ignore the return code
+      - run: docker run -v "$(pwd):$(pwd)" -t ocamlformat bash -c "cd $(pwd); sudo dune build @fmt --auto-promote; exit 0"
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: ocamlformat
