@@ -96,7 +96,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     Notice that we do not regard costs in the chaining step.
     However, we consider them when we compute the final bound. *)
   let chain_cycle ?(relevant_vars = None) cycle program =
-    let entries = Program.entry_transitions logger program (handled_transitions cycle) in
+    let entries = Program.entry_transitions_with_logger logger program (handled_transitions cycle) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
@@ -121,7 +121,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
         let handled_transitions = handled_transitions cycle in
-        TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
+        TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
           Option.some
           (handled_transitions,
           List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
@@ -169,7 +169,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           (* Enlarge the cycle by transitions which do not have an influence on the size of the variables on the cycle. *)
           (* Entries of handled_transitions which are inside or outside of scc. *)
           let entries_inside,entries_outside =
-            List.partition (Base.Set.mem scc) (Program.entry_transitions logger program handled_transitions)
+            List.partition (Base.Set.mem scc) (Program.entry_transitions_with_logger logger program handled_transitions)
           in
           (* If a sub_scc changes a variable of the loop, then all entries in this sub_scc are relevant.
              Otherwise, we take the entries leading to this sub_scc which are not in the original scc. *)
@@ -180,12 +180,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             if Base.Set.exists ~f:(fun (_,t,_) -> not @@ Base.Set.are_disjoint (TransitionLabel.changed_vars t) (Loop.vars loop_red)) sub_scc then
               List.filter (Base.Set.mem sub_scc) entries_inside
             else
-              List.filter (not % Base.Set.mem scc) @@ Program.entry_transitions logger program (Base.Set.to_list sub_scc)
+              List.filter (not % Base.Set.mem scc) @@ Program.entry_transitions_with_logger logger program (Base.Set.to_list sub_scc)
             ) sccs |> List.flatten)
             @
             (List.filter (not % Base.Set.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)
           in
-          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
+          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
           Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.equal relevant_entries@entries_outside))
         else
           None) cycles

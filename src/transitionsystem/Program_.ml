@@ -205,9 +205,7 @@ struct
   let to_simple_string program =
     G.fold_edges_e (fun t str -> str ^ ", " ^ T.to_string t) program.graph ""
 
-  (** All entry transitions of the given transitions.
-      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  let entry_transitions logger (program: t) (transitions: T.t list): T.t List.t =
+  let entry_transitions program transitions =
     let transitions_set = TransitionSet.of_list transitions in
     let all_possible_pre_transitions =
       transitions
@@ -216,6 +214,11 @@ struct
     in
     Set.diff all_possible_pre_transitions transitions_set
     |> Set.to_list
+
+  (** All entry transitions of the given transitions.
+      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+  let entry_transitions_with_logger logger (program: t) (transitions: T.t list): T.t List.t =
+    entry_transitions program transitions
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "entry_transitions", ["result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string]))
 

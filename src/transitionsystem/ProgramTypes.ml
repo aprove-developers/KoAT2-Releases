@@ -406,7 +406,10 @@ module type Program = sig
 
   (** Computes all entry transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  val entry_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
+  val entry_transitions : t -> transition list -> transition Batteries.List.t
+
+  (** Like [entry_transitions] but loggs the results using the given logger *)
+  val entry_transitions_with_logger: Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
 
   (** Computes all outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
