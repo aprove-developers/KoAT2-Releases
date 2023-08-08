@@ -55,8 +55,8 @@ let default_vars =
   ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
   |> List.map ~f:Var.of_string
 
-(** Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input. *)
-(** Assume Com_1 transitions *)
+(** Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input.
+    Assume Com_1 transitions *)
 let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (string * Polynomial.t list) list) (formula: Formula.t): Transition.t list =
   let com_kind = get_com_kind_from_com_str (Tuple2.first rhs) in
   if not (Int.equal com_kind 1) then raise OnlyCom1InSimpleMode else

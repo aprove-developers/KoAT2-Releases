@@ -31,24 +31,24 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
 
     let vars = List.fold ~f:(fun vars (_,t,_) -> Set.union vars (TransitionLabel.vars t)) ~init:VarSet.empty (Set.to_list transitions) in
 
-    (** Creates the apron environment where all program_ variables are integer variables. *)
+    (* Creates the apron environment where all program_ variables are integer variables. *)
     let environment: Apron.Environment.t =
       Apron.Environment.make (vars_to_apron vars) [||]
     in
 
-    (** The manager defines the abstract domain of the variables.
-        The octagon domain searches for something like +-x +-y <= b *)
+    (* The manager defines the abstract domain of the variables.
+       The octagon domain searches for something like +-x +-y <= b *)
     let manager =
       Oct.manager_alloc ()
     in
 
-    (** Applies the guard to the abstract value, reducing its size. *)
+    (* Applies the guard to the abstract value, reducing its size. *)
     let apply_guard (guard: Guard.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
       constraint_to_apron environment guard
       |> Apron.Abstract1.meet_tcons_array manager abstract
     in
 
-    (** Applies the update to the abstract value. *)
+    (* Applies the update to the abstract value. *)
     let apply_update (update: Var.t -> Polynomial.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
       (* A completely unbound (non-deterministic) choice *)
       let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
@@ -66,18 +66,18 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       |> Apron.Abstract1.of_tcons_array manager environment
     in
 
-    (** Applies the transition to the abstract value.
-        First, it applies the guard and then the update. *)
+    (* Applies the transition to the abstract value.
+       First, it applies the guard and then the update. *)
     let apply_transition ((l,t,l'): Transition.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
       abstract
       |> apply_guard (TransitionLabel.guard t)
       |> apply_update (TransitionLabel.update t)
     in
 
-    (** The bottom element of the static analysis for the whole program.
-        The values at the start location are defined to be not restricted in any way.
-        All other values at other program locations are undefined in the beginning.
-        This will change through assignments in the program. *)
+    (* The bottom element of the static analysis for the whole program.
+       The values at the start location are defined to be not restricted in any way.
+       All other values at other program locations are undefined in the beginning.
+       This will change through assignments in the program. *)
     let bottom(*: 'a program_abstract*) =
       Set.to_list locations
       |> List.map ~f:(fun location ->
@@ -93,7 +93,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       (* TODO At this point, we have an abstract bottom element for the whole program and a function, which can recompute the abstract value for a single location.
         Now it is important, to find a good sequence of locations, such that the recomputation of all locations comes as early as possible to a fixpoint.  *)
       (* TODO Maybe it is better to recompute transitions instead of locations. *)
-      (** We use a modifiable stack here for performance reasons. *)
+      (* We use a modifiable stack here for performance reasons. *)
       let worklist: Transition.t Stack.t =
         Set.to_list transitions
         |> Stack.of_list
@@ -145,14 +145,14 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       program_abstract
     in
 
-    (** Converts a value of the abstract domain into a koat constraint which acts as an invariant. *)
+    (* Converts a value of the abstract domain into a koat constraint which acts as an invariant. *)
     let extract_invariant (abstract: 'a Apron.Abstract1.t): Constraint.t =
       abstract
       |> Apron.Abstract1.to_tcons_array manager
       |> constraint_from_apron
     in
 
-    (** Determines for each location its invariant constraint and filters locations, which does not have an additional invariant. *)
+    (* Determines for each location its invariant constraint and filters locations, which does not have an additional invariant. *)
     let invariants =
       bottom
       |> find_fixpoint

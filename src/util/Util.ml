@@ -52,7 +52,7 @@ let option_to_string content_to_string option =
 
 let enum_to_string content_to_string enum =
   let output = IO.output_string () in
-  (** To prevent cloning issues *)
+  (* To prevent cloning issues *)
   let list = List.of_enum enum in
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output

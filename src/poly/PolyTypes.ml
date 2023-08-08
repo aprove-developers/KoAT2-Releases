@@ -404,6 +404,7 @@ module type Ring =
     (** TODO doc *)
     val equal : t -> t -> bool
     val (=~=) : t -> t -> bool
+
     (** Stable structural compare, but not an actual compare *)
     val compare : t -> t -> int
 
@@ -493,6 +494,7 @@ module type Polynomial =
 
     (** Returns the scaled monomials of the polynomial without the empty monomial. *)
     val scaled_monomials : t -> scaled_monomial list
+
     (** Returns all monomials and their coefficients of the polynomial. *)
     val monomials_with_coeffs : t -> (value * monomial) list
 

@@ -100,8 +100,8 @@ module type TransitionLabel = sig
   (** Returns the unique id. *)
   val id: t -> int
 
-  (** Returns a string with the transitions id (or ids in case of probabilistic programs). *)
-  (** Used for printing graphs. *)
+  (** Returns a string with the transitions id (or ids in case of probabilistic programs).
+      Used for printing graphs. *)
   val ids_to_string: ?pretty:bool -> t -> string
 
   val add_invariant: t -> Invariant.t -> t
@@ -317,8 +317,8 @@ module type Program = sig
     , location, location_comparator_witness
     , transition_graph) GenericProgram_.t
 
-  (** Create a program from a start location and an enum of transitions. *)
-  (** The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
+  (** Create a program from a start location and an enum of transitions.
+      The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
   val from_sequence: location -> transition Sequence.t -> t
 
   (** Create a program from a start location and a graph *)
@@ -422,8 +422,8 @@ module type Program = sig
   (** Remove the given variables that do not contribute to the problem *)
   val remove_non_contributors: VarSet.t -> t -> t
 
-  (** This module exposes internal structure. *)
-  (** Useful for tests. *)
+  (** This module exposes internal structure.
+      Useful for tests. *)
   module InternalTest: sig
     (** Obtain the internal cache of pre transitions *)
     val get_pre_cache: t -> (transition, transition_set) Hashtbl.t

@@ -122,10 +122,10 @@ module ProbabilisticProgram: sig
   (** The general transitions of the program *)
   val gts: t -> GeneralTransitionSet.t
 
-  (** Enum of general transitions that form SCCs *)
-  (** At least one transition of the general transition needs to be contained in the SCC so that *)
-  (** the general transition itself is also viewed as part of the SCC. *)
-  (** The resulting enum is in topological order *)
+  (** Enum of general transitions that form SCCs
+      At least one transition of the general transition needs to be contained in the SCC so that
+      the general transition itself is also viewed as part of the SCC.
+      The resulting enum is in topological order *)
   val sccs_gts : t -> GeneralTransitionSet.t List.t
 
   val pre_gt: t -> GeneralTransition.t -> GeneralTransitionSet.t

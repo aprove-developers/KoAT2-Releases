@@ -59,7 +59,7 @@ module Make(M: ProgramTypes.ProgramModules) = struct
         Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("non_contributors", VarSet.to_string non_contributors)]));
         if not (Set.is_empty non_contributors) then
         ProofOutput.add_str_paragraph_to_proof(fun () -> "Eliminate variables "^VarSet.to_string ~pretty:true non_contributors^" that do not contribute to the problem");
-        if Set.is_empty non_contributors then (** this is hideous *)
+        if Set.is_empty non_contributors then
             MaybeChanged.same program
         else
             MaybeChanged.changed program_

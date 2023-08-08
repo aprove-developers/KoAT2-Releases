@@ -11,7 +11,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module RVG = RVGTypes.MakeRVG(PM)
 
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
-   * *)
+     *)
   let compute_
         (rvg: RVG.t)
         (get_lsb: RV.t -> LSB.t * bool)
@@ -22,7 +22,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let scc_rvset = Set.of_list (module RV) scc in
     let (rvs_equality, rvs_non_equality) = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
 
-    (** All transitions that are present in the scc and that are not of equality type.
+    (*  All transitions that are present in the scc and that are not of equality type.
         Corresponds to T_C in the thesis. *)
     let transitions =
       rvs_non_equality
@@ -31,7 +31,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.sequence_to_string ~f:Transition.to_id_string (Sequence.of_list transitions)]))
     in
 
-    (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
+    (* Returns all the variables with which the given transition does occur as result variable in the scc. *)
     let get_scc_vars transition =
       rvs_non_equality
       |> List.filter ~f:(fun (t,v) -> Transition.equal t transition)
@@ -40,7 +40,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.sequence_to_string ~f:Var.to_string (Sequence.of_list scc_vars)]))
     in
 
-    (** Returns all result variables that may influence the given result variable and that are part of the scc. *)
+    (* Returns all result variables that may influence the given result variable and that are part of the scc. *)
     let pre_in_scc (rv: RV.t) =
       rv
       |> RVG.pre rvg
@@ -48,7 +48,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> Set.inter scc_rvset
     in
 
-    (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
+    (* Returns all result variables that may influence the given result variable and that are not part of the scc. *)
     let pre_out_scc rv =
       rv
       |> RVG.pre rvg
@@ -56,7 +56,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> fun pre -> Set.diff pre scc_rvset
     in
 
-    (** Returns all result variables that may influence the given result variable from within the scc.
+    (* Returns all result variables that may influence the given result variable from within the scc.
         Corresponds to V_rv in the thesis. *)
     let scc_variables rv =
       rv
@@ -162,8 +162,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
                                                                              ; "result", Bound.to_string res]))
 
 
-  (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
-      Corresponds to 'SizeBounds for nontrivial SCCs'. *)
+  (* Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
+     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
   let compute program rvg get_timebound get_sizebound scc get_lsb =
     let lsb_fun =
       let lsbs = List.map ~f:(fun(t,v) -> (t,v), get_lsb (t,v)) scc in

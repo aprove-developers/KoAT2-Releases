@@ -38,8 +38,8 @@ let add_to_proof program bound =
       | Formatter.Html -> mk_raw_str GraphPrint.(print_system_pretty_html program)
       | _ -> FormattedString.Empty )
 
-(** Timeouts *)
-(** Measures the time spend on CFR. *)
+(* Timeouts *)
+(* Measures the time spend on CFR. *)
 let time_cfr = ref 180.
 
 (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
@@ -123,15 +123,15 @@ let minimalDisjointSCCs (original_sccs: TransitionSet.t list) =
   |> SCCSet.of_list
   |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> Base.Set.is_subset scc1 ~of_:scc2 && not (Base.Set.equal scc1 scc2)) tmp)) tmp
 
-(** Counts file and creates always a new file useful for debugging. *)
+(* Counts file and creates always a new file useful for debugging. *)
 let counter = ref 0
 
-(** To allow several parallel executions of KoAT, we create cfr-output folders with unique names. *)
+(* To allow several parallel executions of KoAT, we create cfr-output folders with unique names. *)
 let uid = ref ""
 
-(** After parsing the program outputted by iRankFinder the arg variables will be called Arg_0, Arg_1. *)
-(** But suppose we have already preprocessed our program and eliminated argument variable Arg_0. I.e. argument variables are Arg_1,.. *)
-(** Then we have to correspondingly rename the argument variables from iRankFinder *)
+(* After parsing the program outputted by iRankFinder the arg variables will be called Arg_0, Arg_1. *)
+(* But suppose we have already preprocessed our program and eliminated argument variable Arg_0. I.e. argument variables are Arg_1,.. *)
+(* Then we have to correspondingly rename the argument variables from iRankFinder *)
 let rename_arg_vars original_program program_cfr =
   let rename_map =
     Base.Sequence.zip Var.args (Base.Set.to_sequence ~order:`Increasing @@ Program.input_vars original_program)
@@ -139,7 +139,7 @@ let rename_arg_vars original_program program_cfr =
   in
   Program.map_transitions (Transition.rename rename_map) program_cfr
 
-(** Creates a file containing irankfinder, applies irankfinder and returns the resulting program. *)
+(* Creates a file containing irankfinder, applies irankfinder and returns the resulting program. *)
 let applyIrankFinder (scc_program: Program.t) =
   if String.equal !uid "" then (
     uid := (string_of_int (Unix.getpid ())) ^ "_" ^ (string_of_float (Unix. gettimeofday ()));
@@ -171,8 +171,8 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
                                     else
                                      (l,g,l'))
 
-(** Finds first location which matches to the entry-location l ->  l' from the original program.
-    We assume that we only get transitions starting in the initial location of cfr program*)
+(* Finds first location which matches to the entry-location l ->  l' from the original program.
+   We assume that we only get transitions starting in the initial location of cfr program*)
 let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
   |> Base.Set.to_sequence
@@ -193,7 +193,7 @@ let rename_entry_transition (entry_locations: LocationSet.t) (initial_location: 
           |> Base.Set.fold ~f:(fun tset l' -> rename_matching_trans location l' tset) ~init:merged_trans) ~init:transitions
 (* ------------------------------------- *)
 
-(** Adds original outgoing transitions, i.e.,  program and program_cfr are path equivalent. *)
+(* Adds original outgoing transitions, i.e.,  program and program_cfr are path equivalent. *)
 let outgoing_transitions (outgoing_trans: Transition.t list) (scc_cfr: TransitionSet.t) =
   let locations_cfr = Base.Set.fold ~f:(fun locations (l,_,l') -> locations
                                                                        |> flip Base.Set.add l
@@ -247,7 +247,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
           Program.from_sequence initial_location (Base.Sequence.of_list @@ entry_transitions@scc_list)
           |> applyIrankFinder
 
-          (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
+          (* Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
           and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
                                                                 Var.to_string var)) (Program.input_vars merged_program |> Base.Set.to_list))  in
           let transitions_cfr = program_cfr
@@ -262,7 +262,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
             Base.Set.filter ~f:(fun l -> Base.Set.exists ~f:(fun (_,_,l') -> Location.equal l l') (Base.Set.diff (Program.transitions merged_program) scc)) locations
             |> Base.Set.diff locations in
 
-          (** Merges irankfinder and original program. *)
+          (* Merges irankfinder and original program. *)
           let processed_program =
           merged_program
           |> Program.transitions

@@ -4,8 +4,8 @@ open Bounds
 open ProgramTypes
 open RVGTypes
 
-(** These types are used to limit certain analyses methods to the specified underlying types. *)
-(** Together with the GADTs they are used to prove type equalities *)
+(** These types are used to limit certain analyses methods to the specified underlying types.
+    Together with the GADTs they are used to prove type equalities *)
 type !'prog_modules_t cfr_configuration =
   | NoCFR: 'a cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
@@ -23,8 +23,8 @@ type !'prog_modules_t analysis_configuration =
   ; analysis_type: [`Termination | `Complexity]
   }
 
-(** This corresponds to strictly classical programs only. *)
-(** So not even overapproximated probabilistic progams are allowed.  *)
+(** This corresponds to strictly classical programs only.
+    So not even overapproximated probabilistic progams are allowed.  *)
 type classical_program_conf_type = ProgramModules.program_modules_t analysis_configuration
 
 (** Default configuration. mprf_depth of 1, no twn, no cfr, and no closed form size bounds*)

@@ -15,8 +15,8 @@ module Koat2Apron =
     let vars_to_apron: VarSet.t -> Apron.Var.t array =
       VarSet.map_to_array var_to_apron
 
-    (** Converts a koat integer to its apron equivalent. *)
-    (** TODO Usage of OurInt.to_int breaks usage of big_int *)
+    (** Converts a koat integer to its apron equivalent.
+        TODO Usage of OurInt.to_int breaks usage of big_int *)
     let const_to_apron: OurInt.t -> Apron.Coeff.t =
       Apron.Coeff.s_of_int % OurInt.to_int
 
@@ -91,8 +91,8 @@ module Apron2Koat =
     let vars_from_apron: Apron.Var.t array -> VarSet.t =
       VarSet.of_array % Array.map ~f:var_from_apron
 
-    (** Converts an apron integer to its koat equivalent. *)
-    (** TODO Usage of OurInt.to_int breaks usage of big_int *)
+    (** Converts an apron integer to its koat equivalent.
+        TODO Usage of OurInt.to_int breaks usage of big_int *)
     let const_from_apron (coeff: Apron.Coeff.t): OurInt.t =
       let open Apron in
       match coeff with

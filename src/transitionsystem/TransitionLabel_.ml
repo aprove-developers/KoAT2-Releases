@@ -133,7 +133,7 @@ module Inner = struct
             let new_var = Var.fresh_id Var.Int () in
             let new_var_poly = Polynomial.of_var new_var in
             let new_var_poly_with_coeff = Polynomial.mul (Polynomial.of_constant coeff) new_var_poly in
-            (** check if update is quadratic, ^4, ^6, ... *)
+            (* check if update is quadratic, ^4, ^6, ... *)
             let vars = Monomial.vars mon in
             if Base.Set.length vars = 1 then
               let var = Base.Set.choose_exn vars in

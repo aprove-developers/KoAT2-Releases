@@ -72,7 +72,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* method transforms polynome to parapolynom*)
   let as_parapoly update var =
       match Base.Map.find update var with
-      (** Correct? In the nondeterministic case we just make it deterministic? *)
+      (* Correct? In the nondeterministic case we just make it deterministic? *)
       | None -> ParameterPolynomial.of_var var
       | Some p -> ParameterPolynomial.of_polynomial p
 

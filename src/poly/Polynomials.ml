@@ -436,13 +436,13 @@ module ParameterPolynomialOver(Value : PolyTypes.Ring) = struct
                ~times:Inner.mul
                ~pow:Inner.pow
 
-  (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
-  (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
+  (* Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
+  (* Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
   let flatten (templatepoly : Outer.t): Inner.t =
     Outer.fold ~const:identity ~indeterminate:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
 
-  (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
-  (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
+  (* Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
+  (* Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
   let of_polynomial (poly : Inner.t): t =
     Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~indeterminate:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
 end

@@ -33,10 +33,10 @@ end
 
 include module type of ProgramOverLocation(Location)
 
-(** Creates a program from a list of transitions and a (start) location. *)
-(**  A list of k transitions makes up a Com_k transition *)
-(**  Since KoAT currently does not support recursion we try to eliminate it. *)
-(**  If this is not possible we throw a RecursionNotSupportedException *)
+(** Creates a program from a list of transitions and a (start) location.
+     A list of k transitions makes up a Com_k transition
+     Since KoAT currently does not support recursion we try to eliminate it.
+     If this is not possible we throw a RecursionNotSupportedException *)
 val from_com_transitions : ?termination:bool -> Transition_.t list list -> Location.t -> t
 
 (** TODO doc *)

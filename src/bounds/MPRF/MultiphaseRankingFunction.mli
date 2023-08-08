@@ -32,8 +32,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Extracts an unlifted (local) bound from the MPRF *)
   val to_unlifted_bound: PM.Program.t -> t
     -> (PM.Transition.t,Bound.t,PM.Transition.comparator_witness) UnliftedBounds.UnliftedTimeBound.unlifted_time_bound
+
   (** Tries to find a suitable multiphase ranking function for the given transitions T'.
-  * The int corresponds to the maximum depth of the mprf *)
+      The int corresponds to the maximum depth of the mprf *)
   val find : measure -> PM.Program.t -> int -> t Base.Sequence.t
 
   val find_scc : measure -> PM.Program.t ->

@@ -9,6 +9,7 @@ open Formulas
 
 module Make(M: ProgramTypes.ProgramModules) = struct
   open M
+
   (** Logger Preprocessor *)
   let logger = Logging.(get Preprocessor)
 

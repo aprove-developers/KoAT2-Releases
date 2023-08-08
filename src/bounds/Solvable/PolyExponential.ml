@@ -276,7 +276,7 @@ module PE = struct
                 ConstantConstraint.mk_and (ConstantConstraint.increase OurInt.one c) (ConstantConstraint.mk_neq OurInt.zero),
                 RationalPolynomial.mult_with_const coeff p,
                 i,
-                b)) (List.range 0 `To d)) pe) pe [] in (** TODO: QQ[x] ?*)
+                b)) (List.range 0 `To d)) pe) pe [] in (* TODO: QQ[x] ?*)
         [(ConstantConstraint.mk_eq OurInt.zero, RationalPolynomial.of_var var, 0, 1)] @ pe_
 
     (* c.f.: eq. (7) *)

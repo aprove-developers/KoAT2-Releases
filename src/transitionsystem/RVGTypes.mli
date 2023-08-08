@@ -27,11 +27,11 @@ sig
 
   type scc = MakeRV(PM.TransitionLabel)(PM.Transition).t list
 
-  (** Compute the result variable graph. *)
-  (** The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
+  (** Compute the result variable graph.
+      The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
   val rvg : (MakeRV(PM.TransitionLabel)(PM.Transition).t -> VarSet.t Option.t) -> PM.Program.t -> t
 
-  (** Compute the result variable graph and lazily compute the list of all SCCs *)
-  (** The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
+  (** Compute the result variable graph and lazily compute the list of all SCCs
+      The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
   val rvg_with_sccs : (MakeRV(PM.TransitionLabel)(PM.Transition).t -> VarSet.t Option.t) -> PM.Program.t -> t * scc list Lazy.t
 end

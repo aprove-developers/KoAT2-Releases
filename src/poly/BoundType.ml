@@ -69,8 +69,8 @@ module type Bound =
     (** Generates a string from a bound and adds the asymptotic complexity if parameter {i complexity} is not assigned to false. *)
     val show : ?pretty:bool -> ?complexity:bool -> ?termination_only:bool -> t -> string
 
-    (** Math functions. Since we can not negate or subtract bounds, these functions form a prober subset of PolyTypes.Math *)
-    (** Returns zero element. *)
+    (** Math functions. Since we can not negate or subtract bounds, these functions form a prober subset of PolyTypes.Math
+        Returns zero element. *)
     val zero : t
 
     (** Returns one element. *)

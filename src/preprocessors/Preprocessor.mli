@@ -43,9 +43,9 @@ val all_strategies : strategy list
 (** Helper function for tests *)
 val lift_to_program : (TransitionGraph.t -> TransitionGraph.t MaybeChanged.t) -> Program.t -> Program.t MaybeChanged.t
 
-(** This functor allows to preprocess a program using the provided program modules. *)
-(** The program will both be processes using PM and CPM (e.g. for Invariant Generations). *)
-(** The last module contains a proof that both program types are equal. *)
+(** This functor allows to preprocess a program using the provided program modules.
+    The program will both be processes using PM and CPM (e.g. for Invariant Generations).
+    The last module contains a proof that both program types are equal. *)
 module Make(PM: ProgramTypes.ProgramModules)
            (CPM: ProgramTypes.ClassicalProgramModules)
            (_: sig val eq: (PM.Program.t,CPM.Program.t) Type_equal.t end): sig

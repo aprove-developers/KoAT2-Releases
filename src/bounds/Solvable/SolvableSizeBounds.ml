@@ -11,7 +11,7 @@ module Loop = Loop.Make(ProgramModules)
 module SimpleCycle = SimpleCycle.Make(ProgramModules)
 
 let matrix_of_linear_assignments loop (block: Var.t list) =
-  (** get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
+  (* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
   let rec get_linear_update_of_var loop (block: Var.t list) (var_left: Var.t) = match block with
     | [] -> []
     | x::xs ->

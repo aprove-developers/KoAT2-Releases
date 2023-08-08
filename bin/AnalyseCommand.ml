@@ -122,8 +122,6 @@ type params = {
 
     termination : bool; [@default false]
     (** Only looks for termination behavior. *)
-
-    (** If the analysis should be terminated after the first found timebound. *)
   } [@@deriving cmdliner]
 
 
