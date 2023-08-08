@@ -85,7 +85,8 @@ let tests =
       ("check_termination" >:::
          List.map ~f:(fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN_Termination.termination (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn |> Tuple3.second |> Loop.mk) in
+                     let twn_proofs = ProofOutput.LocalProofOutput.create () in
+                     let result = TWN_Termination.termination twn_proofs (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn |> Tuple3.second |> Loop.mk) in
                      assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
@@ -140,7 +141,8 @@ let tests =
       ("complexity" >:::
          List.map ~f:(fun (expected_string, program) ->
              "" >:: (fun _ ->
-                     let result = TWN_Complexity.complexity_(Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn) in
+                     let twn_proofs = ProofOutput.LocalProofOutput.create () in
+                     let result = TWN_Complexity.complexity_ twn_proofs (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
                     ("4*Arg_0+4*Arg_1+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");

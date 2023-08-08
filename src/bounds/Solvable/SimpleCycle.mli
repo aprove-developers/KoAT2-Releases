@@ -12,6 +12,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   open PM
 
   val find_loops :
+    ProofOutput.LocalProofOutput.t ->
     ?relevant_vars: VarSet.t option ->
     ?transformation_type: [< `NoTransformation | `TWNTransform > `NoTransformation] ->
     (Approximation.t -> Transition.t -> Program.t ->  Formula.t * Polynomial.t var_map -> bool) ->
@@ -22,6 +23,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
     (Transition.t list * (Transition.t * (Loop.t * Automorphism.t option)) list) option
 
   val find_loop :
+    ProofOutput.LocalProofOutput.t ->
     ?relevant_vars: VarSet.t option ->
     (Approximation.t -> Program.t ->  Formula.t * Polynomial.t var_map -> bool) ->
     Approximation.t ->

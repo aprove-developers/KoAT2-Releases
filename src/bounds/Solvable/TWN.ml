@@ -36,8 +36,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     TimeBoundTable.clear time_bound_table;
     TimeBoundTable.clear termination_table
 
-  let add_to_proof_hook prev_part_of_proof t ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
-    let proof = ref prev_part_of_proof in
+  let add_to_proof_hook twn_proofs t ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry,local_bound) =
       let bound_with_sizebound = Bound.substitute_f (get_sizebound entry) local_bound in
       Bound.mul (get_timebound entry) bound_with_sizebound
@@ -47,7 +46,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
                                               |> Base.Set.to_list
                                               |> List.map (fun v -> ("t: " ^ (Transition.to_id_string entry)  ^ ", yvar: " ^ Var.to_string v) , (get_sizebound entry v |> Bound.to_string ~pretty:true)));
       Logger.log logger Logger.INFO (fun () -> "lift", [("RB of entry", get_timebound entry |> Bound.to_string); ("Result", Bound.to_string b)]);
-      let next_proof_part =
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         (mk_str_header_small ("TWN - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " of " ^ (Bound.to_string ~pretty:true local_bound))) <>
         (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
             Bound.vars local_bound
@@ -56,14 +55,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             |> List.map mk_str_line
             |> mappend) <>
         mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (get_timebound entry |> Bound.to_string ~pretty:true)) <>
-        mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b)))
-      in
-      proof := !proof<>next_proof_part
+        mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))));
     in
     OurBase.Map.iteri
       ~f:(fun ~key ~data -> ignore (for_entry_and_local_bound (key,data)))
       entry_measure_map;
-    ProofOutput.add_to_proof (fun () -> !proof)
+    ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof twn_proofs)
 
   let heuristic_for_cycle conf appr entry program loop = match conf with
     | `NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
@@ -77,18 +74,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       (OurBase.Map.of_alist_exn (module Transition) local_bounds)
 
   let time_bound conf (l,t,l') scc program appr =
-    TWN_Proofs.proof_reset();
-    TWN_Proofs.proof_append @@ mk_str_header_big @@ "TWN: " ^ (Transition.to_id_string_pretty (l,t,l'));
+    let twn_proofs = ProofOutput.LocalProofOutput.create () in
+    ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+      (fun () -> mk_str_header_big @@ "TWN: " ^ (Transition.to_id_string_pretty (l,t,l')));
     let bound =
       let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
       if Option.is_none opt then (
         let unlifted_result = Timeout.timed_run 5. (fun () ->
         (* We have not yet computed a (local) runtime bound. *)
-        let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle conf) appr program scc (l,t,l') in
+        let loops_opt = SimpleCycle.find_loops twn_proofs (heuristic_for_cycle conf) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
-          let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
-          let unlifted_o = Some (to_unlifted_bounds (TWN_Proofs.get_proof ()) (l,t,l') cycle local_bounds) in
+          let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop) aut) loops in
+          let unlifted_o = Some (to_unlifted_bounds twn_proofs (l,t,l') cycle local_bounds) in
           List.iter (fun t -> TimeBoundTable.add time_bound_table t unlifted_o) cycle;
           unlifted_o
         else (
@@ -107,18 +105,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     bound
 
     let terminates conf (l,t,l') scc program appr =
-      TWN_Proofs.proof_reset();
-      TWN_Proofs.proof_append @@ mk_str_header_big @@ "TWN: " ^ (Transition.to_id_string_pretty (l,t,l'));
+      let twn_proofs = ProofOutput.LocalProofOutput.create () in
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+        (fun () -> mk_str_header_big @@ "TWN: " ^ (Transition.to_id_string_pretty (l,t,l')));
       let compute_new_bound =
         let bound = Timeout.timed_run 5. (fun () ->
           (* Local termination was not proven yet. *)
           let compute_termination (cycle, loops) =
-            let is_bounded entry loop = TWN_Termination.termination ~entry:(Option.some entry) loop in
+            let is_bounded entry loop = TWN_Termination.termination twn_proofs ~entry:(Option.some entry) loop in
             let local_bounds = List.map (fun (entry,(loop,_)) -> entry, is_bounded entry loop) loops in
             List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
             List.for_all Tuple2.second local_bounds in
           let handle_missing_loops = TimeBoundTable.add termination_table (l,t,l') [(l,t,l'),false] in
-          SimpleCycle.find_loops (heuristic_for_cycle conf) appr program scc (l,t,l')
+          SimpleCycle.find_loops twn_proofs (heuristic_for_cycle conf) appr program scc (l,t,l')
           (*If no simple loops were found we cannot prove termination*)
           |> Option.map_default compute_termination (handle_missing_loops; false)) in
         (* In case no bound was computed this maps to false otherwise to the bound*)
@@ -129,6 +128,5 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       |> Option.map_default (List.for_all Tuple2.second) compute_new_bound
       |> tap (fun terminates ->
         if terminates && (Bound.is_infinity @@ Approximation.timebound appr (l,t,l')) then (
-          let proof = TWN_Proofs.get_proof () in
-          ProofOutput.add_to_proof (fun () -> proof));)
+          ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof twn_proofs));)
 end

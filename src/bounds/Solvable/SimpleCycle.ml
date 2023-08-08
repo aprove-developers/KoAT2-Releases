@@ -100,7 +100,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
-  let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
+  let find_loops twn_proofs ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
     let updated_trans = TransitionLabel.relax_guard ~non_static:VarSet.empty t in
     let handle_scc = List.map (Tuple3.map2 (TransitionLabel.relax_guard ~non_static:VarSet.empty)) in
     let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
@@ -121,7 +121,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
         let handled_transitions = handled_transitions cycle in
-        TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
+        TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
           Option.some
           (handled_transitions,
           List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
@@ -147,7 +147,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         (Base.Map.empty (module Var)) traversal
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
-  let find_loop ?(relevant_vars = None) f appr program scc (l,t,l') =
+  let find_loop twn_proofs ?(relevant_vars = None) f appr program scc (l,t,l') =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
@@ -185,7 +185,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             @
             (List.filter (not % Base.Set.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)
           in
-          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
+          TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions (Program.entry_transitions_with_logger logger program handled_transitions);
           Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.equal relevant_entries@entries_outside))
         else
           None) cycles

@@ -41,7 +41,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Valuation = Valuation.Make(OurInt)
 
-  let termination_ ?(entry = None) ((guard,update): Loop.t) varmap =
+  let termination_ twn_proofs ?(entry = None) ((guard,update): Loop.t) varmap =
     let self_impl =
       if Option.is_some entry then
         List.filter (check_update_invariant (guard,update)) (TransitionLabel.guard @@ (Tuple3.second % Option.get) entry)
@@ -63,7 +63,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
                       if Option.is_some model then Logger.log logger Logger.DEBUG (fun () -> "termination", ["model", (Option.get model |> Valuation.to_string)]);
-      TWN_Proofs.proof_append
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs @@ fun () ->
           FormattedString.(
           mk_str_line ("Termination: " ^ (string_of_bool bool))
           <> mk_str_line "Formula: "
@@ -71,19 +71,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           |> mk_paragraph);)
 
   (* Counterpart to TWN_Complexity.complexity *)
-  let termination ?(entry = None) loop =
+  let termination twn_proofs ?(entry = None) loop =
       let order = Check_TWN.check_triangular loop in
       let t_ =
         if Check_TWN.check_weakly_negativitiy loop then
           Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop]))
         else loop in
       Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-      TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () -> FormattedString.mk_str_line @@ "  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)));
       let pe = PE.compute_closed_form (List.map (fun var ->
         let update_var = Loop.update_var t_ var in
         var, update_var) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        TWN_Proofs.proof_append (
+        ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
           FormattedString.(mk_str "closed-form:" <> (
           (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b)
@@ -91,6 +91,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
       let varmap = Hashtbl.of_list @@ List.combine order npe in
-      termination_ t_ ~entry:entry varmap
+      termination_ twn_proofs t_ ~entry:entry varmap
 
 end

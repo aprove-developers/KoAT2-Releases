@@ -67,7 +67,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
                         List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
             |> Polynomial.of_scaled
 
-  let compute_f atom = function
+  let compute_f twn_proofs atom = function
     | [] -> Bound.zero
     | x::[] -> Bound.one
     | xs ->
@@ -84,14 +84,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
       |> tap (fun b ->
         Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
-        TWN_Proofs.proof_append (
+        ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
           "M: " ^ (OurInt.to_string m_);
           "N: " ^ (OurInt.to_string n_);
           "Bound: " ^ (Bound.to_string ~pretty:true b);
         ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
-  let get_bound ((guard,update): Loop.t) order npe varmap =
+  let get_bound twn_proofs ((guard,update): Loop.t) order npe varmap =
     let bound, max_con =
       List.fold_right (fun atom (bound, const) ->
         let poly = Atom.poly atom |> Polynomial.neg in
@@ -99,13 +99,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", Atom.to_string atom; "subs", "0 <= " ^ PE.to_string sub_poly]);
         let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
         let max_const = OurInt.max const (PE.max_const sub_poly) in
-          Bound.add bound (compute_f atom sub_poly_n), max_const)
+          Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const)
           (guard |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in (* TODO guard without inv *)
           Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", OurInt.to_string max_con]);
     Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
-  let complexity ?(entry = None) ?(termination = true) ((guard,update): Loop.t) =
+  let complexity twn_proofs ?(entry = None) ?(termination = true) ((guard,update): Loop.t) =
     let loop = (guard,update) in
     let order = Check_TWN.check_triangular loop in
     let t_, was_negative =
@@ -113,13 +113,15 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
       else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    TWN_Proofs.proof_append (FormattedString.mk_str_line ("  loop: " ^ Loop.to_string (guard,update)));
-    TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
+    ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+      (fun () -> FormattedString.mk_str_line ("  loop: " ^ Loop.to_string (guard,update)));
+    ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+      (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var ->
       let update_var = Loop.update_var t_ var in
       var, update_var) order) in
       Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-      TWN_Proofs.proof_append (
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         FormattedString.(mk_str "closed-form:" <> (
         (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
         |> List.map (fun (a,b) -> a ^ ": " ^ b)
@@ -127,15 +129,15 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let npe = PE.normalize pe in
       Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    let terminating = if not termination then true else TWN_Termination.termination_ t_ ~entry:entry varmap in
+    let terminating = if not termination then true else TWN_Termination.termination_ twn_proofs t_ ~entry:entry varmap in
     if not terminating then
       Bound.infinity
     else
-      let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
+      let f = get_bound twn_proofs t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
 
-  let complexity_ t =
+  let complexity_ twn_proofs t =
     if Check_TWN.check_twn_ t then
-      complexity @@ (Loop.mk % Tuple3.second) t
+      complexity twn_proofs @@ (Loop.mk % Tuple3.second) t
     else
       Bound.infinity
 end

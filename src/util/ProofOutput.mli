@@ -11,3 +11,15 @@ val add_to_proof: (unit -> FormattedString.t) -> unit
 val add_to_proof_with_format: (Formatter.format -> FormattedString.t) -> unit
 val add_str_paragraph_to_proof: (unit -> string) -> unit
 val print_proof : Formatter.format -> unit
+
+(** Useful for Subproofs *)
+module LocalProofOutput: sig
+  type t
+
+  val create: unit -> t
+  val add_to_proof: t -> (unit -> FormattedString.t) -> unit
+  val add_to_proof_with_format: t -> (Formatter.format -> FormattedString.t) -> unit
+  val add_str_paragraph_to_proof: t -> (unit -> string) -> unit
+
+  val get_proof: t -> FormattedString.t
+end
