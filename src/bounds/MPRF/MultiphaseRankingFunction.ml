@@ -12,6 +12,8 @@ type measure = [ `Cost | `Time ] [@@deriving show]
 
 type constraint_type = [`Non_Increasing | `Decreasing]
 
+let logger = Logging.(get PRF)
+
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
@@ -23,6 +25,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     non_increasing : TransitionSet.t;
     depth : int;
   }
+
   module TemplateTable = Hashtbl.Make(Location)
 
   module CoeffsTable = Hashtbl.Make(struct
@@ -60,8 +63,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* Cache does not depend on measure since the cache is unique for each measure *)
   let constraint_cache cache =
     Util.memoize cache.constraint_cache ~extractor:(fun (depth, _, constraint_type, t) -> depth, constraint_type, Transition.id t)
-
-  let logger = Logging.(get PRF)
 
   let decreaser measure cost =
       match measure with
@@ -144,6 +145,27 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html ~color_map program)
           | _    -> FormattedString.Empty
     )
+
+  module UnliftedBound = UnliftedBounds.UnliftedTimeBound.Make(PM)(Bound)
+  let to_unlifted_bound program t =
+    let evaluated_rank_for_entry_loc entry_loc =
+      if t.depth = 1 then (List.hd t.rank) entry_loc
+      else
+        let mprf_coeff = MPRF_Coefficient.coefficient t.depth in
+        let ranking_functions_at_entry_loc =
+          OurBase.Sequence.of_list t.rank
+          |> OurBase.Sequence.map ~f:(fun f -> f entry_loc)
+        in
+        Polynomial.(one + of_constant mprf_coeff * Polynomial.sum ranking_functions_at_entry_loc)
+    in
+    UnliftedBound.mk_from_program logger
+      ~handled_transitions:t.non_increasing
+      ~measure_decr_transitions:(TransitionSet.singleton t.decreasing)
+      ~hook:(Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> add_to_proof t (Some bound) program)
+      program
+      (fun (_,_,l') -> Bound.of_poly @@ evaluated_rank_for_entry_loc l')
+
+
 
   (* We do not minimise the coefficients for now *)
   (* let fresh_coeffs: Var.t list ref = ref [] *)
