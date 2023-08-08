@@ -50,6 +50,10 @@ module type TransitionSet = sig
 
   (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
   val targets: t -> location_set
+
+  val find_by_id: t -> int -> elt Option.t
+
+  val find_by_ids: t -> int Sequence.t -> t
 end
 
 module type TransitionLabel = sig

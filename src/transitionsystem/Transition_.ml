@@ -106,6 +106,15 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
 
   let targets: t -> location_set =
     Set.map (module L) ~f:T.target
+
+  let find_by_id set id =
+    Set.binary_search set ~compare:(fun t i -> Int.compare (T.id t) i) `First_equal_to id
+
+  let find_by_ids set ids =
+    Sequence.map ~f:(find_by_id set) ids
+    |> Util.cat_maybes_sequence
+    |> Set.of_sequence (module T)
+
 end
 
 include TransitionOver(TransitionLabel_)(Location)

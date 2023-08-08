@@ -671,6 +671,14 @@ module GeneralTransitionSet = struct
   let all_transitions t =
     Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions) (Set.to_sequence t)
     |> Set.of_sequence (module ProbabilisticTransition) % Sequence.join
+
+  let find_by_id set id =
+    Set.binary_search set ~compare:(fun t i -> Int.compare (GeneralTransition.gt_id t) i) `First_equal_to id
+
+  let find_by_ids set ids =
+    Sequence.map ~f:(find_by_id set) ids
+    |> Util.cat_maybes_sequence
+    |> Set.of_sequence (module GeneralTransition)
 end
 
 (* Probabilistic and Overapproximated Nonprobabilistic Programs share the same internal *)
