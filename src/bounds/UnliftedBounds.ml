@@ -2,8 +2,7 @@ open OurBase
 
 module UnliftedTimeBound = struct
   type ('trans,'bound,'trans_cmp_wit) unlifted_time_bound =
-      { handled_transitions:       ('trans,'trans_cmp_wit) Set.t
-      ; measure_decr_transitions:  ('trans,'trans_cmp_wit) Set.t
+      { measure_decr_transitions:  ('trans,'trans_cmp_wit) Set.t
       ; entry_transitions_measure: ('trans,'bound,'trans_cmp_wit) Map.t
       ; hook: get_timebound:('trans -> 'bound)
               -> get_sizebound:('trans -> Var.t -> 'bound)
@@ -19,12 +18,12 @@ module UnliftedTimeBound = struct
 
     type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound
 
-    let mk ~handled_transitions ~measure_decr_transitions ?(hook=None) entry_transitions_measure: t =
+    let mk ~measure_decr_transitions ?(hook=None) entry_transitions_measure: t =
       let hook = match hook with
         | None -> fun ~get_timebound ~get_sizebound _ _ -> ()
         | Some h -> h
       in
-      { handled_transitions; measure_decr_transitions; entry_transitions_measure; hook; }
+      { measure_decr_transitions; entry_transitions_measure; hook; }
 
     let mk_from_program logger ~handled_transitions ~measure_decr_transitions ?(hook=None) program measure_from_entry_trans: t =
       let entry_transitions_measure =
@@ -32,7 +31,7 @@ module UnliftedTimeBound = struct
         |> List.map ~f:(fun t -> t, measure_from_entry_trans t)
         |> Map.of_alist_exn (module Transition)
       in
-      mk ~handled_transitions ~measure_decr_transitions ~hook entry_transitions_measure
+      mk ~measure_decr_transitions ~hook entry_transitions_measure
 
     let lift_and_get_hook ~get_timebound ~get_sizebound (t:t) =
       let res =

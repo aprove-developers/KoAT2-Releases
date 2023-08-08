@@ -72,7 +72,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let to_unlifted_bounds prev_part_of_proof trans cycle local_bounds =
     let cycle_set = TransitionSet.of_list cycle in
     UnliftedTimeBound.mk
-      ~handled_transitions:cycle_set
       ~measure_decr_transitions:cycle_set
       ~hook:(Option.some @@ add_to_proof_hook prev_part_of_proof trans)
       (OurBase.Map.of_alist_exn (module Transition) local_bounds)
