@@ -105,10 +105,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       )
     in
     bound
-    (* if Bound.compare_asy bound (Approximation.timebound appr (l,t,l')) < 0 then ( *)
-    (*   let proof = TWN_Proofs.get_proof () in *)
-    (*   ProofOutput.add_to_proof (fun () -> proof)); *)
-    (* bound *)
 
     let terminates conf (l,t,l') scc program appr =
       TWN_Proofs.proof_reset();
