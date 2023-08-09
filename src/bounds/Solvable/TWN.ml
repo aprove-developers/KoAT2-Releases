@@ -25,17 +25,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
 
   (* Keys: transition, values: bounds of entry transitions. *)
-  let time_bound_table : UnliftedTimeBound.t Option.t TimeBoundTable.t = TimeBoundTable.create 10
   let termination_table : (Transition.t * bool) list TimeBoundTable.t = TimeBoundTable.create 10
 
   (* Internal memoization: The idea is to use this cache if we applied cfr and
      1) delete it and use the original cache if we get a timeout or
      2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory.
      TODO Currently, we just reset the cache. *)
-  let reset_cfr () =
-    TimeBoundTable.clear time_bound_table;
-    TimeBoundTable.clear termination_table
-
+  let reset_cfr () = TimeBoundTable.clear termination_table
 
   let add_to_proof_hook twn_proofs t ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry, local_bound) =
@@ -91,41 +87,34 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         mk_str_header_big @@ "TWN: " ^ Transition.to_id_string_pretty (l, t, l'));
     let bound =
-      let opt = TimeBoundTable.find_option time_bound_table (l, t, l') in
-      if Option.is_none opt then
-        let unlifted_result =
-          Timeout.timed_run 5. (fun () ->
-              (* We have not yet computed a (local) runtime bound. *)
-              let loops_opt =
-                SimpleCycle.find_loops twn_proofs (heuristic_for_cycle conf) appr program scc (l, t, l')
+      let unlifted_result =
+        Timeout.timed_run 5. (fun () ->
+            (* We have not yet computed a (local) runtime bound. *)
+            let loops_opt =
+              SimpleCycle.find_loops twn_proofs (heuristic_for_cycle conf) appr program scc (l, t, l')
+            in
+            if Option.is_some loops_opt then
+              let cycle, loops = Option.get loops_opt in
+              let local_bounds =
+                List.map
+                  (fun (entry, (loop, aut)) ->
+                    ( entry,
+                      Automorphism.apply_to_bound
+                        (TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop)
+                        aut ))
+                  loops
               in
-              if Option.is_some loops_opt then (
-                let cycle, loops = Option.get loops_opt in
-                let local_bounds =
-                  List.map
-                    (fun (entry, (loop, aut)) ->
-                      ( entry,
-                        Automorphism.apply_to_bound
-                          (TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop)
-                          aut ))
-                    loops
-                in
-                let unlifted_o = Some (to_unlifted_bounds twn_proofs (l, t, l') cycle local_bounds) in
-                List.iter (fun t -> TimeBoundTable.add time_bound_table t unlifted_o) cycle;
-                unlifted_o)
-              else (
-                TimeBoundTable.add time_bound_table (l, t, l') None;
-                None))
-        in
-        if Option.is_some unlifted_result then
-          Tuple2.first @@ Option.get unlifted_result
-        else
-          None
+              let unlifted_o = Some (to_unlifted_bounds twn_proofs (l, t, l') cycle local_bounds) in
+              unlifted_o
+            else
+              None)
+      in
+      if Option.is_some unlifted_result then
+        Tuple2.first @@ Option.get unlifted_result
       else
-        (* We already have computed a (local) runtime bound and just lift it again.*)
-        let unlifted_o = Option.get opt in
-        unlifted_o
+        None
     in
+
     bound
 
 
