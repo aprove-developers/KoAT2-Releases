@@ -1,23 +1,22 @@
 (** This module represents a weighted transition graph. *)
-module TransitionGraphWeight (Value : PolyTypes.Ring) :
-  sig
-    (** This module represents a weighted transition graph consisting of a set of locations and a set of transitions and a weight function. We use this module to find shortest paths. Therefore all weights are just 1.*)
+module TransitionGraphWeight (Value : PolyTypes.Ring) : sig
+  (** This module represents a weighted transition graph consisting of a set of locations and a set of transitions and a weight function. We use this module to find shortest paths. Therefore all weights are just 1.*)
 
-    (** Type of weights. *)
-    type t = Value.t
+  type t = Value.t
+  (** Type of weights. *)
 
-    (** Type of transitions. *)
-    type edge = TransitionGraph_.E.t
+  type edge = TransitionGraph_.E.t
+  (** Type of transitions. *)
 
-    (** Weight function mapping from transitions to one. *)
-    val weight : edge -> Value.t
+  val weight : edge -> Value.t
+  (** Weight function mapping from transitions to one. *)
 
-    (** Compares two weights. Always zero as every weight is one. *)
-    val compare : 'a -> 'b -> int
+  val compare : 'a -> 'b -> int
+  (** Compares two weights. Always zero as every weight is one. *)
 
-    (** Adds two weights. *)
-    val add : Value.t -> Value.t -> Value.t
+  val add : Value.t -> Value.t -> Value.t
+  (** Adds two weights. *)
 
-    (** Returns the zero value of our weight type. *)
-    val zero : Value.t
-  end
+  val zero : Value.t
+  (** Returns the zero value of our weight type. *)
+end

@@ -1,22 +1,19 @@
 open OurBase
 
-module LocationSetOver(L: ProgramTypes.Location) = struct
+module LocationSetOver (L : ProgramTypes.Location) = struct
   include Set
+  include OurBase.MakeSetCreators0 (L)
 
-  include OurBase.MakeSetCreators0(L)
-
-  let to_string: t -> string = Util.sequence_to_string ~f:L.to_string %  Set.to_sequence
+  let to_string : t -> string = Util.sequence_to_string ~f:L.to_string % Set.to_sequence
 end
 
 module Inner = struct
   type t = string [@@deriving eq, ord, sexp]
 
   let to_string l = l
-
   let hash l = Hashtbl.hash l
-
   let of_string name = name
 end
 
 include Inner
-include Comparator.Make(Inner)
+include Comparator.Make (Inner)

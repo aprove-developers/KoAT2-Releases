@@ -29,6 +29,18 @@ To get a statically linked binary, please execute the script `compile_static_bin
 4. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
 5. For size bound technique based on closed forms, install [SymPy](https://www.sympy.org/en/index.html) on your system and use the flag `--closed-form-size-bounds`.`
 
+## Formatting with `ocamlformat`
+We use `ocamlformat` for formatting purposes.
+Currently, we use version 0.25.1 which can be installed with `opam install ocamlformat.0.25.1`.
+Use `dune build @fmt` to run the formatter, which will output the suggested changes.
+You can accept these changes by executing `dune promote`.
+Alternatively, you can format the code and directly accept all changes with `dune build @fmt --auto-promote`.
+
+The directory `./hooks/`contains a pre-commit hook that automatically runs `dune build @fmt`.
+To activate it, simply copy `./hooks/pre-commit` to `./.git/hooks/pre-commit`.
+
+Note that the CI automatically runs `ocamlformat` upon push to autoformat the code.
+
 ## Tests & documentation
 
 1. Documentation is build via the dune target `@doc`. Execute the command `dune build @doc`. The resultion documentation can be found in `_build/default/_doc/`

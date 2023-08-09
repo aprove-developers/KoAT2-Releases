@@ -1,14 +1,10 @@
 ; treat all modules in subdirectories as if they were on the root directory. Hence we can keep the diretory structure
+
 (include_subdirs unqualified)
 
 (executable
  (public_name koat2)
  (name main)
  (preprocess
-   (pps
-     ppx_deriving.show
-     metapp.ppx
-     ppx_deriving_cmdliner))
- (libraries
-   koat2
-   ))
+  (pps ppx_deriving.show metapp.ppx ppx_deriving_cmdliner))
+ (libraries koat2))

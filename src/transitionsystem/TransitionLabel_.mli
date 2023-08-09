@@ -9,44 +9,45 @@ include ProgramTypes.TransitionLabel
 
 type update_element = Polynomials.Polynomial.t
 
+val mk :
+  id:int option ->
+  cost:Polynomials.Polynomial.t ->
+  assignments:Polynomials.Polynomial.t list ->
+  patterns:Var.t list ->
+  guard:Guard.t ->
+  t
 (** TODO doc? *)
-val mk : id:int option ->
-         cost:Polynomials.Polynomial.t ->
-         assignments: Polynomials.Polynomial.t list ->
-         patterns:Var.t list ->
-         guard:Guard.t ->
-         t
 
+val append : t -> t -> t
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
-val append : t -> t -> t
 
-(** Returns the update map of the transitionlabel *)
 val update_map : t -> Polynomials.Polynomial.t ProgramTypes.var_map
+(** Returns the update map of the transitionlabel *)
 
-(** Returns the update of a variable. *)
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t
+(** Returns the update of a variable. *)
 
-(** Assign a fresh id to the transition *)
 val fresh_id : t -> t
+(** Assign a fresh id to the transition *)
 
-(** We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 val separate_guard_invariant : t -> Invariant.t -> t
+(** We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 
+val only_update : t -> t
 (** Sets costs to 1, and guard and invariant to true *)
-val only_update: t -> t
 
-(** Returns the number of variables. *)
 val input_size : t -> int
+(** Returns the number of variables. *)
 
 val has_tmp_vars : t -> bool
 
+val update_to_file_string_lhs : t -> string
 (** Returns a string representing the left hand side of the update function.
     Can be used to dump the Program to a file. *)
-val update_to_file_string_lhs: t -> string
 
+val update_to_file_string_rhs : t -> string
 (** Returns a string representing the right hand side of the update function.
     Can be used to dump the Program to a file. *)
-val update_to_file_string_rhs: t -> string
 
-val eliminate_tmp_var: Var.t -> t -> MaybeChanged.status * t
+val eliminate_tmp_var : Var.t -> t -> MaybeChanged.status * t
