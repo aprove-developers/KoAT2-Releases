@@ -1,4 +1,3 @@
-
 (* explicitly import required modules from Base *)
 module Array = Base.Array
 module Exn = Base.Exn
@@ -17,7 +16,6 @@ let bool_of_sexp = Base.bool_of_sexp
 let float_of_sexp = Base.float_of_sexp
 let int_of_sexp = Base.int_of_sexp
 let string_of_sexp = Base.string_of_sexp
-
 let sexp_of_bool = Base.sexp_of_bool
 let sexp_of_float = Base.sexp_of_float
 let sexp_of_int = Base.sexp_of_int
@@ -27,52 +25,56 @@ module Logger = Batteries.Logger
 
 (*  TODO Comine with Util? *)
 
-let (%) = Fn.compose
-
+let ( % ) = Fn.compose
 let flip = Fn.flip
+let uncurry f (a, b) = f a b
 
-let uncurry f = fun (a,b) -> f a b
-
-let (|?) opt def = match opt with
+let ( |? ) opt def =
+  match opt with
   | Some r -> r
-  | None   -> def
+  | None -> def
 
-let tap (f: 'a -> unit) (value: 'a) = f value; value
 
-let const x = fun _ -> x
-let identity = fun x -> x
+let tap (f : 'a -> unit) (value : 'a) =
+  f value;
+  value
+
+
+let const x _ = x
+let identity x = x
 
 module Tuple2 = Batteries.Tuple2
 module Tuple3 = Batteries.Tuple3
 module Tuple4 = Batteries.Tuple4
 module Tuple5 = Batteries.Tuple5
 
-module Atomically: sig
+module Atomically : sig
   type 'a t
-  val create: 'a -> 'a t
-  val run_atomically: 'a t -> ('a -> 'b) -> 'b
-  val map_atomically: 'a t -> ('a -> 'a) -> 'a t
+
+  val create : 'a -> 'a t
+  val run_atomically : 'a t -> ('a -> 'b) -> 'b
+  val map_atomically : 'a t -> ('a -> 'a) -> 'a t
 end = struct
   type 'a t = Mutex.t * 'a
 
-  let create a = Mutex.create (), a
+  let create a = (Mutex.create (), a)
 
-  let run_atomically (mutex,a) f =
+  let run_atomically (mutex, a) f =
     Mutex.lock mutex;
     Exn.protect ~f:(fun () -> f a) ~finally:(fun () -> Mutex.unlock mutex)
 
-  let map_atomically (m,a) f =
-    run_atomically (m,a) f
-    |> fun a' -> (m,a')
+
+  let map_atomically (m, a) f = run_atomically (m, a) f |> fun a' -> (m, a')
 end
 
 module Unique = struct
   let counter = Atomically.create (ref 0)
-  let unique () = Atomically.run_atomically counter (fun counter ->
-      let id = !counter in
-      counter := !counter+1;
-      id
-    )
+
+  let unique () =
+    Atomically.run_atomically counter (fun counter ->
+        let id = !counter in
+        counter := !counter + 1;
+        id)
 end
 
 module Comparator = struct
@@ -86,18 +88,23 @@ module List = struct
   include Base.List
 
   (** Like zip2 but truncate the longer list if both are of uneven length *)
-  let rec zip_truncate l1 l2 = match (l1,l2) with
-    | (x::xs,y::ys) -> (x,y) :: zip_truncate xs ys
-    | _           -> []
-
-  (** Like map2 but truncate the longer list if both are of uneven length *)
-  let rec map2_truncate l1 l2 ~f = match (l1,l2) with
-    | (x::xs,y::ys) -> f x y :: map2_truncate xs ys ~f
+  let rec zip_truncate l1 l2 =
+    match (l1, l2) with
+    | x :: xs, y :: ys -> (x, y) :: zip_truncate xs ys
     | _ -> []
 
-  let rec modify_at i ~f l = match l with
-    | (x::xs) when i = 0 -> f x :: xs
-    | (x::xs) when i > 0 -> x :: modify_at (i-1) ~f xs
+
+  (** Like map2 but truncate the longer list if both are of uneven length *)
+  let rec map2_truncate l1 l2 ~f =
+    match (l1, l2) with
+    | x :: xs, y :: ys -> f x y :: map2_truncate xs ys ~f
+    | _ -> []
+
+
+  let rec modify_at i ~f l =
+    match l with
+    | x :: xs when i = 0 -> f x :: xs
+    | x :: xs when i > 0 -> x :: modify_at (i - 1) ~f xs
     | _ -> raise (Invalid_argument "List.modify_at: Index does not exist")
 end
 
@@ -105,53 +112,60 @@ module Sequence = struct
   include Base.Sequence
 
   (** Counterpart to iter. E.g. construct a sequence by pulling from a function *)
-  let uniter f =
-    unfold ~init:() ~f:(fun () -> Some (f (), ()))
+  let uniter f = unfold ~init:() ~f:(fun () -> Some (f (), ()))
 end
 
 module Set = struct
   include Base.Set
 
   (** All subsets of the given specific size *)
-  let combinations (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) (k:int) =
+  let combinations (type a cmp) (module M : Comparator.S with type t = a and type comparator_witness = cmp)
+      (set : (a, cmp) t) (k : int) =
     let empty_set = empty (module M) in
     let arr = to_array set in
     let set_length = Array.length arr in
-    let next (i,rem_choices, state_stack, curr_set) =
+    let next (i, rem_choices, state_stack, curr_set) =
       if i < set_length then
         let rem_elements = set_length - i in
         if rem_choices = rem_elements then
           let remaining_set =
-            Sequence.range i set_length
-            |> Sequence.map ~f:(Array.get arr)
-            |> of_sequence (module M)
+            Sequence.range i set_length |> Sequence.map ~f:(Array.get arr) |> of_sequence (module M)
           in
-          Sequence.Step.Skip { state = i+1, rem_choices-1, state_stack, union curr_set remaining_set }
+          Sequence.Step.Skip { state = (i + 1, rem_choices - 1, state_stack, union curr_set remaining_set) }
         else if rem_choices > 0 then
-          Sequence.Step.Skip { state = i+1, rem_choices-1, (i,rem_choices,curr_set)::state_stack, add curr_set (Array.get arr i) }
-        else Sequence.Step.Skip { state = set_length, rem_choices, state_stack, curr_set }
-
+          Sequence.Step.Skip
+            {
+              state =
+                ( i + 1,
+                  rem_choices - 1,
+                  (i, rem_choices, curr_set) :: state_stack,
+                  add curr_set (Array.get arr i) );
+            }
+        else
+          Sequence.Step.Skip { state = (set_length, rem_choices, state_stack, curr_set) }
       else if i = set_length then
         match state_stack with
-        | [] -> Sequence.Step.Yield { value = curr_set; state = (i+1, -1, [], empty_set) }
-        | (prev_state::rem) ->
-          let (i',rem_choices',curr_set') = prev_state in
-          Sequence.Step.Yield { value = curr_set; state = (i'+1, rem_choices', rem, curr_set') }
-
-      else Sequence.Step.Done
+        | [] -> Sequence.Step.Yield { value = curr_set; state = (i + 1, -1, [], empty_set) }
+        | prev_state :: rem ->
+            let i', rem_choices', curr_set' = prev_state in
+            Sequence.Step.Yield { value = curr_set; state = (i' + 1, rem_choices', rem, curr_set') }
+      else
+        Sequence.Step.Done
     in
-    Sequence.unfold_step ~init:(0,k,[],empty_set) ~f:(next)
+    Sequence.unfold_step ~init:(0, k, [], empty_set) ~f:next
+
 
   (** The powerset in ascending order of subset cardinality *)
-  let powerset (type a cmp) (module M: Comparator.S with type t = a and type comparator_witness = cmp) (set: (a,cmp) t) =
+  let powerset (type a cmp) (module M : Comparator.S with type t = a and type comparator_witness = cmp)
+      (set : (a, cmp) t) =
     Sequence.range ~stop:`inclusive 0 (length set)
     |> Sequence.map ~f:(combinations (module M) set)
     |> Sequence.join
-
 end
 
 module Map = struct
   include Base.Map
+
   let find_default m ~default key = Option.value ~default (find m key)
 
   (** Adds the key or overwrites it if already present *)
@@ -171,41 +185,47 @@ module type SetCreators'0 = sig
   type elt
   type elt_comparator_witness
 
-  include Set.Creators_generic
-    with type 'e elt := elt
-     and type 'c cmp := elt_comparator_witness
-     and type ('a,'cmp) t := (elt,elt_comparator_witness) Set.t
-     and type ('a, 'cmp) set := ('a,'cmp) Set.t
-     and type ('a, 'cmp) tree := (elt, elt_comparator_witness) Set.Using_comparator.Tree.t
-     and type ('a, 'cmp, 'z) create_options := 'z
+  include
+    Set.Creators_generic
+      with type 'e elt := elt
+       and type 'c cmp := elt_comparator_witness
+       and type ('a, 'cmp) t := (elt, elt_comparator_witness) Set.t
+       and type ('a, 'cmp) set := ('a, 'cmp) Set.t
+       and type ('a, 'cmp) tree := (elt, elt_comparator_witness) Set.Using_comparator.Tree.t
+       and type ('a, 'cmp, 'z) create_options := 'z
 
   (* TODO: Get rid of this helper type as it can complicate error messages *)
-  type t = (elt,elt_comparator_witness) Set.t
+  type t = (elt, elt_comparator_witness) Set.t
 
-  val powerset: (elt,elt_comparator_witness) Set.t -> (elt,elt_comparator_witness) Set.t Sequence.t
-  val combinations: (elt,elt_comparator_witness) Set.t -> int -> (elt,elt_comparator_witness) Set.t Sequence.t
+  val powerset : (elt, elt_comparator_witness) Set.t -> (elt, elt_comparator_witness) Set.t Sequence.t
+
+  val combinations :
+    (elt, elt_comparator_witness) Set.t -> int -> (elt, elt_comparator_witness) Set.t Sequence.t
 end
 
 module type MapCreators'1 = sig
   type key
   type key_comparator_witness
-  include Map.Creators_generic
-    with type 'k key := key
-     and type 'c cmp := key_comparator_witness
-     and type ('k,'v,'c) t := (key,'v,key_comparator_witness) Map.t
-     and type ('k,'v,'cmp) tree := (key,'v,key_comparator_witness) Map.Using_comparator.Tree.t
-     and type ('a,'cmp,'z) create_options := 'z
-     and type ('a,'cmp,'z) access_options := 'z
+
+  include
+    Map.Creators_generic
+      with type 'k key := key
+       and type 'c cmp := key_comparator_witness
+       and type ('k, 'v, 'c) t := (key, 'v, key_comparator_witness) Map.t
+       and type ('k, 'v, 'cmp) tree := (key, 'v, key_comparator_witness) Map.Using_comparator.Tree.t
+       and type ('a, 'cmp, 'z) create_options := 'z
+       and type ('a, 'cmp, 'z) access_options := 'z
 
   (* TODO: Get rid of this helper type as it can complicate error messages *)
-  type 'v t = (key,'v,key_comparator_witness) Map.t
+  type 'v t = (key, 'v, key_comparator_witness) Map.t
 end
 
 (** Does this already exist somewhere? I could not find it… *)
-module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and type elt_comparator_witness = M.comparator_witness = struct
+module MakeSetCreators0 (M : Comparator.S) :
+  SetCreators'0 with type elt = M.t and type elt_comparator_witness = M.comparator_witness = struct
   type elt = M.t
   type elt_comparator_witness = M.comparator_witness
-  type t = (elt,elt_comparator_witness) Set.t
+  type t = (elt, elt_comparator_witness) Set.t
 
   let empty = Set.empty (module M)
   let singleton = Set.singleton (module M)
@@ -220,16 +240,15 @@ module MakeSetCreators0(M: Comparator.S): SetCreators'0 with type elt = M.t and 
   let map s ~f = Set.map (module M) s ~f
   let filter_map s ~f = Set.filter_map (module M) s ~f
   let of_tree = Set.Using_comparator.of_tree ~comparator:M.comparator
-
   let powerset = Set.powerset (module M)
-
   let combinations = Set.combinations (module M)
 end
 
-module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t and type key_comparator_witness = M.comparator_witness = struct
+module MakeMapCreators1 (M : Comparator.S) :
+  MapCreators'1 with type key = M.t and type key_comparator_witness = M.comparator_witness = struct
   type key = M.t
   type key_comparator_witness = M.comparator_witness
-  type 'v t = (key,'v,key_comparator_witness) Map.t
+  type 'v t = (key, 'v, key_comparator_witness) Map.t
 
   let empty = Map.empty (module M)
   let singleton k v = Map.singleton (module M) k v
@@ -254,8 +273,7 @@ module MakeMapCreators1(M: Comparator.S): MapCreators'1 with type key = M.t and 
   let of_iteri ~iteri = Map.of_iteri (module M) ~iteri
   let of_iteri_exn ~iteri = Map.of_iteri_exn (module M) ~iteri
   let of_tree tree = Map.of_tree (module M) tree
-
-  let transpose_keys  m= Map.transpose_keys (module M) m
+  let transpose_keys m = Map.transpose_keys (module M) m
   let of_list_with_key l ~get_key = Map.of_list_with_key (module M) l ~get_key
   let of_list_with_key_multi l ~get_key = Map.of_list_with_key_multi (module M) l ~get_key
   let of_list_with_key_exn l ~get_key = Map.of_list_with_key_exn (module M) l ~get_key

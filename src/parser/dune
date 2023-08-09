@@ -1,8 +1,8 @@
 ; lexer and parser generation
+
 (ocamllex lexer)
 
 (menhir
  ;type inference is activated by default
  (infer true)
  (modules parser))
-

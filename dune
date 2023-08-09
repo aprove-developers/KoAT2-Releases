@@ -1,6 +1,9 @@
 (env
  (release
-   (link_flags (:standard -ccopt -static -ccopt -no-pie))
-   (flags (:standard -g -w +A-3-4-27-33-40..42-44-45-48-70)))
+  (link_flags
+   (:standard -ccopt -static -ccopt -no-pie))
+  (flags
+   (:standard -g -w +A-3-4-27-33-40..42-44-45-48-70)))
  (dev
-   (flags (:standard -g -w +A-3-4-27-33-40..42-44-45-48-70))))
+  (flags
+   (:standard -g -w +A-3-4-27-33-40..42-44-45-48-70))))
