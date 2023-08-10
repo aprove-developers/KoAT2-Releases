@@ -29,7 +29,7 @@
    conf-gmp
    conf-mpfr
    conf-ppl
-   (dune (< 3.8.0))
+   dune
    fpath
    lens
    menhir
