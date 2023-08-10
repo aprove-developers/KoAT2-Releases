@@ -33,9 +33,6 @@ module Polynomial : sig
 
   include module type of PolynomialOver (OurInt)
 
-  val pull_out_common_addends : t -> t -> t * (t * t)
-  (** "Pulls out" common addends of the two given polynomials, i.e., [ pull_out_common_addends (x) (2*x) ] should result in [ (x,(0,x)) ] *)
-
   val separate_by_sign : t -> t * t
   (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficients and the other list with only scaled monomials with non-negative coefficients. *)
 

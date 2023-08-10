@@ -249,7 +249,7 @@ let as_linear_abstract manager constr t new_var =
              Monomial_.to_sequence m
              |> Sequence.map ~f:(fun (i, e) -> (Base.Map.find_exn multiplicands_repr_map (i, e), 1))
              |> ClassicalMonomial.make % Sequence.to_list ))
-    |> Polynomial.make
+    |> Polynomial.of_coeff_and_mon_list
   in
 
   Apron.Abstract1.top manager environment |> fun a ->

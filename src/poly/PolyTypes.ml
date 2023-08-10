@@ -416,14 +416,14 @@ module type Polynomial = sig
 
   (** {1 {L Following methods are convenience methods for the creation of polynomials.}} *)
 
-  val make : (value * monomial) list -> t
+  val make : scaled_monomial list -> t
+  (** Creates a polynomial as the sum of a list of scaled monomials. *)
+
+  val of_coeff_and_mon_list : (value * monomial) list -> t
   (** Creates a polynomial as the sum of a list of monomials and integer coefficients. *)
 
   val lift : value -> monomial -> t
   (** Lifts a monomial and an integer coefficient to a polynomial. *)
-
-  val of_scaled : scaled_monomial list -> t
-  (** Creates a polynomial as the sum of a list of scaled monomials. *)
 
   val of_indeterminate : indeterminate -> t
   (** Lifts a indeterminate/variable to a polynomial. *)
@@ -547,10 +547,6 @@ module type Polynomial = sig
   val delete_monomial : monomial -> t -> t
   (** Removes all summands from the polynomial which are equivalent to the monomial. *)
 
-  val simplify : t -> t
-  (** Returns a simplified version of the polynomial.
-        Subsequent calls to simplify will not lead to a further simplification. *)
-
   val mult_with_const : value -> t -> t
   (** Multiplies the polynomial with a constant value.
         The result is always a polynomial. *)
@@ -565,4 +561,7 @@ module type Polynomial = sig
     t ->
     'b
   (** Replaces all arithmetical operations by new constructors. *)
+
+  val pull_out_common_addends : t -> t -> t * (t * t)
+  (** "Pulls out" common addends of the two given polynomials, i.e., [ pull_out_common_addends (x) (2*x) ] should result in [ (x,(0,x)) ] *)
 end

@@ -36,7 +36,7 @@ let read_constraint = read Parser.onlyConstraints
 let read_probability_distribution = read Parser.onlyProbabilityDistribution
 let read_update_element = read Parser.onlyUpdateElement
 let read_atom = read Parser.onlyAtom
-let read_polynomial str = read Parser.onlyPolynomial str |> Polynomials.Polynomial.simplify
+let read_polynomial str = read Parser.onlyPolynomial str
 let read_bound = read Parser.onlyBound
 
 let read_input ?(termination = false) ?(rename = false) simple program_str =

@@ -373,6 +373,39 @@ module Methods = struct
                            (" 2 ", " 1 ", " x * x + x ^ 2 ");
                            (" y * y + y ^ 2 ", " y ", " x * x + x ^ 2 ");
                          ];
+                  "simplified"
+                  >::: List.map
+                         (fun (expected, poly, poly_str) ->
+                           poly_str >:: fun _ -> assert_equal_poly (Readers.read_polynomial expected) poly)
+                         (let poly = Readers.read_polynomial "X+Y" in
+                          let poly2 = Readers.read_polynomial "X-Y" in
+                          let polyneg = Polynomial.neg poly in
+                          let polystr = Polynomial.to_string poly in
+                          let poly2str = Polynomial.to_string poly in
+                          [
+                            ("2*X+2*Y", Polynomial.add poly poly, "(" ^ polystr ^ ")+(" ^ polystr ^ ")");
+                            ( "X^2 + 2*X*Y + Y^2",
+                              Polynomial.mul poly poly,
+                              "(" ^ polystr ^ ")*(" ^ polystr ^ ")" );
+                            ( "-2*X*Y - X^2 - Y^2",
+                              Polynomial.mul poly polyneg,
+                              "(" ^ polystr ^ ")*(-(" ^ polystr ^ "))" );
+                            ( "-2*X*Y - X^2 - Y^2",
+                              Polynomial.mul polyneg poly,
+                              "(-(" ^ polystr ^ "))*(" ^ polystr ^ ")" );
+                            ( "2*X*Y + X^2 + Y^2",
+                              Polynomial.mul polyneg polyneg,
+                              "(-(" ^ polystr ^ "))*(-(" ^ polystr ^ "))" );
+                            ( "X*X - 2*X*Y + Y^2",
+                              Polynomial.mul poly2 poly2,
+                              "(-(" ^ poly2str ^ "))*(-(" ^ poly2str ^ "))" );
+                            ( "X*X - Y^2",
+                              Polynomial.mul poly2 poly,
+                              "(-(" ^ poly2str ^ "))*(-(" ^ polystr ^ "))" );
+                            ( "X*X - Y^2",
+                              Polynomial.mul poly poly2,
+                              "(-(" ^ polystr ^ "))*(-(" ^ poly2str ^ "))" );
+                          ]);
                 ];
          ]
 end

@@ -93,7 +93,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> List.map (fun ys ->
                let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
                List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
-        |> Polynomial.of_scaled
+        |> Polynomial.make
 
 
   let compute_f twn_proofs atom = function
