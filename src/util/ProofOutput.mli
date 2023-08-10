@@ -15,8 +15,12 @@ val print_proof : Formatter.format -> unit
 (** Useful for Subproofs *)
 module LocalProofOutput : sig
   type t
+  type 'a with_proof = { result : 'a; proof : t }
 
+  val result : 'a with_proof -> 'a
+  val proof : 'a with_proof -> t
   val create : unit -> t
+  val copy : t -> t
   val add_to_proof : t -> (unit -> FormattedString.t) -> unit
   val add_to_proof_with_format : t -> (Formatter.format -> FormattedString.t) -> unit
   val add_str_paragraph_to_proof : t -> (unit -> string) -> unit

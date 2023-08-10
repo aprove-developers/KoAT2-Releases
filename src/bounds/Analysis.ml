@@ -138,14 +138,52 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     improve_with_unlifted_time_bound measure appr unlifted_bound
 
 
-  let improve_with_twn program scc conf appr =
-    let compute appr t =
-      match TWN.time_bound conf t scc program appr with
-      | None -> MaybeChanged.same appr
-      | Some unlifted_time_bound -> improve_with_unlifted_time_bound `Time appr unlifted_time_bound
+  (* We initially compute all possible twn loops.
+     Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
+  type twn_state = { remaining_twn_loops : TWN.twn_loop ProofOutput.LocalProofOutput.with_proof List.t }
+
+  let initial_twn_state twn_conf program scc =
+    let all_loops = TWN.find_all_possible_loops_for_scc twn_conf scc program in
+    { remaining_twn_loops = all_loops }
+
+
+  let empty_twn_state = { remaining_twn_loops = [] }
+
+  let improve_with_twn program scc twn_state conf appr =
+    let open OurBase in
+    let not_all_trans_bounded twn_loop =
+      TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
+      |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
     in
-    MaybeChanged.fold compute appr
-      (Base.Set.to_list (Base.Set.filter ~f:(Bound.is_infinity % Approximation.timebound appr) scc))
+    let remaining_twn_loops, appr_mc =
+      List.fold_left !twn_state.remaining_twn_loops
+        ~init:([], MaybeChanged.same appr)
+        ~f:(fun (remaining_twn_loops, appr_mc) twn_loop ->
+          let appr = MaybeChanged.unpack appr_mc in
+          let twn_loop_res = ProofOutput.LocalProofOutput.result twn_loop in
+          if not_all_trans_bounded twn_loop then
+            if
+              TWN.finite_bound_possible_if_twn_terminates ~get_timebound:(Approximation.timebound appr)
+                ~get_sizebound:(Approximation.sizebound appr) twn_loop_res
+            then
+              (* compute a new global time bound *)
+              let unlifted_bound = TWN.to_unlifted_bounds twn_loop in
+              let new_appr_mc =
+                MaybeChanged.flat_map
+                  (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
+                  appr_mc
+              in
+              (remaining_twn_loops, new_appr_mc)
+            else
+              (* We wouldn't be able to compute a finite global time bound from this TWN Loop for now. So keep loop for later *)
+              (twn_loop :: remaining_twn_loops, appr_mc)
+          else
+            (* all transitions handled by this TWN are already terminating. Get rid of it *)
+            (remaining_twn_loops, appr_mc))
+    in
+    (* update twn_state to updated list of remaining loops *)
+    twn_state := { remaining_twn_loops };
+    appr_mc
 
 
   (** Checks if a transition is bounded *)
@@ -287,7 +325,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     rankfuncs |> MaybeChanged.fold_enum (improvement_function measure program) appr
 
 
-  let run_local ~conf (scc : TransitionSet.t) measure program appr =
+  let run_local ~conf (scc : TransitionSet.t) twn_state measure program appr =
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
@@ -298,11 +336,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       | `Cost, _, _ -> MaybeChanged.return appr
       | `Time, None, _ -> MaybeChanged.return appr
       | `Time, Some twn_conf, `Termination -> improve_termination_twn program scc twn_conf appr
-      | `Time, Some twn_conf, `Complexity -> improve_with_twn program scc twn_conf appr)
+      | `Time, Some twn_conf, `Complexity -> improve_with_twn program scc twn_state twn_conf appr)
 
 
-  let improve_timebound (scc : TransitionSet.t) measure program appr =
-    let execute () = run_local scc measure program appr in
+  let improve_timebound (scc : TransitionSet.t) twn_state measure program appr =
+    let execute () = run_local scc twn_state measure program appr in
     Logger.with_log logger Logger.INFO
       (fun () ->
         ("improve_bounds", [ ("scc", TransitionSet.to_string scc); ("measure", show_measure measure) ]))
@@ -318,8 +356,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
 
-  (* TODO unify conf types with ~local! *)
   let improve_scc ~conf opt_rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table appr =
+    let twn_state =
+      match conf.twn_configuration with
+      | Some twn_conf -> ref (initial_twn_state twn_conf program scc)
+      | None -> ref empty_twn_state
+    in
     let improvement appr =
       knowledge_propagation ~conf scc program appr
       |> (match conf.analysis_type with
@@ -330,17 +372,17 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                  (LSB_Table.find @@ Option.get opt_lsb_table)
                  appr
                |> twn_size_bounds ~conf scc program)
-      |> improve_timebound ~conf scc `Time program
+      |> improve_timebound ~conf scc twn_state `Time program
     in
     (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
     knowledge_propagation ~conf scc program appr
-    |> MaybeChanged.unpack % improve_timebound ~conf scc `Time program
+    |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
     |> Util.find_fixpoint improvement
 
 
   let scc_cost_bounds ~conf program scc appr =
     if Base.Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
-      MaybeChanged.unpack (improve_timebound ~conf scc `Cost program appr)
+      MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_twn_state) `Cost program appr)
     else
       appr
 

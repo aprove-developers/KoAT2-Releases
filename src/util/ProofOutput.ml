@@ -31,12 +31,16 @@ let add_str_paragraph_to_proof t f =
 
 module LocalProofOutput = struct
   type t = FormattedString.t Lazy.t ref
+  type 'a with_proof = { result : 'a; proof : t }
 
+  let result with_proof = with_proof.result
+  let proof with_proof = with_proof.proof
   let create = create
   let add_to_proof = add_to_proof
   let add_to_proof_with_format = add_to_proof_with_format
   let add_str_paragraph_to_proof = add_str_paragraph_to_proof
   let get_proof t : FormattedString.t = Lazy.force !t
+  let copy t = ref !t
 end
 
 let proof_is_enabled () = !proof_enabled

@@ -10,16 +10,18 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (PM)
   open PM
 
-  val find_loops :
+  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.t Option.t)) list
+
+  val find_all_loops :
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
     ?transformation_type:[< `NoTransformation | `TWNTransform > `NoTransformation ] ->
-    (Approximation.t -> Transition.t -> Program.t -> Formula.t * Polynomial.t var_map -> bool) ->
-    Approximation.t ->
+    (Formula.t * Polynomial.t var_map -> bool) ->
     Program.t ->
-    TransitionSet.t ->
-    Transition.t ->
-    (Transition.t list * (Transition.t * (Loop.t * Automorphism.t option)) list) option
+    (TransitionSet.location * TransitionLabel.t * TransitionSet.location, 'a) Base.Set.t ->
+    TransitionSet.location * TransitionLabel.t * TransitionSet.location ->
+    twn_loop ProofOutput.LocalProofOutput.with_proof list
+  (** copies the proof output for all elements of the result list *)
 
   val find_loop :
     ProofOutput.LocalProofOutput.t ->
