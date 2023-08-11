@@ -50,31 +50,37 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
       Corresponds to 'SizeBounds for trivial SCCs'. *)
   let compute (program : Program.t) rvg get_sizebound (t, v) lsb_as_bound =
+    let open OptionMonad in
     let execute () =
-      if Program.is_initial program t then
-        match lsb_as_bound with
-        | Some b -> b
-        | None -> (
+      let res_from_lsb, res_from_update =
+        if Program.is_initial program t then
+          let res_from_lsb = lsb_as_bound in
+          let res_from_update =
             let tlabel = Transition.label t in
-            match TransitionLabel.update tlabel v with
-            | Some u ->
-                if Set.is_subset (Polynomials.Polynomial.vars u) ~of_:(TransitionLabel.input_vars tlabel) then
-                  Bound.of_poly u
-                else
-                  Bound.infinity
-            | None -> Bound.infinity)
-      else
-        match lsb_as_bound with
-        | Some b -> incoming_bound_lsb rvg get_sizebound b t v
-        | None -> (
+            let+ update = TransitionLabel.update tlabel v in
+            if Set.is_subset (Polynomials.Polynomial.vars update) ~of_:(TransitionLabel.input_vars tlabel)
+            then
+              Bound.of_poly update
+            else
+              Bound.infinity
+          in
+          (res_from_lsb, res_from_update)
+        else
+          let res_from_lsb =
+            Option.map ~f:(fun lsb -> incoming_bound_lsb rvg get_sizebound lsb t v) lsb_as_bound
+          in
+          let res_from_update =
             let tlabel = Transition.label t in
-            match TransitionLabel.update tlabel v with
-            | Some u ->
-                if Set.is_subset (Polynomials.Polynomial.vars u) ~of_:(TransitionLabel.input_vars tlabel) then
-                  incoming_bound_lifted_update program get_sizebound u t v
-                else
-                  Bound.infinity
-            | None -> Bound.infinity)
+            let+ update = TransitionLabel.update (Transition.label t) v in
+            if Set.is_subset (Polynomials.Polynomial.vars update) ~of_:(TransitionLabel.input_vars tlabel)
+            then
+              incoming_bound_lifted_update program get_sizebound update t v
+            else
+              Bound.infinity
+          in
+          (res_from_lsb, res_from_update)
+      in
+      Bound.(keep_simpler_bound (res_from_lsb |? infinity) (res_from_update |? infinity))
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> ("compute_trivial_bound", [ ("rv", RV.to_id_string (t, v)) ]))
