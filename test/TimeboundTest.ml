@@ -11,19 +11,14 @@ let preprocess =
       [ InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations ])
 
 
-let conf = Analysis.default_configuration
+let default_conf = Analysis.default_configuration
+let mprf5_conf = Analysis.{ default_configuration with run_mprf_depth = Some 5 }
+let twn_conf = Analysis.{ default_configuration with twn_configuration = Some `NoTransformation }
 
 module Analysis = Analysis.Make (ProgramModules)
 
-(** Returns an overall timebound for the given program.*)
-let find_timebound ?(mprf_max_depth = 1) (program : Program.t) : Bound.t =
-  (program, Approximation.empty) |> Tuple2.map1 preprocess |> fun (program, appr) ->
-  Analysis.improve ~preprocess ~conf:{ conf with run_mprf_depth = Some mprf_max_depth } program appr
-  |> fun (program, appr) -> Approximation.program_timebound appr program
-
-
 (** Returns an overall costbound for the given program. *)
-let find_costbound (program : Program.t) : Bound.t =
+let find_costbound ?(conf = default_conf) (program : Program.t) : Bound.t =
   (program, Approximation.empty) |> Tuple2.map1 preprocess |> fun (program, appr) ->
   Analysis.improve ~preprocess ~conf program appr |> fun (program, appr) ->
   Approximation.program_costbound appr program
@@ -110,28 +105,64 @@ let tests =
          >:::
          let open Bound in
          List.map
-           (fun (expected_complexity, program_str) ->
+           (fun (expected_complexity, program_str, conf) ->
              program_str >:: fun _ ->
              let complexity =
-               (asymptotic_complexity % find_costbound % Readers.read_program_simple) program_str
+               (asymptotic_complexity % find_costbound ~conf % Readers.read_program_simple) program_str
              in
              assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity)
            [
-             (Inf, "a -> b(), b -> b()");
-             (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0");
-             (Polynomial 0, "a -> b(), b -> c()");
-             (Polynomial 0, "a -> b(), b -> c(), a -> c()");
-             (* TODO Problem with constant ranking functions (Polynomial 0, "a -> b(x), b -> b(x-x) :|: x>0"); *)
-             (Polynomial 0, "a -> b(x), b -> b(x-1) :|: x>x");
-             (Polynomial 1, "a -> b(x), b -> b(x-1) :|: x>0");
-             (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y");
-             (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y");
-             (Polynomial 1, "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");
-             (* Non-linear not supported by Z3 (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0"); *)
-             (Polynomial 2, "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");
-             (Exponential 1, "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");
+             (Inf, "a -> b(), b -> b()", default_conf);
+             (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0", default_conf);
+             (Polynomial 0, "a -> b(), b -> c()", default_conf);
+             (Polynomial 0, "a -> b(), b -> c(), a -> c()", default_conf);
+             (* TODO Problem with constant ranking functions (Polynomial 0, "a -> b(x), b -> b(x-x) :|: x>0", default_conf); *)
+             (Polynomial 0, "a -> b(x), b -> b(x-1) :|: x>x", default_conf);
+             (Polynomial 1, "a -> b(x), b -> b(x-1) :|: x>0", default_conf);
+             (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y", default_conf);
+             ( Polynomial 1,
+               "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y",
+               default_conf );
+             ( Polynomial 1,
+               "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               default_conf );
+             (* Non-linear not supported by Z3 (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0", default_conf); *)
+             ( Polynomial 2,
+               "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               default_conf );
+             ( Exponential 1,
+               "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               default_conf );
              ( Exponential 1,
                "a -> b(x,y,z), b -> c(x+y,y,z-1) :|: z>0, c -> b(x,x,z) :|: z>0, c -> d(x,y,z), d -> \
-                d(x-1,y,z) :|: x>0" );
+                d(x-1,y,z) :|: x>0",
+               default_conf );
+             (* MPRF *)
+             (Inf, "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", default_conf);
+             (Polynomial 1, "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", mprf5_conf);
+             (Polynomial 1, "a -> b(x,y,z), b -> b(x+y,y+z,z-1) :|: x > 0", mprf5_conf);
+             (Polynomial 1, "a -> b(x,y,z,u), b -> b(x+y,y+z,z+u,u-1) :|: x > 0", mprf5_conf);
+             (Polynomial 1, "a -> b(x,y,z,u,v), b -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0", mprf5_conf);
+             (* This would require depth > 5 *)
+             (Inf, "a -> b(x,y,z,u,v,p), b -> b(x+y,y+z,z+u,u+v,v+p,p-1) :|: x > 0", mprf5_conf);
+             (* TWN based on twn001 *)
+             (Inf, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
+             (Polynomial 1, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
+             ( Polynomial 1,
+               "a -> b(x,y,z), b -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b -> c(z,z,z), c -> c(2*x, 3*y, z) \
+                :|: x >= y && y >= 1",
+               twn_conf );
+             ( Polynomial 2,
+               "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
+                b(x,y,z)",
+               twn_conf );
+             ( Polynomial 2,
+               "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
+                d(z,z,z), d -> d(2*x,3*y,z) :|: x>= y && y >= 1, d -> b(x,y,z)",
+               twn_conf );
+             ( Polynomial 3,
+               "a -> b(x,y,z,u), b -> c(x,y,z-1,z) :|: z > 0, c -> d(u,u,z,u-1) :|: u > 0, d -> d(2 * x, 3 * \
+                y,z,u) :|: x >= y && y >= 1, d -> c(y,y,z,u), d -> b(x,y,z,u)",
+               twn_conf );
            ]);
        ]
