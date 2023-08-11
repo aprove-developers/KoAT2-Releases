@@ -97,8 +97,8 @@ struct
 
 
   let map_graph f program = invalidate_complete_pre_cache { program with graph = f program.graph }
-  let map_transitions f = invalidate_complete_pre_cache % map_graph (G.map_transitions f)
-  let map_labels f = invalidate_complete_pre_cache % map_transitions (fun (l, t, l') -> (l, f t, l'))
+  let map_transitions f = map_graph (G.map_transitions f)
+  let map_labels f = map_transitions (fun (l, t, l') -> (l, f t, l'))
   let locations : t -> location_set = G.locations % graph
   let transitions = G.transitions % graph
   let simplify_all_guards : t -> t = map_transitions (T.map_label (TL.map_guard Guard.simplify_guard))
