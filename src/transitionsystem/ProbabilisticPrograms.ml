@@ -294,9 +294,9 @@ module ProbabilisticTransitionLabel_ = struct
     let new_gt_id = match Hashtbl.find_option gt_ids old_gt_id with
     | Some id -> id
     | None ->
-        let id = unique () in
-        Hashtbl.add gt_ids old_gt_id id;
-        id
+        let new_gt_id = unique () in
+        Hashtbl.add gt_ids old_gt_id new_gt_id;
+        new_gt_id
     in 
     {t with id = unique (); gt_id = new_gt_id}
 end
@@ -481,6 +481,13 @@ module ProbabilisticTransition = struct
     in
     prob_string ^ (Int.to_string (ProbabilisticTransitionLabel.id label) ^ ":") ^ Location.to_string l' ^ ProbabilisticTransitionLabel.update_to_string_rhs label
 
+  let to_file_string_rhs (_,label,l') =
+    let prob = ProbabilisticTransitionLabel.probability label in
+    let prob_string =
+      if OurFloat.(equal one prob) then "" else "[" ^ OurFloat.to_string prob ^ "]:"
+    in
+    prob_string ^ Location.to_string l' ^ ProbabilisticTransitionLabel.update_to_string_rhs label
+
   let to_string_rhs_pretty (_,label,l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string = if OurFloat.(equal one prob) then "" else "["^OurFloat.to_string prob ^ "]:" in
@@ -625,6 +632,17 @@ module GeneralTransition = struct
       |> Enum.reduce (fun a b -> a^" :+: "^b)
     in
     id_string ^ Location.to_string (src t) ^ vars ^ " -" ^ cost_str ^ "> " ^ trans_string ^ " :|: " ^ Guard.to_string ~pretty:false (guard t)
+
+  let to_file_string t = 
+    let vars = ProbabilisticTransitionLabel.update_to_string_lhs @@ ProbabilisticTransition.label (ProbabilisticTransitionSet.any t.transitions) in
+    let trans = ProbabilisticTransitionSet.enum t.transitions in
+    let cost_str = if Polynomial.(equal (cost t) one) then "" else "{" ^ Polynomial.to_string (cost t) ^ "}" in
+    let trans_string =
+      Enum.map ProbabilisticTransition.to_file_string_rhs trans
+      |> Enum.reduce (fun a b -> a^" :+: "^b)
+    in
+      Location.to_string (src t) ^ vars ^ " -" ^ cost_str ^ "> " ^ trans_string ^ if Guard.is_true (guard t) then "" else " :|: " ^ Guard.to_string ~pretty:false (guard t)
+
 
   let to_string_pretty t =
     let id_string = "g" ^ Util.natural_to_subscript (gt_id t) ^ ":" in

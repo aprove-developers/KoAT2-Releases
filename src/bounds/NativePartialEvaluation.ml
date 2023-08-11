@@ -1200,7 +1200,7 @@ struct
   let am = Ppl.manager_alloc_loose ()
 
   (* TODO: find a better name, component is wrong, it's just a set of transitions *)
-  let evaluate_component config component program_vars graph =
+  let evaluate_component config component program_vars start_location graph =
     let entry_transitions = entry_transitions graph component
     and exit_transitions = exit_transitions graph component in
 
@@ -1273,9 +1273,8 @@ struct
               else
                 let target_version = Version.mk target_loc a in
                 let new_transition = (src_version, label, target_version) in
-                let result_graph =
-                  PEGraph.add_edge_e result_graph new_transition
-                in
+                log ~level:DEBUG "pe.transition" (fun () -> ["NEW_TRANSITION", PEM.Transition.to_string_pretty new_transition]);
+                let result_graph = PEGraph.add_edge_e result_graph new_transition in
                 evaluate_version target_version
                   (already_unfolded_versions, result_graph)
           | None ->
@@ -1283,16 +1282,6 @@ struct
                   [ ("VERSION_SAT", "false") ]);
               (* Target version is unsat take, backtrack without adding a new transition *)
               (already_unfolded_versions, result_graph)
-      in
-
-      let rename_transitions transitions =
-        let gt_id_map = Hashtbl.create 10 in
-        List.enum transitions
-        |> Enum.map (fun transition ->
-               (transition, TransitionSet.mem transition exit_transitions))
-        |> Enum.map (fun ((src, label, target), is_exit) ->
-               ( (src, TransitionLabel.copy_rename gt_id_map label, target),
-                 is_exit ))
       in
 
       if PEM.VersionSet.mem current_version already_unfolded_versions then (
@@ -1313,29 +1302,45 @@ struct
         in
         let location = Version.location current_version in
 
+        let gt_id_map = Hashtbl.create 10 in
         let outgoing_transitions =
-          TransitionGraph.succ_e graph location |> rename_transitions
+          TransitionGraph.succ_e graph location 
+          |> List.enum
+          |> Enum.map (fun transition ->
+               (transition, TransitionSet.mem transition exit_transitions))
+          |> Enum.map (fun ((src, label, target), is_exit) ->
+                 ( (src, TransitionLabel.copy_rename gt_id_map label, target),
+                   is_exit ))
+          |> Enum.map (tap (fun (t, is_exit) ->  
+            log ~level:DEBUG "pe.version" (fun () ->
+                [ "RENAMED_TRANSITION", Transition.to_string t; "IS_EXIT", Bool.to_string is_exit ]);
+          ))
+          |> List.of_enum
+
         in
         (* Evaluate from every outgoing transition *)
-        Enum.fold
+        List.fold
           (evaluate_transition current_version)
           (already_unfolded_versions, result_graph)
           outgoing_transitions)
     in
 
-    let evaluate_entry_transition entry_transition
-        (already_unfolded_versions, result_graph) =
-      let start_location = Transition.target entry_transition in
-      let start_version = Version.mk_true start_location in
-      evaluate_version start_version (already_unfolded_versions, result_graph)
+    let entry_versions = TransitionSet.fold
+          (fun entry_transition entry_versions ->
+            let entry_location = Transition.target entry_transition in
+            let entry_version = Version.mk_true entry_location in
+            PEM.VersionSet.add entry_version entry_versions 
+          ) entry_transitions PEM.VersionSet.empty
     in
 
-    let _, pe_graph =
-      TransitionSet.fold
-        (fun entry_transition result_graph ->
-          evaluate_entry_transition entry_transition result_graph)
-        entry_transitions
-        (PEM.VersionSet.empty, result_graph_without_sub)
+    let entry_versions = if LocationSet.mem start_location (TransitionSet.locations component) then
+      PEM.VersionSet.add (Version.mk_true start_location) entry_versions
+    else entry_versions in
+
+    let _, pe_graph = PEM.VersionSet.fold
+        (fun entry_version (already_unfolded_versions, result_graph) ->
+          evaluate_version entry_version (already_unfolded_versions, result_graph)
+        ) entry_versions (PEM.VersionSet.empty, result_graph_without_sub)
     in
 
     let pe_graph = PEM.remove_abstractions config.update_invariants pe_graph in
@@ -1354,11 +1359,13 @@ struct
           (* Note: the start location cannot be part of an SCC and hence is
              Also present in the result graph.
           *)
-          Program.sccs program
-          |> Enum.fold
-               (fun result_graph scc ->
-                 evaluate_component config scc program_vars result_graph)
-               graph)
+          (* Program.sccs program *)
+          (* |> Enum.fold *)
+          (*      (fun result_graph scc -> *)
+          (*        evaluate_component config scc program_vars result_graph) *)
+          (*      graph) *)
+          evaluate_component config (TransitionGraph.transitions graph) program_vars (Program.start program) graph
+          )
         program
     in
     assert (
@@ -1402,7 +1409,7 @@ struct
                      (find_parallel_transitions transition))
                  TransitionSet.empty
           in
-          evaluate_component config component program_vars graph)
+          evaluate_component config component program_vars (Program.start program) graph)
         program
     in
     log ~level:INFO "pe" (fun () -> [ ("PE", Program.to_string pe_prog) ]);

@@ -44,14 +44,16 @@ let sane_program_to_file file program=
     Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
                     (Location.to_string (Program.start program))
                     (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (Program.input_vars program) "")
-                    (TransitionGraph_.fold_edges_e (fun t str-> str ^ " " ^Transition_.to_file_string t ^ "\n") (Program.graph program) "");
+                    (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^Transition.to_file_string t ^ "\n") (Program.graph program) "");
     close_out oc
 
 let prob_program_to_file file program =
   let open ProbabilisticProgramModules in
   let oc = open_out (file) in
-    (* TODO: this is not in Koat format, because it was not implemented *)
-    Printf.fprintf oc "%s" (Program.to_string program);
+    Printf.fprintf oc "(GOAL EXPECTEDCOMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+                    (Location.to_string (Program.start program))
+                    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (Program.input_vars program) "")
+                    (GeneralTransitionSet.fold (fun gt str -> str ^ " " ^GeneralTransition.to_file_string gt ^ "\n") (Program.gts program) "");
     close_out oc
 
 

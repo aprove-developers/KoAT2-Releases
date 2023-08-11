@@ -17,6 +17,7 @@ module ProbabilisticTransition: sig
 
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
   val same_gt: t -> t -> bool
+  val to_file_string_rhs: t -> string
 end
 
 module ProbabilisticTransitionNonProbOverappr: sig
@@ -49,6 +50,7 @@ module GeneralTransition: sig
 
   val to_string: t -> string
   val to_string_pretty: t -> string
+  val to_file_string: t -> string
 
   (* Obtain a string only containing the transitoin's id, e.g., [ "g3" ] *)
   val ids_to_string: ?pretty:bool -> t -> string
