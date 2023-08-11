@@ -1,5 +1,5 @@
 open Koat2
-open Batteries
+open OurBase
 open OUnit2
 open Helper
 open LocalSizeBound
@@ -11,7 +11,7 @@ let tests =
   >::: [
          "find upper bound"
          >::: List.map
-                (fun (expected, guard, exp_equality) ->
+                ~f:(fun (expected, guard, exp_equality) ->
                   "bound for x with " ^ guard >:: fun _ ->
                   let bound =
                     find_bound
@@ -50,5 +50,34 @@ let tests =
                   (mk ~s:3 [ "y"; "z" ], "x <= 2*y + 3*z && x>= -2*y - 3*z", false);
                   (* Bounded by two variables but of equality type *)
                   (mk ~s:1 [ "y"; "z" ], "y >= 0 && z<0 && x = y+z", true);
+                ];
+         "from_update_poly"
+         >::: List.map
+                ~f:(fun (expected, poly_str) ->
+                  let program_vars = VarSet.of_string_list [ "x"; "y" ] in
+                  let update_var = Var.of_string "x" in
+                  let update = Readers.read_polynomial poly_str in
+
+                  "lsb from update " ^ Polynomial.to_string update >:: fun _ ->
+                  let lsb =
+                    LocalSizeBound.from_update_poly program_vars update_var update
+                    |> Option.value_exn |> Tuple2.first
+                  in
+                  assert_equal_bound (LocalSizeBound.as_bound expected) (LocalSizeBound.as_bound lsb))
+                [
+                  (mk ~s:1 ~c:0 [ "x" ], "x");
+                  (mk ~s:1 ~c:0 [ "x" ], "- 1*x");
+                  (mk ~s:1 ~c:0 [ "x"; "y" ], "x + y");
+                  (mk ~s:1 ~c:0 [ "x"; "y" ], "x - y");
+                  (mk ~s:2 ~c:0 [ "x"; "y" ], "2*x - y");
+                  (mk ~s:2 ~c:0 [ "x"; "y" ], "x - 2*y");
+                  (mk ~s:2 ~c:0 [ "x"; "y" ], "2*x - 2*y");
+                  (mk ~s:1 ~c:3 [ "x" ], "x + 3");
+                  (mk ~s:1 ~c:3 [ "x" ], "- 1*x + 3");
+                  (mk ~s:1 ~c:3 [ "x"; "y" ], "x + y + 3");
+                  (mk ~s:1 ~c:3 [ "x"; "y" ], "x - y + 3");
+                  (mk ~s:2 ~c:2 [ "x"; "y" ], "2*x - y - 3");
+                  (mk ~s:2 ~c:2 [ "x"; "y" ], "x - 2*y - 3");
+                  (mk ~s:2 ~c:2 [ "x"; "y" ], "2*x - 2*y - 4");
                 ];
        ]

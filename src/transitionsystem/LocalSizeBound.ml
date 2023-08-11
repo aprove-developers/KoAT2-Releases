@@ -106,13 +106,13 @@ struct
     (* Trivially holds for constant lsbs *)
     if Set.is_empty t.vars then
       true
-    else if (* Trivially holds for identity lsbs *)
-            t.factor > 1 && not (Set.is_empty t.vars) then
-      false
     else if
       (* Trivially does not hold if scaling > 1 and variables are present *)
-      Set.length t.vars = 1 && Int.equal 0 t.constant
+      t.factor > 1 && not (Set.is_empty t.vars)
     then
+      false
+    else if (* Trivially holds for identity lsbs *)
+            Set.length t.vars = 1 && Int.equal 0 t.constant then
       true
     else if Formula.is_linear update_formula then (
       let solver = Solver.create ~model:false () in
@@ -169,26 +169,64 @@ struct
       execute
 
 
+  module Monomial = Monomials.Make (OurInt)
+
+  let from_update_poly program_vars update_var update =
+    let open OptionMonad in
+    let to_abs_int = OurInt.to_int % OurInt.abs in
+    let* const, factor, vars =
+      try
+        Polynomial.monomials_with_coeffs update
+        |> List.fold_left
+             ~f:(fun lsb (coeff, mon) ->
+               let* const, factor, vars = lsb in
+               match Sequence.to_list (Monomial.to_sequence mon) with
+               | [] -> Option.return (const + to_abs_int coeff, factor, vars)
+               | [ (v, 1) ] when Set.mem program_vars v ->
+                   Option.return (const, max factor (to_abs_int coeff), Set.add vars v)
+               | _ -> None)
+             ~init:(Some (0, 1, VarSet.empty))
+      with
+      | OurInt.Overflow -> None
+    in
+    let lsb =
+      {
+        factor;
+        vars;
+        constant =
+          (if const mod factor = 0 then
+             const / factor
+           else
+             (const / factor) + 1);
+      }
+    in
+    let is_equality_type = Polynomial.equal (Polynomial.of_var update_var) update in
+    Option.return (lsb, Lazy.from_val is_equality_type)
+
+
   let compute_bound program_vars (l, t, l') var =
     let execute () =
-      TL.update t var
-      |> Option.bind ~f:(fun ue ->
-             let v' = Var.fresh_id Var.Int () in
-             let update_formula =
-               (* Facilitate SMT call by removing non-linear constraints. *)
-               (* The resulting update_formula is an overapproximation of the original formula *)
-               Formula.mk @@ Constraint.drop_nonlinear
-               @@ Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue)
-             in
-             let update_vars =
-               Set.union (Polynomial.vars ue) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
-             in
-             try
-               (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
-               (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-               find_bound (Set.inter program_vars update_vars) v' update_formula (s_range ue)
-             with
-             | SMT.SMTFailure _ -> None)
+      let open OptionMonad in
+      let* update = TL.update t var in
+      if Set.are_disjoint (Polynomial.vars update) (Guard.vars @@ TL.guard t) then
+        from_update_poly program_vars var update
+      else
+        let v' = Var.fresh_id Var.Int () in
+        let update_formula =
+          (* Facilitate SMT call by removing non-linear constraints. *)
+          (* The resulting update_formula is an overapproximation of the original formula *)
+          Formula.mk @@ Constraint.drop_nonlinear
+          @@ Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') update)
+        in
+        let update_vars =
+          Set.union (Polynomial.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+        in
+        try
+          (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
+          (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
+          find_bound (Set.inter program_vars update_vars) v' update_formula (s_range update)
+        with
+        | SMT.SMTFailure _ -> None
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->

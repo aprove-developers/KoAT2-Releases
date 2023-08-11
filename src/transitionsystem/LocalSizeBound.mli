@@ -47,6 +47,9 @@ module Make
   * the variabels that may occur in the lsb.
   * The bool Lazy.t value indiciates if this lsb is of the equality type *)
 
+  val from_update_poly : VarSet.t -> Var.t -> Polynomial.t -> (t * bool Lazy.t) option
+  (** Construct a local size bound directly from the update expression *)
+
   val compute_bound : VarSet.t -> T.t -> Var.t -> (t * bool Lazy.t) option
 
   val sizebound_local : P.t -> T.t -> Var.t -> t Option.t
