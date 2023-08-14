@@ -432,11 +432,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   let relax_guard ~non_static t =
     let is_static atom = Set.is_subset (Atoms.Atom.vars atom) ~of_:(Set.diff (input_vars t) non_static) in
-    {
-      t with
-      guard = List.filter ~f:is_static t.guard;
-      overappr_guard = List.filter ~f:is_static t.overappr_guard;
-    }
+    { t with overappr_guard = List.filter ~f:is_static t.overappr_guard }
 
 
   let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
