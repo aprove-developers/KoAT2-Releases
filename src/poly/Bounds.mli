@@ -10,4 +10,7 @@ module RealBound : sig
 
   val of_intbound : Bound.t -> t
   val of_intpoly : Polynomials.Polynomial.t -> t
+
+  val to_intbound : t -> Bound.t
+  (** Ceil Floats to Ints *)
 end

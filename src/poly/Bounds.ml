@@ -550,4 +550,9 @@ module RealBound = struct
 
 
   let of_intpoly = of_poly % RealPolynomial.of_intpoly
+
+  let to_intbound =
+    fold ~const:(Bound.of_constant % OurFloat.ceil) ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul
+      ~exp:(fun value -> Bound.exp (OurFloat.ceil value))
+      ~inf:infinity
 end
