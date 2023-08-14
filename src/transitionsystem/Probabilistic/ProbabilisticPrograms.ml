@@ -914,11 +914,9 @@ module ProbabilisticProgram = struct
     let gts = gts t in
     sccs t
     |> List.map ~f:(fun tset ->
-           Set.filter
-             ~f:(fun gt ->
-               let gt_transs = GeneralTransition.transitions gt in
-               Set.exists ~f:(fun t -> Set.mem gt_transs t) tset)
-             gts)
+           Set.to_sequence tset
+           |> Sequence.map ~f:ProbabilisticTransition.gt_id
+           |> GeneralTransitionSet.find_by_ids gts)
 
 
   let to_formatted_string ?(pretty = false) t =
@@ -956,6 +954,10 @@ module ProbabilisticProgram = struct
     Set.fold tset ~init:program ~f:(fun prog (l, t, l') ->
         assert (OurFloat.(equal (ProbabilisticTransitionLabel.probability t) zero));
         remove_transition prog (l, t, l'))
+
+
+  let find_gt_from_gts_and_transition gts trans =
+    GeneralTransitionSet.find_by_id gts (ProbabilisticTransition.gt_id trans)
 end
 
 module ProbabilisticTransitionGraphNonProbOverappr =

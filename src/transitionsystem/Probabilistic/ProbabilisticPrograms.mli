@@ -135,6 +135,10 @@ module ProbabilisticProgram : sig
   val restore_legacy_distribution_update_semantics : t -> t
   val to_string_pretty : t -> string
 
+  val find_gt_from_gts_and_transition :
+    GeneralTransitionSet.t -> ProbabilisticTransition.t -> GeneralTransition.t Option.t
+  (** Find the general transition in the given transition set with the same id as the given transition *)
+
   val is_initial_gt : t -> GeneralTransition.t -> bool
   (** is the given general transition initial, i.e., does it start in the initial location *)
 end
