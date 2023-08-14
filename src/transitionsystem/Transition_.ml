@@ -100,6 +100,7 @@ struct
 
   let to_string s = Util.sequence_to_string ~f:T.to_id_string (Set.to_sequence s)
   let to_id_string s = Util.sequence_to_string ~f:T.to_id_string (Set.to_sequence s)
+  let to_id_string_pretty s = Util.sequence_to_string ~f:T.to_id_string_pretty (Set.to_sequence s)
 
   type location_set = (L.t, L.comparator_witness) Set.t
 

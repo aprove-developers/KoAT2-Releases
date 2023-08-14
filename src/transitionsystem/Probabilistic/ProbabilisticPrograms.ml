@@ -826,6 +826,7 @@ module GeneralTransitionSet = struct
 
   let to_string = Util.sequence_to_string ~f:GeneralTransition.to_id_string % Set.to_sequence
   let to_id_string = Util.sequence_to_string ~f:GeneralTransition.to_id_string % Set.to_sequence
+  let to_id_string_pretty = Util.sequence_to_string ~f:GeneralTransition.to_id_string_pretty % Set.to_sequence
 
   let locations t =
     Set.fold

@@ -43,6 +43,9 @@ module type TransitionSet = sig
   val to_id_string : t -> string
   (** Returns a short string representing the transition set. *)
 
+  val to_id_string_pretty : t -> string
+  (** [to_id_string] but prettier *)
+
   type location
   type location_comparator_witness
   type location_set = (location, location_comparator_witness) Set.t
