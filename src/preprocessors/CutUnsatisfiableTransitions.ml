@@ -42,15 +42,16 @@ module Make (M : ProgramTypes.ProgramModules) = struct
     if Base.Set.is_empty unsatisfiable_transitions then
       MaybeChanged.same program
     else
-      let remove (transition : Transition.t) (program : Program.t) =
+      let removed =
         Logger.(
           log logger INFO (fun () ->
-              ("cut_unsatisfiable_transitions", [ ("transition", Transition.to_id_string_pretty transition) ])));
+              ( "cut_unsatisfiable_transitions",
+                [ ("transitions", TransitionSet.to_id_string_pretty unsatisfiable_transitions) ] )));
         ProofOutput.add_str_paragraph_to_proof (fun () ->
-            "Cut unsatisfiable transition " ^ Transition.to_id_string_pretty transition);
-        Program.remove_transition program transition
+            "Cut unsatisfiable transition " ^ TransitionSet.to_id_string_pretty unsatisfiable_transitions);
+        Program.remove_unsatisfiable_transitions program unsatisfiable_transitions
       in
-      MaybeChanged.changed (Base.Set.fold ~f:(flip remove) unsatisfiable_transitions ~init:program)
+      MaybeChanged.changed removed
 end
 
 include Make (ProgramModules)

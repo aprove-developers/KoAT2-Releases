@@ -5,9 +5,7 @@ open OurBase
     A guard has to be fulfiled for a state to reach another state via the transition.
     An update assigns variables a new value as a linear combination of the old values. *)
 
-include ProgramTypes.TransitionLabel
-
-type update_element = Polynomials.Polynomial.t
+include ProgramTypes.ClassicalTransitionLabel
 
 val mk :
   id:int option ->

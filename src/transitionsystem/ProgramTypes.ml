@@ -99,17 +99,12 @@ module type TransitionLabel = sig
   val invariant : t -> Invariant.t
   (** Returns the invariant. *)
 
-  val map_guard : (Guard.t -> Guard.t) -> t -> t
-  (** Apply function to guard *)
-
   val id : t -> int
   (** Returns the unique id. *)
 
   val ids_to_string : ?pretty:bool -> t -> string
   (** Returns a string with the transitions id (or ids in case of probabilistic programs).
       Used for printing graphs. *)
-
-  val add_invariant : t -> Invariant.t -> t
 
   val cost : t -> Polynomials.Polynomial.t
   (** Returns the cost function *)
@@ -137,11 +132,7 @@ module type TransitionLabel = sig
   val fill_up_arg_vars_up_to_num : int -> t -> t
   (** The call {i fill_up_arg_vars_up_to_num n} adds trivial updates for the first {i n}, i.e. Arg_0, .., Arg_n-1 arguments that are not contained in the labels update map *)
 
-  val rename : RenameMap.t -> t -> t
   (** TODO doc *)
-
-  val rename_temp_vars : t -> Var.t Sequence.t -> t
-  (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
 
   val vars : t -> VarSet.t
   (** Returns the set of variables. *)
@@ -157,23 +148,37 @@ module type TransitionLabel = sig
 
   val has_tmp_vars : t -> bool
 
-  val relax_guard : non_static:VarSet.t -> t -> t
-  (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
-
   val changed_vars : t -> VarSet.t
   (** All input variables where the update is not x' = x.*)
 
   val chain_guards : t -> t -> Guard.t
   (** Guard that is true if both transitions can be executed one after another *)
 
-  val overapprox_nonlinear_updates : t -> t
-  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
-
   val remove_non_contributors : VarSet.t -> t -> t
 
   include Comparator.S with type t := t
 
   val sexp_of_t : t -> Sexp.t
+end
+
+module type ClassicalTransitionLabel = sig
+  include TransitionLabel with type update_element = Polynomial.t
+
+  val add_invariant : t -> Invariant.t -> t
+
+  val map_guard : (Guard.t -> Guard.t) -> t -> t
+  (** Apply function to guard *)
+
+  val rename : RenameMap.t -> t -> t
+
+  val rename_temp_vars : t -> Var.t Sequence.t -> t
+  (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
+
+  val relax_guard : non_static:VarSet.t -> t -> t
+  (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
+
+  val overapprox_nonlinear_updates : t -> t
+  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -196,8 +201,6 @@ module type Transition = sig
 
   val hash : t -> int
   (** Generates a hash value for a transition. *)
-
-  val overapprox_nonlinear_updates : t -> t
 
   val to_id_string : t -> string
   (** Returns a string of the form id: src -> target. *)
@@ -227,11 +230,6 @@ module type Transition = sig
   val cost : t -> Polynomial.t
   (** Returns a cost function of a transition represented as a polynomial. *)
 
-  val add_invariant : Constraint.t -> t -> t
-  (** Adds the invariant to this transition. *)
-
-  val rename : RenameMap.t -> t -> t
-
   include
     Comparator.S
       with type t := t
@@ -241,6 +239,17 @@ module type Transition = sig
         TransitionComparator.comparator_witness
 
   val sexp_of_t : t -> Sexp.t
+end
+
+module type ClassicalTransition = sig
+  include Transition
+
+  val overapprox_nonlinear_updates : t -> t
+
+  val add_invariant : Constraint.t -> t -> t
+  (** Adds the invariant to this transition. *)
+
+  val rename : RenameMap.t -> t -> t
 end
 
 (** This module represents a transition graph. *)
@@ -294,9 +303,6 @@ module type TransitionGraph = sig
   val replace_edge_e : transition -> transition -> t -> t
   (** Replaces the first edge by the second edge. *)
 
-  val add_invariant : location -> Constraint.t -> t -> t
-  (** Adds the invariant to the location of the graph. *)
-
   val sccs : t -> transition_set list
   (** Returns the (biggest) strongly connected components of the transiton graph. *)
 
@@ -327,24 +333,12 @@ module type Program = sig
     GenericProgram_.t
   (** Type of a program consisting of a program graph and a start location. *)
 
-  val from_sequence : location -> transition Sequence.t -> t
-  (** Create a program from a start location and an enum of transitions.
-      The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
-
-  val from_graph : location -> transition_graph -> t
-  (** Create a program from a start location and a graph *)
-
   val remove_location : t -> location -> t
   (** Removes the location from the program and all edges to it. *)
 
-  val remove_transition : t -> transition -> t
-  (** Removes a transition from a program. *)
-
-  (* Removes the transitions from a certain transitionset to a program *)
-  val remove_transition_set : transition_set -> t -> t
-
-  val map_graph : (transition_graph -> transition_graph) -> t -> t
-  (** Apply function to the underlying TransitionGraph *)
+  val remove_unsatisfiable_transitions : t -> transition_set -> t
+  (** Removes unsatisfiable transitions from a program.
+      Note that for ProbabilisticPrograms this removes the whole general transitions as all general transitionsn share a guard *)
 
   val map_transitions : (transition -> transition) -> t -> t
   (** Apply function to the programs transitions  *)
@@ -527,10 +521,59 @@ end
 
 (** For classical/non-probabilistic programs we want polynomial updates only and RV.transition = Transition.t *)
 module type ClassicalProgramModules = sig
-  include ProgramModules with module UpdateElement = Polynomial
+  (* Can we avoid copy/pasting below? *)
+  module Location : Location
+
+  module LocationSet :
+    LocationSet with type elt = Location.t and type elt_comparator_witness = Location.comparator_witness
+
+  module UpdateElement : module type of Polynomial
+  module TransitionLabel : ClassicalTransitionLabel
+
+  module Transition :
+    ClassicalTransition
+      with type location = Location.t
+       and type location_comparator_witness = Location.comparator_witness
+       and type transition_label = TransitionLabel.t
+       and type transition_label_comparator_witness = TransitionLabel.comparator_witness
+
+  module TransitionSet :
+    TransitionSet
+      with type elt = Transition.t
+       and type elt_comparator_witness =
+        ( TransitionLabel.comparator_witness,
+          Location.comparator_witness )
+        TransitionComparator.comparator_witness
+       and type location = Location.t
+       and type location_comparator_witness = Location.comparator_witness
+
+  module TransitionGraph :
+    TransitionGraph
+      with type location = Location.t
+       and type location_comparator_witness = Location.comparator_witness
+       and type transition_label = TransitionLabel.t
+       and type transition_label_comparator_witness = TransitionLabel.comparator_witness
+       and type transition = Transition.t
+
+  module Program :
+    Program
+      with type location = Location.t
+       and type location_comparator_witness = Location.comparator_witness
+       and type transition_label = TransitionLabel.t
+       and type transition_label_comparator_witness = TransitionLabel.comparator_witness
+       and type transition = Transition.t
+       and type transition_graph = TransitionGraph.t
 
   module RV :
     RV
       with type transition = Transition.t
        and type transition_comparator_witness = Transition.comparator_witness
+
+  type program_modules_t =
+    (TransitionLabel.t
+    * TransitionLabel.comparator_witness
+    * Location.t
+    * Location.comparator_witness
+    * TransitionGraph.t)
+    program_modules_meta
 end

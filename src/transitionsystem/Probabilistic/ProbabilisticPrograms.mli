@@ -7,7 +7,7 @@ module ProbabilisticTransitionLabel : sig
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
-  include ProgramTypes.TransitionLabel with type update_element = Polynomials.Polynomial.t
+  include ProgramTypes.ClassicalTransitionLabel with type update_element = Polynomials.Polynomial.t
 end
 
 module ProbabilisticTransition : sig
@@ -24,7 +24,7 @@ end
 
 module ProbabilisticTransitionNonProbOverappr : sig
   include
-    ProgramTypes.Transition
+    ProgramTypes.ClassicalTransition
       with type location = Location.t
        and type location_comparator_witness = Location.comparator_witness
        and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
@@ -129,6 +129,7 @@ module ProbabilisticProgram : sig
       The resulting enum is in topological order *)
 
   val pre_gt : t -> GeneralTransition.t -> GeneralTransitionSet.t
+  val remove_zero_prob_transitions : (transition, transition_comparator_witness) Set.t -> t -> t
 
   (* Restores legacy semantics for updates with distributions, i.e. updates of the form X->UNIFORM(0,1) are interpreted as X->X+UNIFORM(0,1) *)
   val restore_legacy_distribution_update_semantics : t -> t

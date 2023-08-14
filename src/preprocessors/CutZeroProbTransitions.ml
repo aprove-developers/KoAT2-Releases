@@ -24,4 +24,4 @@ let transform_program program =
     else
       MaybeChanged.changed
   in
-  lift (Program.remove_transition_set prob_0_trans program)
+  lift (Program.remove_zero_prob_transitions prob_0_trans program)

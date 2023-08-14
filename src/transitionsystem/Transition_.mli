@@ -1,11 +1,21 @@
 open OurBase
 
-(** A transition connects two locations and is labeled with an updated function and a guard. *)
+(** A transition connects two locations and is labeled with a transition label.*)
 
-(** Creates a transition over a given location type *)
-module TransitionOver (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) : sig
+(** Creates a transition over a given label and location type *)
+module Make (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) : sig
   include
     ProgramTypes.Transition
+      with type location = L.t
+       and type location_comparator_witness = L.comparator_witness
+       and type transition_label = TL.t
+       and type transition_label_comparator_witness = TL.comparator_witness
+end
+
+(** Creates a classical transition over a given transition label and location type *)
+module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTypes.Location) : sig
+  include
+    ProgramTypes.ClassicalTransition
       with type location = L.t
        and type location_comparator_witness = L.comparator_witness
        and type transition_label = TL.t
@@ -33,7 +43,7 @@ module TransitionSetOver
 end
 
 include
-  ProgramTypes.Transition
+  ProgramTypes.ClassicalTransition
     with type location = Location.t
      and type location_comparator_witness = Location.comparator_witness
      and type transition_label = TransitionLabel_.t

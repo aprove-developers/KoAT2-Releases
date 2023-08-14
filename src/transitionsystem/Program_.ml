@@ -91,17 +91,12 @@ struct
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
-  (* Removes the transitions from a certain transitionset to a program *)
-  let remove_transition_set (transitions : TransitionSet.t) (program : t) =
-    Set.fold ~f:remove_transition transitions ~init:program
-
-
   let map_graph f program = invalidate_complete_pre_cache { program with graph = f program.graph }
   let map_transitions f = map_graph (G.map_transitions f)
   let map_labels f = map_transitions (fun (l, t, l') -> (l, f t, l'))
   let locations : t -> location_set = G.locations % graph
   let transitions = G.transitions % graph
-  let simplify_all_guards : t -> t = map_transitions (T.map_label (TL.map_guard Guard.simplify_guard))
+  let simplify_all_guards = ()
 
   let vars program =
     transitions program |> Set.to_sequence |> Sequence.map ~f:T.label |> Sequence.map ~f:TL.vars
@@ -172,12 +167,8 @@ struct
 
 
   let non_trivial_transitions : t -> transition_set = TransitionSet.union_list % sccs
-
-  let add_invariant location invariant =
-    (* more fine grained invalidation should be possible but I'm not sure if this will be beneficial since we will find invariants for most locations *)
-    invalidate_complete_pre_cache % map_graph (G.add_invariant location invariant)
-
-
+  let add_invariant = ()
+  let remove_unsatisfiable_transitions = ()
   let is_initial program trans = L.(equal program.start (T.src trans))
   let is_initial_location program location = L.(equal program.start location)
 
@@ -256,12 +247,43 @@ struct
   end
 end
 
-module ProgramOverLocation (L : ProgramTypes.Location) =
-  Make (TransitionLabel_) (Transition_.TransitionOver (TransitionLabel_) (L)) (L)
+(* This functor is like Make but exposes a larger API for classical programs. *)
+module MakeClassical
+    (TL : ProgramTypes.ClassicalTransitionLabel)
+    (T : ProgramTypes.ClassicalTransition
+           with type transition_label = TL.t
+            and type transition_label_comparator_witness = TL.comparator_witness)
+    (L : ProgramTypes.Location
+           with type t = T.location
+            and type comparator_witness = T.location_comparator_witness)
+    (G : ProgramTypes.TransitionGraph
+           with type location = L.t
+            and type location_comparator_witness = L.comparator_witness
+            and type transition_label = TL.t
+            and type transition_label_comparator_witness = TL.comparator_witness) =
+struct
+  include Make (TL) (T) (L) (G)
+
+  let add_invariant location invariant =
+    map_graph @@ fun graph ->
+    location
+    |> G.succ_e graph (* An invariant holds before the execution of the successor transitions *)
+    |> List.fold_left
+         ~f:(fun result transition ->
+           G.replace_edge_e transition (T.add_invariant invariant transition) result)
+         ~init:graph
+
+
+  let simplify_all_guards : t -> t = map_transitions (T.map_label (TL.map_guard Guard.simplify_guard))
+  let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
+end
+
+module ClassicalProgramOverLocation (L : ProgramTypes.Location) =
+  MakeClassical (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_) (L)) (L)
     (TransitionGraph_.TransitionGraphOverLocation (L))
 
 open GenericProgram_
-include ProgramOverLocation (Location)
+include ClassicalProgramOverLocation (Location)
 
 let from_com_transitions ?(termination = false) com_transitions start =
   let all_trans = List.join com_transitions in

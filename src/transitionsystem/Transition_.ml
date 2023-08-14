@@ -4,7 +4,7 @@ include OurBase
 include Constraints
 
 (** Creates a Transition module for a given location type *)
-module TransitionOver (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) = struct
+module Make (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) = struct
   module Inner = struct
     type location = L.t
     type location_comparator_witness = L.comparator_witness
@@ -29,7 +29,6 @@ module TransitionOver (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Loca
 
     let compare_equivalent = compare_f TL.compare_equivalent
     let compare (_, t1, _) (_, t2, _) = Int.compare (TL.id t1) (TL.id t2)
-    let add_invariant invariant (l, t, l') = (l, TL.add_invariant t invariant, l')
     let src (src, _, _) = src
     let label (_, label, _) = label
     let target (_, _, target) = target
@@ -73,10 +72,6 @@ module TransitionOver (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Loca
         ""
       else
         " :|: " ^ TL.(Guard.to_string ~pretty:true (TL.guard t))
-
-
-    let rename vars (l, t, l') = (l, TL.rename vars t, l')
-    let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
   end
 
   include Inner
@@ -86,6 +81,14 @@ module TransitionOver (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Loca
 
   let comparator = TransitionComparator.comparator TL.comparator L.comparator
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+end
+
+module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTypes.Location) = struct
+  include Make (TL) (L)
+
+  let rename vars (l, t, l') = (l, TL.rename vars t, l')
+  let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
+  let add_invariant invariant (l, t, l') = (l, TL.add_invariant t invariant, l')
 end
 
 open OurBase
@@ -118,7 +121,7 @@ struct
     Sequence.map ~f:(find_by_id set) ids |> Util.cat_maybes_sequence |> Set.of_sequence (module T)
 end
 
-include TransitionOver (TransitionLabel_) (Location)
+include MakeClassical (TransitionLabel_) (Location)
 
 let to_file_string (l, t, l') =
   let without_guard =

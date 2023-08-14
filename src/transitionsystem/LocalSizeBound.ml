@@ -54,8 +54,8 @@ let c_range formula =
 
 
 module Make
-    (TL : ProgramTypes.TransitionLabel with type update_element = Polynomial.t)
-    (T : ProgramTypes.Transition with type transition_label = TL.t)
+    (TL : ProgramTypes.ClassicalTransitionLabel)
+    (T : ProgramTypes.ClassicalTransition with type transition_label = TL.t)
     (P : ProgramTypes.Program with type transition_label = TL.t) =
 struct
   type t = { factor : int; constant : int; vars : VarSet.t } [@@deriving eq]

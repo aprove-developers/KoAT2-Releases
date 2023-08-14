@@ -75,14 +75,6 @@ struct
     add_edge_e (remove_edge_e graph old_transition) new_transition
 
 
-  let add_invariant location invariant graph =
-    location
-    |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
-    |> List.fold_left
-         ~f:(fun result transition -> replace_edge_e transition (T.add_invariant invariant transition) result)
-         ~init:graph
-
-
   let sccs graph =
     let module SCC = Graph.Components.Make (G) in
     List.map ~f:(loc_transitions graph) @@ SCC.scc_list graph |> List.filter ~f:(not % Set.is_empty)
@@ -95,7 +87,7 @@ end
 
 module TransitionGraphOverLocation (L : ProgramTypes.Location) =
   Make_
-    (Transition_.TransitionOver (TransitionLabel_) (L)) (L)
+    (Transition_.Make (TransitionLabel_) (L)) (L)
     (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (L) (TransitionLabel_))
 
 include TransitionGraphOverLocation (Location)

@@ -279,24 +279,6 @@ module ProbabilisticTransitionLabel_ = struct
              t2.invariant)
 
 
-    let overapprox_nonlinear_updates t =
-      let handle_nonlinear_or_probabilistic ue =
-        let v' = Var.fresh_id Var.Int () in
-        (Polynomial.of_var v', UpdateElement_.as_linear_guard t.guard ue v')
-      in
-      let overappr_nonprob_update, overappr_guard =
-        Map.map
-          ~f:(fun ue ->
-            match UpdateElement_.to_polynomial ue with
-            | Some p when Polynomial.degree p = 1 -> (p, Guard.mk_true)
-            | _ -> handle_nonlinear_or_probabilistic ue)
-          t.update
-        |> fun m -> (Map.map ~f:Tuple2.first m, Guard.all (List.map ~f:Tuple2.second @@ Map.data m))
-      in
-      let overappr_guard = Guard.mk_and overappr_guard (Guard.drop_nonlinear t.overappr_guard) in
-      { t with overappr_nonprob_update; overappr_guard }
-
-
     let restore_legacy_distribution_update_semantics t =
       let update =
         Map.mapi
@@ -377,15 +359,6 @@ module ProbabilisticTransitionLabel = struct
   let vars = vars VarsNonOverapproximated
   let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
   let tmp_vars t = Set.diff (vars t) (input_vars t)
-
-  let relax_guard ~non_static t =
-    let is_static atom = Set.is_subset (Atoms.Atom.vars atom) ~of_:(Set.diff (input_vars t) non_static) in
-    {
-      t with
-      guard = List.filter ~f:is_static t.guard;
-      overappr_guard = List.filter ~f:is_static t.overappr_guard;
-    }
-
 
   let changed_vars t =
     input_vars t |> Set.filter ~f:(fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
@@ -483,13 +456,31 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:t.overappr_nonprob_update
     in
     { t with overappr_nonprob_update = update_ }
+
+
+  let overapprox_nonlinear_updates t =
+    let handle_nonlinear_or_probabilistic ue =
+      let v' = Var.fresh_id Var.Int () in
+      (Polynomial.of_var v', UpdateElement_.as_linear_guard t.guard ue v')
+    in
+    let overappr_nonprob_update, overappr_guard =
+      Map.map
+        ~f:(fun ue ->
+          match UpdateElement_.to_polynomial ue with
+          | Some p when Polynomial.degree p = 1 -> (p, Guard.mk_true)
+          | _ -> handle_nonlinear_or_probabilistic ue)
+        t.update
+      |> fun m -> (Map.map ~f:Tuple2.first m, Guard.all (List.map ~f:Tuple2.second @@ Map.data m))
+    in
+    let overappr_guard = Guard.mk_and overappr_guard (Guard.drop_nonlinear t.overappr_guard) in
+    { t with overappr_nonprob_update; overappr_guard }
 end
 
 (** Shared definitions between ProbabilisticTransition and ProbabilisticTransitionNonProbOverAppr *)
 module ProbabilisticTransitionShared = struct
   module Inner = struct
     (* do not use include here so that we have to manually check changes in TransitionOver *)
-    module GenericTransition = Transition_.TransitionOver (ProbabilisticTransitionLabel) (Location)
+    module GenericTransition = Transition_.Make (ProbabilisticTransitionLabel) (Location)
 
     type location = GenericTransition.location
     type location_comparator_witness = Location.comparator_witness
@@ -507,11 +498,8 @@ module ProbabilisticTransitionShared = struct
     let equivalent = GenericTransition.equivalent
     let compare_equivalent = GenericTransition.compare_equivalent
     let hash = GenericTransition.hash
-    let overapprox_nonlinear_updates = GenericTransition.overapprox_nonlinear_updates
     let map_label = GenericTransition.map_label
-    let add_invariant = GenericTransition.add_invariant
     let cost = GenericTransition.cost
-    let rename = GenericTransition.rename
   end
 
   include Inner
@@ -621,12 +609,16 @@ module ProbabilisticTransition = struct
 end
 
 module ProbabilisticTransitionNonProbOverappr = struct
+  module GenericClassical = Transition_.MakeClassical (ProbabilisticTransitionLabelNonProbOverappr) (Location)
   include ProbabilisticTransitionShared
 
   let to_id_string = GenericTransition.to_id_string
   let to_id_string_pretty = GenericTransition.to_id_string_pretty
   let to_string = GenericTransition.to_string
   let to_string_pretty = GenericTransition.to_string_pretty
+  let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
+  let add_invariant = GenericClassical.add_invariant
+  let rename = GenericClassical.rename
 end
 
 module GeneralTransition = struct
@@ -638,6 +630,8 @@ module GeneralTransition = struct
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
     let get_arbitrary_transition t = Set.choose_exn t.transitions
     let get_arbitrary_label = ProbabilisticTransition.label % get_arbitrary_transition
+    (* TODO conjunction with invariant! *)
+
     let guard = ProbabilisticTransitionLabel.guard % get_arbitrary_label
     let map_transitions f t = { transitions = ProbabilisticTransitionSet.map ~f t.transitions }
 
@@ -701,7 +695,9 @@ module GeneralTransition = struct
     let add_invariant gt inv =
       {
         transitions =
-          ProbabilisticTransitionSet.map ~f:(ProbabilisticTransition.add_invariant inv) gt.transitions;
+          ProbabilisticTransitionSet.map
+            ~f:(fun (l, t, l') -> (l, ProbabilisticTransitionLabel_.add_invariant t inv, l'))
+            gt.transitions;
       }
 
 
@@ -898,6 +894,25 @@ module ProbabilisticProgram = struct
 
   let tmp_vars t = Set.diff (vars t) (input_vars t)
   let is_initial_gt t gt = Location.equal (start t) (GeneralTransition.src gt)
+  let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
+
+  let add_invariant location invariant =
+    map_graph @@ fun graph ->
+    location
+    |> ProbabilisticTransitionGraph.succ_e
+         graph (* An invariant holds before the execution of the successor transitions *)
+    |> List.fold_left
+         ~f:(fun result (l, t, l') ->
+           ProbabilisticTransitionGraph.replace_edge_e (l, t, l')
+             (l, ProbabilisticTransitionLabel.add_invariant t invariant, l')
+             result)
+         ~init:graph
+
+
+  let simplify_all_guards : t -> t =
+    map_transitions
+      (ProbabilisticTransition.map_label (ProbabilisticTransitionLabel.map_guard Guard.simplify_guard))
+
 
   let sccs_gts t =
     let gts = gts t in
@@ -940,6 +955,11 @@ module ProbabilisticProgram = struct
 
   let to_string = FormattedString.render_string % to_formatted_string
   let to_string_pretty = FormattedString.render_string % to_formatted_string ~pretty:true
+
+  let remove_zero_prob_transitions tset program =
+    Set.fold tset ~init:program ~f:(fun prog (l, t, l') ->
+        assert (OurFloat.(equal (ProbabilisticTransitionLabel.probability t) zero));
+        remove_transition prog (l, t, l'))
 end
 
 module ProbabilisticTransitionGraphNonProbOverappr =
@@ -951,6 +971,10 @@ module ProbabilisticProgramNonProbOverappr = struct
     Program_.Make (ProbabilisticTransitionLabelNonProbOverappr) (ProbabilisticTransitionNonProbOverappr)
       (Location)
       (ProbabilisticTransitionGraphNonProbOverappr)
+
+  let add_invariant = ProbabilisticProgram.add_invariant
+  let simplify_all_guards = ProbabilisticProgram.simplify_all_guards
+  let remove_unsatisfiable_transitions = ProbabilisticProgram.remove_unsatisfiable_transitions
 end
 
 module GRV = struct

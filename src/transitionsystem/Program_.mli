@@ -29,9 +29,41 @@ module Make
        and type transition_label = TL.t
        and type transition_label_comparator_witness = TL.comparator_witness
        and type transition_graph = G.t
+
+  val from_sequence : location -> transition Sequence.t -> t
+  val remove_transition : t -> transition -> t
+  val map_graph : (transition_graph -> transition_graph) -> t -> t
+
+  (** These are just dummy values to shadow the definitions from ProgramTypes.Program *)
+
+  val add_invariant : unit
+  val simplify_all_guards : unit
+  val remove_unsatisfiable_transitions : unit
 end
 
-module ProgramOverLocation (L : ProgramTypes.Location) : sig
+module MakeClassical
+    (TL : ProgramTypes.ClassicalTransitionLabel)
+    (T : ProgramTypes.ClassicalTransition
+           with type transition_label = TL.t
+            and type transition_label_comparator_witness = TL.comparator_witness)
+    (L : ProgramTypes.Location
+           with type t = T.location
+            and type comparator_witness = T.location_comparator_witness)
+    (G : ProgramTypes.TransitionGraph
+           with type location = L.t
+            and type location_comparator_witness = L.comparator_witness
+            and type transition_label = TL.t
+            and type transition_label_comparator_witness = TL.comparator_witness) : sig
+  include
+    ProgramTypes.Program
+      with type location = L.t
+       and type location_comparator_witness = L.comparator_witness
+       and type transition_label = TL.t
+       and type transition_label_comparator_witness = TL.comparator_witness
+       and type transition_graph = G.t
+end
+
+module ClassicalProgramOverLocation (L : ProgramTypes.Location) : sig
   include
     ProgramTypes.Program
       with type location = L.t
@@ -39,9 +71,13 @@ module ProgramOverLocation (L : ProgramTypes.Location) : sig
        and type transition_label = TransitionLabel_.t
        and type transition_label_comparator_witness = TransitionLabel_.comparator_witness
        and type transition_graph = TransitionGraph_.TransitionGraphOverLocation(L).t
+
+  val map_graph : (transition_graph -> transition_graph) -> t -> t
+  val from_sequence : location -> transition Sequence.t -> t
+  val remove_transition : t -> transition -> t
 end
 
-include module type of ProgramOverLocation (Location)
+include module type of ClassicalProgramOverLocation (Location)
 
 val from_com_transitions : ?termination:bool -> Transition_.t list list -> Location.t -> t
 (** Creates a program from a list of transitions and a (start) location.

@@ -30,7 +30,7 @@ module TransitionGraphOverLocation (L : ProgramTypes.Location) : sig
        and type location_comparator_witness = L.comparator_witness
        and type transition_label = TransitionLabel_.t
        and type transition_label_comparator_witness = TransitionLabel_.comparator_witness
-       and type transition = Transition_.TransitionOver(TransitionLabel_)(L).t
+       and type transition = Transition_.Make(TransitionLabel_)(L).t
 end
 
 include module type of TransitionGraphOverLocation (Location)

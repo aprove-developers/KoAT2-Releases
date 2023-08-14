@@ -1,15 +1,15 @@
 open OurBase
 
 (** Modules relevant for working with programs *)
-module ProgramModulesOver (L : ProgramTypes.Location) : ProgramTypes.ProgramModules = struct
+module ProgramModulesOver (L : ProgramTypes.Location) : ProgramTypes.ClassicalProgramModules = struct
   module LocationSet = Location.LocationSetOver (L)
   module Location = L
   module UpdateElement = Polynomials.Polynomial
   module TransitionLabel = TransitionLabel_
-  module Transition = Transition_.TransitionOver (TransitionLabel) (L)
+  module Transition = Transition_.MakeClassical (TransitionLabel) (L)
   module TransitionSet = Transition_.TransitionSetOver (Transition) (L)
   module TransitionGraph = TransitionGraph_.TransitionGraphOverLocation (L)
-  module Program = Program_.ProgramOverLocation (L)
+  module Program = Program_.ClassicalProgramOverLocation (L)
   module RV = RVGTypes.MakeRV (TransitionLabel) (Transition)
 
   type program_modules_t =
