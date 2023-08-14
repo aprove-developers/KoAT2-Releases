@@ -34,24 +34,38 @@ module Make (M : ProgramTypes.ProgramModules) = struct
       eliminate_t_ vars get_update xs ys
 
 
-  let rec eliminate_ program contributors non_contributors =
+  let rec compute_contributors_ transitionset contributors non_contributors =
     let xs, ys =
-      Base.Set.fold
+      Set.fold
         ~f:(fun (xs, ys) (l, t, l') ->
-          Base.Set.fold
+          Set.fold
             ~f:(fun (contr, non_contr) y ->
               if depends y t contr then
                 (Set.add contr y, Set.remove non_contr y)
               else
                 (contr, non_contr))
             ys ~init:(xs, ys))
-        (Program.transitions program) ~init:(contributors, non_contributors)
+        transitionset ~init:(contributors, non_contributors)
     in
     if Set.equal non_contributors ys then
       contributors
     else
-      eliminate_ program xs ys
+      compute_contributors_ transitionset xs ys
 
+
+  let compute_contributors transitionset =
+    let all_vars =
+      Set.to_list transitionset |> List.map ~f:(TransitionLabel.vars % Transition.label) |> VarSet.union_list
+    in
+    let vars_guard =
+      Set.to_list transitionset
+      |> List.map ~f:(Constraint.vars % TransitionLabel.guard % Transition.label)
+      |> VarSet.union_list
+    in
+    compute_contributors_ transitionset vars_guard (Set.diff all_vars vars_guard)
+
+
+  let eliminate_ program = compute_contributors_ (Program.transitions program)
 
   let eliminate_t vars vars_guard get_update remove_non_contributors =
     let init_contr = vars_guard in
@@ -71,11 +85,11 @@ module Make (M : ProgramTypes.ProgramModules) = struct
   let eliminate program =
     let vars = Program.vars program in
     let vars_guard =
-      Base.Set.fold
+      Set.fold
         ~f:(fun xs (l, t, l') -> Set.union (Constraint.vars (TransitionLabel.guard t)) xs)
         (Program.transitions program) ~init:VarSet.empty
     and vars_cost =
-      Base.Set.fold
+      Set.fold
         ~f:(fun xs (l, t, l') -> Set.union (Polynomial.vars (TransitionLabel.cost t)) xs)
         (Program.transitions program) ~init:VarSet.empty
     in

@@ -122,9 +122,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       entries
 
 
+  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.Automorphism.t Option.t)) list
+
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
-  let find_loops twn_proofs ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program
-      scc (l, t, l') =
+  let find_all_loops twn_proofs ?(relevant_vars = None) ?(transformation_type = `NoTransformation)
+      choose_circle program scc (l, t, l') : twn_loop ProofOutput.LocalProofOutput.with_proof List.t =
     let updated_trans = TransitionLabel.relax_guard ~non_static:VarSet.empty t in
     let handle_scc = List.map (Tuple3.map2 (TransitionLabel.relax_guard ~non_static:VarSet.empty)) in
     let merged_trans =
@@ -145,17 +147,20 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
     let tmp_vars = Base.Set.diff (Program.vars program) (Program.input_vars program) in
     let handle_cycles = List.map @@ update_path (Program.input_vars program) tmp_vars in
-    List.find_map_opt (fun cycle ->
+    List.filter_map (fun cycle ->
+        let twn_proofs = ProofOutput.LocalProofOutput.copy twn_proofs in
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
-        if List.for_all (fun (entry, loop) -> f appr entry program loop) chained_cycle then (
+        if List.for_all (fun (entry, loop) -> choose_circle loop) chained_cycle then (
           let handled_transitions = handled_transitions cycle in
           TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions
             (Program.entry_transitions_with_logger logger program handled_transitions);
-          Option.some
+          let loop : twn_loop =
             ( handled_transitions,
               List.map
                 (fun (entry, loop) -> (entry, Transformation.transform transformation_type loop))
-                chained_cycle ))
+                chained_cycle )
+          in
+          Some ProofOutput.LocalProofOutput.{ result = loop; proof = twn_proofs })
         else
           None)
     @@ handle_cycles cycles
