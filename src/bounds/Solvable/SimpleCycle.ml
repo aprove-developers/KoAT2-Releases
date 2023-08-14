@@ -38,18 +38,18 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let cycles, paths =
       List.partition
         (fun path ->
-          let l_start = List.last path |> Tuple3.first and l_end = List.first path |> Tuple3.third in
+          let l_start = List.first path |> Tuple3.first and l_end = List.last path |> Tuple3.third in
           Location.equal l_start l_end)
         paths
     in
     if List.is_empty paths then
-      List.map List.rev cycles @ res
+      cycles @ res
       (* Extend "open" paths. *)
     else
       let extended_paths =
         List.fold
           (fun paths path ->
-            let l_end = List.first path |> Tuple3.third in
+            let l_end = List.last path |> Tuple3.third in
             let successors =
               List.filter
                 (fun (l, _, l') ->
@@ -59,7 +59,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   (* does not form a lasso, i.e., l' is either not occuring in the path or equals l_start *))
                 trans
             in
-            let extend_path = List.map (fun t -> t :: path) successors in
+            let extend_path = List.map (fun t -> List.append path [ t ]) successors in
             extend_path @ paths)
           [] paths
       in
