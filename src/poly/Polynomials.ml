@@ -28,59 +28,54 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     val separate_by_sign : t -> t * t
     val pull_out_common_addends : t -> t -> t * (t * t)
   end = struct
-    type t = ScaledMonomial_.t list [@@deriving eq, ord]
+    (* Maybe instead we just use a map here? *)
+    module MonMap = MakeMapCreators1 (Monomial_)
 
-    let cmp_smons_from_mons smon1 smon2 =
-      Monomial_.compare (ScaledMonomial_.monomial smon1) (ScaledMonomial_.monomial smon2)
+    type t = (monomial, value, Monomial_.comparator_witness) Map.t
+
+    let equal = Map.equal Value.equal
+    let compare = Map.compare_direct Value.compare
+    let make l = List.map ~f:(fun sm -> ScaledMonomial_.(monomial sm, coeff sm)) l |> MonMap.of_alist_exn
+
+    let scaled_monomials (t : t) =
+      Map.to_alist ~key_order:`Increasing t
+      |> List.map ~f:(fun (mon, coeff) -> ScaledMonomial_.make coeff mon)
 
 
-    let make t = List.sort ~compare:cmp_smons_from_mons t
-    let scaled_monomials = identity
-
-    let delete_monomial mon poly =
-      List.filter ~f:(fun x -> not (Monomial_.( =~= ) (ScaledMonomial_.monomial x) mon)) poly
-
+    let delete_monomial mon poly = Map.remove poly mon
 
     let mult_with_const const poly =
       if Value.equal const Value.zero then
-        []
+        MonMap.empty
       else
-        List.map ~f:(ScaledMonomial_.mult_with_const const) poly |> make
+        Map.map poly ~f:(Value.mul const)
 
 
-    let separate_by_sign poly =
-      poly |> List.partition_tf ~f:(fun scaled -> Value.(ScaledMonomial_.coeff scaled >= zero))
-
+    let separate_by_sign poly = Map.partition_tf ~f:(fun value -> Value.(value >= zero)) poly
 
     let add poly1 poly2 =
-      let cmp_sm_on_mon sm1 sm2 =
-        Monomial_.compare (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2)
+      let combine_sms ~key = function
+        | `Left a -> Some a
+        | `Right b -> Some b
+        | `Both (a, b) ->
+            let s = Value.add a b in
+            if Value.(equal s zero) then
+              None
+            else
+              Some s
       in
-      let eq_sm_on_mon sm1 sm2 =
-        Monomial_.equal (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2)
-      in
+      Map.merge poly1 poly2 ~f:combine_sms
 
-      Sequence.merge_sorted (Sequence.of_list poly1) (Sequence.of_list poly2) ~compare:cmp_sm_on_mon
-      |> Sequence.group ~break:(fun sm1 sm2 -> not (eq_sm_on_mon sm1 sm2))
-      |> Sequence.map ~f:(fun sms ->
-             let mon = ScaledMonomial_.monomial @@ List.hd_exn sms in
-             let coeff =
-               List.fold_left sms ~init:Value.zero ~f:(fun s -> Value.add s % ScaledMonomial_.coeff)
-             in
-             ScaledMonomial_.make coeff mon)
-      |> Sequence.filter ~f:(not % Value.(equal zero) % ScaledMonomial_.coeff)
-      |> Sequence.to_list
 
+    (* Map.merge poly1 poly2 ~combine:(fun ~key -> Value.add) *)
 
     let mul poly1 poly2 =
-      match (poly1, poly2) with
-      | [], _ -> []
-      | _, [] -> []
-      | [ x ], ys -> List.map ~f:(ScaledMonomial_.mul x) ys
-      | xs, [ y ] -> List.map ~f:(ScaledMonomial_.mul y) xs
-      | xs, ys ->
-          Sequence.cartesian_product (Sequence.of_list xs) (Sequence.of_list ys)
-          |> Sequence.fold ~init:[] ~f:(fun p (a, b) -> add p [ ScaledMonomial_.mul a b ])
+      if Map.is_empty poly1 || Map.is_empty poly2 then
+        MonMap.empty
+      else
+        Sequence.cartesian_product (Map.to_sequence poly1) (Map.to_sequence poly2)
+        |> Sequence.fold ~init:MonMap.empty ~f:(fun t ((mon1, coeff1), (mon2, coeff2)) ->
+               add t (MonMap.singleton (Monomial_.mul mon1 mon2) (Value.mul coeff1 coeff2)))
 
 
     let pull_out_common_addends t1 t2 =
@@ -118,13 +113,20 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
               (sml :: pulled_out, add_left, add_right)
       in
 
+      let poly_to_seq t =
+        Map.to_sequence ~order:`Increasing_key t
+        |> Sequence.map ~f:(fun (mon, coeff) -> ScaledMonomial_.make coeff mon)
+      in
+
       let pulled_out, add_left, add_right =
-        Sequence.merge_with_duplicates ~compare:cmp_smons_from_mons (Sequence.of_list t1)
-          (Sequence.of_list t2)
+        Sequence.merge_with_duplicates
+          ~compare:(fun sm1 sm2 ->
+            Monomial_.compare (ScaledMonomial_.monomial sm1) (ScaledMonomial_.monomial sm2))
+          (poly_to_seq t1) (poly_to_seq t2)
         |> Sequence.fold ~init:([], [], []) ~f:(fun a b -> combine_monomials a b)
       in
-      (* reverse order to mantain invariants *)
-      (List.rev pulled_out, (List.rev add_left, List.rev add_right))
+
+      (make pulled_out, (make add_left, make add_right))
   end
 
   include PolyType
