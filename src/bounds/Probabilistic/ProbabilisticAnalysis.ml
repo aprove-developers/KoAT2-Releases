@@ -109,7 +109,7 @@ let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.
   MaybeChanged.(appr_mc >>= iter)
 
 
-module ELCBMap = Batteries.Map.Make (GRV)
+module ELCBMap = MakeMapCreators1 (GRV)
 
 (* TODO rvs_in instead of rvs_out  *)
 let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) :
@@ -141,7 +141,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
         else
           pre_size_exp v
       in
-      let elcb = ELCBMap.find ((gt, l), v) elcbs in
+      let elcb = Map.find_exn elcbs ((gt, l), v) in
       let elcb_overapprox =
         if Program.is_initial_gt program gt then
           RealBound.of_var v
@@ -186,7 +186,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
                      ("start_value", [ ("res", RealBound.to_string s) ])))
         in
         let acc_change_grv (gt, l) =
-          let elcb = ELCBMap.find ((gt, l), v) elcbs in
+          let elcb = Map.find_exn elcbs ((gt, l), v) in
           let change_bound = RealBound.substitute_f (overappr_var_in gt) elcb in
           RealBound.(change_bound * ExpApproximation.timebound appr gt)
           |> tap (fun r ->
@@ -228,9 +228,9 @@ let improve_scc ~conf program program_gts program_vars scc (class_appr, appr) : 
   let elcbs =
     List.cartesian_product rvts_scc (Base.Set.to_list program_vars)
     |> List.append rvs_in
-    |> Batteries.Enum.map (fun rv -> (rv, ExpectedLocalChangeBound.compute_elcb program_vars rv))
-       % Batteries.List.enum
-    |> ELCBMap.of_enum
+    |> Sequence.map ~f:(fun rv -> (rv, ExpectedLocalChangeBound.compute_elcb program_vars rv))
+       % Sequence.of_list
+    |> ELCBMap.of_sequence_exn
   in
   let rec improve_scc_ appr =
     improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) |> fun appr ->
