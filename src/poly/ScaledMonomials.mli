@@ -9,8 +9,9 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
      and type monomial = Monomials.MakeOverIndeterminate(I)(Value).t
 
 module Make (Value : PolyTypes.Ring) :
-  module type of MakeOverIndeterminate (VarIndeterminate) (Value)
-  with type value = Value.t
-   and type indeterminate = Var.t
-   and type valuation = Valuation.Make(Value).t
-   and type monomial = Monomials.Make(Value).t
+  PolyTypes.ScaledMonomial
+    with type value = Value.t
+     and type indeterminate = Var.t
+     and type valuation = Valuation.Make(Value).t
+     and type monomial = Monomials.Make(Value).t
+     and type t = MakeOverIndeterminate(VarIndeterminate)(Value).t

@@ -234,6 +234,8 @@ module type Monomial = sig
     t ->
     'b
   (** Replaces all arithmetical operations by new constructors. *)
+
+  include Comparator.S with type t := t
 end
 
 (** A scaled monomial is a monomial multiplied with a coefficient. *)
