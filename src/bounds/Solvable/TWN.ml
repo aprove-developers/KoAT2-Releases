@@ -33,7 +33,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
      TODO Currently, we just reset the cache. *)
   let reset_cfr () = TimeBoundTable.clear termination_table
 
-  let add_to_proof_hook twn_proofs cycle ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
+  let complete_proofs twn_proofs cycle ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry, local_bound) =
       let bound_with_sizebound = Bound.substitute_f (get_sizebound entry) local_bound in
       Bound.mul (get_timebound entry) bound_with_sizebound
@@ -123,8 +123,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               aut ))
         loops
     in
+    let complete_proofs = complete_proofs twn_proofs cycle_set in
     UnliftedTimeBound.mk ~measure_decr_transitions:cycle_set
-      ~hook:(Option.some @@ add_to_proof_hook twn_proofs cycle_set)
+      ~compute_proof:
+        (Option.some (fun ~get_timebound ~get_sizebound entry_map res_bound format ->
+             complete_proofs ~get_timebound ~get_sizebound entry_map res_bound;
+             ProofOutput.LocalProofOutput.get_proof twn_proofs format))
       (OurBase.Map.of_alist_exn (module Transition) local_bounds)
 
 

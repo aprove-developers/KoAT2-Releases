@@ -132,7 +132,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
 
-  let add_to_proof { rank; decreasing; non_increasing; depth } bound program =
+  let compute_proof { rank; decreasing; non_increasing; depth } bound program format =
     let module GraphPrint = GraphPrint.MakeFromClassical (PM) in
     let color_map =
       Base.Set.fold
@@ -141,29 +141,30 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> OurBase.Map.add_or_overwrite ~key:decreasing ~data:GraphPrint.Red
     in
     let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in
-    ProofOutput.add_to_proof_with_format
-    @@ FormattedString.(
-         fun format ->
-           mk_header_small
-             (mk_str
-                ("MPRF for transition "
-                ^ Transition.to_string_pretty decreasing
-                ^ " of depth " ^ string_of_int depth ^ ":"))
-           <> mk_paragraph
-                ((match bound with
-                 | Some b ->
-                     mk_str "new bound:" <> mk_newline
-                     <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
-                 | _ -> FormattedString.Empty)
-                <> mk_str "MPRF:" <> mk_newline
-                <> (locations
-                   |> List.map (fun l ->
-                          "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l))
-                   |> List.map mk_str_line |> mappend |> mk_paragraph))
-           <>
-           match format with
-           | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html ~color_map program)
-           | _ -> FormattedString.Empty)
+    FormattedString.(
+      mk_header_small
+        (mk_str
+           ("MPRF for transition "
+           ^ Transition.to_string_pretty decreasing
+           ^ " of depth " ^ string_of_int depth ^ ":"))
+      <> mk_paragraph
+           ((match bound with
+            | Some b ->
+                mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
+            | _ -> FormattedString.Empty)
+           <> mk_str "MPRF:" <> mk_newline
+           <> (locations
+              |> List.map (fun l ->
+                     "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l))
+              |> List.map mk_str_line |> mappend |> mk_paragraph))
+      <>
+      match format with
+      | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html ~color_map program)
+      | _ -> FormattedString.Empty)
+
+
+  let add_to_proof mprf bound program =
+    ProofOutput.add_to_proof_with_format (compute_proof mprf bound program)
 
 
   module UnliftedBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
@@ -181,7 +182,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
     UnliftedBound.mk_from_program logger ~handled_transitions:t.non_increasing
       ~measure_decr_transitions:(TransitionSet.singleton t.decreasing)
-      ~hook:(Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> add_to_proof t (Some bound) program)
+      ~compute_proof:
+        (Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> compute_proof t (Some bound) program)
       program
       (fun (_, _, l') -> Bound.of_poly @@ evaluated_rank_for_entry_loc l')
 

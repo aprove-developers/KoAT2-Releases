@@ -9,36 +9,31 @@ module UnliftedTimeBound : sig
 
     type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound
 
+    type compute_proof =
+      get_timebound:(Transition.t -> B.t) ->
+      get_sizebound:(Transition.t -> Var.t -> B.t) ->
+      (Transition.t, B.t, Transition.comparator_witness) Map.t ->
+      B.t ->
+      Formatter.format ->
+      FormattedString.t
+    (** Useful for computation of proofs when lifting bounds.
+        The map of the last argument maps all entry transitions to an unlifted (local) time bound for the [measure_decr_transitions]. *)
+
     val measure_decr_transitions : t -> (Transition.t, Transition.comparator_witness) Set.t
     (** All transitions for which we can compute an unlifted (local) time bound *)
 
     val mk :
       measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
-      ?hook:
-        (get_timebound:(Transition.t -> B.t) ->
-        get_sizebound:(Transition.t -> Var.t -> B.t) ->
-        (Transition.t, B.t, Transition.comparator_witness) Base.Map.t ->
-        B.t ->
-        unit)
-        option ->
+      ?compute_proof:compute_proof Option.t ->
       (Transition.t, B.t, Transition.comparator_witness) Map.t ->
       t
-    (** Create a new unlifted time bound. The transitions in [measure_decr_transitions] are those for which a new time bound can be derived.
-          The [hook] is only stored but not executed by this module.
-          Useful for adding proofs.
-          The map of the last argument maps all entry transitions to an unlifted (local) time bound for the [measure_decr_transitions]. *)
+    (** Create a new unlifted time bound. The transitions in [measure_decr_transitions] are those for which a new time bound can be derived. *)
 
     val mk_from_program :
       Logger.log ->
       handled_transitions:(Transition.t, 'a) Base.Set.t ->
       measure_decr_transitions:(Transition.t, Transition.comparator_witness) Base.Set.t ->
-      ?hook:
-        (get_timebound:(Transition.t -> B.t) ->
-        get_sizebound:(Transition.t -> Var.t -> B.t) ->
-        (Transition.t, B.t, Transition.comparator_witness) Base.Map.t ->
-        B.t ->
-        unit)
-        option ->
+      ?compute_proof:compute_proof Option.t ->
       Program.t ->
       (Transition.t -> B.t) ->
       t
@@ -50,12 +45,12 @@ module UnliftedTimeBound : sig
     (** Lifs the unlifted time bound to global time bound.
           To that end, we overapproximate the measure assigned to all entry locations using corresponding sizebounds and then multiply this with incoming time bounds before summing up all bounds obtained in this manner. *)
 
-    val lift_and_get_hook :
+    val lift_and_get_proof :
       get_timebound:(Transition.t -> B.t) ->
       get_sizebound:(Transition.t -> Var.t -> B.t) ->
       t ->
-      B.t * (unit -> unit)
-    (** Analoguously to [lift] but provides an additional returned value which executes the hook in the context of the computation of [lift].
-          To that end the hook function is supplied [get_timebound], [get_sizebound] the map of entry transitions to unlifte (local) time bounds and the global time bound obtained by lifting. *)
+      B.t * (Formatter.format -> FormattedString.t)
+    (** Analoguous to [lift] but provides an additional returned value which uses the registered [compute_proof] function in the context of the computation of [lift] to generate a proof.
+          To that end this function is supplied [get_timebound], [get_sizebound] the map of entry transitions to unlifted (local) time bounds and the global time bound obtained by lifting. *)
   end
 end

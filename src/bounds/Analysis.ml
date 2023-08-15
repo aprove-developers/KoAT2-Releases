@@ -113,8 +113,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
 
   let improve_with_unlifted_time_bound measure appr unlifted_bound =
-    let new_bound, proof_hook =
-      UnliftedTimeBound.lift_and_get_hook ~get_sizebound:(Approximation.sizebound appr)
+    let new_bound, compute_proof =
+      UnliftedTimeBound.lift_and_get_proof ~get_sizebound:(Approximation.sizebound appr)
         ~get_timebound:(Approximation.timebound appr) unlifted_bound
     in
     let decr_transitions = UnliftedTimeBound.measure_decr_transitions unlifted_bound in
@@ -129,7 +129,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         ~init:(MaybeChanged.same appr)
     in
     if MaybeChanged.has_changed result_appr_mc then
-      proof_hook ();
+      ProofOutput.add_to_proof_with_format compute_proof;
     result_appr_mc
 
 
