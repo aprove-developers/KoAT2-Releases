@@ -66,7 +66,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 <> mk_str ("Results in: " ^ Bound.to_string ~pretty:true b)))
     in
     OurBase.Map.iteri ~f:(fun ~key ~data -> ignore (for_entry_and_local_bound (key, data))) entry_measure_map;
-    ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof twn_proofs)
+    ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)
 
 
   type twn_loop = SimpleCycle.twn_loop
@@ -168,5 +168,5 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     |> Option.map_default (List.for_all Tuple2.second) compute_new_bound
     |> tap (fun terminates ->
            if terminates && (Bound.is_infinity @@ Approximation.timebound appr (l, t, l')) then
-             ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof !twn_proofs))
+             ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof !twn_proofs))
 end

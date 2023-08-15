@@ -243,8 +243,6 @@ let run (params : params) =
          Stdio.In_channel.read_lines input |> String.concat ~sep:"\n"
      in
      print_string (program_str ^ "\n\n"));
-  ProofOutput.enable_proof params.show_proof;
-  ProofOutput.proof_format params.proof_format;
   let program =
     input
     |> Readers.read_input ~termination:params.termination

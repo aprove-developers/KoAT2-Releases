@@ -110,7 +110,7 @@ let improve_t program trans t appr =
         && (not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var)
       then (
         let lifted_bound = lift twn_proofs appr t var (SizeBoundTable.find size_bound_table (t, var)) in
-        ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof twn_proofs);
+        ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
         Approximation.add_sizebound lifted_bound t var appr)
       else if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then (
         ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
@@ -167,7 +167,7 @@ let improve_t program trans t appr =
           SizeBoundTable.add size_bound_table (t, var) res;
           (* Lifting previously computed local size bounds and store them in appr. *)
           let lifted_bound = lift twn_proofs appr t var res in
-          ProofOutput.add_to_proof (fun () -> ProofOutput.LocalProofOutput.get_proof twn_proofs);
+          ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
           Approximation.add_sizebound lifted_bound t var appr)
         else
           appr)

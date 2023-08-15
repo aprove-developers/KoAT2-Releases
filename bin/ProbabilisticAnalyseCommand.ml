@@ -39,9 +39,6 @@ type params = {
 [@@deriving cmdliner]
 
 let run (params : params) =
-  ProofOutput.enable_proof params.show_proof;
-  ProofOutput.proof_format params.proof_format;
-
   let program, _ =
     (* TODO respect goals *)
     Readers.read_probabilistic_prog_goal_file params.input
@@ -120,4 +117,5 @@ let run (params : params) =
              (ExpApproximation.to_formatted ~pretty:true program prob_appr));
   Printf.printf "Overall expected time bound: %s\n"
     (Bounds.RealBound.to_string @@ ExpApproximation.program_timebound prob_appr program);
-  ProofOutput.print_proof params.proof_format
+  if params.show_proof then
+    ProofOutput.print_proof params.proof_format
