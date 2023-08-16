@@ -21,6 +21,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
     bool
   (** Under the assumption that the runtime of the TWN Loop itself is bounded would it be possible to compute new global time bounds? *)
 
+  val finite_bound_possible_if_terminating_with_combined_bounds :
+    get_combined_bounds:(Transition.t -> Bound.t * (Var.t -> Bound.t)) -> twn_loop -> bool
+  (** Similar to [finite_bound_possible_if_twn_terminates] but allows for more choice when obtaining the bounds. *)
+
   val to_unlifted_bounds :
     twn_loop ProofOutput.LocalProofOutput.with_proof ->
     ( Transition.t,

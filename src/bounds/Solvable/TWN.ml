@@ -79,13 +79,19 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop
 
 
-  let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : twn_loop) =
+  let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds (loop : twn_loop) =
     let loop_transitions, entries = loop in
     let loop_transitions = TransitionSet.of_list loop_transitions in
     let contributors = EliminateNonContributors.compute_contributors loop_transitions in
     OurBase.List.for_all entries ~f:(fun (entry_trans, _) ->
-        Bound.is_finite (get_timebound entry_trans)
-        && OurBase.Set.for_all contributors ~f:(Bound.is_finite % get_sizebound entry_trans))
+        let timebound, get_sizebound = get_combined_bounds entry_trans in
+        Bound.is_finite timebound && OurBase.Set.for_all contributors ~f:(Bound.is_finite % get_sizebound))
+
+
+  let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : twn_loop) =
+    finite_bound_possible_if_terminating_with_combined_bounds
+      ~get_combined_bounds:(fun t -> (get_timebound t, get_sizebound t))
+      loop
 
 
   let find_all_possible_loops_for_scc conf scc program :
