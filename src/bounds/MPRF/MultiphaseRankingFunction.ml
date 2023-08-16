@@ -136,9 +136,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let module GraphPrint = GraphPrint.MakeFromClassical (PM) in
     let color_map =
       Base.Set.fold
-        ~f:(fun colourmap t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue colourmap)
+        ~f:(fun colourmap t -> OurBase.Map.set ~key:t ~data:GraphPrint.Blue colourmap)
         non_increasing ~init:GraphPrint.empty_color_map
-      |> OurBase.Map.add_or_overwrite ~key:decreasing ~data:GraphPrint.Red
+      |> OurBase.Map.set ~key:decreasing ~data:GraphPrint.Red
     in
     let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in
     FormattedString.(

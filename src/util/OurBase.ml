@@ -167,9 +167,6 @@ module Map = struct
   include Base.Map
 
   let find_default m ~default key = Option.value ~default (find m key)
-
-  (** Adds the key or overwrites it if already present *)
-  let add_or_overwrite m ~key ~data = change m key ~f:(fun o -> Some data)
 end
 
 module Hashtbl = struct

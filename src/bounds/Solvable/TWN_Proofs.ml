@@ -9,10 +9,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   let add_to_proof_graph (t : ProofOutput.LocalProofOutput.t) program cycle entries =
     let color_map =
       List.fold_right
-        ~f:(fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Blue)
+        ~f:(fun t -> Map.set ~key:t ~data:GraphPrint.Blue)
         cycle ~init:GraphPrint.empty_color_map
-      |> fun m ->
-      List.fold_right ~f:(fun t -> OurBase.Map.add_or_overwrite ~key:t ~data:GraphPrint.Red) entries ~init:m
+      |> fun m -> List.fold_right ~f:(fun t -> Map.set ~key:t ~data:GraphPrint.Red) entries ~init:m
     in
     ProofOutput.LocalProofOutput.add_to_proof_with_format t (fun format ->
         mk_paragraph

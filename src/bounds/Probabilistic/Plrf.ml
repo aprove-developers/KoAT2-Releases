@@ -414,13 +414,9 @@ let add_to_proof t bound program =
   let non_incr_transs = GeneralTransitionSet.all_transitions t.non_increasing in
   let decreasing_trans = GeneralTransition.transitions t.decreasing in
   let color_map =
-    Set.fold
-      ~f:(fun cmap t -> Map.add_or_overwrite ~key:t ~data:GP.Blue cmap)
-      non_incr_transs ~init:GP.empty_color_map
+    Set.fold ~f:(fun cmap t -> Map.set ~key:t ~data:GP.Blue cmap) non_incr_transs ~init:GP.empty_color_map
     |> fun cmap ->
-    Set.fold
-      ~f:(fun cmap decr_trans -> Map.add_or_overwrite ~key:decr_trans ~data:GP.Red cmap)
-      decreasing_trans ~init:cmap
+    Set.fold ~f:(fun cmap decr_trans -> Map.set ~key:decr_trans ~data:GP.Red cmap) decreasing_trans ~init:cmap
   in
   let locations = TransitionSet.locations non_incr_transs |> Base.Set.to_list in
   ProofOutput.add_to_proof_with_format
