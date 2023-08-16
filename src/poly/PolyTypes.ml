@@ -546,6 +546,13 @@ module type Polynomial = sig
   val substitute_f : (indeterminate -> t) -> t -> t
   (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
 
+  val substitute_f_by_monomial : (monomial -> t) -> t -> t
+  (** Analoguous to [substitute_f] but on a monomial level *)
+
+  val substitute_f_by_linearity :
+    linear_indet:(indeterminate -> t) -> nonlinear_indet:(indeterminate -> t) -> t -> t
+  (** Analoguous to [substitute_f] but distinguishes between variables that occur linearly and variables that do not occur linearly *)
+
   val delete_monomial : monomial -> t -> t
   (** Removes all summands from the polynomial which are equivalent to the monomial. *)
 

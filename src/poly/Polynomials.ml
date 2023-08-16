@@ -342,6 +342,23 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     fold ~const:of_constant ~indeterminate:substitution ~neg ~plus:add ~times:mul ~pow
 
 
+  let substitute_f_by_monomial (f : monomial -> t) (t : t) =
+    Map.to_sequence t |> Sequence.map ~f:(fun (m, c) -> mult_with_const c (f m)) |> sum
+
+
+  let substitute_f_by_linearity ~linear_indet ~nonlinear_indet (t : t) =
+    let fold_to_substituted_poly of_indet =
+      Monomial_.fold ~const:of_constant ~indeterminate:of_indet ~times:mul ~pow
+    in
+    substitute_f_by_monomial
+      (fun mon ->
+        if Monomial_.is_univariate_linear mon then
+          fold_to_substituted_poly linear_indet mon
+        else
+          fold_to_substituted_poly nonlinear_indet mon)
+      t
+
+
   let substitute ind ~replacement =
     substitute_f (fun target_ind ->
         if I.equal ind target_ind then
