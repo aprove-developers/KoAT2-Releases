@@ -79,7 +79,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop
 
 
-  let finite_bound_possible_if_twn_terminates ~get_timebound ~get_sizebound (loop : twn_loop) =
+  let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : twn_loop) =
     let loop_transitions, entries = loop in
     let loop_transitions = TransitionSet.of_list loop_transitions in
     let contributors = EliminateNonContributors.compute_contributors loop_transitions in

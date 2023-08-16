@@ -163,7 +163,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           let twn_loop_res = ProofOutput.LocalProofOutput.result twn_loop in
           if not_all_trans_bounded twn_loop then
             if
-              TWN.finite_bound_possible_if_twn_terminates ~get_timebound:(Approximation.timebound appr)
+              TWN.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
                 ~get_sizebound:(Approximation.sizebound appr) twn_loop_res
             then
               (* compute a new global time bound *)

@@ -14,7 +14,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
   val find_all_possible_loops_for_scc :
     configuration -> TransitionSet.t -> Program.t -> twn_loop ProofOutput.LocalProofOutput.with_proof list
 
-  val finite_bound_possible_if_twn_terminates :
+  val finite_bound_possible_if_terminating :
     get_timebound:(Transition.t -> Bound.t) ->
     get_sizebound:(Transition.t -> Var.t -> Bound.t) ->
     twn_loop ->
