@@ -22,6 +22,8 @@ module UnliftedTimeBound : sig
     val measure_decr_transitions : t -> (Transition.t, Transition.comparator_witness) Set.t
     (** All transitions for which we can compute an unlifted (local) time bound *)
 
+    val entry_transitions_measure : t -> (Transition.t, B.t, Transition.comparator_witness) Map.t
+
     val mk :
       measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
       ?compute_proof:compute_proof Option.t ->

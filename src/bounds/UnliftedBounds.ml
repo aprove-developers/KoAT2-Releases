@@ -23,6 +23,8 @@ module UnliftedTimeBound = struct
     type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound
     type compute_proof = (Transition.t, B.t, Transition.comparator_witness) compute_proof_
 
+    let entry_transitions_measure t = t.entry_transitions_measure
+
     let mk ~measure_decr_transitions ?(compute_proof = None) entry_transitions_measure : t =
       let compute_proof =
         Option.value compute_proof ~default:(fun ~get_timebound ~get_sizebound _ _ _ -> FormattedString.Empty)
