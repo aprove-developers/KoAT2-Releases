@@ -178,6 +178,32 @@ module Hashtbl = struct
   let to_sequence tbl = Sequence.of_list (to_alist tbl)
 end
 
+(** Useful for constructing sets of sets *)
+module DerivedComparatorOnSets = Comparator.Derived_phantom (struct
+  type ('a, 'b) t = ('a, 'b) Set.t
+
+  let sexp_of_t (type a) (sexp_of_a : a -> Sexp.t) (t : (a, 'b) t) : Sexp.t =
+    let module Sexp_of = struct
+      type t = a
+
+      let sexp_of_t = sexp_of_a
+    end in
+    Set.sexp_of_m__t (module Sexp_of) t
+
+
+  let compare _ = Set.compare_direct
+end)
+
+module MakeComparatorForSet (M : Comparator.S) :
+  Comparator.S
+    with type t = (M.t, M.comparator_witness) Set.t
+     and type comparator_witness = M.comparator_witness DerivedComparatorOnSets.comparator_witness = struct
+  type t = (M.t, M.comparator_witness) Set.t
+  type comparator_witness = M.comparator_witness DerivedComparatorOnSets.comparator_witness
+
+  let comparator = DerivedComparatorOnSets.comparator M.comparator
+end
+
 module type SetCreators'0 = sig
   type elt
   type elt_comparator_witness
