@@ -252,27 +252,30 @@ type plrf_problem = {
   program : Program.t;
   make_non_increasing : GeneralTransition.t Array.t;
   unbounded_vars : GeneralTransition.t * Location.t -> VarSet.t;
-  is_time_bounded : GeneralTransition.t -> bool;
+  is_time_bounded : GeneralTransition.t * Location.t -> bool;
   decreasing : GeneralTransition.t;
 }
 
+module GtLocComp = MakeComparatorForTuples (GeneralTransition) (Location)
+
 let entry_transitions_from_non_increasing program (non_increasing : GeneralTransition.t Stack.t) =
   let all_possible_pre_trans =
-    Stack.to_array non_increasing
-    |> Array.fold
-         ~f:(fun gts -> Set.union gts % Program.pre_gt program)
-         ~init:(Set.empty (module GeneralTransition))
+    Stack.to_list non_increasing
+    |> List.map ~f:(fun gt ->
+           let start_loc = GeneralTransition.src gt in
+           Set.to_sequence (Program.pre_gt program gt)
+           |> Sequence.map ~f:(fun gt -> (gt, start_loc))
+           |> Set.of_sequence (module GtLocComp))
+    |> Set.union_list (module GtLocComp)
   in
-  (* TODO  *)
-  Set.diff all_possible_pre_trans (GeneralTransitionSet.of_array @@ Stack.to_array non_increasing)
+  let non_incr_set = GeneralTransitionSet.of_array (Stack.to_array non_increasing) in
+  all_possible_pre_trans |> Set.filter ~f:(fun (gt, _) -> not (Set.mem non_incr_set gt))
 
 
-let finalise_plrf cache ~refined solver non_increasing entry_trans problem =
+let finalise_plrf cache ~refined solver non_increasing
+    (entry_trans : (GeneralTransition.t * Location.t, 'b) Set.t) problem =
   let entry_trans_grouped_by_loc =
-    Set.to_list entry_trans
-    |> List.map ~f:(fun gt -> List.cartesian_product [ gt ] (Set.to_list @@ GeneralTransition.targets gt))
-    |> List.join
-    |> List.sort_and_group ~compare:(fun (_, l1) (_, l2) -> Location.compare l1 l2)
+    Set.to_list entry_trans |> List.sort_and_group ~compare:(fun (_, l1) (_, l2) -> Location.compare l1 l2)
   in
   let unbounded_vars_at_entry_locs =
     List.map
@@ -409,7 +412,7 @@ let find ?(refined = false) ?(timeout = None) program gt =
     ~result:plrf_option_to_string execute
 
 
-let add_to_proof t bound program =
+let compute_proof t bound program format =
   let module GP = GraphPrint.ProbabilisticGraphPrint in
   let non_incr_transs = GeneralTransitionSet.all_transitions t.non_increasing in
   let decreasing_trans = GeneralTransition.transitions t.decreasing in
@@ -419,21 +422,18 @@ let add_to_proof t bound program =
     Set.fold ~f:(fun cmap decr_trans -> Map.set ~key:decr_trans ~data:GP.Red cmap) decreasing_trans ~init:cmap
   in
   let locations = TransitionSet.locations non_incr_transs |> Base.Set.to_list in
-  ProofOutput.add_to_proof_with_format
-  @@ FormattedString.(
-       fun format ->
-         mk_header_small
-           (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
-         <> mk_paragraph
-              (mk_str "new bound:" <> mk_newline
-              <> mk_paragraph (mk_str (Bounds.RealBound.to_string ~pretty:true bound)))
-         <> mk_str "PLRF:" <> mk_newline
-         <> mk_paragraph
-              (locations
-              |> List.map ~f:(fun l ->
-                     "• " ^ Location.to_string l ^ ": " ^ RealPolynomial.to_string_pretty (t.rank l))
-              |> List.map ~f:mk_str_line |> mappend)
-         <>
-         match format with
-         | Formatter.Html -> FormattedString.mk_raw_str (GP.print_system_pretty_html ~color_map program)
-         | _ -> FormattedString.Empty)
+  FormattedString.(
+    mk_header_small (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
+    <> mk_paragraph
+         (mk_str "new bound:" <> mk_newline
+         <> mk_paragraph (mk_str (Bounds.RealBound.to_string ~pretty:true bound)))
+    <> mk_str "PLRF:" <> mk_newline
+    <> mk_paragraph
+         (locations
+         |> List.map ~f:(fun l ->
+                "• " ^ Location.to_string l ^ ": " ^ RealPolynomial.to_string_pretty (t.rank l))
+         |> List.map ~f:mk_str_line |> mappend)
+    <>
+    match format with
+    | Formatter.Html -> FormattedString.mk_raw_str (GP.print_system_pretty_html ~color_map program)
+    | _ -> FormattedString.Empty)

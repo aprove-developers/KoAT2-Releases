@@ -17,6 +17,14 @@ let twn_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration
   { classic_conf with twn_configuration = Some `NoTransformation }
 
 
+let mprf5_twn_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+  {
+    classic_conf with
+    run_mprf_depth = mprf5_conf.run_mprf_depth;
+    twn_configuration = twn_conf.twn_configuration;
+  }
+
+
 let conf = ProbabilisticAnalysis.default_configuration
 
 let preprocess =
@@ -53,6 +61,11 @@ let tests =
                     ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
                     ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
                     ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", classic_conf);
+                    ( "probabilistic_nested_bounded",
+                      Polynomial 2,
+                      "../../../examples/probabilistic/",
+                      classic_conf );
+                    ("probabilistic_nested_unbounded", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                     ( "nested_mprf_inner_loop_exptime_classsize",
                       Inf,
                       "../../../examples/probabilistic/",

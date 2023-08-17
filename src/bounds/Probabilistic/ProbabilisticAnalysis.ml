@@ -51,35 +51,11 @@ let lift_bounds (program, program_gts) program_vars (class_appr, appr) : ExpAppr
                     (ExpApproximation.to_formatted ~pretty:true program appr)))
 
 
-let improve_timebounds_plrf ~conf program scc (class_appr, appr) : ExpApproximation.t MaybeChanged.t =
-  let is_exptime_bounded = ExpApproximation.is_time_bounded appr in
-  let unbounded_vars (gt, l) =
-    Program.input_vars program
-    |> Base.Set.filter ~f:(RealBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
-  in
-  let find_plrfs refined =
-    Set.filter ~f:(not % is_exptime_bounded) scc
-    |> Set.to_array
-    |> Parmap.array_parmap (Plrf.find_scc ~refined program is_exptime_bounded unbounded_vars scc)
-    |> Array.to_sequence |> Sequence.filter_opt
-  in
-  (if conf.compute_refined_plrfs then
-     Sequence.of_list [ false; true ]
-   else
-     Sequence.of_list [ false ])
-  |> Sequence.map ~f:find_plrfs
-  |> Sequence.filter ~f:(not % Sequence.is_empty)
-  |> fun seq ->
-  Sequence.hd seq |? Sequence.empty
-  |> MaybeChanged.fold_sequence
-       ~f:(fun appr -> PlrfBounds.improve_with_plrf program (class_appr, appr))
-       ~init:appr
-
-
 let improve_timebounds twn_state
     ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf
     (program, program_gts) scc (class_appr, appr) =
-  improve_timebounds_plrf ~conf program scc (class_appr, appr)
+  PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
+    (class_appr, appr)
   |> MaybeChanged.flat_map
        (IntegrateClassicalAnalysis.improve
           ~twn:(twn_state, classic_conf.twn_configuration)

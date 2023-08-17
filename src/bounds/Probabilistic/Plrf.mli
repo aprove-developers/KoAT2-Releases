@@ -16,8 +16,8 @@ val find_scc :
   ?refined:bool ->
   ?timeout:float option ->
   Program.t ->
-  (GeneralTransition.t -> bool) ->
-  (* Is the general transition already time bounded? *)
+  (GeneralTransition.t * Location.t -> bool) ->
+  (* Is the general transition already time bounded? The target location of the general transition is provided to utilise better utilise classic time bounds *)
   (GeneralTransition.t * Location.t -> VarSet.t) ->
   (* Variables with unbounded expected sizes *)
   GeneralTransitionSet.t ->
@@ -27,5 +27,5 @@ val find_scc :
 val find : ?refined:bool -> ?timeout:float option -> Program.t -> GeneralTransition.t -> t option
 val to_string : t -> string
 
-val add_to_proof : t -> Bounds.RealBound.t -> Program.t -> unit
-(**  This function adds an explanation to the the proof that using the Plrf of the first argument the given bound was computed for the given Program *)
+val compute_proof : t -> Bounds.RealBound.t -> Program.t -> Formatter.format -> FormattedString.t
+(** This function computes an explanation for the given PRF and the given resulting bound *)
