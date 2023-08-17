@@ -194,6 +194,29 @@ module DerivedComparatorOnSets = Comparator.Derived_phantom (struct
   let compare _ = Set.compare_direct
 end)
 
+(** Lexicographic comparisons of tuples *)
+module TupleComparator = Comparator.Derived2 (struct
+  type ('a, 'b) t = 'a * 'b [@@deriving sexp_of]
+
+  let compare a_compare b_compare (a1, b1) (a2, b2) =
+    let ares = a_compare a1 a2 in
+    if ares <> 0 then
+      ares
+    else
+      b_compare b1 b2
+end)
+
+module MakeComparatorForTuples (M1 : Comparator.S) (M2 : Comparator.S) :
+  Comparator.S
+    with type t = M1.t * M2.t
+     and type comparator_witness =
+      (M1.comparator_witness, M2.comparator_witness) TupleComparator.comparator_witness = struct
+  type t = M1.t * M2.t
+  type comparator_witness = (M1.comparator_witness, M2.comparator_witness) TupleComparator.comparator_witness
+
+  let comparator = TupleComparator.comparator M1.comparator M2.comparator
+end
+
 module MakeComparatorForSet (M : Comparator.S) :
   Comparator.S
     with type t = (M.t, M.comparator_witness) Set.t
