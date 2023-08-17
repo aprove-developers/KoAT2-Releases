@@ -608,10 +608,10 @@ module ProbabilisticTransitionNonProbOverappr = struct
   module GenericClassical = Transition_.MakeClassical (ProbabilisticTransitionLabelNonProbOverappr) (Location)
   include ProbabilisticTransitionShared
 
-  let to_id_string = GenericTransition.to_id_string
-  let to_id_string_pretty = GenericTransition.to_id_string_pretty
-  let to_string = GenericTransition.to_string
-  let to_string_pretty = GenericTransition.to_string_pretty
+  let to_id_string = GenericClassical.to_id_string
+  let to_id_string_pretty = GenericClassical.to_id_string_pretty
+  let to_string = GenericClassical.to_string
+  let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
   let add_invariant = GenericClassical.add_invariant
   let rename = GenericClassical.rename
