@@ -211,7 +211,59 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       program_vars ~init:appr
   in
 
-  trivial_sizebounds appr |> nontrivial_sizebounds
+  (* propagate sizes through identity updates *)
+  let rec propagate_sizes (appr : ExpApproximation.t) =
+    let appr = MaybeChanged.same appr in
+    let rvs_scc = List.cartesian_product rvts_scc (Set.to_list program_vars) in
+    let all_rvs = List.append rvs_in rvs_scc in
+    List.fold_left all_rvs ~init:appr ~f:(fun appr ((gt, l), v) ->
+        Set.fold (GeneralTransition.targets gt) ~init:appr ~f:(fun appr_mc target_loc ->
+            let appr = MaybeChanged.unpack appr_mc in
+            let transitions = Set.to_list (GeneralTransition.transitions_to_target target_loc gt) in
+            let transition_updates =
+              List.map transitions ~f:(fun (_, t, _) -> TransitionLabel.update t v)
+              |> List.map ~f:(Option.bind ~f:UpdateElement.to_polynomial)
+              |> OptionMonad.sequence
+            in
+            (* Propagate bounds if all transitions have linear non-probabilistic updates *)
+            match transition_updates with
+            | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
+                let pre_sizebound =
+                  if Program.is_initial_gt program gt then
+                    fun v -> RealBound.of_var v
+                  else
+                    let pre_gts = Set.to_sequence (Program.pre_gt program gt) in
+                    fun v ->
+                      Sequence.map pre_gts ~f:(fun pre_gt ->
+                          ExpApproximation.sizebound appr (pre_gt, GeneralTransition.src gt) v)
+                      |> RealBound.sum
+                in
+                let propagated_bound =
+                  Sequence.of_list update_polys
+                  |> Sequence.map ~f:(fun update_poly ->
+                         RealBound.substitute_f pre_sizebound (RealBound.of_intpoly update_poly))
+                  |> RealBound.sum
+                in
+                if
+                  RealBound.compare_asy propagated_bound (ExpApproximation.sizebound appr (gt, target_loc) v)
+                  < 0
+                then (
+                  Logger.log size_logger Logger.DEBUG (fun () ->
+                      ( "propagate_sizes",
+                        [
+                          ("grv", GRV.to_id_string ((gt, target_loc), v));
+                          ("new_bound", RealBound.to_string propagated_bound);
+                        ] ));
+                  MaybeChanged.flat_map
+                    (MaybeChanged.changed % ExpApproximation.add_sizebound propagated_bound (gt, target_loc) v)
+                    appr_mc)
+                else
+                  appr_mc
+            | _ -> appr_mc))
+    |> MaybeChanged.unpack % MaybeChanged.if_changed propagate_sizes
+  in
+
+  trivial_sizebounds appr |> nontrivial_sizebounds |> propagate_sizes
 
 
 let improve_scc ~conf program program_gts program_vars scc (class_appr, appr) : ExpApproximation.t =
