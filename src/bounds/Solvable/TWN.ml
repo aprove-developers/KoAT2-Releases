@@ -63,7 +63,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                      ^ (Transition.id entry |> Util.natural_to_subscript)
                      ^ ": "
                      ^ (get_timebound entry |> Bound.to_string ~pretty:true))
-                <> mk_str ("Results in: " ^ Bound.to_string ~pretty:true b)))
+                <> mk_str_line ("Results in: " ^ Bound.to_string ~pretty:true b)))
     in
     OurBase.Map.iteri ~f:(fun ~key ~data -> ignore (for_entry_and_local_bound (key, data))) entry_measure_map;
     ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)

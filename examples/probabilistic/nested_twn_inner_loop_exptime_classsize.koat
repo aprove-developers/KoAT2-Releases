@@ -1,0 +1,9 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z)
+(RULES
+  f(x,y,z) -> g(x,y,z)
+  g(x,y,z) -> h(z,z,z) :|: z > 0
+  h(x,y,z) -> h(2 * x, 3 * y,z) :|: x >= y && y >= 1
+  h(x,y,z) -> 0.5:g(x,y,z) :+: 0.5:g(x,y,z-1)
+)

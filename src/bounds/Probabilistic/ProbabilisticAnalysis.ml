@@ -76,12 +76,14 @@ let improve_timebounds_plrf ~conf program scc (class_appr, appr) : ExpApproximat
        ~init:appr
 
 
-let improve_timebounds ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration)
-    ~conf (program, program_gts) scc (class_appr, appr) =
+let improve_timebounds twn_state
+    ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf
+    (program, program_gts) scc (class_appr, appr) =
   improve_timebounds_plrf ~conf program scc (class_appr, appr)
   |> MaybeChanged.flat_map
-       (IntegrateClassicalAnalysis.improve ~mprf_depth:classic_conf.run_mprf_depth (program, program_gts) scc
-          class_appr)
+       (IntegrateClassicalAnalysis.improve
+          ~twn:(twn_state, classic_conf.twn_configuration)
+          ~mprf_depth:classic_conf.run_mprf_depth (program, program_gts) scc class_appr)
 
 
 let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.t =
@@ -289,9 +291,15 @@ let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.anal
        % Sequence.of_list
     |> ELCBMap.of_sequence_exn
   in
+  let twn_state =
+    Option.value_map
+      Analysis.(classic_conf.twn_configuration)
+      ~default:(ref IntegrateClassicalAnalysis.empty_twn_state)
+      ~f:(fun twn_conf -> ref @@ IntegrateClassicalAnalysis.initial_twn_state twn_conf program scc)
+  in
   let rec improve_scc_ appr =
     improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) |> fun appr ->
-    improve_timebounds ~classic_conf ~conf (program, program_gts) scc (class_appr, appr)
+    improve_timebounds twn_state ~classic_conf ~conf (program, program_gts) scc (class_appr, appr)
     |> knowledge_propagation program scc
     |> MaybeChanged.map (fun appr ->
            improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr))
