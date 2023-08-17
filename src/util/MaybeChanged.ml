@@ -7,6 +7,7 @@ type status = Changed | Same
 type 'a t = status * 'a
 
 let return subject = (Same, subject)
+let pure = return
 
 let ( >>= ) maybe f =
   match maybe with
@@ -17,6 +18,7 @@ let ( >>= ) maybe f =
   | Same, subject -> f subject
 
 
+let bind = ( >>= )
 let flat_map f maybe = maybe >>= f
 
 let map f = function
