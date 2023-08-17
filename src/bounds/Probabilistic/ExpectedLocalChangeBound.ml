@@ -24,8 +24,7 @@ let compute_ue_diff label v =
 
 
 let compute_elcb program_vars ((gt, l), v) =
-  Set.to_sequence (GeneralTransition.transitions gt)
-  |> Sequence.filter ~f:(Location.equal l % Transition.target)
+  Set.to_sequence (GeneralTransition.transitions_to_target l gt)
   |> Sequence.map ~f:(fun t ->
          let label = Transition.label t in
          let ue_diff = compute_ue_diff label v in

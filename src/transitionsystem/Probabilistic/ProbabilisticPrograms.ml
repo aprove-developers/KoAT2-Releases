@@ -674,6 +674,11 @@ module GeneralTransition = struct
 
     let gt_id = ProbabilisticTransitionLabel.gt_id % get_arbitrary_label
     let transitions t = t.transitions
+
+    let transitions_to_target target t =
+      Set.filter t.transitions ~f:(Location.equal target % ProbabilisticTransition.target)
+
+
     let cost = ProbabilisticTransitionLabel.cost % get_arbitrary_label
     let src = ProbabilisticTransition.src % get_arbitrary_transition
     let invariant = ProbabilisticTransitionLabel.invariant % get_arbitrary_label

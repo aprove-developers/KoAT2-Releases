@@ -19,10 +19,7 @@ let improve_with_plrf program (class_appr, appr) rank =
            in
            let class_trans_to_loc =
              Set.to_list entry_gts_to_loc
-             |> List.map ~f:(fun gt ->
-                    GeneralTransition.transitions gt
-                    |> Base.Set.filter ~f:(Location.equal entry_loc % Transition.target)
-                    |> Base.Set.to_list)
+             |> List.map ~f:(Set.to_list % GeneralTransition.transitions_to_target entry_loc)
              |> List.join
            in
 

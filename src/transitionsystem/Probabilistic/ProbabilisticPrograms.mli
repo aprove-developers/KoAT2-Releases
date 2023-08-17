@@ -49,7 +49,11 @@ module GeneralTransition : sig
   val guard : t -> Guard.t
   val invariant : t -> Guard.t
   val guard_without_inv : t -> Guard.t
-  val transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
+  val transitions : t -> (ProbabilisticTransition.t, ProbabilisticTransition.comparator_witness) Set.t
+
+  val transitions_to_target :
+    Location.t -> t -> (ProbabilisticTransition.t, ProbabilisticTransition.comparator_witness) Set.t
+
   val gt_id : t -> int
   val to_id_string : t -> string
   val to_id_string_pretty : t -> string

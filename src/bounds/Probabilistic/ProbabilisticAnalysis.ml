@@ -126,11 +126,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       in
       let pre_size_classical v =
         Set.to_sequence pre_gt
-        |> Sequence.map
-             ~f:
-               (Set.to_sequence
-               % Set.filter ~f:(Location.equal start_loc % Transition.target)
-               % GeneralTransition.transitions)
+        |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
         |> Sequence.join
         |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
         |> RealBound.of_intbound % Bound.sum
