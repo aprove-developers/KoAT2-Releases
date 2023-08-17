@@ -1013,6 +1013,12 @@ module GRV = struct
     "("
     ^ GeneralTransition.ids_to_string ~pretty gt
     ^ "," ^ Location.to_string l ^ "), " ^ Var.to_string ~pretty v
+
+
+  let to_probabilistic_rvs ((gt, loc), v) =
+    GeneralTransition.transitions gt |> Set.to_sequence
+    |> Sequence.filter ~f:(Location.equal loc % ProbabilisticTransition.target)
+    |> Sequence.map ~f:(fun t -> (t, v))
 end
 
 module RVTuple_ = struct

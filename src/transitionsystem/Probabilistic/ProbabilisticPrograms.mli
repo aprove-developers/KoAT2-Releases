@@ -58,8 +58,8 @@ module GeneralTransition : sig
   val to_string : t -> string
   val to_string_pretty : t -> string
 
-  (* Obtain a string only containing the transitoin's id, e.g., [ "g3" ] *)
   val ids_to_string : ?pretty:bool -> t -> string
+  (** Obtain a string only containing the transition's id, e.g., [ "g3" ] *)
 
   val equal : t -> t -> bool
   (** compare gt_ids*)
@@ -162,10 +162,7 @@ module ProbabilisticProgramNonProbOverappr : sig
        and type transition_graph = ProbabilisticTransitionGraphNonProbOverappr.t
 end
 
-(** RV Types for transitions *)
-
-module GRV : ProgramTypes.RV with type transition = GeneralTransition.t * Location.t
-(** General Transitions *)
+(** {1 RV Types for transitions} *)
 
 module ProbabilisticRV :
   ProgramTypes.RV
@@ -176,6 +173,12 @@ module ProbabilisticRVNonProbOverappr :
   ProgramTypes.RV
     with type transition = ProbabilisticTransitionNonProbOverappr.t
      and type transition_comparator_witness = ProbabilisticTransitionNonProbOverappr.comparator_witness
+
+module GRV : sig
+  include ProgramTypes.RV with type transition = GeneralTransition.t * Location.t
+
+  val to_probabilistic_rvs : t -> ProbabilisticRV.t Sequence.t
+end
 
 module Equalities : sig
   val trans_eq : (ProbabilisticTransitionNonProbOverappr.t, ProbabilisticTransition.t) Type_equal.t
