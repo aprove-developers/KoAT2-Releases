@@ -103,6 +103,9 @@ module GeneralTransitionSet : sig
 
   val locations : t -> location_set
   val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
+
+  val find_by_transition : t -> ProbabilisticTransition.t -> GeneralTransition.t Option.t
+  (** Find the general transition in the given transition set with the same id as the given transition *)
 end
 
 module ProbabilisticTransitionGraph :
@@ -138,10 +141,6 @@ module ProbabilisticProgram : sig
   (* Restores legacy semantics for updates with distributions, i.e. updates of the form X->UNIFORM(0,1) are interpreted as X->X+UNIFORM(0,1) *)
   val restore_legacy_distribution_update_semantics : t -> t
   val to_string_pretty : t -> string
-
-  val find_gt_from_gts_and_transition :
-    GeneralTransitionSet.t -> ProbabilisticTransition.t -> GeneralTransition.t Option.t
-  (** Find the general transition in the given transition set with the same id as the given transition *)
 
   val is_initial_gt : t -> GeneralTransition.t -> bool
   (** is the given general transition initial, i.e., does it start in the initial location *)

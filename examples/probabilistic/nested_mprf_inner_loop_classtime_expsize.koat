@@ -1,0 +1,11 @@
+# Two nested probabilistic loops with bounded variable sizes
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z reset)
+(RULES
+  f(x,y,z,reset) -> g(x,y,z,reset)
+  g(x,y,z,reset) -> h(reset,reset,z,reset)     :|: z>0
+  h(x,y,z,reset) -> h(x+y,y-1,z,reset) :|: x>0
+  h(x,y,z,reset) -> g(x,y,z-1,reset+GEOMETRIC(0.5))
+)

@@ -107,7 +107,9 @@ let run (params : params) =
         | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
         | _ -> Empty);
 
-  let prob_appr = ProbabilisticAnalysis.perform_analysis program class_appr in
+  let prob_appr =
+    ProbabilisticAnalysis.perform_analysis ~classic_conf:classical_analysis_conf program class_appr
+  in
 
   ProofOutput.add_to_proof
     FormattedString.(

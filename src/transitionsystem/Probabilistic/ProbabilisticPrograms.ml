@@ -847,6 +847,9 @@ module GeneralTransitionSet = struct
     Sequence.map ~f:(find_by_id set) ids
     |> Util.cat_maybes_sequence
     |> Set.of_sequence (module GeneralTransition)
+
+
+  let find_by_transition gts trans = find_by_id gts (ProbabilisticTransition.gt_id trans)
 end
 
 (* Probabilistic and Overapproximated Nonprobabilistic Programs share the same internal *)
@@ -956,10 +959,6 @@ module ProbabilisticProgram = struct
     Set.fold tset ~init:program ~f:(fun prog (l, t, l') ->
         assert (OurFloat.(equal (ProbabilisticTransitionLabel.probability t) zero));
         remove_transition prog (l, t, l'))
-
-
-  let find_gt_from_gts_and_transition gts trans =
-    GeneralTransitionSet.find_by_id gts (ProbabilisticTransition.gt_id trans)
 end
 
 module ProbabilisticTransitionGraphNonProbOverappr =

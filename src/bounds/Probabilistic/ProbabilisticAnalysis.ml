@@ -19,14 +19,14 @@ let grvs_from_gts_and_vars gts vars =
   rvts_from_gts gts |> fun rvts -> List.cartesian_product rvts (Base.Set.to_list vars)
 
 
-let lift_bounds program gts program_vars (class_appr, appr) : ExpApproximation.t =
+let lift_bounds (program, program_gts) program_vars (class_appr, appr) : ExpApproximation.t =
   let lift_time_bounds appr =
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
       |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
       |> RealBound.of_intbound % Bound.sum
     in
-    Set.to_sequence gts
+    Set.to_sequence program_gts
     |> Sequence.fold ~f:(fun appr gt -> ExpApproximation.add_timebound (gt_timebound gt) gt appr) ~init:appr
   in
 
@@ -36,7 +36,7 @@ let lift_bounds program gts program_vars (class_appr, appr) : ExpApproximation.t
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
       |> RealBound.of_intbound % Bound.sum
     in
-    grvs_from_gts_and_vars gts program_vars
+    grvs_from_gts_and_vars program_gts program_vars
     |> List.fold
          ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt, v)) rvt v appr)
          ~init:appr
@@ -51,7 +51,7 @@ let lift_bounds program gts program_vars (class_appr, appr) : ExpApproximation.t
                     (ExpApproximation.to_formatted ~pretty:true program appr)))
 
 
-let improve_timebounds ~conf program scc (class_appr, appr) : ExpApproximation.t MaybeChanged.t =
+let improve_timebounds_plrf ~conf program scc (class_appr, appr) : ExpApproximation.t MaybeChanged.t =
   let is_exptime_bounded = ExpApproximation.is_time_bounded appr in
   let unbounded_vars (gt, l) =
     Program.input_vars program
@@ -74,6 +74,14 @@ let improve_timebounds ~conf program scc (class_appr, appr) : ExpApproximation.t
   |> MaybeChanged.fold_sequence
        ~f:(fun appr -> PlrfBounds.improve_with_plrf program (class_appr, appr))
        ~init:appr
+
+
+let improve_timebounds ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration)
+    ~conf (program, program_gts) scc (class_appr, appr) =
+  improve_timebounds_plrf ~conf program scc (class_appr, appr)
+  |> MaybeChanged.flat_map
+       (IntegrateClassicalAnalysis.improve ~mprf_depth:classic_conf.run_mprf_depth (program, program_gts) scc
+          class_appr)
 
 
 let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.t =
@@ -266,7 +274,8 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
   trivial_sizebounds appr |> nontrivial_sizebounds |> propagate_sizes
 
 
-let improve_scc ~conf program program_gts program_vars scc (class_appr, appr) : ExpApproximation.t =
+let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf
+    (program, program_gts) program_vars scc (class_appr, appr) : ExpApproximation.t =
   let rvts_scc = rvts_from_gts scc in
   let rvs_in =
     List.cartesian_product
@@ -282,7 +291,7 @@ let improve_scc ~conf program program_gts program_vars scc (class_appr, appr) : 
   in
   let rec improve_scc_ appr =
     improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) |> fun appr ->
-    improve_timebounds ~conf program scc (class_appr, appr)
+    improve_timebounds ~classic_conf ~conf (program, program_gts) scc (class_appr, appr)
     |> knowledge_propagation program scc
     |> MaybeChanged.map (fun appr ->
            improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr))
@@ -295,14 +304,16 @@ let improve_scc ~conf program program_gts program_vars scc (class_appr, appr) : 
   improve_scc_ appr
 
 
-let perform_analysis ?(conf = default_configuration) program class_appr : ExpApproximation.t =
-  let gts = Program.gts program in
+let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = default_configuration) program
+    class_appr : ExpApproximation.t =
+  let program_gts = Program.gts program in
   let program_vars = Program.input_vars program in
   let sccs = Program.sccs_gts program in
 
-  lift_bounds program gts program_vars (class_appr, ExpApproximation.empty) |> fun appr ->
+  lift_bounds (program, program_gts) program_vars (class_appr, ExpApproximation.empty) |> fun appr ->
   List.fold
-    ~f:(fun appr scc_with_locs -> improve_scc ~conf program gts program_vars scc_with_locs (class_appr, appr))
+    ~f:(fun appr scc_with_locs ->
+      improve_scc ~classic_conf ~conf (program, program_gts) program_vars scc_with_locs (class_appr, appr))
     ~init:appr sccs
 
 
@@ -323,6 +334,6 @@ let perform_classic_and_probabilistic_analysis ?(classic_conf = Analysis.default
          coerce_from_nonprob_overappr_approximation
   in
 
-  let prob_appr = perform_analysis program class_appr in
+  let prob_appr = perform_analysis ~classic_conf program class_appr in
 
   (program, (class_appr, prob_appr))

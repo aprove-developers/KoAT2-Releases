@@ -5,7 +5,14 @@ open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
 
-let classic_conf = Analysis.default_configuration
+let classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+  Analysis.default_configuration
+
+
+let mprf5_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+  { classic_conf with run_mprf_depth = Some 5 }
+
+
 let conf = ProbabilisticAnalysis.default_configuration
 
 let preprocess =
@@ -20,7 +27,7 @@ let tests =
   >::: [
          "asymptotic"
          >::: List.map
-                ~f:(fun (name, complexity_exp, prog_dir) ->
+                ~f:(fun (name, complexity_exp, prog_dir, classic_conf) ->
                   (fun f -> name >: test_case ~length:test_len f) @@ fun _ ->
                   let prog = Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat") |> preprocess in
                   let prog, (_, appr) =
@@ -39,8 +46,24 @@ let tests =
                   assert_bool error_msg (RealBound.equal_complexity complexity complexity_exp))
                 RealBound.
                   [
-                    ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/");
-                    ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/");
-                    ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/");
+                    ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
+                    ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
+                    ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", classic_conf);
+                    ( "nested_mprf_inner_loop_exptime_classsize",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      classic_conf );
+                    ( "nested_mprf_inner_loop_exptime_classsize",
+                      Polynomial 2,
+                      "../../../examples/probabilistic/",
+                      mprf5_conf );
+                    ( "nested_mprf_inner_loop_classtime_expsize",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      classic_conf );
+                    ( "nested_mprf_inner_loop_classtime_expsize",
+                      Polynomial 2,
+                      "../../../examples/probabilistic/",
+                      mprf5_conf );
                   ];
        ]
