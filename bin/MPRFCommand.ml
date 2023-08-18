@@ -26,8 +26,8 @@ let run (params : params) =
   Approximation.empty |> TrivialTimeBounds.compute program |> fun appr ->
   let transitions =
     program |> Program.graph |> TransitionGraph.transitions
-    |> Base.Set.filter ~f:(not % Approximation.is_time_bounded appr)
+    |> Set.filter ~f:(not % Approximation.is_time_bounded appr)
   in
   MultiphaseRankingFunction.find `Time program params.depth
-  |> Base.Sequence.filter ~f:(Base.Set.mem transitions % MultiphaseRankingFunction.decreasing)
-  |> Base.Sequence.iter ~f:(fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))
+  |> Sequence.filter ~f:(Set.mem transitions % MultiphaseRankingFunction.decreasing)
+  |> Sequence.iter ~f:(fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))

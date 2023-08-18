@@ -16,7 +16,7 @@ let rvts_from_gts gts =
 
 
 let grvs_from_gts_and_vars gts vars =
-  rvts_from_gts gts |> fun rvts -> List.cartesian_product rvts (Base.Set.to_list vars)
+  rvts_from_gts gts |> fun rvts -> List.cartesian_product rvts (Set.to_list vars)
 
 
 let lift_bounds (program, program_gts) program_vars (class_appr, appr) : ExpApproximation.t =
@@ -153,8 +153,8 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
     let entry_rvts = Sequence.to_list (BoundsHelper.entry_gts_with_locs program scc) in
     let overappr_var_in gt v =
       GeneralTransition.transitions gt
-      |> Program.pre program % Base.Set.choose_exn
-      |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Base.Set.to_sequence
+      |> Program.pre program % Set.choose_exn
+      |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Set.to_sequence
       |> RealBound.of_intbound % Bound.sum
     in
     let nontrivial_sizebound appr v =
@@ -190,7 +190,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
           ("nontrivial_sizebound", [ ("scc", GeneralTransitionSet.to_id_string scc); ("v", Var.to_string v) ]))
         ~result:RealBound.to_string execute
     in
-    Base.Set.fold
+    Set.fold
       ~f:(fun appr v ->
         let new_bound = nontrivial_sizebound appr v in
         ExpApproximation.add_sizebounds new_bound (List.map ~f:(fun rvt -> (rvt, v)) rvts_scc) appr)
@@ -258,10 +258,10 @@ let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.anal
   let rvs_in =
     List.cartesian_product
       (Sequence.to_list @@ BoundsHelper.entry_gts_with_locs program scc)
-      (Base.Set.to_list program_vars)
+      (Set.to_list program_vars)
   in
   let elcbs =
-    List.cartesian_product rvts_scc (Base.Set.to_list program_vars)
+    List.cartesian_product rvts_scc (Set.to_list program_vars)
     |> List.append rvs_in
     |> Sequence.map ~f:(fun rv -> (rv, ExpectedLocalChangeBound.compute_elcb program_vars rv))
        % Sequence.of_list

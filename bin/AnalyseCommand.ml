@@ -284,7 +284,7 @@ let run (params : params) =
            if params.no_boundsearch then
              (program, appr)
            else if
-             Base.Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program)
+             Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program)
            then
              (program, appr)
            else

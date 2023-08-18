@@ -20,7 +20,7 @@ let tests =
                   program >:: fun _ ->
                   let program = Readers.read_program_simple program in
                   let result =
-                    Check_TWN.check_twn_ (program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn)
+                    Check_TWN.check_twn_ (program |> Program.sccs |> List.hd_exn |> Set.choose_exn)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -115,8 +115,8 @@ let tests =
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Termination.termination twn_proofs
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn
-                     |> Base.Set.choose_exn |> Tuple3.second |> Loop.mk)
+                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
+                     |> Tuple3.second |> Loop.mk)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -169,8 +169,7 @@ let tests =
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Complexity.complexity_ twn_proofs
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn
-                     |> Base.Set.choose_exn)
+                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn)
                   in
                   assert_equal_string expected_string (Bound.to_string result))
                 [

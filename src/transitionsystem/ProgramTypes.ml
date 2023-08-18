@@ -354,7 +354,7 @@ module type Program = sig
       Note that the computation involves calls to the SMT solver and is therefore expensive.
       However, to improve performance they are cached inside the program type [t]. *)
 
-  val pre_lazy : t -> transition -> transition Base.Sequence.t
+  val pre_lazy : t -> transition -> transition Sequence.t
   (** Similar to pre but return the pre-transitions as a lazy Sequence.
       If the result has already been computed and cached in the value of type [t], then we do not recompute the pre-transitions.
       If however the pre-transitions haven't been computed yet then they are lazily computed when inspecting the returned sequence. These values are *not* added to the cached!

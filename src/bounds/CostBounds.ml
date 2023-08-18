@@ -21,7 +21,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         else
           let overappr_cost =
             (* Precompute and Cache *)
-            let temp_vars = Base.Set.diff (Program.vars program) (Program.input_vars program) in
+            let temp_vars = Set.diff (Program.vars program) (Program.input_vars program) in
 
             if Program.is_initial program transition then
               (* We can not look at the size bounds for predecessor transitions if transition is initial *)
@@ -33,7 +33,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                        Bound.of_var v)
             else
               (* Overapproximate the cost by looking at the sizes of incoming transitions *)
-              let inc_trans = Base.Set.to_sequence @@ Program.pre program transition in
+              let inc_trans = Set.to_sequence @@ Program.pre program transition in
               let inc_size v =
                 Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans |> Bound.sum
               in

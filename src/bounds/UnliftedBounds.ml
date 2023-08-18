@@ -45,7 +45,7 @@ module UnliftedTimeBound = struct
     let lift_and_get_proof ~get_timebound ~get_sizebound (t : t) =
       let res =
         Map.to_sequence t.entry_transitions_measure
-        |> Base.Sequence.map ~f:(fun ((l, t, l'), measure) ->
+        |> Sequence.map ~f:(fun ((l, t, l'), measure) ->
                let timebound = get_timebound (l, t, l') in
                let overappr_measure = B.substitute_f (get_sizebound (l, t, l')) measure in
                B.mul timebound overappr_measure)

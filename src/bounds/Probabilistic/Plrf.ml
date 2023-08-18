@@ -421,7 +421,7 @@ let compute_proof t bound program format =
     |> fun cmap ->
     Set.fold ~f:(fun cmap decr_trans -> Map.set ~key:decr_trans ~data:GP.Red cmap) decreasing_trans ~init:cmap
   in
-  let locations = TransitionSet.locations non_incr_transs |> Base.Set.to_list in
+  let locations = TransitionSet.locations non_incr_transs |> Set.to_list in
   FormattedString.(
     mk_header_small (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
     <> mk_paragraph

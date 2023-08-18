@@ -39,11 +39,11 @@ let affects : type p. p t -> p t list = function
 
 (* Chaining might introduce MANY different temporary variables. To mitigate this we normalise their names*)
 let normalise_temp_vars program =
-  let temp_vars = OurBase.Sequence.memoize @@ OurBase.Sequence.uniter (Var.fresh_id Var.Int) in
+  let temp_vars = Sequence.memoize @@ Sequence.uniter (Var.fresh_id Var.Int) in
   Program.map_graph
     (fun graph ->
       let trans = TransitionGraph.transitions graph in
-      Base.Set.fold
+      Set.fold
         ~f:(fun graph (l, t, l') ->
           TransitionGraph.replace_edge_e (l, t, l')
             (l, TransitionLabel.rename_temp_vars t temp_vars, l')
@@ -121,7 +121,7 @@ let process_till_fixpoint_ ~run_preprocessor ~(wanted : 'a t Set.Poly.t) =
 
 let process_till_fixpoint : strategy =
   let strat_f ~run_preprocessor preprocessors subject =
-    let set = OurBase.Set.Poly.of_list preprocessors in
+    let set = Set.Poly.of_list preprocessors in
     process_till_fixpoint_ ~run_preprocessor ~wanted:set set subject
   in
   { run_strategy = strat_f }

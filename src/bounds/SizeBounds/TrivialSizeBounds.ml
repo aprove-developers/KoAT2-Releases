@@ -25,7 +25,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         lsb
       else
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
-        pre_transitions |> Base.Sequence.map ~f:substitute_with_prevalues |> Bound.sum
+        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.sum
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
@@ -36,14 +36,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let incoming_bound_lsb rvg get_sizebound lsb t v =
     let pre_transitions =
-      RVG.pre rvg (t, v)
-      |> List.map ~f:RV.transition |> TransitionSet.stable_dedup_list |> Base.Sequence.of_list
+      RVG.pre rvg (t, v) |> List.map ~f:RV.transition |> TransitionSet.stable_dedup_list |> Sequence.of_list
     in
     incoming_bound pre_transitions get_sizebound lsb t v
 
 
   let incoming_bound_lifted_update program get_sizebound upd t v =
-    let pre_transitions = Base.Set.to_sequence (Program.pre program t) in
+    let pre_transitions = Set.to_sequence (Program.pre program t) in
     incoming_bound pre_transitions get_sizebound (Bound.of_poly upd) t v
 
 

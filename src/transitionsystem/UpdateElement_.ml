@@ -171,18 +171,18 @@ let as_linear_abstract manager constr t new_var =
           UpdateValue.as_guard i v
         else
           Guard.mk_true)
-      (Base.Map.to_sequence indeterminates_repr_map)
+      (Map.to_sequence indeterminates_repr_map)
     |> Guard.all % Sequence.to_list
   in
 
   let multiplicands_repr_map =
     Sequence.of_list (monomials t)
     |> Sequence.map ~f:Monomial_.to_sequence
-    |> Base.Set.to_sequence % MultiplicandSet.of_sequence % Sequence.join
+    |> Set.to_sequence % MultiplicandSet.of_sequence % Sequence.join
     |> Sequence.map ~f:(fun (i, e) ->
            let v =
              if e = 1 then
-               Base.Map.find_exn indeterminates_repr_map i
+               Map.find_exn indeterminates_repr_map i
              else
                Var.fresh_id Var.Int ()
            in
@@ -192,10 +192,10 @@ let as_linear_abstract manager constr t new_var =
 
   (* post_update refinement constraints for updates of the form X^e where e is even*)
   let multiplicands_post_update_constraint =
-    Base.Map.to_sequence multiplicands_repr_map
+    Map.to_sequence multiplicands_repr_map
     |> Sequence.filter ~f:(fun ((_, e), _) -> e mod 2 = 0 && Int.(e > 0))
     |> Sequence.map ~f:(fun ((i, e), multipl_repr_var) ->
-           let ind_repr_var = Base.Map.find_exn indeterminates_repr_map i in
+           let ind_repr_var = Map.find_exn indeterminates_repr_map i in
            let guard = Guard.Infix.(constr && UpdateValue.as_guard i ind_repr_var) in
            let multipl_repr_poly = Polynomial.of_var multipl_repr_var in
 
@@ -212,12 +212,11 @@ let as_linear_abstract manager constr t new_var =
     |> Guard.all % Sequence.to_list
   in
 
-  let keep_vars = Base.Set.add (Base.Set.union (Guard.vars constr) (vars t)) new_var in
+  let keep_vars = Set.add (Set.union (Guard.vars constr) (vars t)) new_var in
   let all_vars =
-    Base.Set.union keep_vars
-      (Base.Set.union (Guard.vars indet_guard) (Guard.vars multiplicands_post_update_constraint))
+    Set.union keep_vars (Set.union (Guard.vars indet_guard) (Guard.vars multiplicands_post_update_constraint))
   in
-  let temp_vars = Base.Set.diff all_vars keep_vars in
+  let temp_vars = Set.diff all_vars keep_vars in
 
   let open ApronInterface.Koat2Apron in
   let open ApronInterface.Apron2Koat in
@@ -247,7 +246,7 @@ let as_linear_abstract manager constr t new_var =
     |> List.map ~f:(fun (c, m) ->
            ( c,
              Monomial_.to_sequence m
-             |> Sequence.map ~f:(fun (i, e) -> (Base.Map.find_exn multiplicands_repr_map (i, e), 1))
+             |> Sequence.map ~f:(fun (i, e) -> (Map.find_exn multiplicands_repr_map (i, e), 1))
              |> ClassicalMonomial.make % Sequence.to_list ))
     |> Polynomial.of_coeff_and_mon_list
   in

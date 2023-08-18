@@ -19,7 +19,7 @@ module Make (M : ProgramTypes.ProgramModules) = struct
     let combine (l, t, l') set =
       if Program.is_initial_location program l then
         if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
-          Base.Set.add set (l, t, l')
+          Set.add set (l, t, l')
         else
           set
       else
@@ -29,7 +29,7 @@ module Make (M : ProgramTypes.ProgramModules) = struct
           Sequence.filter ~f:(not % Transition.equal (l, t, l')) @@ Program.pre_lazy program (l, t, l')
         in
         if Sequence.is_empty intrans then
-          Base.Set.add set (l, t, l')
+          Set.add set (l, t, l')
         else
           set
     in
@@ -39,7 +39,7 @@ module Make (M : ProgramTypes.ProgramModules) = struct
   (** Returns program without unsatisfiable transitions. *)
   let transform_program program =
     let unsatisfiable_transitions = unsatisfiable_transitions program (Program.graph program) in
-    if Base.Set.is_empty unsatisfiable_transitions then
+    if Set.is_empty unsatisfiable_transitions then
       MaybeChanged.same program
     else
       let removed =

@@ -45,7 +45,7 @@ module ConstraintOver (A : ConstraintTypes.Atom) = struct
     List.zip_exn constr1 constr2 |> List.map ~f:(uncurry A.( =~= )) |> List.fold_left ~f:( && ) ~init:true
 
 
-  let vars constr = constr |> List.map ~f:A.vars |> List.fold_left ~f:Base.Set.union ~init:VarSet.empty
+  let vars constr = constr |> List.map ~f:A.vars |> List.fold_left ~f:Set.union ~init:VarSet.empty
 
   let to_string ?(to_file = false) ?(pretty = false) ?(conj = " && ") constr =
     String.concat
@@ -83,7 +83,7 @@ module ConstraintOver (A : ConstraintTypes.Atom) = struct
     let dualised_left =
       List.map
         ~f:(fun row ->
-          List.map2_exn ~f:(fun c -> A.P.mul c % A.P.of_var) row vars |> OurBase.Sequence.of_list |> A.P.sum)
+          List.map2_exn ~f:(fun c -> A.P.mul c % A.P.of_var) row vars |> Sequence.of_list |> A.P.sum)
         matrix
     in
     let dualised_eq = List.join (List.map2_exn ~f:mk_eq dualised_left column) in
@@ -138,7 +138,7 @@ module ParameterConstraintOver (Value : PolyTypes.Ring) = struct
     (* Remove strict comparisons in constraints by replacing them with their non-strict counterparts *)
     let constr, param_atom = (remove_strict constr, A.remove_strict param_atom) in
 
-    let vars = Base.Set.union (vars constr) (A.vars param_atom) |> Base.Set.to_list in
+    let vars = Set.union (vars constr) (A.vars param_atom) |> Set.to_list in
     let a_matrix = get_matrix vars constr in
     let b_right = get_constant_vector constr in
     let c_left = List.map ~f:(flip A.get_coefficient param_atom) vars in

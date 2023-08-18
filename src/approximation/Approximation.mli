@@ -38,7 +38,7 @@ module Make
   (** Adds the information that the specified bound is a valid timebound for the given transition.
       The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 
-  val all_times_bounded : t -> T.t OurBase.Sequence.t -> bool
+  val all_times_bounded : t -> T.t Sequence.t -> bool
   (** Returns true iff. all transitions from a given list of transitions are bounded and not infinity. *)
 
   val is_time_bounded : t -> T.t -> bool
@@ -103,7 +103,7 @@ module Probabilistic : sig
             include GeneralTransition
 
             let id = gt_id
-            let all_from_program = Base.Set.to_sequence % Program.gts
+            let all_from_program = Set.to_sequence % Program.gts
           end)
 
   val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t

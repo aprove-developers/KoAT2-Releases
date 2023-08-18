@@ -23,15 +23,15 @@ module Inner = struct
 
 
   let equivalent lbl1 lbl2 =
-    Base.Map.equal Polynomial.equal lbl1.update lbl2.update
+    Map.equal Polynomial.equal lbl1.update lbl2.update
     && Guard.equal lbl1.guard lbl2.guard
     && Invariant.equal lbl1.invariant lbl2.invariant
     && Polynomial.equal lbl1.cost lbl2.cost
 
 
   let compare_equivalent lbl1 lbl2 =
-    if Base.Map.compare_direct Polynomial.compare lbl1.update lbl2.update != 0 then
-      Base.Map.compare_direct Polynomial.compare lbl1.update lbl2.update
+    if Map.compare_direct Polynomial.compare lbl1.update lbl2.update != 0 then
+      Map.compare_direct Polynomial.compare lbl1.update lbl2.update
     else if Guard.compare lbl1.guard lbl2.guard != 0 then
       Guard.compare lbl1.guard lbl2.guard
     else if Invariant.compare lbl1.invariant lbl2.invariant != 0 then
@@ -42,32 +42,26 @@ module Inner = struct
       0
 
 
-  let equivalent_update lbl1 lbl2 = Base.Map.equal Polynomial.equal lbl1.update lbl2.update
+  let equivalent_update lbl1 lbl2 = Map.equal Polynomial.equal lbl1.update lbl2.update
   let equal lbl1 lbl2 = Int.equal lbl1.id lbl2.id
   let compare lbl1 lbl2 = Int.compare lbl1.id lbl2.id
 
   let fill_up_update_arg_vars_up_to_num n update =
     let missing_args =
-      Base.Set.diff
-        (VarSet.of_sequence @@ Base.Sequence.take Var.args n)
-        (VarSet.of_list @@ Base.Map.keys update)
+      Set.diff (VarSet.of_sequence @@ Sequence.take Var.args n) (VarSet.of_list @@ Map.keys update)
     in
-    Base.Set.fold
-      ~f:(fun vmap v -> Base.Map.add_exn vmap ~key:v ~data:(Polynomial.of_var v))
-      missing_args ~init:update
+    Set.fold ~f:(fun vmap v -> Map.add_exn vmap ~key:v ~data:(Polynomial.of_var v)) missing_args ~init:update
 
 
   let fill_up_arg_vars_up_to_num n t = { t with update = fill_up_update_arg_vars_up_to_num n t.update }
 
   let mk ~id ~cost ~assignments ~patterns ~guard =
-    let map_to_arg_vars =
-      Base.Sequence.zip (Base.Sequence.of_list patterns) Var.args |> RenameMap.of_sequence
-    in
+    let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
     let update =
-      Base.Sequence.of_list assignments
-      |> Base.Sequence.map ~f:(Polynomial.rename map_to_arg_vars)
-      |> Base.Sequence.zip Var.args
-      |> Base.Map.of_sequence_exn (module Var)
+      Sequence.of_list assignments
+      |> Sequence.map ~f:(Polynomial.rename map_to_arg_vars)
+      |> Sequence.zip Var.args
+      |> Map.of_sequence_exn (module Var)
       |> fill_up_update_arg_vars_up_to_num (List.length patterns)
     in
     {
@@ -95,7 +89,7 @@ module Inner = struct
                   Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                   nondet_var))
     in
-    let new_update = Base.Map.map ~f:(Polynomial.substitute_f (substitution t1.update)) t2.update
+    let new_update = Map.map ~f:(Polynomial.substitute_f (substitution t1.update)) t2.update
     and new_guard =
       Guard.Infix.(
         t1.guard && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.guard)
@@ -114,7 +108,7 @@ module Inner = struct
 
 
   let id t = t.id
-  let update t var = Base.Map.find t.update var
+  let update t var = Map.find t.update var
   let update_map t = t.update
 
   let overapprox_nonlinear_updates t =
@@ -132,8 +126,8 @@ module Inner = struct
             let new_var_poly_with_coeff = Polynomial.mul (Polynomial.of_constant coeff) new_var_poly in
             (* check if update is quadratic, ^4, ^6, ... *)
             let vars = Monomial.vars mon in
-            if Base.Set.length vars = 1 then
-              let var = Base.Set.choose_exn vars in
+            if Set.length vars = 1 then
+              let var = Set.choose_exn vars in
               if Monomial.degree_variable var mon mod 2 = 0 then
                 let var_poly = Polynomial.of_var var in
                 (* check if term will increase. drop nonlinear to ensure fast termination of SMT call *)
@@ -176,11 +170,11 @@ module Inner = struct
                ~f:(fun (g, p) (g', p') -> (Guard.mk_and g g', Polynomial.add p p'))
                ~init:(guard, Polynomial.zero)
         in
-        (final_guard, Base.Map.set update ~key:orig_var ~data:final_upd_poly)
+        (final_guard, Map.set update ~key:orig_var ~data:final_upd_poly)
     in
 
     let guard', update' =
-      Base.Map.fold t.update ~f:(fun ~key ~data a -> overapprox_poly key data a) ~init:(t.guard, t.update)
+      Map.fold t.update ~f:(fun ~key ~data a -> overapprox_poly key data a) ~init:(t.guard, t.update)
     in
     { t with guard = guard'; update = update' }
 
@@ -193,7 +187,7 @@ module Inner = struct
         ~f:(fun (atom1, atom2) ->
           Atom.is_le atom1 && Atom.is_le atom2
           && Atom.equal atom1 (Atom.flip_comp atom2)
-          && Base.Set.mem (Atom.vars atom1) var
+          && Set.mem (Atom.vars atom1) var
           && Polynomial.var_only_linear var (Atom.poly atom1))
         (List.cartesian_product atoms atoms)
     in
@@ -208,7 +202,7 @@ module Inner = struct
           Polynomial.neg
           @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
       in
-      let update' = Base.Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
+      let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
       let guard' =
         List.filter
           ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
@@ -241,17 +235,17 @@ module Inner = struct
   let only_update t = { t with cost = Polynomial.one; guard = Guard.mk_true; invariant = Invariant.mk_true }
 
   let vars { update; guard; invariant; cost; _ } =
-    Base.Map.fold ~f:(fun ~key ~data -> Base.Set.union (Polynomial.vars data)) update ~init:VarSet.empty
-    |> (Base.Set.union % VarSet.of_list % Base.Map.keys) update
-    |> (Base.Set.union % Guard.vars) guard
-    |> (Base.Set.union % Invariant.vars) invariant
-    |> (Base.Set.union % Polynomial.vars) cost
+    Map.fold ~f:(fun ~key ~data -> Set.union (Polynomial.vars data)) update ~init:VarSet.empty
+    |> (Set.union % VarSet.of_list % Map.keys) update
+    |> (Set.union % Guard.vars) guard
+    |> (Set.union % Invariant.vars) invariant
+    |> (Set.union % Polynomial.vars) cost
 
 
   let default =
     {
       id = 0;
-      update = Base.Map.empty (module Var);
+      update = Map.empty (module Var);
       guard = Guard.mk_true;
       invariant = Invariant.mk_true;
       cost = Polynomial.one;
@@ -266,10 +260,10 @@ module Inner = struct
 
 
   let update_to_string update =
-    if Base.Map.is_empty update then
+    if Map.is_empty update then
       "true"
     else
-      update |> Base.Map.to_alist
+      update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) -> (Var.to_string var, Polynomial.to_string poly))
       |> List.unzip
       |> fun (xs, ys) -> "(" ^ String.concat ~sep:"," xs ^ ") -> (" ^ String.concat ~sep:"," ys ^ ")"
@@ -284,13 +278,13 @@ module Inner = struct
 
   let update_to_string_lhs_ ?(to_file = false) t =
     let update = t.update in
-    if Base.Map.is_empty update then
+    if Map.is_empty update then
       if to_file then
         "()"
       else
         ""
     else
-      update |> Base.Map.to_alist
+      update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) ->
              ( Var.to_string ~to_file var,
                if to_file then
@@ -306,13 +300,13 @@ module Inner = struct
 
   let update_to_string_rhs_ ?(to_file = false) t =
     let update = t.update in
-    if Base.Map.is_empty update then
+    if Map.is_empty update then
       if to_file then
         "()"
       else
         ""
     else
-      update |> Base.Map.to_alist
+      update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) ->
              ( Var.to_string ~to_file var,
                if to_file then
@@ -328,10 +322,10 @@ module Inner = struct
 
   let update_to_string_lhs_pretty t =
     let update = t.update in
-    if Base.Map.is_empty update then
+    if Map.is_empty update then
       ""
     else
-      update |> Base.Map.to_alist
+      update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) -> (Var.to_string ~pretty:true var, Polynomial.to_string_pretty poly))
       |> List.unzip |> Tuple2.first
       |> fun xs -> "(" ^ String.concat ~sep:", " xs ^ ")"
@@ -339,10 +333,10 @@ module Inner = struct
 
   let update_to_string_rhs_pretty t =
     let update = t.update in
-    if Base.Map.is_empty update then
+    if Map.is_empty update then
       ""
     else
-      update |> Base.Map.to_alist
+      update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) -> (Var.to_string ~pretty:true var, Polynomial.to_string_pretty poly))
       |> List.unzip |> Tuple2.second
       |> fun xs -> "(" ^ String.concat ~sep:", " xs ^ ")"
@@ -381,27 +375,25 @@ module Inner = struct
 
 
   let to_id_string = string_of_int % id
-  let input_vars t = t.update |> Base.Map.keys |> VarSet.of_list
-  let has_tmp_vars t = not @@ Base.Set.is_empty @@ Base.Set.diff (vars t) (input_vars t)
-  let input_size t = t |> input_vars |> Base.Set.length
-  let tmp_vars t = Base.Set.diff (vars t) (input_vars t)
+  let input_vars t = t.update |> Map.keys |> VarSet.of_list
+  let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
+  let input_size t = t |> input_vars |> Set.length
+  let tmp_vars t = Set.diff (vars t) (input_vars t)
 
   let changed_vars t =
-    input_vars t |> Base.Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
+    input_vars t |> Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
 
 
   let rename_update update rename_map =
-    update |> Base.Map.to_sequence
-    |> Base.Sequence.map ~f:(fun (key, value) ->
+    update |> Map.to_sequence
+    |> Sequence.map ~f:(fun (key, value) ->
            (RenameMap.find key rename_map ~default:key, Polynomial.rename rename_map value))
-    |> Base.Map.of_sequence_exn (module Var)
+    |> Map.of_sequence_exn (module Var)
 
 
   let rename_temp_vars t temp_vars =
-    let temp_vars_of_label = Base.Set.diff (vars t) (input_vars t) in
-    let rename_map =
-      Base.Sequence.zip (Base.Set.to_sequence temp_vars_of_label) temp_vars |> RenameMap.of_sequence
-    in
+    let temp_vars_of_label = Set.diff (vars t) (input_vars t) in
+    let rename_map = Sequence.zip (Set.to_sequence temp_vars_of_label) temp_vars |> RenameMap.of_sequence in
     {
       id = t.id;
       update = rename_update t.update rename_map;
@@ -422,19 +414,15 @@ module Inner = struct
 
 
   let relax_guard ~non_static t =
-    let is_static atom =
-      Base.Set.is_subset (Atoms.Atom.vars atom) ~of_:(Base.Set.diff (input_vars t) non_static)
-    in
+    let is_static atom = Set.is_subset (Atoms.Atom.vars atom) ~of_:(Set.diff (input_vars t) non_static) in
     { t with guard = List.filter ~f:is_static t.guard }
 
 
   let remove_non_contributors non_contributors t =
     let patterns =
-      List.filter
-        ~f:(Base.Set.mem (Base.Set.diff (input_vars t) non_contributors))
-        (Base.Set.to_list @@ input_vars t)
+      List.filter ~f:(Set.mem (Set.diff (input_vars t) non_contributors)) (Set.to_list @@ input_vars t)
     in
-    let assignments = List.map ~f:(Base.Map.find_exn t.update) patterns in
+    let assignments = List.map ~f:(Map.find_exn t.update) patterns in
     mk ~cost:t.cost ~assignments ~patterns ~guard:t.guard ~id:None
 
 
@@ -454,4 +442,4 @@ module Inner = struct
 end
 
 include Inner
-include Base.Comparator.Make (Inner)
+include Comparator.Make (Inner)

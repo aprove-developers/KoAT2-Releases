@@ -5,8 +5,8 @@ type ('a, 'b, 'a_cmp, 'b_cmp) t = ('a, 'b, 'a_cmp) Map.t * ('b, 'a, 'b_cmp) Map.
 let of_sequence (type a b a_cmp b_cmp) (a_comparator_module : (a, a_cmp) Comparator.Module.t)
     (b_comparator_module : (b, b_cmp) Comparator.Module.t) (seq : (a * b) Sequence.t) : (a, b, a_cmp, b_cmp) t
     =
-  let seq_rev = Base.Sequence.map ~f:Tuple2.swap seq in
-  (Base.Map.of_sequence_exn a_comparator_module seq, Base.Map.of_sequence_exn b_comparator_module seq_rev)
+  let seq_rev = Sequence.map ~f:Tuple2.swap seq in
+  (Map.of_sequence_exn a_comparator_module seq, Map.of_sequence_exn b_comparator_module seq_rev)
 
 
 (* let of_sequence_rev = *)
@@ -45,8 +45,8 @@ module Make (A : Comparator.S) (B : Comparator.S) = struct
   type t = (A.t, B.t, A.comparator_witness, B.comparator_witness) outer_t
 
   let of_sequence seq : t =
-    let seq_rev = Base.Sequence.map ~f:Tuple2.swap seq in
-    (Base.Map.of_sequence_exn (module A) seq, Base.Map.of_sequence_exn (module B) seq_rev)
+    let seq_rev = Sequence.map ~f:Tuple2.swap seq in
+    (Map.of_sequence_exn (module A) seq, Map.of_sequence_exn (module B) seq_rev)
 
 
   let of_sequence_rev = of_sequence % Sequence.map ~f:(fun (a, b) -> (b, a))

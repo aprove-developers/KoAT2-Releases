@@ -2,7 +2,7 @@ open OurBase
 
 module LocationSetOver (L : ProgramTypes.Location) = struct
   include Set
-  include OurBase.MakeSetCreators0 (L)
+  include MakeSetCreators0 (L)
 
   let to_string : t -> string = Util.sequence_to_string ~f:L.to_string % Set.to_sequence
 end

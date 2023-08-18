@@ -120,7 +120,7 @@ let improve_timebounds_plrf ~compute_refined_plrfs program scc (class_appr, appr
   let is_exptime_bounded = RealBound.is_finite % get_timebound in
   let unbounded_vars (gt, l) =
     Program.input_vars program
-    |> Base.Set.filter ~f:(RealBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
+    |> Set.filter ~f:(RealBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
   in
   let find_plrfs refined =
     Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc

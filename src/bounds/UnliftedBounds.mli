@@ -33,8 +33,8 @@ module UnliftedTimeBound : sig
 
     val mk_from_program :
       Logger.log ->
-      handled_transitions:(Transition.t, 'a) Base.Set.t ->
-      measure_decr_transitions:(Transition.t, Transition.comparator_witness) Base.Set.t ->
+      handled_transitions:(Transition.t, 'a) Set.t ->
+      measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
       ?compute_proof:compute_proof Option.t ->
       Program.t ->
       (Transition.t -> B.t) ->
