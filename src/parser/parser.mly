@@ -182,7 +182,7 @@ general_transition_rhss:
     { rhss }
     (** If there is only one transition then we allow to omit the probability annotation *)
   | rhs = prob_transition_rhs_without_prob
-    { [(OurFloat.one,rhs)] };
+    { [(OurRational.one,rhs)] };
 
 prob_transition_rhs_with_prob:
   | prob=our_float; COLON; rhs_without_prob=prob_transition_rhs_without_prob

@@ -2,8 +2,8 @@ open OurBase
 open Polynomials
 
 type t =
-  | Binomial of Polynomial.t * OurFloat.t
-  | Geometric of OurFloat.t
+  | Binomial of Polynomial.t * OurRational.t
+  | Geometric of OurRational.t
   | Hypergeometric of OurInt.t * Polynomial.t * Polynomial.t
   | Uniform of Polynomial.t * Polynomial.t
 [@@deriving eq, ord]
@@ -18,8 +18,8 @@ let to_string ?(pretty = false) ?(to_file = false) =
       Polynomial.to_string
   in
   function
-  | Binomial (n, p) -> "Binomial (" ^ poly_to_string n ^ ", " ^ OurFloat.to_string p ^ ")"
-  | Geometric p -> "Geometric (" ^ OurFloat.to_string p ^ ")"
+  | Binomial (n, p) -> "Binomial (" ^ poly_to_string n ^ ", " ^ OurRational.to_string p ^ ")"
+  | Geometric p -> "Geometric (" ^ OurRational.to_string p ^ ")"
   | Hypergeometric (bigN, k, n) ->
       "Hypergeometric (" ^ OurInt.to_string bigN ^ ", " ^ Polynomial.to_string k ^ ", "
       ^ Polynomial.to_string n ^ ")"
@@ -56,9 +56,9 @@ let as_guard d v' =
   let zero = Polynomial.zero in
   match d with
   | Binomial (n, p) ->
-      if OurFloat.(equal p zero) then
+      if OurRational.(equal p zero) then
         Guard.Infix.(poly_v' = zero)
-      else if OurFloat.(equal p one) then
+      else if OurRational.(equal p one) then
         Guard.Infix.(poly_v' = n)
       else
         Guard.Infix.(zero <= poly_v' && poly_v' <= n)
@@ -69,12 +69,12 @@ let as_guard d v' =
 
 let exp_value_poly = function
   | Binomial (n, p) -> RealPolynomial.(of_intpoly n * of_constant p)
-  | Geometric a -> RealPolynomial.of_constant OurFloat.(div (of_int 1) a)
+  | Geometric a -> RealPolynomial.of_constant OurRational.(div (of_int 1) a)
   | Hypergeometric (bigN, k, n) ->
-      RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurFloat.(one / of_ourint bigN))
+      RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one / of_ourint bigN))
   | Uniform (a, b) ->
       RealPolynomial.mul
-        (RealPolynomial.of_constant @@ OurFloat.of_float 0.5)
+        (RealPolynomial.of_constant @@ OurRational.of_float 0.5)
         (RealPolynomial.add (RealPolynomial.of_intpoly a) (RealPolynomial.of_intpoly b))
 
 
@@ -92,30 +92,30 @@ let moment_poly d i =
         | _ -> failwith @@ Int.to_string i ^ ". moment of binomial distribution not yet implemented.")
     | Geometric a -> (
         match i with
-        | 2 -> RealPolynomial.of_constant @@ OurFloat.((of_int 2 - a) / pow a 2)
+        | 2 -> RealPolynomial.of_constant @@ OurRational.((of_int 2 - a) / pow a 2)
         | _ -> failwith @@ Int.to_string i ^ ". moment of geometric distribution not yet implemented.")
     | Hypergeometric (bigN, k, n) -> (
         match i with
-        (* RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurFloat.(one/of_ourint bigN)) *)
+        (* RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one/of_ourint bigN)) *)
         | 2 ->
             let expv = exp_value_poly d in
             let bigN, k, n =
-              (OurFloat.of_ourint bigN, RealPolynomial.of_intpoly k, RealPolynomial.of_intpoly n)
+              (OurRational.of_ourint bigN, RealPolynomial.of_intpoly k, RealPolynomial.of_intpoly n)
             in
             RealPolynomial.(
               expv
               + expv
-                * (of_constant OurFloat.(one / bigN) * (of_constant bigN - k))
-                * (of_constant OurFloat.(one / (bigN - one)) * (of_constant bigN - n)))
+                * (of_constant OurRational.(one / bigN) * (of_constant bigN - k))
+                * (of_constant OurRational.(one / (bigN - one)) * (of_constant bigN - n)))
         | _ -> failwith @@ Int.to_string i ^ ". moment of hypergeometric distribution not yet implemented.")
     | Uniform (a, b) -> (
         match i with
         | 2 ->
             (* Variance is given by ((b - a + 1)² - 1)/12 *)
-            let one = RealPolynomial.of_constant OurFloat.one in
+            let one = RealPolynomial.of_constant OurRational.one in
             let variance =
               RealPolynomial.mul
-                (RealPolynomial.of_constant @@ OurFloat.div OurFloat.one (OurFloat.of_int 12))
+                (RealPolynomial.of_constant @@ OurRational.div OurRational.one (OurRational.of_int 12))
                 (RealPolynomial.sub
                    (RealPolynomial.pow
                       (RealPolynomial.add
@@ -133,7 +133,7 @@ let moment_poly d i =
 open Bounds
 
 let exp_value_abs_bound = function
-  | Uniform (a, b) -> RealBound.(of_constant (OurFloat.of_float 0.5) * (of_intpoly a + of_intpoly b))
+  | Uniform (a, b) -> RealBound.(of_constant (OurRational.of_float 0.5) * (of_intpoly a + of_intpoly b))
   | Binomial (n, p) -> RealBound.of_poly @@ exp_value_poly (Binomial (n, p))
   | Geometric a -> RealBound.of_poly @@ exp_value_poly (Geometric a)
   | Hypergeometric (bigN, k, n) -> RealBound.of_poly @@ exp_value_poly (Hypergeometric (bigN, k, n))

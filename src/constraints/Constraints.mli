@@ -47,7 +47,7 @@ end
 module RealConstraint : sig
   include module type of ConstraintOver (RealAtom)
 
-  val max_of_occurring_constants : t -> OurFloat.t
+  val max_of_occurring_constants : t -> OurRational.t
 
   (* Add operations specific to polynomial constraints here if needed *)
   val of_intconstraint : Constraint.t -> t
@@ -68,7 +68,7 @@ end
 module ParameterConstraint : module type of ParameterConstraintOver (OurInt)
 
 module RealParameterConstraint : sig
-  include module type of ParameterConstraintOver (OurFloat)
+  include module type of ParameterConstraintOver (OurRational)
 
   val of_intconstraint : Constraint.t -> t
 end

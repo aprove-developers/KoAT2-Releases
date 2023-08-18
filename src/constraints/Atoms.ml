@@ -169,7 +169,7 @@ module Atom = struct
 end
 
 module RealAtom = struct
-  include AtomOver (PolynomialOver (OurFloat))
+  include AtomOver (PolynomialOver (OurRational))
 
   let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
     let poly_print =
@@ -205,4 +205,4 @@ module ParameterAtom = struct
     | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
 end
 
-module RealParameterAtom = ParameterAtomOver (OurFloat)
+module RealParameterAtom = ParameterAtomOver (OurRational)

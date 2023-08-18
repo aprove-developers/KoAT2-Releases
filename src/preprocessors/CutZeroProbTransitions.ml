@@ -9,7 +9,7 @@ let logger = Logging.(get Preprocessor)
 let transform_program program =
   let prob_0_trans =
     Program.transitions program
-    |> Set.filter ~f:OurFloat.(equal zero % TransitionLabel.probability % Transition.label)
+    |> Set.filter ~f:OurRational.(equal zero % TransitionLabel.probability % Transition.label)
   in
 
   Set.iter

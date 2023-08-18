@@ -6,7 +6,7 @@ open Polynomials
 open ProgramTypes
 open Valuation
 open ProbabilisticProgramModules
-module Valuation = Valuation.Make (OurFloat)
+module Valuation = Valuation.Make (OurRational)
 
 module CoeffTableEntry = struct
   module Inner = struct
@@ -301,7 +301,8 @@ let finalise_plrf cache ~refined solver non_increasing
     let model = Option.value_exn @@ Solver.model_real solver in
     let rfunc loc =
       Hashtbl.find_exn cache.template_table loc
-      |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var model |? OurFloat.zero)
+      |> RealParameterPolynomial.eval_coefficients (fun var ->
+             Valuation.eval_opt var model |? OurRational.zero)
     in
     let ranking =
       {

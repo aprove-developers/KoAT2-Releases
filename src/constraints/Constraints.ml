@@ -107,7 +107,7 @@ module RealConstraint = struct
   let max_of_occurring_constants atoms =
     atoms
     |> List.map ~f:RealAtom.max_of_occurring_constants
-    |> List.fold_left ~f:OurFloat.mul ~init:OurFloat.one
+    |> List.fold_left ~f:OurRational.mul ~init:OurRational.one
 
 
   let of_intconstraint intconstraint = mk (List.map ~f:(fun atom -> RealAtom.of_intatom atom) intconstraint)
@@ -149,7 +149,7 @@ end
 module ParameterConstraint = ParameterConstraintOver (OurInt)
 
 module RealParameterConstraint = struct
-  include ParameterConstraintOver (OurFloat)
+  include ParameterConstraintOver (OurRational)
 
   let of_intconstraint = of_constraint % RealConstraint.of_intconstraint
 end

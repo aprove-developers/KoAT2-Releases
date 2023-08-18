@@ -6,7 +6,7 @@ module Make (Num : PolyTypes.OurNumber) :
 module Bound : BoundType.Bound with type value = OurInt.t and type polynomial = Polynomials.Polynomial.t
 
 module RealBound : sig
-  include BoundType.Bound with type value = OurFloat.t and type polynomial = Polynomials.RealPolynomial.t
+  include BoundType.Bound with type value = OurRational.t and type polynomial = Polynomials.RealPolynomial.t
 
   val of_intbound : Bound.t -> t
   val of_intpoly : Polynomials.Polynomial.t -> t

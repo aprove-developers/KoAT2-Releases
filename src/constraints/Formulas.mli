@@ -31,7 +31,7 @@ module RealFormula : sig
   include module type of FormulaOver (RealConstraint)
 
   val of_intformula : Formula.t -> t
-  val max_of_occurring_constants : t -> OurFloat.t
+  val max_of_occurring_constants : t -> OurRational.t
 
   (* Add operations specific to polynomial formula here if needed *)
 end

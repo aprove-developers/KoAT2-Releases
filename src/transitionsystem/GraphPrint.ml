@@ -99,7 +99,7 @@ module ProbabilisticLabelPrint = struct
 
   let all_fields l =
     let classical_fields = all_default_fields_as_strings l in
-    let prob_field = "p = " ^ OurFloat.to_string (TransitionLabel.probability l) in
+    let prob_field = "p = " ^ OurRational.to_string (TransitionLabel.probability l) in
     prob_field :: classical_fields
 
 

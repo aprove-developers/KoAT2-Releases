@@ -2,8 +2,8 @@ open OurBase
 open Polynomials
 
 type t =
-  | Binomial of Polynomial.t * OurFloat.t
-  | Geometric of OurFloat.t
+  | Binomial of Polynomial.t * OurRational.t
+  | Geometric of OurRational.t
   | Hypergeometric of OurInt.t * Polynomial.t * Polynomial.t
   | Uniform of Polynomial.t * Polynomial.t
 [@@deriving eq, ord]

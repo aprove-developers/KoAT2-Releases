@@ -112,7 +112,7 @@ module RealFormula = struct
   let max_of_occurring_constants constraints =
     constraints
     |> List.map ~f:RealConstraint.max_of_occurring_constants
-    |> List.fold_left ~f:OurFloat.mul ~init:OurFloat.one
+    |> List.fold_left ~f:OurRational.mul ~init:OurRational.one
 end
 
 module RealParameterFormula = struct

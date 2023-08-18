@@ -286,5 +286,5 @@ let exp_value_abs_bound t =
             (RealBound.product
             % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound)
             % Monomial_.to_sequence))
-  |> Sequence.map ~f:RealBound.(fun (c, p) -> mul (of_constant @@ OurFloat.of_ourint c) p)
+  |> Sequence.map ~f:RealBound.(fun (c, p) -> mul (of_constant @@ OurRational.of_ourint c) p)
   |> RealBound.sum

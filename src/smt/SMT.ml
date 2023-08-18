@@ -28,7 +28,7 @@ let from_poly context =
 
 let from_real_poly context =
   RealPolynomial.fold
-    ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value))
+    ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
     ~indeterminate:(fun var ->
       if Var.is_real var then
         Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
@@ -43,7 +43,7 @@ let from_real_poly context =
 let from_real_bound context bound =
   let from_finite_bound =
     RealBound.fold_bound
-      ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value))
+      ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
       ~var:(fun var ->
         let varexp =
           if Var.is_real var then
@@ -59,7 +59,7 @@ let from_real_bound context bound =
       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
       ~exp:(fun b e ->
-        Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurFloat.to_string b) e)
+        Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurRational.to_string b) e)
   in
   match Option.map ~f:from_finite_bound (RealBound.prove_finiteness bound) with
   | Some b -> b
@@ -267,7 +267,7 @@ module IncrementalZ3Solver = struct
   type t = Z3.Solver.solver * Z3.context
 
   module IntValuation = Valuation.Make (OurInt)
-  module RealValuation = Valuation.Make (OurFloat)
+  module RealValuation = Valuation.Make (OurRational)
 
   let create ?(model = true) () =
     let context =
@@ -353,7 +353,7 @@ module IncrementalZ3Solver = struct
 
 
   let get_int_expr_value = get_expr_value ~val_of_z3int:identity ~val_of_ratio:Q.to_bigint
-  let get_real_expr_value = get_expr_value ~val_of_z3int:OurFloat.of_ourint ~val_of_ratio:identity
+  let get_real_expr_value = get_expr_value ~val_of_z3int:OurRational.of_ourint ~val_of_ratio:identity
   let model t = extract_values t ~get_z3_value:get_int_expr_value |> Option.map ~f:IntValuation.from
   let model_real t = extract_values t ~get_z3_value:get_real_expr_value |> Option.map ~f:RealValuation.from
 end

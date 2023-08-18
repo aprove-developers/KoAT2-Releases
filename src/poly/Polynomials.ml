@@ -390,30 +390,31 @@ module Polynomial = struct
 end
 
 module RealPolynomial = struct
-  include PolynomialOver (OurFloat)
+  include PolynomialOver (OurRational)
 
   let max_of_occurring_constants =
-    fold ~const:OurFloat.abs
-      ~indeterminate:(fun _ -> OurFloat.one)
-      ~neg:identity ~plus:OurFloat.add ~times:OurFloat.mul ~pow:OurFloat.pow
+    fold ~const:OurRational.abs
+      ~indeterminate:(fun _ -> OurRational.one)
+      ~neg:identity ~plus:OurRational.add ~times:OurRational.mul ~pow:OurRational.pow
 
 
   let of_intpoly =
-    Polynomial.fold ~const:(of_constant % OurFloat.of_ourint) ~indeterminate:of_var ~neg ~plus:add ~times:mul
-      ~pow
+    Polynomial.fold
+      ~const:(of_constant % OurRational.of_ourint)
+      ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow
 
 
-  let of_intconstant = of_constant % OurFloat.of_ourint
+  let of_intconstant = of_constant % OurRational.of_ourint
 end
 
 module RationalPolynomial = struct
-  include PolynomialOver (OurFloat)
+  include PolynomialOver (OurRational)
 
   let normalize_return_factor poly =
     let coeff_inv =
       coeffs poly
-      |> List.filter ~f:(not % OurFloat.is_integral)
-      |> List.map ~f:OurFloat.den
+      |> List.filter ~f:(not % OurRational.is_integral)
+      |> List.map ~f:OurRational.den
       |> List.fold ~f:OurInt.lcm ~init:OurInt.one
       |> OurInt.abs |> OurRational.of_ourint
     in
@@ -470,4 +471,4 @@ module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
 end
 
 module ParameterPolynomial = ParameterPolynomialOver (OurInt)
-module RealParameterPolynomial = ParameterPolynomialOver (OurFloat)
+module RealParameterPolynomial = ParameterPolynomialOver (OurRational)

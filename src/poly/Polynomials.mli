@@ -41,16 +41,16 @@ module Polynomial : sig
 end
 
 module RealPolynomial : sig
-  include module type of PolynomialOver (OurFloat)
+  include module type of PolynomialOver (OurRational)
 
   val separate_by_sign : t -> t * t
   val of_intconstant : OurInt.t -> t
-  val max_of_occurring_constants : t -> OurFloat.t
+  val max_of_occurring_constants : t -> OurRational.t
   val of_intpoly : Polynomial.t -> t
 end
 
 module RationalPolynomial : sig
-  include module type of PolynomialOver (OurFloat)
+  include module type of PolynomialOver (OurRational)
 
   val degree_coeff_list : t -> value list
 
@@ -87,5 +87,5 @@ end
 module ParameterPolynomial : module type of ParameterPolynomialOver (OurInt)
 (** Provides default implementation of polynomials where the coefficients are polynomials over [OurInt]. *)
 
-module RealParameterPolynomial : module type of ParameterPolynomialOver (OurFloat)
-(** Provides default implementation of polynomials where the coefficients are polynomials over [OurFloat]. *)
+module RealParameterPolynomial : module type of ParameterPolynomialOver (OurRational)
+(** Provides default implementation of polynomials where the coefficients are polynomials over [OurRational]. *)

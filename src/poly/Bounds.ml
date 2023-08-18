@@ -541,18 +541,22 @@ end
 module Bound = Make (OurInt)
 
 module RealBound = struct
-  include Make (OurFloat)
+  include Make (OurRational)
 
   let of_intbound =
-    Bound.fold ~const:(of_constant % OurFloat.of_ourint) ~var:of_var ~plus:add ~times:mul
-      ~exp:(fun value -> exp (OurFloat.of_ourint value))
+    Bound.fold
+      ~const:(of_constant % OurRational.of_ourint)
+      ~var:of_var ~plus:add ~times:mul
+      ~exp:(fun value -> exp (OurRational.of_ourint value))
       ~inf:infinity
 
 
   let of_intpoly = of_poly % RealPolynomial.of_intpoly
 
   let to_intbound =
-    fold ~const:(Bound.of_constant % OurFloat.ceil) ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul
-      ~exp:(fun value -> Bound.exp (OurFloat.ceil value))
+    fold
+      ~const:(Bound.of_constant % OurRational.ceil)
+      ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul
+      ~exp:(fun value -> Bound.exp (OurRational.ceil value))
       ~inf:infinity
 end

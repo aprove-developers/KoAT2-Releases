@@ -85,32 +85,32 @@ let mk_program_simple (transitions : Transition.t list) : Program.t =
   Program.from_sequence (Transition.src @@ List.hd_exn transitions) (Sequence.of_list transitions)
 
 
-let ourfloat_of_decimal_or_fraction_string (str : string) : OurFloat.t =
+let ourfloat_of_decimal_or_fraction_string (str : string) : OurRational.t =
   (* Check if fraction *)
   if String.contains str '[' then
-    OurFloat.of_string (String.drop_prefix str 1 |> flip String.drop_suffix 1)
+    OurRational.of_string (String.drop_prefix str 1 |> flip String.drop_suffix 1)
   else
     let str_before_point, str_after_point = Option.value ~default:(str, "") (String.lsplit2 ~on:'.' str) in
     let numerator =
       if String.is_empty str_after_point then
-        OurFloat.zero
+        OurRational.zero
       else
-        OurFloat.of_string str_after_point
+        OurRational.of_string str_after_point
     in
-    let denominator = OurFloat.pow (OurFloat.of_int 10) (String.length str_after_point) in
+    let denominator = OurRational.pow (OurRational.of_int 10) (String.length str_after_point) in
     let fractional =
       if String.is_empty str_after_point then
-        OurFloat.zero
+        OurRational.zero
       else
-        OurFloat.(numerator / denominator)
+        OurRational.(numerator / denominator)
     in
     let leading =
       if String.is_empty str_before_point then
-        OurFloat.zero
+        OurRational.zero
       else
-        OurFloat.of_string str_before_point
+        OurRational.of_string str_before_point
     in
-    OurFloat.(leading + fractional)
+    OurRational.(leading + fractional)
 
 
 (* Probabilistic Programs *)
@@ -132,7 +132,7 @@ let mk_general_transitions
     (gts :
       ((string * string list)
       * Polynomial.t
-      * (int * (OurFloat.t * UpdateElement.t list * string) list) list
+      * (int * (OurRational.t * UpdateElement.t list * string) list) list
       * Formula.t)
       list) =
   let lhs_locations = Set.of_list (module String) @@ List.map ~f:(fun ((loc, _), _, _, _) -> loc) gts in
@@ -155,7 +155,7 @@ let mk_general_transitions
     |> List.max_elt ~compare:Int.compare |> Option.value ~default:0
   in
   let mk_general_transition
-      ((start_loc, patterns), cost, (rhss : (OurFloat.t * UpdateElement.t list * string) list), formula) =
+      ((start_loc, patterns), cost, (rhss : (OurRational.t * UpdateElement.t list * string) list), formula) =
     Sequence.of_list (Formula.constraints formula)
     |> Sequence.map ~f:(fun guard ->
            GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns

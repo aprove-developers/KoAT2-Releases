@@ -28,7 +28,7 @@ module Atom : sig
 end
 
 module RealAtom : sig
-  include module type of AtomOver (PolynomialOver (OurFloat))
+  include module type of AtomOver (PolynomialOver (OurRational))
 
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
@@ -36,7 +36,7 @@ module RealAtom : sig
   val get_coefficient : Var.t -> t -> value
   (** Returns the coefficient of a variable which is normalised to the lhs. *)
 
-  val max_of_occurring_constants : t -> OurFloat.t
+  val max_of_occurring_constants : t -> OurRational.t
 
   (* Add operations specific to polynomial atoms here if needed *)
   val of_intatom : Atom.t -> t
@@ -51,4 +51,4 @@ module ParameterAtom : sig
   include module type of ParameterAtomOver (OurInt)
 end
 
-module RealParameterAtom : module type of ParameterAtomOver (OurFloat)
+module RealParameterAtom : module type of ParameterAtomOver (OurRational)

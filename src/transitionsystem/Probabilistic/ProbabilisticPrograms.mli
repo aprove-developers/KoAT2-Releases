@@ -3,7 +3,7 @@ open OurBase
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
-  val probability : t -> OurFloat.t
+  val probability : t -> OurRational.t
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
@@ -41,7 +41,7 @@ module GeneralTransition : sig
     patterns:Var.t list ->
     cost:Polynomials.Polynomial.t ->
     guard:Guard.t ->
-    rhss:(OurFloat.t * UpdateElement_.t list * Location.t) list ->
+    rhss:(OurRational.t * UpdateElement_.t list * Location.t) list ->
     t
 
   val src : t -> Location.t

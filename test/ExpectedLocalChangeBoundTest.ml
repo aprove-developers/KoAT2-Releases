@@ -8,7 +8,7 @@ let tests =
   let var_first_arg = Sequence.hd_exn Var.args in
   let bound_first_arg = RealBound.of_var var_first_arg in
   let loc_g = Location.of_string "g" in
-  let one_half = RealBound.of_constant (OurFloat.of_float 0.5) in
+  let one_half = RealBound.of_constant (OurRational.of_float 0.5) in
   "ExpectedChangeBoundTests"
   >::: List.mapi
          ~f:(fun i (gt, expected) ->
@@ -51,8 +51,8 @@ let tests =
              ("(RULES f(X) -> g(UNIFORM(X-Y,X)) :|: Y = X)", zero);
              ("(RULES f(X) -> g(UNIFORM(X-Y,X+Y)) :|: Y = X)", bound_first_arg);
              ( "(RULES f(X) -> g(UNIFORM(X-1,X+2)*UNIFORM(-3,4)) :|: Y = X)",
-               (of_constant (OurFloat.of_float 4.5) * bound_first_arg) + of_constant (OurFloat.of_float 5.25)
-             )
+               (of_constant (OurRational.of_float 4.5) * bound_first_arg)
+               + of_constant (OurRational.of_float 5.25) )
              (* imprecise due to abs overestimation of unif distributions*);
-             ("(RULES f(X) -> g(X + BINOMIAL(2,0.5)^2) )", of_constant (OurFloat.of_float 1.5));
+             ("(RULES f(X) -> g(X + BINOMIAL(2,0.5)^2) )", of_constant (OurRational.of_float 1.5));
            ]

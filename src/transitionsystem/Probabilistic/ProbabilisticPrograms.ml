@@ -13,7 +13,7 @@ module ProbabilisticTransitionLabel_ = struct
     type t = {
       id : int;
       gt_id : int;
-      probability : OurFloat.t;
+      probability : OurRational.t;
       guard : Guard.t;
       invariant : Invariant.t;
       update : UpdateElement_.t ProgramTypes.var_map;
@@ -29,7 +29,7 @@ module ProbabilisticTransitionLabel_ = struct
       {
         id = 0;
         gt_id = 0;
-        probability = OurFloat.one;
+        probability = OurRational.one;
         guard = Guard.mk_true;
         invariant = Guard.mk_true;
         overappr_guard = Guard.mk_true;
@@ -175,13 +175,13 @@ module ProbabilisticTransitionLabel_ = struct
           Polynomial.to_string t.cost ^ "}>"
       in
       if pretty then
-        OurFloat.to_string t.probability ^ ":" ^ "t" ^ Util.natural_to_subscript t.id ^ "∈g"
+        OurRational.to_string t.probability ^ ":" ^ "t" ^ Util.natural_to_subscript t.id ^ "∈g"
         ^ Util.natural_to_subscript t.gt_id ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty t ^ " "
         ^ cost ^ " "
         ^ update_to_string_rhs_pretty ue_to_string_pretty get_update t
         ^ guard
       else
-        "ID: " ^ OurFloat.to_string t.probability ^ ":" ^ invariant ^ string_of_int t.gt_id ^ ","
+        "ID: " ^ OurRational.to_string t.probability ^ ":" ^ invariant ^ string_of_int t.gt_id ^ ","
         ^ string_of_int t.id ^ ", " ^ cost ^ "&euro;" ^ ", "
         ^ update_to_string ue_to_string (get_update t)
         ^ guard
@@ -307,15 +307,15 @@ module ProbabilisticTransitionLabel = struct
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
     Map.equal UpdateElement_.equal t1.update t2.update
-    && OurFloat.equal t1.probability t2.probability
+    && OurRational.equal t1.probability t2.probability
     && Guard.equal t1.guard t2.guard
     && Invariant.equal t1.invariant t2.invariant
     && Polynomial.equal t1.cost t2.cost
 
 
   let compare_equivalent t1 t2 =
-    if OurFloat.compare t1.probability t2.probability != 0 then
-      OurFloat.compare t1.probability t2.probability
+    if OurRational.compare t1.probability t2.probability != 0 then
+      OurRational.compare t1.probability t2.probability
     else if Map.compare_direct UpdateElement_.compare t1.update t2.update != 0 then
       Map.compare_direct UpdateElement_.compare t1.update t2.update
     else if Guard.compare t1.guard t2.guard != 0 then
@@ -547,7 +547,7 @@ module ProbabilisticTransition = struct
     ^ ":"
     ^ Int.to_string (ProbabilisticTransitionLabel.id label)
     ^ ": " ^ Location.to_string l ^ "->"
-    ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label)
+    ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
     ^ ":" ^ Location.to_string l'
 
 
@@ -557,17 +557,17 @@ module ProbabilisticTransition = struct
     ^ "∈g"
     ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.gt_id label)
     ^ ": " ^ Location.to_string l ^ "→"
-    ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label)
+    ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
     ^ ":" ^ Location.to_string l'
 
 
   let to_string_rhs (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
-      if OurFloat.(equal one prob) then
+      if OurRational.(equal one prob) then
         ""
       else
-        "[" ^ OurFloat.to_string prob ^ "]:"
+        "[" ^ OurRational.to_string prob ^ "]:"
     in
     prob_string
     ^ (Int.to_string (ProbabilisticTransitionLabel.id label) ^ ":")
@@ -578,10 +578,10 @@ module ProbabilisticTransition = struct
   let to_string_rhs_pretty (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
-      if OurFloat.(equal one prob) then
+      if OurRational.(equal one prob) then
         ""
       else
-        "[" ^ OurFloat.to_string prob ^ "]:"
+        "[" ^ OurRational.to_string prob ^ "]:"
     in
     prob_string
     ^ ("t" ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.id label) ^ ":")
@@ -633,9 +633,9 @@ module GeneralTransition = struct
 
     let mk ~(start : Location.t) ~(fill_up_to_num_arg_vars : int) ~(patterns : Var.t list)
         ~(cost : Polynomials.Polynomial.t) ~(guard : Guard.t)
-        ~(rhss : (OurFloat.t * UpdateElement_.t list * Location.t) list) : t =
-      let total_prob = Sequence.of_list rhss |> Sequence.map ~f:Tuple3.first |> OurFloat.sum in
-      if not (OurFloat.equal OurFloat.one total_prob) then
+        ~(rhss : (OurRational.t * UpdateElement_.t list * Location.t) list) : t =
+      let total_prob = Sequence.of_list rhss |> Sequence.map ~f:Tuple3.first |> OurRational.sum in
+      if not (OurRational.equal OurRational.one total_prob) then
         raise ProbabilitiesDoNotSumToOne;
 
       let gt_id = Unique.unique () in
@@ -707,7 +707,7 @@ module GeneralTransition = struct
       let show_prob_branch (_, label, l') =
         Int.to_string (ProbabilisticTransitionLabel.id label)
         ^ ": "
-        ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label)
+        ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
         ^ ":" ^ Location.to_string l'
       in
       Int.to_string (gt_id t)
@@ -722,7 +722,7 @@ module GeneralTransition = struct
         "t"
         ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.id label)
         ^ ":"
-        ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label)
+        ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
         ^ ":" ^ Location.to_string l'
       in
       "g"
@@ -948,7 +948,7 @@ module ProbabilisticProgram = struct
 
   let remove_zero_prob_transitions tset program =
     Set.fold tset ~init:program ~f:(fun prog (l, t, l') ->
-        assert (OurFloat.(equal (ProbabilisticTransitionLabel.probability t) zero));
+        assert (OurRational.(equal (ProbabilisticTransitionLabel.probability t) zero));
         remove_transition prog (l, t, l'))
 end
 
