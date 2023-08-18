@@ -110,12 +110,8 @@ let cat_maybes_enum e = Enum.map Option.get (Enum.filter Option.is_some e)
 let map_maybe f = List.map f % cat_maybes
 
 (* Returns the fixpoint of f *)
-let find_fixpoint f x =
-  let rec to_same x =
-    match f x with
-    | MaybeChanged.Same, value -> value
-    | MaybeChanged.Changed, value -> to_same value
-  in
+let find_fixpoint (type a) (f : a -> a MaybeChanged.t) x =
+  let rec to_same x = MaybeChanged.if_changed to_same (f x) |> MaybeChanged.unpack in
   to_same x
 
 

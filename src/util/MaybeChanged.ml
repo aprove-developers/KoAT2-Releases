@@ -1,10 +1,9 @@
 open OurBase
-(** A type that is wrapped by the MaybeChanged monad represents a value that might change during a computation.
-    Once it has changed it will be forever marked as changed, but can also be further be manipulated. *)
 
 type status = Changed | Same
 type 'a t = status * 'a
 
+let status (s, _) = s
 let return subject = (Same, subject)
 let pure = return
 
