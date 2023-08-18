@@ -48,7 +48,7 @@ module UpdateValue = struct
 
     let moment_abs_bound d i =
       match d with
-      | Var v -> RealBound.(pow (of_var v) i)
+      | Var v -> RationalBound.(pow (of_var v) i)
       | Dist d -> ProbabilityDistribution.moment_abs_bound d i
 
 
@@ -283,8 +283,8 @@ let exp_value_abs_bound t =
   |> Sequence.map
        ~f:
          (Tuple2.map2
-            (RealBound.product
+            (RationalBound.product
             % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound)
             % Monomial_.to_sequence))
-  |> Sequence.map ~f:RealBound.(fun (c, p) -> mul (of_constant @@ OurRational.of_ourint c) p)
-  |> RealBound.sum
+  |> Sequence.map ~f:RationalBound.(fun (c, p) -> mul (of_constant @@ OurRational.of_ourint c) p)
+  |> RationalBound.sum

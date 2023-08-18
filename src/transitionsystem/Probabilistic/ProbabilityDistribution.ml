@@ -134,10 +134,10 @@ let moment_poly d i =
 open Bounds
 
 let exp_value_abs_bound = function
-  | Uniform (a, b) -> RealBound.(of_constant (OurRational.of_float 0.5) * (of_intpoly a + of_intpoly b))
-  | Binomial (n, p) -> RealBound.of_poly @@ exp_value_poly (Binomial (n, p))
-  | Geometric a -> RealBound.of_poly @@ exp_value_poly (Geometric a)
-  | Hypergeometric (bigN, k, n) -> RealBound.of_poly @@ exp_value_poly (Hypergeometric (bigN, k, n))
+  | Uniform (a, b) -> RationalBound.(of_constant (OurRational.of_float 0.5) * (of_intpoly a + of_intpoly b))
+  | Binomial (n, p) -> RationalBound.of_poly @@ exp_value_poly (Binomial (n, p))
+  | Geometric a -> RationalBound.of_poly @@ exp_value_poly (Geometric a)
+  | Hypergeometric (bigN, k, n) -> RationalBound.of_poly @@ exp_value_poly (Hypergeometric (bigN, k, n))
 
 
 let moment_abs_bound d i =
@@ -147,9 +147,9 @@ let moment_abs_bound d i =
     match d with
     | Uniform (a, b) ->
         if i mod 2 = 0 then
-          RealBound.of_poly @@ moment_poly (Uniform (a, b)) i
+          RationalBound.of_poly @@ moment_poly (Uniform (a, b)) i
         else
           failwith @@ Int.to_string i ^ ". moment of absolute uniform distribution not yet implemented."
-    | Binomial (n, p) -> RealBound.of_poly @@ moment_poly (Binomial (n, p)) i
-    | Geometric a -> RealBound.of_poly @@ moment_poly (Geometric a) i
-    | Hypergeometric (bigN, k, n) -> RealBound.of_poly @@ moment_poly (Hypergeometric (bigN, k, n)) i
+    | Binomial (n, p) -> RationalBound.of_poly @@ moment_poly (Binomial (n, p)) i
+    | Geometric a -> RationalBound.of_poly @@ moment_poly (Geometric a) i
+    | Hypergeometric (bigN, k, n) -> RationalBound.of_poly @@ moment_poly (Hypergeometric (bigN, k, n)) i

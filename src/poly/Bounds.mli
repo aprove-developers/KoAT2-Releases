@@ -5,7 +5,7 @@ module Make (Num : PolyTypes.OurNumber) :
 
 module Bound : BoundType.Bound with type value = OurInt.t and type polynomial = Polynomials.Polynomial.t
 
-module RealBound : sig
+module RationalBound : sig
   include
     BoundType.Bound with type value = OurRational.t and type polynomial = Polynomials.RationalPolynomial.t
 

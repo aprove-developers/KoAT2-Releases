@@ -56,7 +56,7 @@ module IncrementalZ3Solver : sig
   val add : t -> Formula.t -> unit
   (** Asserts the formula. *)
 
-  val add_real : t -> RealFormula.t -> unit
+  val add_real : t -> RationalFormula.t -> unit
 
   val model : t -> Polynomial.valuation Option.t
   (** Returns a model of the current state, if the state is satisfiable. *)
@@ -66,5 +66,5 @@ module IncrementalZ3Solver : sig
   val add_bound_comparison : t -> [ `LE | `LT ] -> Bound.t -> Bound.t -> unit
   (** Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)*)
 
-  val add_realbound_comparison : t -> [ `LE | `LT ] -> RealBound.t -> RealBound.t -> unit
+  val add_realbound_comparison : t -> [ `LE | `LT ] -> RationalBound.t -> RationalBound.t -> unit
 end

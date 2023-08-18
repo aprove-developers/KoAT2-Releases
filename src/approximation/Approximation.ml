@@ -148,7 +148,7 @@ module Probabilistic = struct
 
   module ExpApproximation =
     Make
-      (Bounds.RealBound)
+      (Bounds.RationalBound)
       (struct
         include ProbabilisticProgramModules
         module RV = GRV

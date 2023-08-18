@@ -15,7 +15,7 @@ let get_timebound direction (class_appr, appr) =
         GeneralTransition.transitions gt |> Set.to_sequence
         |> Sequence.filter ~f:(Location.equal l % Transition.target)
         |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
-        |> Bound.sum |> RealBound.of_intbound
+        |> Bound.sum |> RationalBound.of_intbound
 
 
 let get_sizebound direction (class_appr, appr) =
@@ -25,12 +25,12 @@ let get_sizebound direction (class_appr, appr) =
       fun (gt, l) var ->
         GRV.to_probabilistic_rvs ((gt, l), var)
         |> Sequence.map ~f:(fun (t, v) -> ClassicalApproximation.sizebound class_appr t v)
-        |> Bound.sum |> RealBound.of_intbound
+        |> Bound.sum |> RationalBound.of_intbound
 
 
 let get_combined_bounds_both_directions apprs (gt, l) =
   let classtime_bound = get_timebound `ClassTime apprs (gt, l) in
-  if RealBound.is_finite classtime_bound then
+  if RationalBound.is_finite classtime_bound then
     let dir = `ClassTimeExpSize in
     let get_expsize_bound = get_sizebound (size_direction dir) apprs (gt, l) in
     (classtime_bound, get_expsize_bound, dir)
@@ -86,24 +86,26 @@ let improve_with_plrf program (class_appr, appr) rank =
            let rank_size_bound v =
              Set.to_sequence entry_gts_to_loc
              |> Sequence.map ~f:(fun gt -> get_sizebound (gt, entry_loc) v)
-             |> RealBound.sum
+             |> RationalBound.sum
            in
            let rank_at_loc = Plrf.rank rank entry_loc in
            (* Here we assume that rank_at_loc is linear as is always the case for PLRFs *)
-           let rank_bounded = RealBound.substitute_f rank_size_bound (RealBound.of_poly rank_at_loc) in
+           let rank_bounded =
+             RationalBound.substitute_f rank_size_bound (RationalBound.of_poly rank_at_loc)
+           in
 
            let inc_timebound =
              Set.to_sequence entry_gts_to_loc
              |> Sequence.map ~f:(fun gt -> get_timebound (gt, entry_loc))
-             |> RealBound.sum
+             |> RationalBound.sum
            in
-           RealBound.(inc_timebound * rank_bounded))
-    |> RealBound.sum
+           RationalBound.(inc_timebound * rank_bounded))
+    |> RationalBound.sum
   in
   Logger.log logger Logger.DEBUG (fun () ->
-      ("improve_with_plrf", [ ("rank", Plrf.to_string rank); ("bound", RealBound.to_string new_bound) ]));
+      ("improve_with_plrf", [ ("rank", Plrf.to_string rank); ("bound", RationalBound.to_string new_bound) ]));
 
-  if RealBound.is_finite new_bound then (
+  if RationalBound.is_finite new_bound then (
     ProofOutput.add_to_proof_with_format
       FormattedString.(
         fun fmt ->
@@ -117,10 +119,10 @@ let improve_with_plrf program (class_appr, appr) rank =
 let improve_timebounds_plrf ~compute_refined_plrfs program scc (class_appr, appr) :
     ExpApproximation.t MaybeChanged.t =
   let get_timebound, get_sizebound = get_timebound_and_sizebound_both_directions (class_appr, appr) in
-  let is_exptime_bounded = RealBound.is_finite % get_timebound in
+  let is_exptime_bounded = RationalBound.is_finite % get_timebound in
   let unbounded_vars (gt, l) =
     Program.input_vars program
-    |> Set.filter ~f:(RealBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
+    |> Set.filter ~f:(RationalBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
   in
   let find_plrfs refined =
     Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc

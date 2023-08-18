@@ -540,7 +540,7 @@ end
 
 module Bound = Make (OurInt)
 
-module RealBound = struct
+module RationalBound = struct
   include Make (OurRational)
 
   let of_intbound =

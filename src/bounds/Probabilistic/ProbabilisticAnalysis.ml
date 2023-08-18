@@ -24,7 +24,7 @@ let lift_bounds (program, program_gts) program_vars (class_appr, appr) : ExpAppr
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
       |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
-      |> RealBound.of_intbound % Bound.sum
+      |> RationalBound.of_intbound % Bound.sum
     in
     Set.to_sequence program_gts
     |> Sequence.fold ~f:(fun appr gt -> ExpApproximation.add_timebound (gt_timebound gt) gt appr) ~init:appr
@@ -34,7 +34,7 @@ let lift_bounds (program, program_gts) program_vars (class_appr, appr) : ExpAppr
     let rv_sizebound ((gt, l), v) =
       Set.to_sequence (GeneralTransition.transitions gt)
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-      |> RealBound.of_intbound % Bound.sum
+      |> RationalBound.of_intbound % Bound.sum
     in
     grvs_from_gts_and_vars program_gts program_vars
     |> List.fold
@@ -72,14 +72,14 @@ let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.
         let new_bound =
           Set.to_sequence (Program.pre_gt program gt)
           |> Sequence.map ~f:(ExpApproximation.timebound appr)
-          |> RealBound.sum
+          |> RationalBound.sum
         in
-        if RealBound.is_finite new_bound then (
+        if RationalBound.is_finite new_bound then (
           ProofOutput.add_str_paragraph_to_proof
             FormattedString.(
               fun () ->
                 "knowledge_propagation leads to new time bound "
-                ^ RealBound.to_string ~pretty:true new_bound
+                ^ RationalBound.to_string ~pretty:true new_bound
                 ^ " for transition "
                 ^ GeneralTransition.to_string_pretty gt);
           MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr))
@@ -108,40 +108,40 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       let pre_size_exp v =
         Set.to_sequence pre_gt
         |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
-        |> RealBound.sum
+        |> RationalBound.sum
       in
       let pre_size_classical v =
         Set.to_sequence pre_gt
         |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
         |> Sequence.join
         |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-        |> RealBound.of_intbound % Bound.sum
+        |> RationalBound.of_intbound % Bound.sum
       in
       let var_overapprox =
         if Program.is_initial_gt program gt then
-          RealBound.of_var v
+          RationalBound.of_var v
         else
           pre_size_exp v
       in
       let elcb = Map.find_exn elcbs ((gt, l), v) in
       let elcb_overapprox =
         if Program.is_initial_gt program gt then
-          RealBound.of_var v
-        else if RealBound.is_linear elcb then
-          RealBound.substitute_f pre_size_exp elcb
+          RationalBound.of_var v
+        else if RationalBound.is_linear elcb then
+          RationalBound.substitute_f pre_size_exp elcb
         else
-          RealBound.substitute_f pre_size_classical elcb
+          RationalBound.substitute_f pre_size_classical elcb
       in
-      RealBound.add var_overapprox elcb_overapprox
+      RationalBound.add var_overapprox elcb_overapprox
       |> tap (fun r ->
              Logger.log size_logger Logger.DEBUG (fun () ->
                  ( "trivial_sizebound_for_rv",
                    [
                      ("grv", GRV.to_id_string ((gt, l), v));
-                     ("var_overapprox", RealBound.to_string var_overapprox);
-                     ("elcb", RealBound.to_string elcb);
-                     ("elcb_overapprox", RealBound.to_string elcb_overapprox);
-                     ("result", RealBound.to_string r);
+                     ("var_overapprox", RationalBound.to_string var_overapprox);
+                     ("elcb", RationalBound.to_string elcb);
+                     ("elcb_overapprox", RationalBound.to_string elcb_overapprox);
+                     ("result", RationalBound.to_string r);
                    ] )))
     in
     List.fold
@@ -155,40 +155,40 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       GeneralTransition.transitions gt
       |> Program.pre program % Set.choose_exn
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Set.to_sequence
-      |> RealBound.of_intbound % Bound.sum
+      |> RationalBound.of_intbound % Bound.sum
     in
     let nontrivial_sizebound appr v =
       let execute () =
         let start_value =
           Sequence.of_list entry_rvts
           |> Sequence.map ~f:(fun rvt -> ExpApproximation.sizebound appr rvt v)
-          |> RealBound.sum
+          |> RationalBound.sum
           |> tap (fun s ->
                  Logger.log size_logger Logger.DEBUG (fun () ->
-                     ("start_value", [ ("res", RealBound.to_string s) ])))
+                     ("start_value", [ ("res", RationalBound.to_string s) ])))
         in
         let acc_change_grv (gt, l) =
           let elcb = Map.find_exn elcbs ((gt, l), v) in
-          let change_bound = RealBound.substitute_f (overappr_var_in gt) elcb in
-          RealBound.(change_bound * ExpApproximation.timebound appr gt)
+          let change_bound = RationalBound.substitute_f (overappr_var_in gt) elcb in
+          RationalBound.(change_bound * ExpApproximation.timebound appr gt)
           |> tap (fun r ->
                  Logger.log size_logger Logger.DEBUG (fun () ->
                      ( "acc_change_rvt",
                        [
                          ("rv", GRV.to_id_string ((gt, l), v));
-                         ("elcb", RealBound.to_string elcb);
-                         ("res", RealBound.to_string r);
-                         ("change_bound", RealBound.to_string change_bound);
-                         ("time_bound", RealBound.to_string (ExpApproximation.timebound appr gt));
+                         ("elcb", RationalBound.to_string elcb);
+                         ("res", RationalBound.to_string r);
+                         ("change_bound", RationalBound.to_string change_bound);
+                         ("time_bound", RationalBound.to_string (ExpApproximation.timebound appr gt));
                        ] )))
         in
-        let acc_change = Sequence.of_list rvts_scc |> Sequence.map ~f:acc_change_grv |> RealBound.sum in
-        RealBound.(start_value + acc_change)
+        let acc_change = Sequence.of_list rvts_scc |> Sequence.map ~f:acc_change_grv |> RationalBound.sum in
+        RationalBound.(start_value + acc_change)
       in
       Logger.with_log size_logger Logger.DEBUG
         (fun () ->
           ("nontrivial_sizebound", [ ("scc", GeneralTransitionSet.to_id_string scc); ("v", Var.to_string v) ]))
-        ~result:RealBound.to_string execute
+        ~result:RationalBound.to_string execute
     in
     Set.fold
       ~f:(fun appr v ->
@@ -216,29 +216,30 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
             | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
                 let pre_sizebound =
                   if Program.is_initial_gt program gt then
-                    fun v -> RealBound.of_var v
+                    fun v -> RationalBound.of_var v
                   else
                     let pre_gts = Set.to_sequence (Program.pre_gt program gt) in
                     fun v ->
                       Sequence.map pre_gts ~f:(fun pre_gt ->
                           ExpApproximation.sizebound appr (pre_gt, GeneralTransition.src gt) v)
-                      |> RealBound.sum
+                      |> RationalBound.sum
                 in
                 let propagated_bound =
                   Sequence.of_list update_polys
                   |> Sequence.map ~f:(fun update_poly ->
-                         RealBound.substitute_f pre_sizebound (RealBound.of_intpoly update_poly))
-                  |> RealBound.sum
+                         RationalBound.substitute_f pre_sizebound (RationalBound.of_intpoly update_poly))
+                  |> RationalBound.sum
                 in
                 if
-                  RealBound.compare_asy propagated_bound (ExpApproximation.sizebound appr (gt, target_loc) v)
+                  RationalBound.compare_asy propagated_bound
+                    (ExpApproximation.sizebound appr (gt, target_loc) v)
                   < 0
                 then (
                   Logger.log size_logger Logger.DEBUG (fun () ->
                       ( "propagate_sizes",
                         [
                           ("grv", GRV.to_id_string ((gt, target_loc), v));
-                          ("new_bound", RealBound.to_string propagated_bound);
+                          ("new_bound", RationalBound.to_string propagated_bound);
                         ] ));
                   MaybeChanged.flat_map
                     (MaybeChanged.changed % ExpApproximation.add_sizebound propagated_bound (gt, target_loc) v)

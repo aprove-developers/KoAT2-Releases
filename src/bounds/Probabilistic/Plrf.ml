@@ -163,7 +163,7 @@ let encode_update cache tguard (t : Transition.t) =
 
 
 (* generate a RSM constraint of the specified type for a general transition *)
-let general_transition_constraint cache constraint_type gtrans : RealFormula.t =
+let general_transition_constraint cache constraint_type gtrans : RationalFormula.t =
   let template = gtrans |> GeneralTransition.src |> Hashtbl.find_exn cache.template_table in
   let lift_paraatom pa =
     (GeneralTransition.guard gtrans |> RealParameterConstraint.of_intconstraint, pa) |> List.return
@@ -214,8 +214,8 @@ let general_transition_constraint cache constraint_type gtrans : RealFormula.t =
   List.map
     ~f:(fun (c, a) -> RealParameterConstraint.farkas_transform (RealParameterConstraint.drop_nonlinear c) a)
     constraints_and_atoms
-  |> List.map ~f:RealFormula.mk
-  |> List.fold_left ~f:RealFormula.mk_and ~init:RealFormula.mk_true
+  |> List.map ~f:RationalFormula.mk
+  |> List.fold_left ~f:RationalFormula.mk_and ~init:RationalFormula.mk_true
 
 
 let non_increasing_constraint cache transition =
@@ -292,7 +292,7 @@ let finalise_plrf cache ~refined solver non_increasing
   (* Add variable constraints *)
   Solver.push solver;
   Set.iter
-    ~f:(Solver.add_real solver % RealFormula.mk_eq RationalPolynomial.zero % RationalPolynomial.of_var)
+    ~f:(Solver.add_real solver % RationalFormula.mk_eq RationalPolynomial.zero % RationalPolynomial.of_var)
     unbounded_vars_at_entry_locs;
   Logger.log logger Logger.DEBUG (fun () ->
       ("finalise_plrf", [ ("unbounded_vars_at_entry_locs", VarSet.to_string unbounded_vars_at_entry_locs) ]));
@@ -427,7 +427,7 @@ let compute_proof t bound program format =
     mk_header_small (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
     <> mk_paragraph
          (mk_str "new bound:" <> mk_newline
-         <> mk_paragraph (mk_str (Bounds.RealBound.to_string ~pretty:true bound)))
+         <> mk_paragraph (mk_str (Bounds.RationalBound.to_string ~pretty:true bound)))
     <> mk_str "PLRF:" <> mk_newline
     <> mk_paragraph
          (locations

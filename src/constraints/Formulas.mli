@@ -27,7 +27,7 @@ module ParameterFormula : sig
   (* Add operations specific to parameter polynomial formula here if needed *)
 end
 
-module RealFormula : sig
+module RationalFormula : sig
   include module type of FormulaOver (RealConstraint)
 
   val of_intformula : Formula.t -> t

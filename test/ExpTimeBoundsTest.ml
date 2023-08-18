@@ -47,16 +47,17 @@ let tests =
                   in
 
                   let bound = ExpApproximation.program_timebound appr prog in
-                  let complexity = RealBound.asymptotic_complexity bound in
+                  let complexity = RationalBound.asymptotic_complexity bound in
 
                   let error_msg =
-                    "Asymptotic Complexity " ^ RealBound.show_complexity complexity ^ " of bound "
-                    ^ RealBound.to_string bound ^ " does not match expected complexity "
-                    ^ RealBound.show_complexity complexity_exp
+                    "Asymptotic Complexity "
+                    ^ RationalBound.show_complexity complexity
+                    ^ " of bound " ^ RationalBound.to_string bound ^ " does not match expected complexity "
+                    ^ RationalBound.show_complexity complexity_exp
                   in
 
-                  assert_bool error_msg (RealBound.equal_complexity complexity complexity_exp))
-                RealBound.
+                  assert_bool error_msg (RationalBound.equal_complexity complexity complexity_exp))
+                RationalBound.
                   [
                     ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
                     ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", classic_conf);

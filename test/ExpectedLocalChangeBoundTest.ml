@@ -6,9 +6,9 @@ open Bounds
 
 let tests =
   let var_first_arg = Sequence.hd_exn Var.args in
-  let bound_first_arg = RealBound.of_var var_first_arg in
+  let bound_first_arg = RationalBound.of_var var_first_arg in
   let loc_g = Location.of_string "g" in
-  let one_half = RealBound.of_constant (OurRational.of_float 0.5) in
+  let one_half = RationalBound.of_constant (OurRational.of_float 0.5) in
   "ExpectedChangeBoundTests"
   >::: List.mapi
          ~f:(fun i (gt, expected) ->
@@ -18,9 +18,9 @@ let tests =
            let elcb = ExpectedLocalChangeBound.compute_elcb program_vars ((gt, loc_g), var_first_arg) in
 
            Helper.assert_equal_realpoly_smt
-             (Option.value_exn @@ RealBound.to_poly expected)
-             (Option.value_exn @@ RealBound.to_poly elcb))
-         RealBound.
+             (Option.value_exn @@ RationalBound.to_poly expected)
+             (Option.value_exn @@ RationalBound.to_poly elcb))
+         RationalBound.
            [
              ("(RULES f(X) -> g(X))", zero);
              ("(RULES f(X) -> 0.5:g(X) :+: 0.5:g(X) )", zero);

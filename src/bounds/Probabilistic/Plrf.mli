@@ -27,5 +27,5 @@ val find_scc :
 val find : ?refined:bool -> ?timeout:float option -> Program.t -> GeneralTransition.t -> t option
 val to_string : t -> string
 
-val compute_proof : t -> Bounds.RealBound.t -> Program.t -> Formatter.format -> FormattedString.t
+val compute_proof : t -> Bounds.RationalBound.t -> Program.t -> Formatter.format -> FormattedString.t
 (** This function computes an explanation for the given PRF and the given resulting bound *)

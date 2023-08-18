@@ -101,7 +101,7 @@ module ParameterFormula = struct
   include FormulaOver (ParameterConstraint)
 end
 
-module RealFormula = struct
+module RationalFormula = struct
   include FormulaOver (RealConstraint)
 
   let of_intformula =

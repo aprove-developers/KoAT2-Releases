@@ -38,7 +38,7 @@ val of_dist : ProbabilityDistribution.t -> t
 (* {i update_guard ue v} expresses the effects of the updatelement ue as guard, i.e., the returned guard enforces variable {i v} to lie in the support of {i ue} *)
 val as_guard : t -> Var.t -> Guard.t
 val exp_value_poly : t -> RationalPolynomial.t
-val exp_value_abs_bound : t -> Bounds.RealBound.t
+val exp_value_abs_bound : t -> Bounds.RationalBound.t
 val moment_poly : t -> int -> RationalPolynomial.t
 
 (* try to convert the UpdateElement to a Polynomial *)

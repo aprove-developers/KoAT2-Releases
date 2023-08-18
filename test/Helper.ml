@@ -23,7 +23,7 @@ let assert_equal_realpoly_smt =
   let cmp p1 p2 =
     (* Z3Solver is *not* thread-safe compared to the incremental one *)
     let s = SMT.IncrementalZ3Solver.create () in
-    SMT.IncrementalZ3Solver.add_real s (RealFormula.mk_uneq p1 p2);
+    SMT.IncrementalZ3Solver.add_real s (RationalFormula.mk_uneq p1 p2);
     SMT.IncrementalZ3Solver.unsatisfiable s
   in
   assert_equal ~cmp ~printer:RationalPolynomial.to_string
@@ -47,7 +47,7 @@ let assert_ge_realbound_smt =
     Solver.add_realbound_comparison s `LT b1 b2;
     not (Solver.satisfiable s)
   in
-  assert_equal ~cmp ~printer:RealBound.to_string
+  assert_equal ~cmp ~printer:RationalBound.to_string
 
 
 let assert_equal_atom = assert_equal ~cmp:Atom.( =~= ) ~printer:Atom.to_string

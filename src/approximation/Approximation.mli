@@ -90,7 +90,7 @@ module Probabilistic : sig
   module ExpApproximation :
       module type of
         Make
-          (Bounds.RealBound)
+          (Bounds.RationalBound)
           (struct
             include ProbabilisticProgramModules
             module RV = GRV

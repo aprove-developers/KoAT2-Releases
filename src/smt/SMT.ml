@@ -42,7 +42,7 @@ let from_real_poly context =
 
 let from_real_bound context bound =
   let from_finite_bound =
-    RealBound.fold_bound
+    RationalBound.fold_bound
       ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
       ~var:(fun var ->
         let varexp =
@@ -61,7 +61,7 @@ let from_real_bound context bound =
       ~exp:(fun b e ->
         Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurRational.to_string b) e)
   in
-  match Option.map ~f:from_finite_bound (RealBound.prove_finiteness bound) with
+  match Option.map ~f:from_finite_bound (RationalBound.prove_finiteness bound) with
   | Some b -> b
   | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
@@ -101,7 +101,7 @@ let from_formula context =
 
 
 let from_real_formula context =
-  RealFormula.fold ~subject:(from_real_poly context) ~le:(Z3.Arithmetic.mk_le context)
+  RationalFormula.fold ~subject:(from_real_poly context) ~le:(Z3.Arithmetic.mk_le context)
     ~lt:(Z3.Arithmetic.mk_lt context) ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [ a1; a2 ])
     ~wrong:(Z3.Boolean.mk_false context)

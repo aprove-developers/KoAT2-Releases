@@ -118,6 +118,6 @@ let run (params : params) =
         <> FormattedString.reduce_header_sizes ~levels_to_reduce:1
              (ExpApproximation.to_formatted ~pretty:true program prob_appr));
   Printf.printf "Overall expected time bound: %s\n"
-    (Bounds.RealBound.to_string @@ ExpApproximation.program_timebound prob_appr program);
+    (Bounds.RationalBound.to_string @@ ExpApproximation.program_timebound prob_appr program);
   if params.show_proof then
     ProofOutput.print_proof params.proof_format

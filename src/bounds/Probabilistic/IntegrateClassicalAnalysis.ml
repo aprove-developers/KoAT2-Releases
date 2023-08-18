@@ -18,7 +18,7 @@ let get_timebound all_gts direction (class_appr, appr) t =
   let prob_trans = nonprob_trans_to_prob_trans t in
   match direction with
   | `ExpTime ->
-      RealBound.to_intbound
+      RationalBound.to_intbound
       @@ ExpApproximation.timebound appr
            (Option.value_exn @@ GeneralTransitionSet.find_by_transition all_gts prob_trans)
   | `ClassTime -> ClassicalApproximation.timebound class_appr prob_trans
@@ -29,7 +29,7 @@ let get_sizebound all_gts direction (class_appr, appr) t var =
   match direction with
   | `ExpSize ->
       let gt = Option.value_exn (GeneralTransitionSet.find_by_transition all_gts prob_trans) in
-      RealBound.to_intbound @@ ExpApproximation.sizebound appr (gt, Transition.target prob_trans) var
+      RationalBound.to_intbound @@ ExpApproximation.sizebound appr (gt, Transition.target prob_trans) var
   | `ClassSize -> ClassicalApproximation.sizebound class_appr prob_trans var
 
 
@@ -141,7 +141,7 @@ let improve_with_mprfs depth (program, all_gts) scc (class_appr, appr) =
                (new_bound, compute_proof))
          in
          let new_bound =
-           List.map ~f:(fun (b, _) -> b) new_bounds_and_proofs |> RealBound.of_intbound % Bound.sum_list
+           List.map ~f:(fun (b, _) -> b) new_bounds_and_proofs |> RationalBound.of_intbound % Bound.sum_list
          in
          ProofOutput.add_to_proof_with_format
            FormattedString.(
@@ -153,7 +153,7 @@ let improve_with_mprfs depth (program, all_gts) scc (class_appr, appr) =
                in
                (* Due to the heuristic the bound should always be finite so we don't need to explicitly check here *)
                let new_bound =
-                 mk_str_line @@ "Obtained bound " ^ RealBound.to_string ~pretty:true new_bound
+                 mk_str_line @@ "Obtained bound " ^ RationalBound.to_string ~pretty:true new_bound
                in
                let mprf_proofs =
                  List.map
@@ -326,8 +326,8 @@ let improve_with_twn_loops twn_state all_gts (class_appr, appr) unbounded_gts lo
          let+ transs_with_bounds_with_proofs = bounds_with_proofs in
          let b =
            Sequence.of_list transs_with_bounds_with_proofs
-           |> Sequence.map ~f:(fun (_, (b, _)) -> RealBound.of_intbound b)
-           |> RealBound.sum
+           |> Sequence.map ~f:(fun (_, (b, _)) -> RationalBound.of_intbound b)
+           |> RationalBound.sum
          in
          ProofOutput.add_to_proof_with_format
            FormattedString.(

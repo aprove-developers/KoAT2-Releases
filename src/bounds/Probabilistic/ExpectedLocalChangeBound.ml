@@ -33,16 +33,16 @@ let compute_elcb program_vars ((gt, l), v) =
            let temp_var_bound tv =
              let guard = Formulas.Formula.mk (TransitionLabel.guard label) in
              LocalSizeBound.find_bound program_vars tv guard (LocalSizeBound.c_range guard)
-             |> Option.map ~f:(RealBound.of_intbound % LocalSizeBound.as_bound % Tuple2.first)
-             |> Option.value ~default:RealBound.infinity
+             |> Option.map ~f:(RationalBound.of_intbound % LocalSizeBound.as_bound % Tuple2.first)
+             |> Option.value ~default:RationalBound.infinity
            in
            UpdateElement.exp_value_abs_bound ue_diff
-           |> RealBound.substitute_f (fun v ->
+           |> RationalBound.substitute_f (fun v ->
                   if Set.mem program_vars v then
-                    RealBound.of_var v
+                    RationalBound.of_var v
                   else
                     temp_var_bound v)
          in
 
-         RealBound.(of_constant (TransitionLabel.probability label) * ue_exp_abs_diff_bound))
-  |> RealBound.sum
+         RationalBound.(of_constant (TransitionLabel.probability label) * ue_exp_abs_diff_bound))
+  |> RationalBound.sum
