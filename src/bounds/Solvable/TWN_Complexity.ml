@@ -29,10 +29,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             test_m OurInt.(add m one)
         else
           let tmp =
-            OurRational.(
-              mul (pow_ourint (reduce (m, OurInt.(add m one))) (OurInt.sub a2 a1)) (reduce (b1, b2)))
+            OurRational.(mul (pow_ourint (make m OurInt.(add m one)) (OurInt.sub a2 a1)) (make b1 b2))
           in
-          if OurRational.(is_ge tmp one) && OurInt.is_gt tmp1 tmp2 then
+          if OurRational.(tmp >= one) && OurInt.is_gt tmp1 tmp2 then
             m
           else
             test_m OurInt.(add m one)

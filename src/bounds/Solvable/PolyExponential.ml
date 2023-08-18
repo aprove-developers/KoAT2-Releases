@@ -495,7 +495,9 @@ module PE = struct
         let coeff =
           OurRational.(
             mul
-              (div (pow (div (of_int b) (of_int coeff_var)) (OurInt.to_int max_const_inc)) (of_int (-b)))
+              (div
+                 (pow (div (of_int b) (of_int coeff_var)) (OurInt.to_int max_const_inc))
+                 (of_int (Int.neg b)))
               (RationalPolynomial.eval_f r (fun _ -> OurRational.of_ourint max_const_inc)))
         in
         let coeff_list = RationalPolynomial.degree_coeff_list r in

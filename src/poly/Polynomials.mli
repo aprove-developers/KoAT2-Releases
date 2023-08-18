@@ -50,21 +50,21 @@ module RealPolynomial : sig
 end
 
 module RationalPolynomial : sig
-  include module type of PolynomialOver (OurRational)
+  include module type of PolynomialOver (OurFloat)
 
   val degree_coeff_list : t -> value list
 
   val normalize : t -> Polynomial.t
   (** Multiply with lcm *)
 
-  val normalize_return_factor : t -> Polynomial.t * (OurInt.t * OurInt.t)
+  val normalize_return_factor : t -> Polynomial.t * OurRational.t
   (** Multiply with lcm and return lcm*)
 
   val overapprox : t -> Polynomial.t
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
 
   val of_intpoly : Polynomial.t -> t
-  val is_integer_poly : t -> bool
+  val is_integral : t -> bool
 end
 
 (** Provides polynomials where the coefficients are polynomials over {i Value}. *)

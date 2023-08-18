@@ -407,28 +407,13 @@ module RealPolynomial = struct
 end
 
 module RationalPolynomial = struct
-  include PolynomialOver (OurRational)
-
-  let normalize poly =
-    let coeff_inv =
-      coeffs poly
-      |> List.filter ~f:(not % OurRational.is_integer)
-      |> List.map ~f:Tuple2.second
-      |> List.fold ~f:OurInt.lcm ~init:OurInt.one
-      |> OurInt.abs |> OurRational.of_ourint
-    in
-    poly |> mult_with_const coeff_inv
-    |> fold
-         ~const:(Polynomial.of_constant % OurRational.to_ourint)
-         ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul
-         ~pow:Polynomial.pow
-
+  include PolynomialOver (OurFloat)
 
   let normalize_return_factor poly =
     let coeff_inv =
       coeffs poly
-      |> List.filter ~f:(not % OurRational.is_integer)
-      |> List.map ~f:Tuple2.second
+      |> List.filter ~f:(not % OurFloat.is_integral)
+      |> List.map ~f:OurFloat.den
       |> List.fold ~f:OurInt.lcm ~init:OurInt.one
       |> OurInt.abs |> OurRational.of_ourint
     in
@@ -439,6 +424,8 @@ module RationalPolynomial = struct
            ~pow:Polynomial.pow,
       coeff_inv )
 
+
+  let normalize = Tuple2.first % normalize_return_factor
 
   let overapprox =
     fold
@@ -453,7 +440,7 @@ module RationalPolynomial = struct
       ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow
 
 
-  let is_integer_poly poly = List.for_all ~f:OurRational.is_integer @@ coeffs poly
+  let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly
 end
 
 module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
