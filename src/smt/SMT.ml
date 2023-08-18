@@ -27,7 +27,7 @@ let from_poly context =
 
 
 let from_real_poly context =
-  RealPolynomial.fold
+  RationalPolynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
     ~indeterminate:(fun var ->
       if Var.is_real var then

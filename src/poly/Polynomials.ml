@@ -389,7 +389,7 @@ module Polynomial = struct
       ~neg:identity ~plus:OurInt.add ~times:OurInt.mul ~pow:OurInt.pow
 end
 
-module RealPolynomial = struct
+module RationalPolynomial = struct
   include PolynomialOver (OurRational)
 
   let max_of_occurring_constants =
@@ -405,10 +405,6 @@ module RealPolynomial = struct
 
 
   let of_intconstant = of_constant % OurRational.of_ourint
-end
-
-module RationalPolynomial = struct
-  include PolynomialOver (OurRational)
 
   let normalize_return_factor poly =
     let coeff_inv =
@@ -433,12 +429,6 @@ module RationalPolynomial = struct
       ~const:(Polynomial.of_constant % OurRational.ceil % OurRational.abs)
       ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul
       ~pow:Polynomial.pow
-
-
-  let of_intpoly =
-    Polynomial.fold
-      ~const:(of_constant % OurRational.of_ourint)
-      ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow
 
 
   let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly

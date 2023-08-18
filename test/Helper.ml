@@ -26,7 +26,7 @@ let assert_equal_realpoly_smt =
     SMT.IncrementalZ3Solver.add_real s (RealFormula.mk_uneq p1 p2);
     SMT.IncrementalZ3Solver.unsatisfiable s
   in
-  assert_equal ~cmp ~printer:RealPolynomial.to_string
+  assert_equal ~cmp ~printer:RationalPolynomial.to_string
 
 
 let assert_equal_parameter_poly =

@@ -174,24 +174,24 @@ module RealAtom = struct
   let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
     let poly_print =
       if to_file then
-        RealPolynomial.to_string_to_file
+        RationalPolynomial.to_string_to_file
       else if pretty then
-        RealPolynomial.to_string_pretty
+        RationalPolynomial.to_string_pretty
       else
-        RealPolynomial.to_string
+        RationalPolynomial.to_string
     in
-    RealPolynomial.separate_by_sign poly |> fun (positive, negative) ->
-    poly_print positive ^ comp_to_string comp ~pretty ^ poly_print (RealPolynomial.neg negative)
+    RationalPolynomial.separate_by_sign poly |> fun (positive, negative) ->
+    poly_print positive ^ comp_to_string comp ~pretty ^ poly_print (RationalPolynomial.neg negative)
 
 
-  let max_of_occurring_constants (poly, _) = RealPolynomial.max_of_occurring_constants poly
+  let max_of_occurring_constants (poly, _) = RationalPolynomial.max_of_occurring_constants poly
 
   let of_intatom ((poly, comp) : Atom.t) : t =
-    let realpoly_minus_1 = RealPolynomial.sub RealPolynomial.zero RealPolynomial.one in
+    let realpoly_minus_1 = RationalPolynomial.sub RationalPolynomial.zero RationalPolynomial.one in
     match comp with
     (* This is necessary because for example x<0 is equivalent to x<-1 in the deterministic case*)
-    | LE -> mk Comparator.LE (RealPolynomial.of_intpoly poly) RealPolynomial.zero
-    | LT -> mk Comparator.LE (RealPolynomial.of_intpoly poly) realpoly_minus_1
+    | LE -> mk Comparator.LE (RationalPolynomial.of_intpoly poly) RationalPolynomial.zero
+    | LT -> mk Comparator.LE (RationalPolynomial.of_intpoly poly) realpoly_minus_1
 end
 
 module ParameterAtomOver (Value : PolyTypes.Ring) = AtomOver (ParameterPolynomialOver (Value))

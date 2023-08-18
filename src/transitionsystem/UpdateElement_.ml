@@ -36,13 +36,13 @@ module UpdateValue = struct
 
 
     let exp_value_poly = function
-      | Var v -> RealPolynomial.of_var v
+      | Var v -> RationalPolynomial.of_var v
       | Dist d -> ProbabilityDistribution.exp_value_poly d
 
 
     let moment_poly d i =
       match d with
-      | Var v -> RealPolynomial.pow (RealPolynomial.of_var v) i
+      | Var v -> RationalPolynomial.pow (RationalPolynomial.of_var v) i
       | Dist d -> ProbabilityDistribution.moment_poly d i
 
 
@@ -104,17 +104,17 @@ let as_guard ue new_var =
   Guard.mk_and (Guard.mk_eq (Polynomial.of_var new_var) replaced_poly) dist_constrs
 
 
-let exp_value_poly : t -> RealPolynomial.t =
+let exp_value_poly : t -> RationalPolynomial.t =
  fun t ->
   Sequence.of_list (monomials_with_coeffs t)
   |> Sequence.map
        ~f:
          (Tuple2.map2
-            (RealPolynomial.product
+            (RationalPolynomial.product
             % Sequence.map ~f:(uncurry UpdateValue.moment_poly)
             % Monomial_.to_sequence))
-  |> Sequence.map ~f:RealPolynomial.(fun (c, p) -> mul (of_intconstant c) p)
-  |> RealPolynomial.sum
+  |> Sequence.map ~f:RationalPolynomial.(fun (c, p) -> mul (of_intconstant c) p)
+  |> RationalPolynomial.sum
 
 
 let moment_poly t i = exp_value_poly (pow t i)

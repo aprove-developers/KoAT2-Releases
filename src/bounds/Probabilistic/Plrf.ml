@@ -23,7 +23,7 @@ type coeffs_table_t = (CoeffTableEntry.t, Var.t) Hashtbl.t
 type template_table_t = (Location.t, RealParameterPolynomial.t) Hashtbl.t
 
 type t = {
-  rank : Location.t -> RealPolynomial.t;
+  rank : Location.t -> RationalPolynomial.t;
   (* The ranked transition itself *)
   decreasing : GeneralTransition.t;
   non_increasing : GeneralTransitionSet.t;
@@ -37,7 +37,7 @@ let to_string t =
   ^ " rank: ["
   ^ (GeneralTransitionSet.locations t.non_increasing
     |> Set.to_list
-    |> List.map ~f:(fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RealPolynomial.to_string))
+    |> List.map ~f:(fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RationalPolynomial.to_string))
     |> String.concat ~sep:"; ")
   ^ "]}"
 
@@ -69,7 +69,7 @@ let ranking_template cache location (vars : VarSet.t) : RealParameterPolynomial.
   let vars = Set.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
-  let fresh_coeffs = List.map ~f:RealPolynomial.of_var fresh_vars in
+  let fresh_coeffs = List.map ~f:RationalPolynomial.of_var fresh_vars in
 
   (* Store fresh_vars *)
   List.iter
@@ -78,7 +78,7 @@ let ranking_template cache location (vars : VarSet.t) : RealParameterPolynomial.
 
   let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Real () in
-  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  let constant_poly = RealParameterPolynomial.of_constant (RationalPolynomial.of_var constant_var) in
   (RealParameterPolynomial.(linear_poly + constant_poly), fresh_vars, constant_var)
 
 
@@ -124,7 +124,7 @@ let expected_poly cache gtrans =
     let template = Hashtbl.find_exn cache.template_table in
     let prob = t |> TransitionLabel.probability in
     RealParameterPolynomial.mul
-      (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial)
+      (prob |> RationalPolynomial.of_constant |> RealParameterPolynomial.of_polynomial)
       (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
   in
   Set.fold
@@ -177,7 +177,7 @@ let general_transition_constraint cache constraint_type gtrans : RealFormula.t =
         RealParameterAtom.Infix.(
           template
           >= RealParameterPolynomial.(
-               expected_poly cache gtrans + RealParameterPolynomial.of_polynomial RealPolynomial.one))
+               expected_poly cache gtrans + RealParameterPolynomial.of_polynomial RationalPolynomial.one))
         |> lift_paraatom
     | `Bounded ->
         (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
@@ -292,7 +292,7 @@ let finalise_plrf cache ~refined solver non_increasing
   (* Add variable constraints *)
   Solver.push solver;
   Set.iter
-    ~f:(Solver.add_real solver % RealFormula.mk_eq RealPolynomial.zero % RealPolynomial.of_var)
+    ~f:(Solver.add_real solver % RealFormula.mk_eq RationalPolynomial.zero % RationalPolynomial.of_var)
     unbounded_vars_at_entry_locs;
   Logger.log logger Logger.DEBUG (fun () ->
       ("finalise_plrf", [ ("unbounded_vars_at_entry_locs", VarSet.to_string unbounded_vars_at_entry_locs) ]));
@@ -432,7 +432,7 @@ let compute_proof t bound program format =
     <> mk_paragraph
          (locations
          |> List.map ~f:(fun l ->
-                "• " ^ Location.to_string l ^ ": " ^ RealPolynomial.to_string_pretty (t.rank l))
+                "• " ^ Location.to_string l ^ ": " ^ RationalPolynomial.to_string_pretty (t.rank l))
          |> List.map ~f:mk_str_line |> mappend)
     <>
     match format with

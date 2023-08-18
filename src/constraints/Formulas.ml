@@ -105,7 +105,7 @@ module RealFormula = struct
   include FormulaOver (RealConstraint)
 
   let of_intformula =
-    Formula.fold ~subject:Polynomials.RealPolynomial.of_intpoly ~le:mk_le ~lt:mk_lt ~correct:mk_true
+    Formula.fold ~subject:Polynomials.RationalPolynomial.of_intpoly ~le:mk_le ~lt:mk_lt ~correct:mk_true
       ~conj:mk_and ~wrong:mk_false ~disj:mk_or
 
 

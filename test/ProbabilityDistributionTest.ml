@@ -25,7 +25,7 @@ let tests =
                   let result = ProbabilityDistribution.moment_poly dist order in
 
                   assert_equal_realpoly_smt expected_result result)
-                (let open RealPolynomial in
+                (let open RationalPolynomial in
                  [
                    (1, "UNIFORM(0,5)", of_constant (OurRational.of_float 2.5));
                    (1, "UNIFORM(-5,-2)", of_constant (OurRational.of_float (-3.5)));

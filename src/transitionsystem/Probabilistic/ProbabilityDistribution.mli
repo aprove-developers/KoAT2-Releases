@@ -15,10 +15,10 @@ val vars : t -> VarSet.t
 val as_guard : t -> Var.t -> Guard.t
 (** {i as_guard d v } constructs a guard that requires v to be in the support of d *)
 
-val exp_value_poly : t -> RealPolynomial.t
+val exp_value_poly : t -> RationalPolynomial.t
 (** overapproximates the expected value of the distribution as a poly *)
 
-val moment_poly : t -> int -> RealPolynomial.t
+val moment_poly : t -> int -> RationalPolynomial.t
 (** {i moment_poly d i} is the {i i}-th non-central moment of distribution {i d}, i.e., {i E(d^i)} *)
 
 val admissibility_constraint : t -> Guard.t

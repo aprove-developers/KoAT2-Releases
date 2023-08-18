@@ -6,7 +6,7 @@ val new_cache : unit -> lrsm_cache
 
 type t
 
-val rank : t -> Location.t -> Polynomials.RealPolynomial.t
+val rank : t -> Location.t -> Polynomials.RationalPolynomial.t
 val decreasing : t -> GeneralTransition.t
 
 val non_increasing : t -> GeneralTransitionSet.t

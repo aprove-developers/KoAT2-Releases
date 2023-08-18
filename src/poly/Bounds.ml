@@ -551,7 +551,7 @@ module RealBound = struct
       ~inf:infinity
 
 
-  let of_intpoly = of_poly % RealPolynomial.of_intpoly
+  let of_intpoly = of_poly % RationalPolynomial.of_intpoly
 
   let to_intbound =
     fold

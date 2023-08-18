@@ -61,7 +61,7 @@ module IncrementalZ3Solver : sig
   val model : t -> Polynomial.valuation Option.t
   (** Returns a model of the current state, if the state is satisfiable. *)
 
-  val model_real : t -> RealPolynomial.valuation Option.t
+  val model_real : t -> RationalPolynomial.valuation Option.t
 
   val add_bound_comparison : t -> [ `LE | `LT ] -> Bound.t -> Bound.t -> unit
   (** Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)*)

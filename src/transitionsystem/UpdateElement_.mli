@@ -20,10 +20,10 @@ module UpdateValue : sig
   val as_guard : t -> Var.t -> Guard.t
 
   (* Get a polynomial representing the expected value *)
-  val exp_value_poly : t -> RealPolynomial.t
+  val exp_value_poly : t -> RationalPolynomial.t
 
   (* Get a polynomial representing the corresponding non-central moment, i.e. E(d^i) *)
-  val moment_poly : t -> int -> RealPolynomial.t
+  val moment_poly : t -> int -> RationalPolynomial.t
 
   include Comparator.S with type t := t
 end
@@ -37,9 +37,9 @@ val of_dist : ProbabilityDistribution.t -> t
 
 (* {i update_guard ue v} expresses the effects of the updatelement ue as guard, i.e., the returned guard enforces variable {i v} to lie in the support of {i ue} *)
 val as_guard : t -> Var.t -> Guard.t
-val exp_value_poly : t -> RealPolynomial.t
+val exp_value_poly : t -> RationalPolynomial.t
 val exp_value_abs_bound : t -> Bounds.RealBound.t
-val moment_poly : t -> int -> RealPolynomial.t
+val moment_poly : t -> int -> RationalPolynomial.t
 
 (* try to convert the UpdateElement to a Polynomial *)
 val to_polynomial : t -> Polynomial.t option

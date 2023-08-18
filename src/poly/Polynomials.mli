@@ -40,18 +40,13 @@ module Polynomial : sig
   (** TODO doc *)
 end
 
-module RealPolynomial : sig
+module RationalPolynomial : sig
   include module type of PolynomialOver (OurRational)
 
   val separate_by_sign : t -> t * t
   val of_intconstant : OurInt.t -> t
   val max_of_occurring_constants : t -> OurRational.t
   val of_intpoly : Polynomial.t -> t
-end
-
-module RationalPolynomial : sig
-  include module type of PolynomialOver (OurRational)
-
   val degree_coeff_list : t -> value list
 
   val normalize : t -> Polynomial.t
@@ -63,7 +58,6 @@ module RationalPolynomial : sig
   val overapprox : t -> Polynomial.t
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
 
-  val of_intpoly : Polynomial.t -> t
   val is_integral : t -> bool
 end
 

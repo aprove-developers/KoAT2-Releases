@@ -68,14 +68,14 @@ let as_guard d v' =
 
 
 let exp_value_poly = function
-  | Binomial (n, p) -> RealPolynomial.(of_intpoly n * of_constant p)
-  | Geometric a -> RealPolynomial.of_constant OurRational.(div (of_int 1) a)
+  | Binomial (n, p) -> RationalPolynomial.(of_intpoly n * of_constant p)
+  | Geometric a -> RationalPolynomial.of_constant OurRational.(div (of_int 1) a)
   | Hypergeometric (bigN, k, n) ->
-      RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one / of_ourint bigN))
+      RationalPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one / of_ourint bigN))
   | Uniform (a, b) ->
-      RealPolynomial.mul
-        (RealPolynomial.of_constant @@ OurRational.of_float 0.5)
-        (RealPolynomial.add (RealPolynomial.of_intpoly a) (RealPolynomial.of_intpoly b))
+      RationalPolynomial.mul
+        (RationalPolynomial.of_constant @@ OurRational.of_float 0.5)
+        (RationalPolynomial.add (RationalPolynomial.of_intpoly a) (RationalPolynomial.of_intpoly b))
 
 
 (* TODO generalise to higher orders we might want to use polylogs for geo distribution *)
@@ -87,22 +87,22 @@ let moment_poly d i =
     | Binomial (n, p) -> (
         match i with
         | 2 ->
-            let n, p = (RealPolynomial.of_intpoly n, RealPolynomial.of_constant p) in
-            RealPolynomial.((n * p * (one - p)) + (pow n 2 * pow p 2))
+            let n, p = (RationalPolynomial.of_intpoly n, RationalPolynomial.of_constant p) in
+            RationalPolynomial.((n * p * (one - p)) + (pow n 2 * pow p 2))
         | _ -> failwith @@ Int.to_string i ^ ". moment of binomial distribution not yet implemented.")
     | Geometric a -> (
         match i with
-        | 2 -> RealPolynomial.of_constant @@ OurRational.((of_int 2 - a) / pow a 2)
+        | 2 -> RationalPolynomial.of_constant @@ OurRational.((of_int 2 - a) / pow a 2)
         | _ -> failwith @@ Int.to_string i ^ ". moment of geometric distribution not yet implemented.")
     | Hypergeometric (bigN, k, n) -> (
         match i with
-        (* RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one/of_ourint bigN)) *)
+        (* RationalPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one/of_ourint bigN)) *)
         | 2 ->
             let expv = exp_value_poly d in
             let bigN, k, n =
-              (OurRational.of_ourint bigN, RealPolynomial.of_intpoly k, RealPolynomial.of_intpoly n)
+              (OurRational.of_ourint bigN, RationalPolynomial.of_intpoly k, RationalPolynomial.of_intpoly n)
             in
-            RealPolynomial.(
+            RationalPolynomial.(
               expv
               + expv
                 * (of_constant OurRational.(one / bigN) * (of_constant bigN - k))
@@ -112,20 +112,21 @@ let moment_poly d i =
         match i with
         | 2 ->
             (* Variance is given by ((b - a + 1)² - 1)/12 *)
-            let one = RealPolynomial.of_constant OurRational.one in
+            let one = RationalPolynomial.of_constant OurRational.one in
             let variance =
-              RealPolynomial.mul
-                (RealPolynomial.of_constant @@ OurRational.div OurRational.one (OurRational.of_int 12))
-                (RealPolynomial.sub
-                   (RealPolynomial.pow
-                      (RealPolynomial.add
-                         (RealPolynomial.sub (RealPolynomial.of_intpoly b) (RealPolynomial.of_intpoly a))
+              RationalPolynomial.mul
+                (RationalPolynomial.of_constant @@ OurRational.div OurRational.one (OurRational.of_int 12))
+                (RationalPolynomial.sub
+                   (RationalPolynomial.pow
+                      (RationalPolynomial.add
+                         (RationalPolynomial.sub (RationalPolynomial.of_intpoly b)
+                            (RationalPolynomial.of_intpoly a))
                          one)
                       2)
                    one)
             in
-            let exp_squared = RealPolynomial.pow (exp_value_poly d) 2 in
-            RealPolynomial.add variance exp_squared
+            let exp_squared = RationalPolynomial.pow (exp_value_poly d) 2 in
+            RationalPolynomial.add variance exp_squared
         (* TODO *)
         | _ -> failwith @@ Int.to_string i ^ ". moment of uniform distribution not yet implemented.")
 
