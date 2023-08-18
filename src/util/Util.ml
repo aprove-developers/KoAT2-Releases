@@ -109,11 +109,16 @@ let cat_maybes_sequence l = OurBase.Sequence.map ~f:Option.get (OurBase.Sequence
 let cat_maybes_enum e = Enum.map Option.get (Enum.filter Option.is_some e)
 let map_maybe f = List.map f % cat_maybes
 
-(* Returns the fixpoint of f *)
-let find_fixpoint (type a) (f : a -> a MaybeChanged.t) x =
-  let rec to_same x = MaybeChanged.if_changed to_same (f x) |> MaybeChanged.unpack in
-  to_same x
+let rec find_fixpoint_mc f x =
+  let res = f x in
+  if MaybeChanged.has_changed res then
+    MaybeChanged.(res >>= find_fixpoint_mc f)
+  else
+    res
 
+
+(* Returns the fixpoint of f *)
+let find_fixpoint f x = MaybeChanged.unpack (find_fixpoint_mc f x)
 
 let measure_execution_time ?(methodname = "") f =
   let t0 = Unix.gettimeofday () in

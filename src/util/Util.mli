@@ -35,6 +35,7 @@ val cat_maybes_sequence : 'a option OurBase.Sequence.t -> 'a OurBase.Sequence.t
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
 val map_maybe : ('a -> 'b) -> 'a option list -> 'b list
 val find_fixpoint : ('a -> 'a MaybeChanged.t) -> 'a -> 'a
+val find_fixpoint_mc : ('a -> 'a MaybeChanged.t) -> 'a -> 'a MaybeChanged.t
 
 (* Execute a function and measure its execution time. The time used by the function is then printed to stdout *)
 val measure_execution_time : ?methodname:string -> (unit -> 'a) -> 'a
