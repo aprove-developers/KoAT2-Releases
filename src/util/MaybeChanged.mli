@@ -29,3 +29,5 @@ val has_changed : 'a t -> bool
 val if_changed : ('a -> 'a) -> 'a t -> 'a t
 val fold_sequence : f:('a -> 'b -> 'a t) -> init:'a -> 'b Sequence.t -> 'a t
 val fold : ('a -> 'b -> 'a t) -> 'a -> 'b List.t -> 'a t
+
+module Monad : MonadType.Monad with type 'a t := 'a t
