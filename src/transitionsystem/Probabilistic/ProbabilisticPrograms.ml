@@ -109,7 +109,6 @@ module ProbabilisticTransitionLabel_ = struct
     let probability t = t.probability
     let invariant t = t.invariant
     let cost t = t.cost
-    let map_guard f t = { t with guard = f t.guard; overappr_guard = f t.overappr_guard }
     let add_invariant t inv = { t with invariant = Guard.mk_and t.invariant inv }
 
     (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
@@ -378,6 +377,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   type update_element = Polynomial.t
 
+  let map_guard f t = { t with overappr_guard = f t.overappr_guard }
   let update_map t = t.overappr_nonprob_update
   let update t v = Map.find t.overappr_nonprob_update v
   let guard t = Guard.mk_and t.invariant t.overappr_guard
@@ -631,6 +631,15 @@ module GeneralTransition = struct
     let guard = ProbabilisticTransitionLabel.guard % get_arbitrary_label
     let map_transitions f t = { transitions = ProbabilisticTransitionSet.map ~f t.transitions }
 
+    let add_invariant gt inv =
+      {
+        transitions =
+          ProbabilisticTransitionSet.map
+            ~f:(fun (l, t, l') -> (l, ProbabilisticTransitionLabel_.add_invariant t inv, l'))
+            gt.transitions;
+      }
+
+
     let mk ~(start : Location.t) ~(fill_up_to_num_arg_vars : int) ~(patterns : Var.t list)
         ~(cost : Polynomials.Polynomial.t) ~(guard : Guard.t)
         ~(rhss : (OurFloat.t * UpdateElement_.t list * Location.t) list) : t =
@@ -655,11 +664,6 @@ module GeneralTransition = struct
         |> Sequence.map ~f:ProbabilisticTransitionLabel.update_admissibility_constraint
         |> Sequence.fold ~f:Guard.mk_and ~init:Guard.mk_true
       in
-      let rhss =
-        List.map
-          ~f:(Tuple2.map1 (ProbabilisticTransitionLabel_.map_guard (Guard.mk_and update_admissibility)))
-          rhss
-      in
 
       (* rename program vars to arg vars *)
       let rename_map = RenameMap.of_sequence @@ Sequence.zip (Sequence.of_list patterns) Var.args in
@@ -670,6 +674,7 @@ module GeneralTransition = struct
           ProbabilisticTransitionSet.of_list
           @@ List.map ~f:(fun (label, target) -> (start, label, target)) rhss;
       }
+      |> flip add_invariant update_admissibility
 
 
     let gt_id = ProbabilisticTransitionLabel.gt_id % get_arbitrary_label
@@ -692,15 +697,6 @@ module GeneralTransition = struct
     let equal t1 t2 = Int.equal (gt_id t1) (gt_id t2)
     let compare t1 t2 = Int.compare (gt_id t1) (gt_id t2)
     let hash = Hashtbl.hash % gt_id
-
-    let add_invariant gt inv =
-      {
-        transitions =
-          ProbabilisticTransitionSet.map
-            ~f:(fun (l, t, l') -> (l, ProbabilisticTransitionLabel_.add_invariant t inv, l'))
-            gt.transitions;
-      }
-
 
     let vars t =
       Set.to_sequence t.transitions
@@ -912,7 +908,8 @@ module ProbabilisticProgram = struct
 
   let simplify_all_guards : t -> t =
     map_transitions
-      (ProbabilisticTransition.map_label (ProbabilisticTransitionLabel.map_guard Guard.simplify_guard))
+      (ProbabilisticTransition.map_label (fun label ->
+           { label with guard = Guard.simplify_guard label.guard }))
 
 
   let sccs_gts t =
