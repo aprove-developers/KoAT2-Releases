@@ -78,12 +78,11 @@ let to_polynomial =
   fold
     ~const:(Option.some % Polynomial.of_constant)
     ~indeterminate:(Option.map ~f:Polynomial.of_var % UpdateValue.get_var)
-    ~neg:(Option.map ~f:Polynomial.neg) ~plus:(OptionMonad.liftM2 Polynomial.add)
-    ~times:(OptionMonad.liftM2 Polynomial.mul)
+    ~plus:(OptionMonad.liftM2 Polynomial.add) ~times:(OptionMonad.liftM2 Polynomial.mul)
     ~pow:(fun p i -> Option.map ~f:(fun p -> Polynomial.pow p i) p)
 
 
-let of_poly = Polynomial.fold ~const:of_constant ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow
+let of_poly = Polynomial.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
 let of_dist d = of_indeterminate (Dist d)
 
 let as_guard ue new_var =
@@ -95,7 +94,6 @@ let as_guard ue new_var =
         | Dist d ->
             let temp_v = Var.fresh_id Var.Int () in
             (Polynomial.of_var temp_v, ProbabilityDistribution.as_guard d temp_v))
-      ~neg:(Tuple2.map1 Polynomial.neg)
       ~plus:(fun (p1, g1) (p2, g2) -> (Polynomial.add p1 p2, Guard.mk_and g1 g2))
       ~times:(fun (p1, g1) (p2, g2) -> (Polynomial.mul p1 p2, Guard.mk_and g1 g2))
       ~pow:(fun (p, g) i -> (Polynomial.pow p i, g))
@@ -120,8 +118,8 @@ let exp_value_poly : t -> RationalPolynomial.t =
 let moment_poly t i = exp_value_poly (pow t i)
 
 let admissibility_constraint : t -> Guard.t =
-  fold ~const:(const Guard.mk_true) ~indeterminate:UpdateValue.admissibility_constraint ~neg:identity
-    ~plus:Guard.mk_and ~times:Guard.mk_and ~pow:const
+  fold ~const:(const Guard.mk_true) ~indeterminate:UpdateValue.admissibility_constraint ~plus:Guard.mk_and
+    ~times:Guard.mk_and ~pow:const
 
 
 let restore_legacy_distribution_update_semantics v t =
@@ -274,7 +272,7 @@ let pull_out_of_uniform : t -> t =
           let p, (a', b') = Polynomial.pull_out_common_addends a b in
           add (of_poly p) (of_indeterminate @@ Dist (Uniform (a', b')))
       | i -> of_indeterminate i)
-    ~neg ~plus:add ~times:mul ~pow
+    ~plus:add ~times:mul ~pow
 
 
 let exp_value_abs_bound t =

@@ -468,8 +468,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
 
   let of_poly =
     OptionMonad.return
-    % Poly.fold ~const:bound_of_constant ~indeterminate:bound_of_var ~neg:identity ~plus:add_bound
-        ~times:mul_bound ~pow:pow_bound
+    % Poly.fold ~const:bound_of_constant ~indeterminate:bound_of_var ~plus:add_bound ~times:mul_bound
+        ~pow:pow_bound
 
 
   let bound_of_int i = Const (Num.of_int @@ Int.abs i)

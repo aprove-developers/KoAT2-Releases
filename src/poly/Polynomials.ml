@@ -116,7 +116,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
   let is_integral = List.for_all ~f:ScaledMonomial_.is_integral % scaled_monomials
   let lift coeff mon = make [ ScaledMonomial_.make coeff mon ]
 
-  let fold ~const ~indeterminate ~neg ~plus ~times ~pow t =
+  let fold ~const ~indeterminate ~plus ~times ~pow t =
     List.fold_left
       ~f:(fun b scaled -> plus b (ScaledMonomial_.fold ~const ~indeterminate ~times ~pow scaled))
       ~init:(const Value.zero) (scaled_monomials t)
@@ -323,7 +323,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
   let is_one poly = poly =~= one
 
   let instantiate (substitution : Value.t -> t) =
-    fold ~const:substitution ~indeterminate:of_indeterminate ~neg ~plus:add ~times:mul ~pow
+    fold ~const:substitution ~indeterminate:of_indeterminate ~plus:add ~times:mul ~pow
 
 
   let eval_f poly f =
@@ -339,7 +339,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
 
 
   let substitute_f substitution =
-    fold ~const:of_constant ~indeterminate:substitution ~neg ~plus:add ~times:mul ~pow
+    fold ~const:of_constant ~indeterminate:substitution ~plus:add ~times:mul ~pow
 
 
   let substitute_f_by_monomial (f : monomial -> t) (t : t) =
@@ -386,7 +386,7 @@ module Polynomial = struct
   let max_of_occurring_constants =
     fold ~const:OurInt.abs
       ~indeterminate:(fun _ -> OurInt.one)
-      ~neg:identity ~plus:OurInt.add ~times:OurInt.mul ~pow:OurInt.pow
+      ~plus:OurInt.add ~times:OurInt.mul ~pow:OurInt.pow
 end
 
 module RationalPolynomial = struct
@@ -395,13 +395,13 @@ module RationalPolynomial = struct
   let max_of_occurring_constants =
     fold ~const:OurRational.abs
       ~indeterminate:(fun _ -> OurRational.one)
-      ~neg:identity ~plus:OurRational.add ~times:OurRational.mul ~pow:OurRational.pow
+      ~plus:OurRational.add ~times:OurRational.mul ~pow:OurRational.pow
 
 
   let of_intpoly =
     Polynomial.fold
       ~const:(of_constant % OurRational.of_ourint)
-      ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow
+      ~indeterminate:of_var ~plus:add ~times:mul ~pow
 
 
   let of_intconstant = of_constant % OurRational.of_ourint
@@ -417,8 +417,7 @@ module RationalPolynomial = struct
     ( poly |> mult_with_const coeff_inv
       |> fold
            ~const:(Polynomial.of_constant % OurRational.to_ourint)
-           ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul
-           ~pow:Polynomial.pow,
+           ~indeterminate:Polynomial.of_var ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow,
       coeff_inv )
 
 
@@ -427,8 +426,7 @@ module RationalPolynomial = struct
   let overapprox =
     fold
       ~const:(Polynomial.of_constant % OurRational.ceil % OurRational.abs)
-      ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul
-      ~pow:Polynomial.pow
+      ~indeterminate:Polynomial.of_var ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
 
 
   let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly
@@ -442,14 +440,14 @@ module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
   let eval_coefficients f =
     Outer.fold
       ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
-      ~indeterminate:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
+      ~indeterminate:Inner.of_var ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
 
 
   (* Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
   (* Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
   let flatten (templatepoly : Outer.t) : Inner.t =
-    Outer.fold ~const:identity ~indeterminate:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul
-      ~pow:Inner.pow templatepoly
+    Outer.fold ~const:identity ~indeterminate:Inner.of_var ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
+      templatepoly
 
 
   (* Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
@@ -457,7 +455,7 @@ module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
   let of_polynomial (poly : Inner.t) : t =
     Inner.fold
       ~const:(fun value -> of_constant (Inner.of_constant value))
-      ~indeterminate:of_var ~neg ~plus:add ~times:mul ~pow poly
+      ~indeterminate:of_var ~plus:add ~times:mul ~pow poly
 end
 
 module ParameterPolynomial = ParameterPolynomialOver (OurInt)

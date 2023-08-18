@@ -84,8 +84,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | x :: [] ->
         Polynomial.fold
           ~const:(Polynomial.of_constant % OurInt.abs)
-          ~indeterminate:Polynomial.of_var ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul
-          ~pow:Polynomial.pow x
+          ~indeterminate:Polynomial.of_var ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
     | xs ->
         List.flatten (List.map Polynomial.scaled_monomials xs)
         |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))

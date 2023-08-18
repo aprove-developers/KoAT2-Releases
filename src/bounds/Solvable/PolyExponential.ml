@@ -332,14 +332,12 @@ module PE = struct
     | (pe, exp) :: xs -> mul (power pe exp) (power_list xs)
 
 
-  let neg = List.map (fun (c, p, d, b) -> (c, RationalPolynomial.neg p, d, b))
-
   let substitute varmap poly =
     Polynomial.fold ~const:(mk_cons % OurRational.of_ourint)
       ~indeterminate:(fun var ->
         try Hashtbl.find varmap var with
         | Not_found -> [])
-      ~neg ~plus:add ~times:mul ~pow:power poly
+      ~plus:add ~times:mul ~pow:power poly
     |> simplify
 
 

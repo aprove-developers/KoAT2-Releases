@@ -22,7 +22,6 @@ module Koat2Apron = struct
     Polynomial.fold
       ~const:(fun c -> Texpr1.Cst (const_to_apron c))
       ~indeterminate:(fun v -> Texpr1.Var (var_to_apron v))
-      ~neg:(fun expr -> Texpr1.Unop (Texpr1.Neg, expr, Texpr1.Int, Texpr1.Up))
       ~plus:(fun expr1 expr2 -> Texpr1.Binop (Texpr1.Add, expr1, expr2, Texpr1.Int, Texpr1.Up))
       ~times:(fun expr1 expr2 -> Texpr1.Binop (Texpr1.Mul, expr1, expr2, Texpr1.Int, Texpr1.Up))
       ~pow:(fun expr n ->

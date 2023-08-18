@@ -13,7 +13,6 @@ let from_poly context =
         Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)
       else
         Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
-    ~neg:(Z3.Arithmetic.mk_unary_minus context)
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
       (* Somehow Z3.Arithmetic.mk_power makes Z3 use real arithmetic.. *)
@@ -34,7 +33,6 @@ let from_real_poly context =
         Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
       else
         Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
-    ~neg:(Z3.Arithmetic.mk_unary_minus context)
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
     ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Real.mk_numeral_i context e))

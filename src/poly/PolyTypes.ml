@@ -563,7 +563,6 @@ module type Polynomial = sig
   val fold :
     const:(value -> 'b) ->
     indeterminate:(indeterminate -> 'b) ->
-    neg:('b -> 'b) ->
     plus:('b -> 'b -> 'b) ->
     times:('b -> 'b -> 'b) ->
     pow:('b -> int -> 'b) ->
