@@ -80,7 +80,7 @@ struct
     List.map ~f:(loc_transitions graph) @@ SCC.scc_list graph |> List.filter ~f:(not % Set.is_empty)
 
 
-  let sccs_ trans =
+  let sccs_from_sequence trans =
     let graph = add_transitions trans empty in
     sccs graph
 end

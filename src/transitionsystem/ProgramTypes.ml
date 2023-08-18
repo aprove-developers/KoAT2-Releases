@@ -299,7 +299,7 @@ module type TransitionGraph = sig
   val sccs : t -> transition_set list
   (** Returns the (biggest) strongly connected components of the transiton graph. *)
 
-  val sccs_ : transition Sequence.t -> transition_set list
+  val sccs_from_sequence : transition Sequence.t -> transition_set list
   (** Returns the (biggest) strongly connected components of the transitons. *)
 end
 

@@ -222,7 +222,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             (* If a sub_scc changes a variable of the loop, then all entries in this sub_scc are relevant.
                Otherwise, we take the entries leading to this sub_scc which are not in the original scc. *)
             let sccs =
-              TransitionGraph.sccs_
+              TransitionGraph.sccs_from_sequence
                 (Base.Sequence.of_list
                 @@ Base.Set.(to_list @@ diff scc @@ of_list (module Transition) handled_transitions))
             in
