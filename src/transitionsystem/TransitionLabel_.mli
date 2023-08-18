@@ -16,6 +16,9 @@ val mk :
   t
 (** TODO doc? *)
 
+val add_invariant : t -> Invariant.t -> t
+(** Adds an invariant, i.e., a constraint that is always fulfilled upon execution of the transition, to the transition label *)
+
 val append : t -> t -> t
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)

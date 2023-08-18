@@ -34,33 +34,11 @@ module Make
   val remove_transition : t -> transition -> t
   val map_graph : (transition_graph -> transition_graph) -> t -> t
 
-  (** These are just dummy values to shadow the definitions from ProgramTypes.Program *)
+  (** {1 These are just dummy values to shadow the definitions from ProgramTypes.Program } *)
 
   val add_invariant : unit
   val simplify_all_guards : unit
   val remove_unsatisfiable_transitions : unit
-end
-
-module MakeClassical
-    (TL : ProgramTypes.ClassicalTransitionLabel)
-    (T : ProgramTypes.ClassicalTransition
-           with type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness)
-    (L : ProgramTypes.Location
-           with type t = T.location
-            and type comparator_witness = T.location_comparator_witness)
-    (G : ProgramTypes.TransitionGraph
-           with type location = L.t
-            and type location_comparator_witness = L.comparator_witness
-            and type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness) : sig
-  include
-    ProgramTypes.Program
-      with type location = L.t
-       and type location_comparator_witness = L.comparator_witness
-       and type transition_label = TL.t
-       and type transition_label_comparator_witness = TL.comparator_witness
-       and type transition_graph = G.t
 end
 
 module ClassicalProgramOverLocation (L : ProgramTypes.Location) : sig

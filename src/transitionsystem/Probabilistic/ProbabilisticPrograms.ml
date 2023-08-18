@@ -605,7 +605,6 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let to_string = GenericClassical.to_string
   let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
-  let add_invariant = GenericClassical.add_invariant
 end
 
 module GeneralTransition = struct

@@ -164,8 +164,6 @@ end
 module type ClassicalTransitionLabel = sig
   include TransitionLabel with type update_element = Polynomial.t
 
-  val add_invariant : t -> Invariant.t -> t
-
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
 
@@ -240,9 +238,6 @@ module type ClassicalTransition = sig
   include Transition
 
   val overapprox_nonlinear_updates : t -> t
-
-  val add_invariant : Constraint.t -> t -> t
-  (** Adds the invariant to this transition. *)
 end
 
 (** This module represents a transition graph. *)

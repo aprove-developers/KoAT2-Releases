@@ -80,7 +80,6 @@ module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTy
   include Make (TL) (L)
 
   let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
-  let add_invariant invariant (l, t, l') = (l, TL.add_invariant t invariant, l')
 end
 
 open OurBase

@@ -247,40 +247,32 @@ struct
   end
 end
 
-(* This functor is like Make but exposes a larger API for classical programs. *)
-module MakeClassical
-    (TL : ProgramTypes.ClassicalTransitionLabel)
-    (T : ProgramTypes.ClassicalTransition
-           with type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness)
-    (L : ProgramTypes.Location
-           with type t = T.location
-            and type comparator_witness = T.location_comparator_witness)
-    (G : ProgramTypes.TransitionGraph
-           with type location = L.t
-            and type location_comparator_witness = L.comparator_witness
-            and type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness) =
-struct
-  include Make (TL) (T) (L) (G)
+module ClassicalProgramOverLocation (L : ProgramTypes.Location) = struct
+  include
+    Make (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_) (L)) (L)
+      (TransitionGraph_.TransitionGraphOverLocation (L))
+
+  module Transition = Transition_.MakeClassical (TransitionLabel_) (L)
+  module TransitionGraph = TransitionGraph_.TransitionGraphOverLocation (L)
 
   let add_invariant location invariant =
     map_graph @@ fun graph ->
     location
-    |> G.succ_e graph (* An invariant holds before the execution of the successor transitions *)
+    |> TransitionGraph.succ_e graph (* An invariant holds before the execution of the successor transitions *)
     |> List.fold_left
-         ~f:(fun result transition ->
-           G.replace_edge_e transition (T.add_invariant invariant transition) result)
+         ~f:(fun result (l, label, l') ->
+           TransitionGraph.replace_edge_e (l, label, l')
+             (l, TransitionLabel_.add_invariant label invariant, l')
+             result)
          ~init:graph
 
 
-  let simplify_all_guards : t -> t = map_transitions (T.map_label (TL.map_guard Guard.simplify_guard))
+  let simplify_all_guards : t -> t =
+    map_transitions (Transition.map_label (TransitionLabel_.map_guard Guard.simplify_guard))
+
+
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
 end
-
-module ClassicalProgramOverLocation (L : ProgramTypes.Location) =
-  MakeClassical (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_) (L)) (L)
-    (TransitionGraph_.TransitionGraphOverLocation (L))
 
 open GenericProgram_
 include ClassicalProgramOverLocation (Location)
