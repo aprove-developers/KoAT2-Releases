@@ -79,7 +79,6 @@ end
 module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTypes.Location) = struct
   include Make (TL) (L)
 
-  let rename vars (l, t, l') = (l, TL.rename vars t, l')
   let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
   let add_invariant invariant (l, t, l') = (l, TL.add_invariant t invariant, l')
 end
@@ -128,3 +127,6 @@ let to_file_string (l, t, l') =
     without_guard
   else
     without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel_.guard t)
+
+
+let rename vars (l, t, l') = (l, TransitionLabel_.rename vars t, l')

@@ -9,6 +9,7 @@ module ProbabilisticTransitionLabel_ = struct
   module Inner = struct
     module Invariant = Guard
 
+    (* NOTE: The guard & invariant must always be the same among all transitions belonging to the same general transition *)
     type t = {
       id : int;
       gt_id : int;
@@ -228,6 +229,7 @@ module ProbabilisticTransitionLabel_ = struct
       |> Map.of_sequence_exn (module Var)
 
 
+    (* Use with caution as all guards & invariants need to be maintained over general transitions *)
     let rename rename_map t =
       {
         t with
@@ -238,16 +240,6 @@ module ProbabilisticTransitionLabel_ = struct
         invariant = Guard.rename t.invariant rename_map;
         cost = Polynomial.rename rename_map t.cost;
       }
-
-
-    let rename_temp_vars t temp_vars =
-      (* whenever we have a temp variable with the same name occur in both the overapproximated and the
-         non overapproximated vars they refer to the same thing. *)
-      let all_temp_vars =
-        Set.diff (Set.union (vars VarsOverapproximated t) (vars VarsNonOverapproximated t)) (input_vars t)
-      in
-      let rename_map = Sequence.zip (Set.to_sequence all_temp_vars) temp_vars |> RenameMap.of_sequence in
-      rename rename_map t
 
 
     let update_admissibility_constraint t : Guard.t =
@@ -614,7 +606,6 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
   let add_invariant = GenericClassical.add_invariant
-  let rename = GenericClassical.rename
 end
 
 module GeneralTransition = struct

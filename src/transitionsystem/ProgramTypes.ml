@@ -169,11 +169,6 @@ module type ClassicalTransitionLabel = sig
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
 
-  val rename : RenameMap.t -> t -> t
-
-  val rename_temp_vars : t -> Var.t Sequence.t -> t
-  (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
-
   val relax_guard : non_static:VarSet.t -> t -> t
   (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
 
@@ -248,8 +243,6 @@ module type ClassicalTransition = sig
 
   val add_invariant : Constraint.t -> t -> t
   (** Adds the invariant to this transition. *)
-
-  val rename : RenameMap.t -> t -> t
 end
 
 (** This module represents a transition graph. *)

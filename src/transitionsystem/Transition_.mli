@@ -51,3 +51,5 @@ include
 
 val to_file_string : t -> string
 (** Can be used to dump the transition into a koat file *)
+
+val rename : RenameMap.t -> t -> t
