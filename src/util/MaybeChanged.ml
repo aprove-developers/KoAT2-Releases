@@ -1,5 +1,4 @@
-open Batteries
-
+open OurBase
 (** A type that is wrapped by the MaybeChanged monad represents a value that might change during a computation.
     Once it has changed it will be forever marked as changed, but can also be further be manipulated. *)
 
@@ -40,19 +39,13 @@ let if_changed f = function
 let changed subject = (Changed, subject)
 let same subject = (Same, subject)
 
-let fold_enum (f : 'a -> 'b -> 'a t) (subject : 'a) (enum : 'b Enum.t) : 'a t =
-  Enum.fold
-    (fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element)
-    (same subject) enum
-
-
-let fold_sequence ~(f : 'a -> 'b -> 'a t) ~(init : 'a) (seq : 'b Base.Sequence.t) : 'a t =
-  Base.Sequence.fold
+let fold_sequence ~(f : 'a -> 'b -> 'a t) ~(init : 'a) (seq : 'b Sequence.t) : 'a t =
+  Sequence.fold
     ~f:(fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element)
     ~init:(same init) seq
 
 
 let fold (f : 'a -> 'b -> 'a t) (subject : 'a) (list : 'b List.t) : 'a t =
-  List.fold
-    (fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element)
-    (same subject) list
+  List.fold list
+    ~f:(fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element)
+    ~init:(same subject)

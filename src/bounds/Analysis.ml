@@ -282,6 +282,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let local_rank ~conf (scc : TransitionSet.t) measure program max_depth appr =
+    let open OurBase in
     let get_unbounded_vars transition =
       match conf.analysis_type with
       | `Termination -> VarSet.empty
@@ -302,27 +303,27 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       let compute_function trans =
         MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars
           scc_overapprox_nonlinear depth
-        @@ Option.get
+        @@ Option.value_exn
         @@ Base.Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
       in
       Base.Set.to_array unbounded_transitions
-      |> Parmap.array_parmap compute_function |> Array.enum |> Util.cat_maybes_enum
+      |> Parmap.array_parmap compute_function |> Array.to_sequence |> Util.cat_maybes_sequence
     in
     (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
        * or the depth is max_depth *)
     (* Note that enums are lazy *)
     let rankfuncs =
-      Enum.seq 1 (( + ) 1) (( > ) (max_depth + 1))
-      |> Enum.map rankfunc_computation
-      |> Enum.peek % Enum.filter (not % Enum.is_empty)
-      |? Enum.empty ()
+      Sequence.range ~stop:`inclusive 1 max_depth
+      |> Sequence.map ~f:rankfunc_computation
+      |> Sequence.hd % Sequence.filter ~f:(not % Sequence.is_empty)
+      |? Sequence.empty
     in
     let improvement_function =
       match conf.analysis_type with
       | `Termination -> improve_termination_rank_mprf
       | `Complexity -> improve_with_rank_mprf
     in
-    rankfuncs |> MaybeChanged.fold_enum (improvement_function measure program) appr
+    rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improvement_function measure program)
 
 
   let run_local ~conf (scc : TransitionSet.t) twn_state measure program appr =
