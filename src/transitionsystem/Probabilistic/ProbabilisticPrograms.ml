@@ -4,43 +4,305 @@ open Polynomials
 
 exception ProbabilitiesDoNotSumToOne
 
+module Invariant = Guard
+
+type 'a ptr = 'a Option.t ref
+
+type 'trans_label_cmp transition_label_ = {
+  id : int;
+  gt : 'trans_label_cmp general_transition_ ptr;
+  probability : OurRational.t;
+  update : UpdateElement_.t ProgramTypes.var_map;
+      (** Non-determinstically Overapproximated non-probabilistic versions for classic analysis *)
+  overappr_nonprob_update : Polynomial.t ProgramTypes.var_map;
+  overappr_guard : Guard.t;
+  cost : Polynomial.t;
+}
+
+and 'trans_label_cmp transition_ = Location.t * 'trans_label_cmp transition_label_ * Location.t
+
+and 'trans_label_cmp trans_comparator_ =
+  ('trans_label_cmp, Location.comparator_witness) TransitionComparator.comparator_witness
+
+and 'trans_label_cmp general_transition_ = {
+  gt_id : int;
+  guard : Guard.t;
+  invariant : Invariant.t;
+  transitions : ('trans_label_cmp transition_, 'trans_label_cmp trans_comparator_) Set.t;
+}
+
+module LabelComparator = Comparator.Make1 (struct
+  type 'trans_label_cmp t = 'trans_label_cmp transition_label_
+
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+  let compare label1 label2 = Int.compare label1.id label2.id
+end)
+
+type transition_label = LabelComparator.comparator_witness transition_label_
+type general_transition = LabelComparator.comparator_witness general_transition_
+
 (** This is a low level internal interface *)
 module ProbabilisticTransitionLabel_ = struct
-  module Inner = struct
-    module Invariant = Guard
+  type t = transition_label
 
-    (* NOTE: The guard & invariant must always be the same among all transitions belonging to the same general transition *)
-    type t = {
-      id : int;
-      gt_id : int;
-      probability : OurRational.t;
-      guard : Guard.t;
-      invariant : Invariant.t;
-      update : UpdateElement_.t ProgramTypes.var_map;
-      (* overapproximated probabilistic updates for classical analysis *)
-      overappr_nonprob_update : Polynomial.t ProgramTypes.var_map;
-      overappr_guard : Guard.t;
-      cost : Polynomial.t;
+  module Invariant = Guard
+
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+
+  let default =
+    {
+      id = 0;
+      (* We omit the general transition here, as the default label should not be used anywhere.
+         Otherwise one would have to provide a start and target location for the transition corresponding
+         to this label which are unknown here *)
+      gt = ref None;
+      probability = OurRational.one;
+      overappr_guard = Guard.mk_true;
+      (* This guard goes along with overappr_nonprob_update *)
+      update = Map.empty (module Var);
+      overappr_nonprob_update = Map.empty (module Var);
+      cost = Polynomial.one;
     }
 
-    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
-    let default =
-      {
-        id = 0;
-        gt_id = 0;
-        probability = OurRational.one;
-        guard = Guard.mk_true;
-        invariant = Guard.mk_true;
-        overappr_guard = Guard.mk_true;
-        (* This guard goes along with overappr_nonprob_update *)
-        update = Map.empty (module Var);
-        overappr_nonprob_update = Map.empty (module Var);
-        cost = Polynomial.one;
-      }
+  let compute_overapproximated_update_and_guard update_map =
+    Map.map
+      ~f:(fun ue ->
+        match UpdateElement_.to_polynomial ue with
+        | Some p -> (Guard.mk_true, p)
+        | None ->
+            let v' = Var.fresh_id Var.Int () in
+            (UpdateElement_.as_guard ue v', Polynomial.of_var v'))
+      update_map
+    |> fun m -> (Guard.all (List.map ~f:Tuple2.first @@ Map.data m), Map.map ~f:Tuple2.second m)
 
 
-    let compute_overapproximated_update_and_guard update_map =
+  let add_self_updates_if_missing to_update_value vars update_map =
+    Set.fold
+      ~f:(fun fold_update var ->
+        if Map.mem update_map var then
+          fold_update
+        else
+          Map.add_exn fold_update ~key:var ~data:(to_update_value var))
+      vars ~init:update_map
+
+
+  let fill_up_update_arg_vars_up_to_num from_var n update =
+    let all_args = VarSet.of_sequence @@ Sequence.take Var.args n in
+    add_self_updates_if_missing from_var all_args update
+
+
+  let fill_up_arg_vars_up_to_num n t =
+    {
+      t with
+      update = fill_up_update_arg_vars_up_to_num UpdateElement_.of_var n t.update;
+      overappr_nonprob_update =
+        fill_up_update_arg_vars_up_to_num Polynomial.of_var n t.overappr_nonprob_update;
+    }
+
+
+  let mk ~patterns ~map_to_arg_vars ~probability ~assignments ~cost ~guard =
+    let update =
+      Sequence.of_list assignments
+      |> Sequence.map ~f:(UpdateElement_.rename map_to_arg_vars)
+      |> Sequence.zip Var.args
+      |> Map.of_sequence_exn (module Var)
+      |> fill_up_update_arg_vars_up_to_num UpdateElement_.of_var (List.length patterns)
+    in
+
+    let guard = Guard.rename guard map_to_arg_vars in
+    let overappr_guard, overappr_nonprob_update = compute_overapproximated_update_and_guard update in
+    let overappr_guard = Guard.mk_and overappr_guard guard in
+    {
+      id = Unique.unique ();
+      gt = ref None;
+      probability;
+      overappr_guard;
+      update;
+      overappr_nonprob_update;
+      cost = Polynomial.rename map_to_arg_vars cost;
+    }
+
+
+  let comparator = LabelComparator.comparator
+
+  type comparator_witness = LabelComparator.comparator_witness
+
+  let compare = Comparator.compare_of_comparator comparator
+  let equal = Comparator.equal_of_comparator comparator
+  let id t = t.id
+  let gt t = Option.value_exn !(t.gt)
+  let gt_id t = (gt t).gt_id
+  let probability t = t.probability
+
+  (** In contrast to ProbabilisticTransitionLabel.guard this returns the guard {b without} invariant *)
+  let guard t = (gt t).guard
+
+  let invariant t = (gt t).invariant
+  let cost t = t.cost
+
+  (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
+  let update_to_string_lhs_ ~pretty t =
+    let update = t.update in
+    if Map.is_empty update then
+      ""
+    else
+      Map.to_alist update |> List.map ~f:(fun (var, _) -> Var.to_string ~pretty var) |> fun xs ->
+      "(" ^ String.concat ~sep:"," xs ^ ")"
+
+
+  let update_to_string_lhs = update_to_string_lhs_ ~pretty:false
+  let update_to_string_lhs_pretty = update_to_string_lhs_ ~pretty:true
+
+  let update_to_string_rhs_ ue_to_string get_update t =
+    let update = get_update t in
+    if Map.is_empty update then
+      ""
+    else
+      Map.to_alist update |> List.map ~f:(fun (_, poly) -> ue_to_string poly) |> fun xs ->
+      "(" ^ String.concat ~sep:"," xs ^ ")"
+
+
+  let update_to_string_rhs ue_to_string get_update = update_to_string_rhs_ ue_to_string get_update
+
+  let update_to_string_rhs_pretty ue_to_string_pretty get_update =
+    update_to_string_rhs_ ue_to_string_pretty get_update
+
+
+  let update_to_string ue_to_string update =
+    if Map.is_empty update then
+      "true"
+    else
+      Map.to_alist update
+      |> List.map ~f:(fun (var, poly) -> (Var.to_string var, ue_to_string poly))
+      |> List.unzip
+      |> fun (xs, ys) -> "(" ^ String.concat ~sep:"," xs ^ ") -> (" ^ String.concat ~sep:"," ys ^ ")"
+
+
+  let to_string ue_to_string ue_to_string_pretty get_update get_guard ?(pretty = false) t =
+    let guard =
+      if Guard.is_true (get_guard t) then
+        ""
+      else
+        " :|: " ^ Guard.to_string ~pretty (get_guard t)
+    in
+    let invariant =
+      if Invariant.is_true (invariant t) then
+        ""
+      else
+        " [" ^ Guard.to_string ~pretty (invariant t) ^ "] "
+    in
+    let cost =
+      if Polynomial.is_one t.cost then
+        if pretty then
+          "->"
+        else
+          ""
+      else if pretty then
+        "-{" ^ Polynomial.to_string_pretty t.cost
+      else
+        Polynomial.to_string t.cost ^ "}>"
+    in
+    if pretty then
+      OurRational.to_string t.probability ^ ":" ^ "t" ^ Util.natural_to_subscript t.id ^ "∈g"
+      ^ Util.natural_to_subscript (gt_id t)
+      ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty t ^ " " ^ cost ^ " "
+      ^ update_to_string_rhs_pretty ue_to_string_pretty get_update t
+      ^ guard
+    else
+      "ID: " ^ OurRational.to_string t.probability ^ ":" ^ invariant
+      ^ string_of_int (gt_id t)
+      ^ "," ^ string_of_int t.id ^ ", " ^ cost ^ "&euro;" ^ ", "
+      ^ update_to_string ue_to_string (get_update t)
+      ^ guard
+
+
+  let cost_to_string t =
+    if Polynomial.is_one t.cost then
+      ""
+    else
+      "{" ^ Polynomial.to_string t.cost ^ "}"
+
+
+  let to_id_string t = string_of_int (gt_id t) ^ "," ^ string_of_int t.id
+  let input_vars t = VarSet.of_list @@ Map.keys t.update
+  let input_size = Set.length % input_vars
+
+  type vars_type = VarsOverapproximated | VarsNonOverapproximated
+
+  let vars vars_type t =
+    let update_and_guard_vars =
+      match vars_type with
+      | VarsOverapproximated ->
+          Set.union
+            (Map.fold
+               ~f:(fun ~key ~data -> Set.union (Polynomial.vars data))
+               t.overappr_nonprob_update ~init:VarSet.empty)
+            (Guard.vars t.overappr_guard)
+      | VarsNonOverapproximated ->
+          Set.union
+            (Map.fold ~f:(fun ~key ~data -> Set.union (UpdateElement_.vars data)) t.update ~init:VarSet.empty)
+            (Guard.vars (guard t))
+    in
+    update_and_guard_vars
+    |> Set.union (Guard.vars (invariant t))
+    |> Set.union (Polynomial.vars t.cost)
+    |> Set.union (VarSet.of_list @@ Map.keys t.update)
+
+
+  let rename_update rename_ue update rename_map =
+    update |> Map.to_sequence
+    |> Sequence.map ~f:(fun (key, value) ->
+           (RenameMap.find key rename_map ~default:key, rename_ue rename_map value))
+    |> Map.of_sequence_exn (module Var)
+
+
+  (** Use with caution as you may also want to rename guards & invariants of the containing general transition *)
+  let rename rename_map t =
+    {
+      t with
+      update = rename_update UpdateElement_.rename t.update rename_map;
+      overappr_nonprob_update = rename_update Polynomial.rename t.overappr_nonprob_update rename_map;
+      overappr_guard = Guard.rename t.overappr_guard rename_map;
+      cost = Polynomial.rename rename_map t.cost;
+    }
+
+
+  let update_admissibility_constraint t : Guard.t =
+    Map.to_sequence t.update
+    |> Sequence.map ~f:(UpdateElement_.admissibility_constraint % Tuple2.second)
+    |> Sequence.fold ~f:Guard.mk_and ~init:Guard.mk_true
+
+
+  let chain_guards t1 t2 =
+    let nondet_vars = Hashtbl.create ~size:3 (module Var) in
+    let substitution update_map var =
+      Map.find update_map var
+      |? Polynomial.of_var
+           (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
+           (Hashtbl.find nondet_vars var
+           |> Option.value_or_thunk ~default:(fun () ->
+                  let nondet_var = Var.fresh_id Var.Int () in
+                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+                  nondet_var))
+    in
+    Guard.Infix.(
+      t1.overappr_guard && invariant t1
+      && Guard.map_polynomial
+           (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
+           t2.overappr_guard
+      && Guard.map_polynomial
+           (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
+           (invariant t2))
+
+
+  let restore_legacy_distribution_update_semantics t =
+    let update =
+      Map.mapi
+        ~f:(fun ~key ~data -> UpdateElement_.restore_legacy_distribution_update_semantics key data)
+        t.update
+    in
+    let overappr_guard, overappr_nonprob_update =
       Map.map
         ~f:(fun ue ->
           match UpdateElement_.to_polynomial ue with
@@ -48,250 +310,10 @@ module ProbabilisticTransitionLabel_ = struct
           | None ->
               let v' = Var.fresh_id Var.Int () in
               (UpdateElement_.as_guard ue v', Polynomial.of_var v'))
-        update_map
+        update
       |> fun m -> (Guard.all (List.map ~f:Tuple2.first @@ Map.data m), Map.map ~f:Tuple2.second m)
-
-
-    let add_self_updates_if_missing to_update_value vars update_map =
-      Set.fold
-        ~f:(fun fold_update var ->
-          if Map.mem update_map var then
-            fold_update
-          else
-            Map.add_exn fold_update ~key:var ~data:(to_update_value var))
-        vars ~init:update_map
-
-
-    let equal t1 t2 = t1.id = t2.id
-
-    let fill_up_update_arg_vars_up_to_num from_var n update =
-      let all_args = VarSet.of_sequence @@ Sequence.take Var.args n in
-      add_self_updates_if_missing from_var all_args update
-
-
-    let fill_up_arg_vars_up_to_num n t =
-      {
-        t with
-        update = fill_up_update_arg_vars_up_to_num UpdateElement_.of_var n t.update;
-        overappr_nonprob_update =
-          fill_up_update_arg_vars_up_to_num Polynomial.of_var n t.overappr_nonprob_update;
-      }
-
-
-    let mk ~gt_id ~patterns ~probability ~assignments ~cost ~guard =
-      let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
-      let update =
-        Sequence.of_list assignments
-        |> Sequence.map ~f:(UpdateElement_.rename map_to_arg_vars)
-        |> Sequence.zip Var.args
-        |> Map.of_sequence_exn (module Var)
-        |> fill_up_update_arg_vars_up_to_num UpdateElement_.of_var (List.length patterns)
-      in
-
-      let guard = Guard.rename guard map_to_arg_vars in
-      let overappr_guard, overappr_nonprob_update = compute_overapproximated_update_and_guard update in
-      let overappr_guard = Guard.mk_and overappr_guard guard in
-      {
-        id = Unique.unique ();
-        gt_id;
-        probability;
-        guard;
-        invariant = Guard.mk_true;
-        overappr_guard;
-        update;
-        overappr_nonprob_update;
-        cost = Polynomial.rename map_to_arg_vars cost;
-      }
-
-
-    let compare t1 t2 = Int.compare t1.id t2.id
-    let id t = t.id
-    let gt_id t = t.gt_id
-    let probability t = t.probability
-    let invariant t = t.invariant
-    let cost t = t.cost
-    let add_invariant t inv = { t with invariant = Guard.mk_and t.invariant inv }
-
-    (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
-    let update_to_string_lhs_ ~pretty t =
-      let update = t.update in
-      if Map.is_empty update then
-        ""
-      else
-        Map.to_alist update |> List.map ~f:(fun (var, _) -> Var.to_string ~pretty var) |> fun xs ->
-        "(" ^ String.concat ~sep:"," xs ^ ")"
-
-
-    let update_to_string_lhs = update_to_string_lhs_ ~pretty:false
-    let update_to_string_lhs_pretty = update_to_string_lhs_ ~pretty:true
-
-    let update_to_string_rhs_ ue_to_string get_update t =
-      let update = get_update t in
-      if Map.is_empty update then
-        ""
-      else
-        Map.to_alist update |> List.map ~f:(fun (_, poly) -> ue_to_string poly) |> fun xs ->
-        "(" ^ String.concat ~sep:"," xs ^ ")"
-
-
-    let update_to_string_rhs ue_to_string get_update = update_to_string_rhs_ ue_to_string get_update
-
-    let update_to_string_rhs_pretty ue_to_string_pretty get_update =
-      update_to_string_rhs_ ue_to_string_pretty get_update
-
-
-    let update_to_string ue_to_string update =
-      if Map.is_empty update then
-        "true"
-      else
-        Map.to_alist update
-        |> List.map ~f:(fun (var, poly) -> (Var.to_string var, ue_to_string poly))
-        |> List.unzip
-        |> fun (xs, ys) -> "(" ^ String.concat ~sep:"," xs ^ ") -> (" ^ String.concat ~sep:"," ys ^ ")"
-
-
-    let to_string ue_to_string ue_to_string_pretty get_update get_guard ?(pretty = false) t =
-      let guard =
-        if Guard.is_true (get_guard t) then
-          ""
-        else
-          " :|: " ^ Guard.to_string ~pretty (get_guard t)
-      in
-      let invariant =
-        if Invariant.is_true t.invariant then
-          ""
-        else
-          " [" ^ Guard.to_string ~pretty t.invariant ^ "] "
-      in
-      let cost =
-        if Polynomial.is_one t.cost then
-          if pretty then
-            "->"
-          else
-            ""
-        else if pretty then
-          "-{" ^ Polynomial.to_string_pretty t.cost
-        else
-          Polynomial.to_string t.cost ^ "}>"
-      in
-      if pretty then
-        OurRational.to_string t.probability ^ ":" ^ "t" ^ Util.natural_to_subscript t.id ^ "∈g"
-        ^ Util.natural_to_subscript t.gt_id ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty t ^ " "
-        ^ cost ^ " "
-        ^ update_to_string_rhs_pretty ue_to_string_pretty get_update t
-        ^ guard
-      else
-        "ID: " ^ OurRational.to_string t.probability ^ ":" ^ invariant ^ string_of_int t.gt_id ^ ","
-        ^ string_of_int t.id ^ ", " ^ cost ^ "&euro;" ^ ", "
-        ^ update_to_string ue_to_string (get_update t)
-        ^ guard
-
-
-    let cost_to_string t =
-      if Polynomial.is_one t.cost then
-        ""
-      else
-        "{" ^ Polynomial.to_string t.cost ^ "}"
-
-
-    let to_id_string t = string_of_int t.gt_id ^ "," ^ string_of_int t.id
-    let input_vars t = VarSet.of_list @@ Map.keys t.update
-    let input_size = Set.length % input_vars
-
-    type vars_type = VarsOverapproximated | VarsNonOverapproximated
-
-    let vars vars_type t =
-      let update_and_guard_vars =
-        match vars_type with
-        | VarsOverapproximated ->
-            Set.union
-              (Map.fold
-                 ~f:(fun ~key ~data -> Set.union (Polynomial.vars data))
-                 t.overappr_nonprob_update ~init:VarSet.empty)
-              (Guard.vars t.overappr_guard)
-        | VarsNonOverapproximated ->
-            Set.union
-              (Map.fold
-                 ~f:(fun ~key ~data -> Set.union (UpdateElement_.vars data))
-                 t.update ~init:VarSet.empty)
-              (Guard.vars t.guard)
-      in
-      update_and_guard_vars
-      |> Set.union (Guard.vars t.invariant)
-      |> Set.union (Polynomial.vars t.cost)
-      |> Set.union (VarSet.of_list @@ Map.keys t.update)
-
-
-    let rename_update rename_ue update rename_map =
-      update |> Map.to_sequence
-      |> Sequence.map ~f:(fun (key, value) ->
-             (RenameMap.find key rename_map ~default:key, rename_ue rename_map value))
-      |> Map.of_sequence_exn (module Var)
-
-
-    (* Use with caution as all guards & invariants need to be maintained over general transitions *)
-    let rename rename_map t =
-      {
-        t with
-        update = rename_update UpdateElement_.rename t.update rename_map;
-        overappr_nonprob_update = rename_update Polynomial.rename t.overappr_nonprob_update rename_map;
-        guard = Guard.rename t.guard rename_map;
-        overappr_guard = Guard.rename t.overappr_guard rename_map;
-        invariant = Guard.rename t.invariant rename_map;
-        cost = Polynomial.rename rename_map t.cost;
-      }
-
-
-    let update_admissibility_constraint t : Guard.t =
-      Map.to_sequence t.update
-      |> Sequence.map ~f:(UpdateElement_.admissibility_constraint % Tuple2.second)
-      |> Sequence.fold ~f:Guard.mk_and ~init:Guard.mk_true
-
-
-    let chain_guards t1 t2 =
-      let nondet_vars = Hashtbl.create ~size:3 (module Var) in
-      let substitution update_map var =
-        Map.find update_map var
-        |? Polynomial.of_var
-             (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
-             (Hashtbl.find nondet_vars var
-             |> Option.value_or_thunk ~default:(fun () ->
-                    let nondet_var = Var.fresh_id Var.Int () in
-                    Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                    nondet_var))
-      in
-      Guard.Infix.(
-        t1.overappr_guard && t1.invariant
-        && Guard.map_polynomial
-             (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
-             t2.overappr_guard
-        && Guard.map_polynomial
-             (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
-             t2.invariant)
-
-
-    let restore_legacy_distribution_update_semantics t =
-      let update =
-        Map.mapi
-          ~f:(fun ~key ~data -> UpdateElement_.restore_legacy_distribution_update_semantics key data)
-          t.update
-      in
-      let overappr_guard, overappr_nonprob_update =
-        Map.map
-          ~f:(fun ue ->
-            match UpdateElement_.to_polynomial ue with
-            | Some p -> (Guard.mk_true, p)
-            | None ->
-                let v' = Var.fresh_id Var.Int () in
-                (UpdateElement_.as_guard ue v', Polynomial.of_var v'))
-          update
-        |> fun m -> (Guard.all (List.map ~f:Tuple2.first @@ Map.data m), Map.map ~f:Tuple2.second m)
-      in
-      { t with update; overappr_guard; overappr_nonprob_update }
-  end
-
-  include Inner
-  include Comparator.Make (Inner)
+    in
+    { t with update; overappr_guard; overappr_nonprob_update }
 end
 
 module ProbabilisticTransitionLabel = struct
@@ -301,15 +323,15 @@ module ProbabilisticTransitionLabel = struct
 
   let update_map t = t.update
   let update t v = Map.find t.update v
-  let guard t = Guard.mk_and t.invariant t.guard
-  let guard_without_inv t = t.guard
+  let guard t = Guard.mk_and (invariant t) (guard t)
+  let guard_without_inv t = guard t
 
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
     Map.equal UpdateElement_.equal t1.update t2.update
     && OurRational.equal t1.probability t2.probability
-    && Guard.equal t1.guard t2.guard
-    && Invariant.equal t1.invariant t2.invariant
+    && Guard.equal (guard t1) (guard t2)
+    && Invariant.equal (invariant t1) (invariant t2)
     && Polynomial.equal t1.cost t2.cost
 
 
@@ -318,10 +340,10 @@ module ProbabilisticTransitionLabel = struct
       OurRational.compare t1.probability t2.probability
     else if Map.compare_direct UpdateElement_.compare t1.update t2.update != 0 then
       Map.compare_direct UpdateElement_.compare t1.update t2.update
-    else if Guard.compare t1.guard t2.guard != 0 then
-      Guard.compare t1.guard t2.guard
-    else if Invariant.compare t1.invariant t2.invariant != 0 then
-      Invariant.compare t1.invariant t2.invariant
+    else if Guard.compare (guard t1) (guard t2) != 0 then
+      Guard.compare (guard t1) (guard t2)
+    else if Invariant.compare (invariant t1) (invariant t2) != 0 then
+      Invariant.compare (invariant t1) (invariant t2)
     else if Polynomial.compare t1.cost t2.cost != 0 then
       Polynomial.compare t1.cost t2.cost
     else
@@ -343,10 +365,7 @@ module ProbabilisticTransitionLabel = struct
     update_to_string_rhs_pretty UpdateElement_.to_string_pretty (fun t -> t.update)
 
 
-  let to_string =
-    to_string UpdateElement_.to_string UpdateElement_.to_string_pretty (fun t -> t.update) (fun t -> t.guard)
-
-
+  let to_string = to_string UpdateElement_.to_string UpdateElement_.to_string_pretty (fun t -> t.update) guard
   let vars = vars VarsNonOverapproximated
   let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
   let tmp_vars t = Set.diff (vars t) (input_vars t)
@@ -372,14 +391,14 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let map_guard f t = { t with overappr_guard = f t.overappr_guard }
   let update_map t = t.overappr_nonprob_update
   let update t v = Map.find t.overappr_nonprob_update v
-  let guard t = Guard.mk_and t.invariant t.overappr_guard
+  let guard t = Guard.mk_and (invariant t) t.overappr_guard
   let guard_without_inv t = t.overappr_guard
 
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
     Map.equal Polynomial.equal t1.overappr_nonprob_update t2.overappr_nonprob_update
     && Guard.equal t1.overappr_guard t2.overappr_guard
-    && Invariant.equal t1.invariant t2.invariant
+    && Invariant.equal (invariant t1) (invariant t2)
     && Polynomial.equal t1.cost t2.cost
 
 
@@ -388,8 +407,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       Map.compare_direct Polynomial.compare t1.overappr_nonprob_update t2.overappr_nonprob_update
     else if Guard.compare t1.overappr_guard t2.overappr_guard != 0 then
       Guard.compare t1.overappr_guard t2.overappr_guard
-    else if Invariant.compare t1.invariant t2.invariant != 0 then
-      Invariant.compare t1.invariant t2.invariant
+    else if Invariant.compare (invariant t1) (invariant t2) != 0 then
+      Invariant.compare (invariant t1) (invariant t2)
     else if Polynomial.compare t1.cost t2.cost != 0 then
       Polynomial.compare t1.cost t2.cost
     else
@@ -449,7 +468,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let overapprox_nonlinear_updates t =
     let handle_nonlinear_or_probabilistic ue =
       let v' = Var.fresh_id Var.Int () in
-      (Polynomial.of_var v', UpdateElement_.as_linear_guard t.guard ue v')
+      (Polynomial.of_var v', UpdateElement_.as_linear_guard (guard t) ue v')
     in
     let overappr_nonprob_update, overappr_guard =
       Map.map
@@ -502,6 +521,7 @@ end
 module ProbabilisticTransition = struct
   include ProbabilisticTransitionShared
 
+  let gt (_, label, _) = ProbabilisticTransitionLabel.gt label
   let vars (_, label, _) = ProbabilisticTransitionLabel.vars label
   let input_vars (_, label, _) = ProbabilisticTransitionLabel.input_vars label
 
@@ -611,7 +631,7 @@ module GeneralTransition = struct
   module ProbabilisticTransitionSet = Transition_.TransitionSetOver (ProbabilisticTransition) (Location)
 
   module Inner = struct
-    type t = { transitions : ProbabilisticTransitionSet.t }
+    type t = general_transition
 
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
     let get_arbitrary_transition t = Set.choose_exn t.transitions
@@ -619,16 +639,22 @@ module GeneralTransition = struct
     (* TODO conjunction with invariant! *)
 
     let guard = ProbabilisticTransitionLabel.guard % get_arbitrary_label
-    let map_transitions f t = { transitions = ProbabilisticTransitionSet.map ~f t.transitions }
+    let map_transitions f gt = { gt with transitions = ProbabilisticTransitionSet.map ~f gt.transitions }
 
-    let add_invariant gt inv =
-      {
-        transitions =
-          ProbabilisticTransitionSet.map
-            ~f:(fun (l, t, l') -> (l, ProbabilisticTransitionLabel_.add_invariant t inv, l'))
-            gt.transitions;
-      }
+    let map_gt f (gt : t) =
+      let gt = f gt in
+      (* This should be enough to create transitions with fresh gt references so we don't alter the original transitions *)
+      let transitions =
+        ProbabilisticTransitionSet.map ~f:(fun (l, t, l') -> (l, { t with gt = ref None }, l')) gt.transitions
+      in
+      let gt = { gt with transitions } in
+      (* Set references to new general transition *)
+      Set.iter gt.transitions ~f:(fun t -> (ProbabilisticTransition.label t).gt := Some gt);
+      gt
 
+
+    let add_invariant (gt : t) invariant : t = map_gt (fun gt -> { gt with invariant }) gt
+    let simplify_guard = map_gt (fun gt -> { gt with guard = Guard.simplify_guard gt.guard })
 
     let mk ~(start : Location.t) ~(fill_up_to_num_arg_vars : int) ~(patterns : Var.t list)
         ~(cost : Polynomials.Polynomial.t) ~(guard : Guard.t)
@@ -637,13 +663,15 @@ module GeneralTransition = struct
       if not (OurRational.equal OurRational.one total_prob) then
         raise ProbabilitiesDoNotSumToOne;
 
+      let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
+
       let gt_id = Unique.unique () in
       let rhss =
         List.map
           ~f:(fun (p, ues, l) ->
             ( ProbabilisticTransitionLabel.fill_up_arg_vars_up_to_num fill_up_to_num_arg_vars
-              @@ ProbabilisticTransitionLabel_.mk ~gt_id ~patterns ~probability:p ~assignments:ues ~cost
-                   ~guard,
+              @@ ProbabilisticTransitionLabel_.mk ~map_to_arg_vars ~patterns ~probability:p ~assignments:ues
+                   ~cost ~guard,
               l ))
           rhss
       in
@@ -658,13 +686,20 @@ module GeneralTransition = struct
       (* rename program vars to arg vars *)
       let rename_map = RenameMap.of_sequence @@ Sequence.zip (Sequence.of_list patterns) Var.args in
       let rhss = List.map ~f:(Tuple2.map1 (ProbabilisticTransitionLabel_.rename rename_map)) rhss in
-
-      {
-        transitions =
-          ProbabilisticTransitionSet.of_list
-          @@ List.map ~f:(fun (label, target) -> (start, label, target)) rhss;
-      }
-      |> flip add_invariant update_admissibility
+      let guard = Guard.rename guard map_to_arg_vars in
+      let gt =
+        {
+          gt_id;
+          guard;
+          invariant = update_admissibility;
+          transitions =
+            ProbabilisticTransitionSet.of_list
+            @@ List.map ~f:(fun (label, target) -> (start, label, target)) rhss;
+        }
+      in
+      (* Tying the knot *)
+      Set.iter ~f:(fun (l, t, l') -> t.gt := Some gt) gt.transitions;
+      gt
 
 
     let gt_id = ProbabilisticTransitionLabel.gt_id % get_arbitrary_label
@@ -856,17 +891,8 @@ module ProbabilisticProgram = struct
     Program_.Make (ProbabilisticTransitionLabel) (ProbabilisticTransition) (Location)
       (ProbabilisticTransitionGraph)
 
-  module ProbabilisticTransitionSet = Transition_.TransitionSetOver (ProbabilisticTransition) (Location)
-
-  let gts t =
-    let arr = Set.to_array (transitions t) in
-    Array.sort ~compare:ProbabilisticTransition.compare arr;
-    Array.to_sequence arr
-    |> Sequence.group ~break:(fun t1 t2 ->
-           ProbabilisticTransition.gt_id t1 <> ProbabilisticTransition.gt_id t2)
-    |> Sequence.map ~f:(fun l -> { GeneralTransition.transitions = ProbabilisticTransitionSet.of_list l })
-    |> GeneralTransitionSet.of_sequence
-
+  let gts_of_ts = GeneralTransitionSet.map ~f:ProbabilisticTransition.gt
+  let gts = gts_of_ts % transitions
 
   let pre_gt t gt =
     (* All transitions in a gt have the same guard and hence the same pre transitions *)
@@ -886,32 +912,38 @@ module ProbabilisticProgram = struct
   let is_initial_gt t gt = Location.equal (start t) (GeneralTransition.src gt)
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
 
-  let add_invariant location invariant =
-    map_graph @@ fun graph ->
-    location
-    |> ProbabilisticTransitionGraph.succ_e
-         graph (* An invariant holds before the execution of the successor transitions *)
-    |> List.fold_left
-         ~f:(fun result (l, t, l') ->
-           ProbabilisticTransitionGraph.replace_edge_e (l, t, l')
-             (l, ProbabilisticTransitionLabel.add_invariant t invariant, l')
-             result)
-         ~init:graph
+  let map_gtsset ~f (gts : GeneralTransitionSet.t) (t : t) : t =
+    map_graph
+      (fun graph ->
+        (* Here, after applying f to the general transitions in gts the transitions contained in the original graph will point back to the wrong general transition.
+           Hence, we replace them here. *)
+        let graph =
+          GeneralTransitionSet.all_transitions gts
+          |> Set.fold ~init:graph ~f:ProbabilisticTransitionGraph.remove_edge_e
+        in
+        let gts = GeneralTransitionSet.map gts ~f in
+        GeneralTransitionSet.all_transitions gts
+        |> Set.fold ~init:graph ~f:ProbabilisticTransitionGraph.add_edge_e)
+      t
 
 
-  let simplify_all_guards : t -> t =
-    map_transitions
-      (ProbabilisticTransition.map_label (fun label ->
-           { label with guard = Guard.simplify_guard label.guard }))
+  let add_invariant location invariant t =
+    let out_gts =
+      Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph t) location)
+      |> Sequence.map ~f:ProbabilisticTransition.gt
+      |> GeneralTransitionSet.of_sequence
+    in
+    map_gtsset out_gts ~f:(fun gt -> GeneralTransition.add_invariant gt invariant) t
 
+
+  let simplify_all_guards (t : t) : t = map_gtsset (gts t) ~f:GeneralTransition.simplify_guard t
 
   let sccs_gts t =
-    let gts = gts t in
     sccs t
     |> List.map ~f:(fun tset ->
            Set.to_sequence tset
-           |> Sequence.map ~f:ProbabilisticTransition.gt_id
-           |> GeneralTransitionSet.find_by_ids gts)
+           |> Sequence.map ~f:ProbabilisticTransition.gt
+           |> GeneralTransitionSet.of_sequence)
 
 
   let to_formatted_string ?(pretty = false) t =

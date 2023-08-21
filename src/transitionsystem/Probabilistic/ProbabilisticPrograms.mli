@@ -10,6 +10,8 @@ module ProbabilisticTransitionLabelNonProbOverappr : sig
   include ProgramTypes.ClassicalTransitionLabel with type update_element = Polynomials.Polynomial.t
 end
 
+type general_transition
+
 module ProbabilisticTransition : sig
   include
     ProgramTypes.Transition
@@ -20,6 +22,9 @@ module ProbabilisticTransition : sig
 
   val same_gt : t -> t -> bool
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
+
+  val gt : t -> general_transition
+  (** Obtain the general transition from the program that contains this transition *)
 end
 
 module ProbabilisticTransitionNonProbOverappr : sig
@@ -33,7 +38,7 @@ module ProbabilisticTransitionNonProbOverappr : sig
 end
 
 module GeneralTransition : sig
-  type t
+  type t = general_transition
 
   val mk :
     start:Location.t ->
