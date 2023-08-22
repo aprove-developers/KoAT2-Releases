@@ -20,7 +20,7 @@ let simplify_guard guard =
     | constr_missing ->
         let next_constr, constr_missing' =
           List.map ~f:(fun c -> (c, not_implied (List.cons c constr_chosen) constr_missing)) constr_missing
-          |> List.min_elt ~compare:(fun (_, l) (_, l') -> Batteries.compare (List.length l) (List.length l'))
+          |> List.min_elt ~compare:(fun (_, l) (_, l') -> Int.compare (List.length l) (List.length l'))
           |> Option.value_exn
         in
         greed_minimpl_set (List.cons next_constr constr_chosen) constr_missing'

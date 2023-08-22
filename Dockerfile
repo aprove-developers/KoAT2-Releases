@@ -8,7 +8,7 @@ LABEL author="Nils Lommen"
 
 WORKDIR /home/opam
 
-ARG OCAML_VERSION=4.14.0
+ARG OCAML_VERSION=5.0.0
 
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
