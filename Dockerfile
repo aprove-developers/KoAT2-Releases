@@ -1,7 +1,7 @@
 #-------------------------------------------
 # Build KoAT
 #-------------------------------------------
-FROM ocaml/opam:alpine-ocaml-4.14-flambda as koat2_build
+FROM ocaml/opam:alpine as koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 LABEL author="Nils Lommen"
