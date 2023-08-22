@@ -94,7 +94,7 @@ let improve_with_mprfs depth program scc (class_appr, appr) =
         depth nonprob_trans
     in
     Sequence.range ~start:`inclusive ~stop:`inclusive 1 depth
-    |> Sequence.map ~f:find_of_depth |> Util.cat_maybes_sequence |> Sequence.hd
+    |> Sequence.map ~f:find_of_depth |> Sequence.filter_opt |> Sequence.hd
   in
   let unbounded_trans_arr = Set.to_array unbounded_trans in
   let mprf_map =
@@ -115,7 +115,7 @@ let improve_with_mprfs depth program scc (class_appr, appr) =
              |> OptionMonad.sequence
            in
            (gt, mprfs))
-    |> Util.cat_maybes
+    |> List.filter_opt
   in
   Sequence.of_list unbounded_gts_with_mprfs
   |> MaybeChanged.fold_sequence ~init:appr ~f:(fun appr (gt, mprfs) ->

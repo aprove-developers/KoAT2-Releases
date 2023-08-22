@@ -104,10 +104,7 @@ let memoize_base_hashtbl cache ~extractor f =
 
 (* TODO: Hash a string into an integer. https://stackoverflow.com/questions/2624192/good-hash-function-for-strings *)
 let hash str = String.fold_right (fun char res -> (res * 31) + int_of_char char) str 1
-let cat_maybes l = List.map Option.get (List.filter Option.is_some l)
-let cat_maybes_sequence l = OurBase.Sequence.map ~f:Option.get (OurBase.Sequence.filter ~f:Option.is_some l)
-let cat_maybes_enum e = Enum.map Option.get (Enum.filter Option.is_some e)
-let map_maybe f = List.map f % cat_maybes
+let map_maybe f = List.filter_map (Option.map f)
 
 let rec find_fixpoint_mc f x =
   let res = f x in

@@ -82,7 +82,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           Base.Set.for_all ~f:(Option.is_none % Hashtbl.find_option static_dep_table) (UpdateElement.vars u)
         in
         (* all updates of var in the path *)
-        let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
+        let updates var = OurBase.List.filter_opt @@ List.map (flip TransitionLabel.update var) labels in
         let static_update var = List.for_all update_is_static @@ updates var in
         let new_non_static var = not (static_update var || Hashtbl.mem static_dep_table var) in
         List.find_opt new_non_static varlist

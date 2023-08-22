@@ -307,7 +307,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         @@ Base.Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
       in
       Base.Set.to_array unbounded_transitions
-      |> Parmap.array_parmap compute_function |> Array.to_sequence |> Util.cat_maybes_sequence
+      |> Parmap.array_parmap compute_function |> Array.to_sequence |> Sequence.filter_opt
     in
     (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
        * or the depth is max_depth *)

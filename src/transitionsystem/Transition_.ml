@@ -109,7 +109,7 @@ struct
 
 
   let find_by_ids set ids =
-    Sequence.map ~f:(find_by_id set) ids |> Util.cat_maybes_sequence |> Set.of_sequence (module T)
+    Sequence.map ~f:(find_by_id set) ids |> Sequence.filter_opt |> Set.of_sequence (module T)
 end
 
 include MakeClassical (TransitionLabel_) (Location)
