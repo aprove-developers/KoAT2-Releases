@@ -101,28 +101,27 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       let pre_gt = Program.pre_gt program gt in
       let start_loc = GeneralTransition.src gt in
       let pre_size_exp v =
-        Set.to_sequence pre_gt
-        |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
-        |> RationalBound.sum
-      in
-      let pre_size_classical v =
-        Set.to_sequence pre_gt
-        |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
-        |> Sequence.join
-        |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-        |> RationalBound.of_intbound % Bound.sum
-      in
-      let var_overapprox =
         if Program.is_initial_gt program gt then
           RationalBound.of_var v
         else
-          pre_size_exp v
+          Set.to_sequence pre_gt
+          |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
+          |> RationalBound.sum
       in
-      let elcb = Map.find_exn elcbs ((gt, l), v) in
-      let elcb_overapprox =
+      let pre_size_classical v =
         if Program.is_initial_gt program gt then
           RationalBound.of_var v
-        else if RationalBound.is_linear elcb then
+        else
+          Set.to_sequence pre_gt
+          |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
+          |> Sequence.join
+          |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
+          |> RationalBound.of_intbound % Bound.sum
+      in
+      let var_overapprox = pre_size_exp v in
+      let elcb = Map.find_exn elcbs ((gt, l), v) in
+      let elcb_overapprox =
+        if RationalBound.is_linear elcb then
           RationalBound.substitute_f pre_size_exp elcb
         else
           RationalBound.substitute_f pre_size_classical elcb
