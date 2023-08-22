@@ -34,10 +34,24 @@ type params = {
       [@enum Formatter.all_formats |> List.map (fun f -> (Formatter.format_to_string f, f))]
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
+  logs : Logging.logger list;
+      [@enum Logging.(List.map (fun l -> (show_logger l, l)) loggers)]
+      [@default Logging.all]
+      [@sep ',']
+      [@aka [ "l" ]]
+      (** The loggers which should be activated. *)
+  log_level : Logger.level;
+      [@enum
+        Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
+        |> List.map (fun level -> (Logger.name_of_level level, level))]
+      [@default Logger.NONE]
+      (** The general log level of the loggers. *)
 }
 [@@deriving cmdliner]
 
 let run (params : params) =
+  let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
+  Logging.use_loggers logs;
   let program, _ =
     (* TODO respect goals *)
     Readers.read_probabilistic_prog_goal_file params.input
