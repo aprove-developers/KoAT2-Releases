@@ -343,8 +343,8 @@ let rec backtrack cache ?(refined = false) steps_left index solver non_increasin
       finalise_if_entrytime_bounded non_increasing)
 
 
-(* Compute a RSM as needed by KoAT. Optionally we can specify a timeout for the SMT Solver *)
-let compute_plrf ~refined ~timeout cache program is_time_bounded unbounded_vars transitions decreasing =
+(* Compute a RSM as needed by KoAT. *)
+let compute_plrf ~refined cache program is_time_bounded unbounded_vars transitions decreasing =
   let solver = Solver.create () in
   Solver.add_real solver (decreasing_constraint cache decreasing);
   (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
@@ -360,11 +360,11 @@ let compute_plrf ~refined ~timeout cache program is_time_bounded unbounded_vars 
 
 (* Compute a ranking function as a side effect such that the given transition is decreasing.
  * The computed ranking function is subsequently added to the RankingTable cache *)
-let find_plrf ~refined ~timeout program is_time_bounded unbounded_vars vars locations trans decreasing =
+let find_plrf ~refined program is_time_bounded unbounded_vars vars locations trans decreasing =
   let cache = new_cache () in
   compute_ranking_templates cache vars locations;
 
-  compute_plrf ~refined ~timeout cache program is_time_bounded unbounded_vars trans decreasing;
+  compute_plrf ~refined cache program is_time_bounded unbounded_vars trans decreasing;
   !(cache.rank)
 
 
@@ -373,7 +373,7 @@ let plrf_option_to_string = function
   | None -> "None"
 
 
-let find_scc ?(refined = false) ?(timeout = None) program is_time_bounded unbounded_vars scc gt =
+let find_scc ?(refined = false) program is_time_bounded unbounded_vars scc gt =
   let execute () =
     let vars =
       Set.to_sequence scc
@@ -381,7 +381,7 @@ let find_scc ?(refined = false) ?(timeout = None) program is_time_bounded unboun
       |> Sequence.fold ~f:Set.union ~init:VarSet.empty
     in
     let locations = GeneralTransitionSet.locations scc |> Set.to_list in
-    find_plrf ~refined ~timeout program is_time_bounded unbounded_vars vars locations scc gt
+    find_plrf ~refined program is_time_bounded unbounded_vars vars locations scc gt
     |> tap (function
          | Some r -> Logger.log logger Logger.INFO (fun () -> ("found_plrf", [ ("plrf", to_string r) ]))
          | None ->
@@ -396,7 +396,7 @@ let find_scc ?(refined = false) ?(timeout = None) program is_time_bounded unboun
 
 
 (** Compute a ranking function such that the given gt is decreasing and return it. *)
-let find ?(refined = false) ?(timeout = None) program =
+let find ?(refined = false) program =
   let execute () =
     Sequence.of_list (Program.sccs_gts program)
     |> Sequence.map ~f:(fun scc ->
@@ -409,7 +409,7 @@ let find ?(refined = false) ?(timeout = None) program =
            in
            Set.to_sequence scc
            |> Sequence.map ~f:(fun gt ->
-                  (gt, find_scc ~refined ~timeout program is_time_bounded unbounded_vars scc gt)))
+                  (gt, find_scc ~refined program is_time_bounded unbounded_vars scc gt)))
     |> Sequence.join |> Sequence.memoize
   in
   Logger.with_log logger Logger.DEBUG
