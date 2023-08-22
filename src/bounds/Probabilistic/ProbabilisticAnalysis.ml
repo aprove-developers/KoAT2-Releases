@@ -157,6 +157,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
     let entry_rvts = Sequence.to_list (BoundsHelper.entry_gts_with_locs program scc) in
     let overappr_var_in gt v =
       GeneralTransition.transitions gt
+      (* transitions of a general transition share their guard and hence have the same pre transitions *)
       |> Program.pre program % Set.choose_exn
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Set.to_sequence
       |> RationalBound.of_intbound % Bound.sum
