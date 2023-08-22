@@ -66,11 +66,9 @@ let improve_timebounds twn_state
 
 
 (** Propagate time bounds of incoming general transitions *)
-let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.t =
-  let rec iter appr =
-    Set.filter ~f:(not % ExpApproximation.is_time_bounded (MaybeChanged.unpack appr_mc)) scc
-    |> Set.to_sequence
-    |> fun gtset ->
+let knowledge_propagation program scc appr : ExpApproximation.t MaybeChanged.t =
+  let iter appr =
+    Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc |> Set.to_sequence |> fun gtset ->
     MaybeChanged.fold_sequence
       ~f:(fun appr gt ->
         let new_bound =
@@ -90,13 +88,8 @@ let knowledge_propagation program scc appr_mc : ExpApproximation.t MaybeChanged.
         else
           MaybeChanged.same appr)
       ~init:appr gtset
-    |> fun appr_mc ->
-    if MaybeChanged.has_changed appr_mc then
-      MaybeChanged.(appr_mc >>= iter)
-    else
-      appr_mc
   in
-  MaybeChanged.(appr_mc >>= iter)
+  Util.find_fixpoint_mc iter appr
 
 
 module ELCBMap = MakeMapCreators1 (GRV)
@@ -203,59 +196,54 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
   in
 
   (* propagate sizes through identity updates *)
-  let rec propagate_sizes (appr : ExpApproximation.t) =
-    let appr = MaybeChanged.same appr in
+  let propagate_sizes (appr : ExpApproximation.t) =
     let rvs_scc = List.cartesian_product rvts_scc (Set.to_list program_vars) in
     let all_rvs = List.append rvs_in rvs_scc in
-    List.fold_left all_rvs ~init:appr ~f:(fun appr ((gt, l), v) ->
-        Set.fold (GeneralTransition.targets gt) ~init:appr ~f:(fun appr_mc target_loc ->
-            let appr = MaybeChanged.unpack appr_mc in
-            let transitions = Set.to_list (GeneralTransition.transitions_to_target target_loc gt) in
-            let transition_updates =
-              List.map transitions ~f:(fun (_, t, _) -> TransitionLabel.update t v)
-              |> List.map ~f:(Option.bind ~f:UpdateElement.to_polynomial)
-              |> OptionMonad.sequence
-            in
-            (* Propagate bounds if all transitions have linear non-probabilistic updates *)
-            match transition_updates with
-            | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
-                let pre_sizebound =
-                  if Program.is_initial_gt program gt then
-                    fun v -> RationalBound.of_var v
-                  else
-                    let pre_gts = Set.to_sequence (Program.pre_gt program gt) in
-                    fun v ->
-                      Sequence.map pre_gts ~f:(fun pre_gt ->
-                          ExpApproximation.sizebound appr (pre_gt, GeneralTransition.src gt) v)
-                      |> RationalBound.sum
-                in
-                let propagated_bound =
-                  Sequence.of_list update_polys
-                  |> Sequence.map ~f:(fun update_poly ->
-                         RationalBound.substitute_f pre_sizebound (RationalBound.of_intpoly update_poly))
-                  |> RationalBound.sum
-                in
-                if
-                  RationalBound.compare_asy propagated_bound
-                    (ExpApproximation.sizebound appr (gt, target_loc) v)
-                  < 0
-                then (
-                  Logger.log size_logger Logger.DEBUG (fun () ->
-                      ( "propagate_sizes",
-                        [
-                          ("grv", GRV.to_id_string ((gt, target_loc), v));
-                          ("new_bound", RationalBound.to_string propagated_bound);
-                        ] ));
-                  MaybeChanged.flat_map
-                    (MaybeChanged.changed % ExpApproximation.add_sizebound propagated_bound (gt, target_loc) v)
-                    appr_mc)
-                else
-                  appr_mc
-            | _ -> appr_mc))
-    |> MaybeChanged.unpack % MaybeChanged.if_changed propagate_sizes
+    let propagate_for_grv appr ((gt, target_loc), v) =
+      let transitions = Set.to_list (GeneralTransition.transitions_to_target target_loc gt) in
+      let transitions_updates =
+        List.map transitions ~f:(fun (_, t, _) -> TransitionLabel.update t v)
+        |> List.map ~f:(Option.bind ~f:UpdateElement.to_polynomial)
+        |> OptionMonad.sequence
+      in
+      (* Propagate bounds iff all transitions have linear non-probabilistic updates *)
+      match transitions_updates with
+      | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
+          let pre_sizebound =
+            if Program.is_initial_gt program gt then
+              fun v -> RationalBound.of_var v
+            else
+              let pre_gts = Set.to_sequence (Program.pre_gt program gt) in
+              fun v ->
+                Sequence.map pre_gts ~f:(fun pre_gt ->
+                    ExpApproximation.sizebound appr (pre_gt, GeneralTransition.src gt) v)
+                |> RationalBound.sum
+          in
+          let propagated_bound =
+            Sequence.of_list update_polys
+            |> Sequence.map ~f:(fun update_poly ->
+                   RationalBound.substitute_f pre_sizebound (RationalBound.of_intpoly update_poly))
+            |> RationalBound.sum
+          in
+          if
+            RationalBound.compare_asy propagated_bound (ExpApproximation.sizebound appr (gt, target_loc) v)
+            < 0
+          then (
+            Logger.log size_logger Logger.DEBUG (fun () ->
+                ( "propagate_sizes",
+                  [
+                    ("grv", GRV.to_id_string ((gt, target_loc), v));
+                    ("new_bound", RationalBound.to_string propagated_bound);
+                  ] ));
+            MaybeChanged.changed (ExpApproximation.add_sizebound propagated_bound (gt, target_loc) v appr))
+          else
+            MaybeChanged.same appr
+      | _ -> MaybeChanged.same appr
+    in
+    MaybeChanged.fold propagate_for_grv appr all_rvs
   in
 
-  trivial_sizebounds appr |> nontrivial_sizebounds |> propagate_sizes
+  trivial_sizebounds appr |> nontrivial_sizebounds |> Util.find_fixpoint propagate_sizes
 
 
 let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf
@@ -279,19 +267,15 @@ let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.anal
       ~default:(ref IntegrateClassicalAnalysis.empty_twn_state)
       ~f:(fun twn_conf -> ref @@ IntegrateClassicalAnalysis.initial_twn_state twn_conf program scc)
   in
-  let rec improve_scc_ appr =
-    improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) |> fun appr ->
-    improve_timebounds twn_state ~classic_conf ~conf program scc (class_appr, appr)
-    |> knowledge_propagation program scc
-    |> MaybeChanged.map (fun appr ->
-           improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr))
-    |> fun mc ->
-    if MaybeChanged.has_changed mc then
-      improve_scc_ (MaybeChanged.unpack mc)
-    else
-      MaybeChanged.unpack mc
+  let improve_scc_ appr =
+    let open MaybeChanged.Monad in
+    let appr = improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) in
+    let* appr = improve_timebounds twn_state ~classic_conf ~conf program scc (class_appr, appr) in
+    let+ appr = knowledge_propagation program scc appr in
+    let appr = improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) in
+    appr
   in
-  improve_scc_ appr
+  Util.find_fixpoint improve_scc_ appr
 
 
 let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = default_configuration) program
