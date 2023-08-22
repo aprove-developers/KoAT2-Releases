@@ -397,8 +397,7 @@ let find_scc ?(refined = false) ?(timeout = None) program is_time_bounded unboun
     ~result:plrf_option_to_string execute
 
 
-(* Coompute a ranking function such that the given gt is decreasing and return it.non_increasing
- * Once a ranking function is computed it is stored in the given cache *)
+(** Compute a ranking function such that the given gt is decreasing and return it. *)
 let find ?(refined = false) ?(timeout = None) program gt =
   let execute () =
     (* TODO  ProbabilisticProgram.sccs_gt program *)

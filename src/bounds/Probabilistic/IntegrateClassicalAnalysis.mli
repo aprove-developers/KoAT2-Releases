@@ -15,9 +15,8 @@ val improve :
   twn:twn_state ref * TWN.configuration Option.t
     (** The twn state will be modified during the execution of this method! Always pass on the same ref to avoid duplicated work *) ->
   mprf_depth:int Option.t ->
-  Program.t * GeneralTransitionSet.t (** The program and a set of {i all} general transitions*) ->
+  Program.t (** The program *) ->
   GeneralTransitionSet.t (** The scc to be analysed *) ->
-  ClassicalApproximation.t ->
-  ExpApproximation.t ->
+  ClassicalApproximation.t * ExpApproximation.t ->
   ExpApproximation.t MaybeChanged.t
 (** Perform a timebound analysis step by lifting classical analysis methods *)

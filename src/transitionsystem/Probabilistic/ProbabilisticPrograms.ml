@@ -872,9 +872,6 @@ module GeneralTransitionSet = struct
     Sequence.map ~f:(find_by_id set) ids
     |> Util.cat_maybes_sequence
     |> Set.of_sequence (module GeneralTransition)
-
-
-  let find_by_transition gts trans = find_by_id gts (ProbabilisticTransition.gt_id trans)
 end
 
 (* Probabilistic and Overapproximated Nonprobabilistic Programs share the same internal *)

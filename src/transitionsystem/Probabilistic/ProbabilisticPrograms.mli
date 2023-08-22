@@ -108,9 +108,6 @@ module GeneralTransitionSet : sig
 
   val locations : t -> location_set
   val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
-
-  val find_by_transition : t -> ProbabilisticTransition.t -> GeneralTransition.t Option.t
-  (** Find the general transition in the given transition set with the same id as the given transition *)
 end
 
 module ProbabilisticTransitionGraph :

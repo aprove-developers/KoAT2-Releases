@@ -14,21 +14,18 @@ let gts_to_nonprob_transs gts =
   GeneralTransitionSet.all_transitions gts |> NonProbOverappr.TransitionSet.map ~f:prob_trans_to_nonprob_trans
 
 
-let get_timebound all_gts direction (class_appr, appr) t =
+let get_timebound direction (class_appr, appr) t =
   let prob_trans = nonprob_trans_to_prob_trans t in
   match direction with
-  | `ExpTime ->
-      RationalBound.to_intbound
-      @@ ExpApproximation.timebound appr
-           (Option.value_exn @@ GeneralTransitionSet.find_by_transition all_gts prob_trans)
+  | `ExpTime -> RationalBound.to_intbound @@ ExpApproximation.timebound appr (Transition.gt prob_trans)
   | `ClassTime -> ClassicalApproximation.timebound class_appr prob_trans
 
 
-let get_sizebound all_gts direction (class_appr, appr) t var =
+let get_sizebound direction (class_appr, appr) t var =
   let prob_trans = nonprob_trans_to_prob_trans t in
   match direction with
   | `ExpSize ->
-      let gt = Option.value_exn (GeneralTransitionSet.find_by_transition all_gts prob_trans) in
+      let gt = Transition.gt prob_trans in
       RationalBound.to_intbound @@ ExpApproximation.sizebound appr (gt, Transition.target prob_trans) var
   | `ClassSize -> ClassicalApproximation.sizebound class_appr prob_trans var
 
@@ -38,20 +35,20 @@ let get_sizebound all_gts direction (class_appr, appr) t var =
    However, this is probably good enough.
    Moreover, at this point we don't know the bound the sizebounds will be substituted in.
    So when actually performing the substition one has to ensure to only substitute expected size bounds for linearly occuring variables to establish soundness. *)
-let get_combined_bounds_both_directions ?proof all_gts apprs t =
-  let classtime_bound = get_timebound all_gts `ClassTime apprs t in
+let get_combined_bounds_both_directions ?proof apprs t =
+  let classtime_bound = get_timebound `ClassTime apprs t in
   if Bound.is_finite classtime_bound then
     let dir = `ClassTimeExpSize in
-    let get_expsize_bound = get_sizebound all_gts (size_direction dir) apprs t in
+    let get_expsize_bound = get_sizebound (size_direction dir) apprs t in
     (classtime_bound, get_expsize_bound, dir)
   else
     let dir = `ExpTimeClassSize in
-    let exptime_bound = get_timebound all_gts (time_direction dir) apprs t in
-    let get_classsize_bound = get_sizebound all_gts (size_direction dir) apprs t in
+    let exptime_bound = get_timebound (time_direction dir) apprs t in
+    let get_classsize_bound = get_sizebound (size_direction dir) apprs t in
     (exptime_bound, get_classsize_bound, dir)
 
 
-let get_timebound_and_sizebound_both_directions ?proof all_gts apprs =
+let get_timebound_and_sizebound_both_directions ?proof apprs =
   let add_to_proof t dir dir_to_string =
     Option.iter proof ~f:(fun proof ->
         ProofOutput.LocalProofOutput.add_to_proof proof
@@ -61,26 +58,26 @@ let get_timebound_and_sizebound_both_directions ?proof all_gts apprs =
               ^ Transition.to_id_string_pretty (nonprob_trans_to_prob_trans t)))
   in
   let get_timebound t =
-    let bound, _, dir = get_combined_bounds_both_directions ?proof all_gts apprs t in
+    let bound, _, dir = get_combined_bounds_both_directions ?proof apprs t in
     add_to_proof t dir (direction_to_string_time % time_direction);
     bound
   in
   let get_sizebound t =
-    let _, get_size, dir = get_combined_bounds_both_directions ?proof all_gts apprs t in
+    let _, get_size, dir = get_combined_bounds_both_directions ?proof apprs t in
     add_to_proof t dir (direction_to_string_size % size_direction);
     get_size
   in
   (get_timebound, get_sizebound)
 
 
-let get_timebound_and_unbounded_vars_both_directions program_vars all_gts apprs =
-  let get_timebound, get_sizebound = get_timebound_and_sizebound_both_directions all_gts apprs in
+let get_timebound_and_unbounded_vars_both_directions program_vars apprs =
+  let get_timebound, get_sizebound = get_timebound_and_sizebound_both_directions apprs in
   let is_timebound_finite = Bound.is_finite % get_timebound in
   let unbounded_vars t = Set.filter program_vars ~f:(Bound.is_infinity % get_sizebound t) in
   (is_timebound_finite, unbounded_vars)
 
 
-let improve_with_mprfs depth (program, all_gts) scc (class_appr, appr) =
+let improve_with_mprfs depth program scc (class_appr, appr) =
   let all_unbounded_gts = Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc in
   let all_trans_non_prob = gts_to_nonprob_transs scc in
   let unbounded_trans = GeneralTransitionSet.all_transitions all_unbounded_gts in
@@ -88,7 +85,7 @@ let improve_with_mprfs depth (program, all_gts) scc (class_appr, appr) =
   let class_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
   let program_vars = Program.input_vars program in
   let is_time_bounded, unbounded_vars =
-    get_timebound_and_unbounded_vars_both_directions program_vars all_gts (class_appr, appr)
+    get_timebound_and_unbounded_vars_both_directions program_vars (class_appr, appr)
   in
   let find_mprf t =
     let nonprob_trans = prob_trans_to_nonprob_trans t in
@@ -126,7 +123,7 @@ let improve_with_mprfs depth (program, all_gts) scc (class_appr, appr) =
            List.map mprfs ~f:(fun mprf ->
                let time_and_size_direction_proof = ProofOutput.LocalProofOutput.create () in
                let get_timebound, get_sizebound =
-                 get_timebound_and_sizebound_both_directions ~proof:time_and_size_direction_proof all_gts
+                 get_timebound_and_sizebound_both_directions ~proof:time_and_size_direction_proof
                    (class_appr, appr)
                in
                let unlifted = MultiphaseRankingFunction.to_unlifted_bound class_program mprf in
@@ -224,9 +221,9 @@ let initial_twn_state twn_conf program scc =
 
 (** At this point we cannot distinguish between variables that occur linearly or non-linearly in the resulting bound.
     This is however not unsound, as [TWN.finite_bound_possible_if_terminating_with_combined_bounds] only uses the provided [get_combined_bounds] as a heuristic and does not perform any substitution/overapproximation whatsoever. *)
-let twn_heuristic all_gts apprs twn_loop =
+let twn_heuristic apprs twn_loop =
   TWN.finite_bound_possible_if_terminating_with_combined_bounds twn_loop ~get_combined_bounds:(fun t ->
-      let timebound, get_sizebound, _ = get_combined_bounds_both_directions all_gts apprs t in
+      let timebound, get_sizebound, _ = get_combined_bounds_both_directions apprs t in
       (timebound, get_sizebound))
 
 
@@ -241,23 +238,23 @@ let handled_transs_of_twn_loops_with_proofs twn_loops_with_proofs =
 
 
 (** Here we build a map which local twn bounds are overapproximated in which direction/manner *)
-let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof all_gts (class_appr, appr) unlifted_bound =
+let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound =
   let entry_measure_map = UnliftedBound.entry_transitions_measure unlifted_bound in
   let time_and_size_bounds_map =
     Map.fold entry_measure_map
       ~init:(Map.empty (module NonProbOverappr.Transition))
       ~f:(fun ~key ~data t_and_s_map ->
-        let classtime_bound = get_timebound all_gts `ClassTime (class_appr, appr) key in
+        let classtime_bound = get_timebound `ClassTime apprs key in
         if Bound.is_finite classtime_bound then
           if Bound.is_linear data then
-            let get_size = get_sizebound all_gts `ExpSize (class_appr, appr) key in
+            let get_size = get_sizebound `ExpSize apprs key in
             Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeExpSize)
           else
-            let get_size = get_sizebound all_gts `ClassSize (class_appr, appr) key in
+            let get_size = get_sizebound `ClassSize apprs key in
             Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeClassSize)
         else
-          let exptime_bound = get_timebound all_gts `ExpTime (class_appr, appr) key in
-          let get_classsize_bound = get_sizebound all_gts `ClassSize (class_appr, appr) key in
+          let exptime_bound = get_timebound `ExpTime apprs key in
+          let get_classsize_bound = get_sizebound `ClassSize apprs key in
           Map.add_exn t_and_s_map ~key ~data:(exptime_bound, get_classsize_bound, `ExpTimeClassSize))
   in
   let add_to_proof proof t dir =
@@ -284,7 +281,7 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof all_gts (class_appr,
 
 
 (** Compute timebound for transition from single twn loop *)
-let compute_timebounds_from_loop_with_proof twn_state all_gts apprs loop_with_proof =
+let compute_timebounds_from_loop_with_proof twn_state apprs loop_with_proof =
   let all_handled_trans =
     TWN.handled_transitions (ProofOutput.LocalProofOutput.result loop_with_proof)
     |> TransitionSet.map ~f:nonprob_trans_to_prob_trans
@@ -294,7 +291,7 @@ let compute_timebounds_from_loop_with_proof twn_state all_gts apprs loop_with_pr
     let unlifted = TWN.to_unlifted_bounds loop_with_proof in
     let time_and_size_proofs = ProofOutput.LocalProofOutput.create () in
     let get_timebound, get_sizebound =
-      get_time_and_size_bounds_for_unlifted_twn_bounds ~proof:time_and_size_proofs all_gts apprs unlifted
+      get_time_and_size_bounds_for_unlifted_twn_bounds ~proof:time_and_size_proofs apprs unlifted
     in
     let new_bound, compute_proof = UnliftedBound.lift_and_get_proof ~get_timebound ~get_sizebound unlifted in
     let compute_proof format =
@@ -309,9 +306,8 @@ let compute_timebounds_from_loop_with_proof twn_state all_gts apprs loop_with_pr
       twn_state := { !twn_state with bounds_from_twn_loops }
 
 
-let improve_with_twn_loops twn_state all_gts (class_appr, appr) unbounded_gts loops_with_proofs =
-  List.iter loops_with_proofs
-    ~f:(compute_timebounds_from_loop_with_proof twn_state all_gts (class_appr, appr));
+let improve_with_twn_loops twn_state (class_appr, appr) unbounded_gts loops_with_proofs =
+  List.iter loops_with_proofs ~f:(compute_timebounds_from_loop_with_proof twn_state (class_appr, appr));
   Set.to_sequence unbounded_gts
   |> Sequence.filter_map ~f:(fun gt ->
          let open OptionMonad in
@@ -342,13 +338,15 @@ let improve_with_twn_loops twn_state all_gts (class_appr, appr) unbounded_gts lo
          MaybeChanged.changed @@ ExpApproximation.add_timebound b gt appr)
 
 
-let improve_with_twn twn_state all_gts scc (class_appr, appr) =
+let improve_with_twn twn_state scc (class_appr, appr) =
   let improve_step appr =
     let unbounded_gts = Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc in
     let unbounded_gt_to_twn_loops_map =
       let partially_handled_unbounded_gts loop_with_proof =
         handled_transs_of_twn_loop_with_proof loop_with_proof
-        |> Sequence.filter_map ~f:(fun t -> GeneralTransitionSet.find_by_transition unbounded_gts t)
+        |> Sequence.filter_map ~f:(fun t ->
+               let gt = Transition.gt t in
+               Option.some_if (Set.mem unbounded_gts gt) gt)
         |> GeneralTransitionSet.of_sequence
       in
       Set.fold !twn_state.remaining_twn_loops
@@ -368,7 +366,7 @@ let improve_with_twn twn_state all_gts scc (class_appr, appr) =
       |> Sequence.find_map ~f:(fun (gt, loops_with_proofs) ->
              let all_new_boundable_loops =
                List.filter
-                 ~f:(twn_heuristic all_gts (class_appr, appr) % ProofOutput.LocalProofOutput.result)
+                 ~f:(twn_heuristic (class_appr, appr) % ProofOutput.LocalProofOutput.result)
                  loops_with_proofs
              in
              let all_new_boundable_trans = handled_transs_of_twn_loops_with_proofs all_new_boundable_loops in
@@ -383,9 +381,7 @@ let improve_with_twn twn_state all_gts scc (class_appr, appr) =
     match gt_to_improve_with_loops with
     | None -> MaybeChanged.same appr
     | Some (gt, loops_with_proofs) ->
-        let appr_mc =
-          improve_with_twn_loops twn_state all_gts (class_appr, appr) unbounded_gts loops_with_proofs
-        in
+        let appr_mc = improve_with_twn_loops twn_state (class_appr, appr) unbounded_gts loops_with_proofs in
         let remaining_twn_loops =
           let all_considered_cycles = Set.of_list (module TWNLoopWithProof) loops_with_proofs in
           let all_twn_loops_in_map =
@@ -403,12 +399,12 @@ let improve_with_twn twn_state all_gts scc (class_appr, appr) =
   Util.find_fixpoint_mc improve_step appr
 
 
-let improve ~twn:(twn_state, twn_conf) ~mprf_depth (program, all_gts) scc class_appr appr =
+let improve ~twn:(twn_state, twn_conf) ~mprf_depth program scc (class_appr, appr) =
   let open MaybeChanged.Monad in
   (* improve with multiphase ranking functions if requested *)
   let appr =
     match mprf_depth with
-    | Some mprf_depth -> improve_with_mprfs mprf_depth (program, all_gts) scc (class_appr, appr)
+    | Some mprf_depth -> improve_with_mprfs mprf_depth program scc (class_appr, appr)
     | None -> MaybeChanged.same appr
   in
   (* improve with twn if requested *)
@@ -416,7 +412,7 @@ let improve ~twn:(twn_state, twn_conf) ~mprf_depth (program, all_gts) scc class_
     match twn_conf with
     | Some twn_conf ->
         let* appr = appr in
-        improve_with_twn twn_state all_gts scc (class_appr, appr)
+        improve_with_twn twn_state scc (class_appr, appr)
     | None -> appr
   in
   appr
