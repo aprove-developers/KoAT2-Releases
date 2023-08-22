@@ -30,7 +30,6 @@ val memoize_base_hashtbl : ('a, 'b) Base.Hashtbl.t -> extractor:('c -> 'a) -> ('
 val hash : string -> int
 (**  Generates a hash interger value of a given string. *)
 
-val map_maybe : ('a -> 'b) -> 'a option list -> 'b list
 val find_fixpoint : ('a -> 'a MaybeChanged.t) -> 'a -> 'a
 val find_fixpoint_mc : ('a -> 'a MaybeChanged.t) -> 'a -> 'a MaybeChanged.t
 
