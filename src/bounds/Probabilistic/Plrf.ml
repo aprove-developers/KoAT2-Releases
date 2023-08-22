@@ -398,18 +398,29 @@ let find_scc ?(refined = false) ?(timeout = None) program is_time_bounded unboun
 
 
 (** Compute a ranking function such that the given gt is decreasing and return it. *)
-let find ?(refined = false) ?(timeout = None) program gt =
+let find ?(refined = false) ?(timeout = None) program =
   let execute () =
-    (* TODO  ProbabilisticProgram.sccs_gt program *)
-    Sequence.singleton (Program.gts program)
-    |> Sequence.filter ~f:(flip Set.mem gt)
+    Sequence.of_list (Program.sccs_gts program)
     |> Sequence.map ~f:(fun scc ->
-           find_scc ~refined ~timeout program (const true) (const @@ Program.vars program) scc gt)
-    |> Util.cat_maybes_sequence |> Sequence.hd
+           let is_time_bounded (gt, _) = not (Set.mem scc gt) in
+           let unbounded_vars (gt, _) =
+             if Set.mem scc gt then
+               Program.vars program
+             else
+               VarSet.empty
+           in
+           Set.to_sequence scc
+           |> Sequence.map ~f:(fun gt ->
+                  (gt, find_scc ~refined ~timeout program is_time_bounded unbounded_vars scc gt)))
+    |> Sequence.join |> Sequence.memoize
   in
   Logger.with_log logger Logger.DEBUG
-    (fun () -> ("find", [ ("gt", GeneralTransition.to_id_string gt); ("refined", Bool.to_string refined) ]))
-    ~result:plrf_option_to_string execute
+    (fun () -> ("find", [ ("refined", Bool.to_string refined) ]))
+    ~result:
+      (Util.sequence_to_string ~f:(fun (gt, plrfo) ->
+           GeneralTransition.to_id_string gt ^ ": " ^ plrf_option_to_string plrfo))
+    execute
+  |> Sequence.filter_opt % Sequence.map ~f:Tuple2.second
 
 
 let compute_proof t bound program format =

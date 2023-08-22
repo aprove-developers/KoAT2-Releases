@@ -25,8 +25,7 @@ let run (params : params) =
         prog)
   in
 
-  let gts = Program.gts prog in
   Stdio.printf "prog %s\n\n" (Program.to_string_pretty prog);
-  let plrfs = Set.to_list gts |> List.map ~f:(Plrf.find prog) |> List.filter_opt in
+  let plrfs = Sequence.to_list (Plrf.find prog) in
   Stdio.printf "\n";
   List.iter ~f:(Stdio.printf "%s\n" % Plrf.to_string) plrfs
