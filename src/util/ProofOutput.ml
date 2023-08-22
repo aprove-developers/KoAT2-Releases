@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open FormatMonad
 open Formatter
 open FormattedString

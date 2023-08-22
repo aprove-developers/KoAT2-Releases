@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides all modules related to constraints, i.e., atoms, constraints and formulas. *)
 
 open PolyTypes

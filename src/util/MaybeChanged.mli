@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** A type that is wrapped by [MaybeChanged.t] represents a value that might change during a computation.
     Once it has changed it will be forever marked as changed, but can also be further be manipulated. *)

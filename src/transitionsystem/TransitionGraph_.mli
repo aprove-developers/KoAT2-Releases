@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** This module represents a transition graph over simple locations *)
 
 (** Creates a TransitionGraph over given transition label, location and internal graph modules *)

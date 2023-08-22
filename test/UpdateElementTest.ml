@@ -1,5 +1,5 @@
 open Koat2
-open OurBase
+open! OurBase
 open OUnit2
 open Helper
 open Formulas

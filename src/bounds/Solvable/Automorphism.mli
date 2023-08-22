@@ -1,5 +1,4 @@
 open Batteries
-open Polynomials
 open Bounds
 
 module Automorphism : sig

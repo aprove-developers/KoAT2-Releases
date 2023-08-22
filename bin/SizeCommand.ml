@@ -1,7 +1,7 @@
 open Koat2
 (** Handles shell arguments and computes a size-bounds for a program. *)
 
-open OurBase
+open! OurBase
 open ProgramModules
 
 let description = "Run a size bound improvement step"

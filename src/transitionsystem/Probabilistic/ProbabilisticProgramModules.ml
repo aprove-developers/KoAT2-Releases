@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 module Location = Location
 module UpdateElement = UpdateElement_
 module LocationSet = Location.LocationSetOver (Location)

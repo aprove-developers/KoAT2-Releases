@@ -1,10 +1,9 @@
 open Koat2
-open OurBase
+open! OurBase
 open OUnit2
 open Helper
 open ProgramModules
 open PolyExponential
-open Polynomials
 open Bounds
 module Check_TWN = Check_TWN.Make (ProgramModules)
 module TWN_Complexity = TWN_Complexity.Make (ProgramModules)

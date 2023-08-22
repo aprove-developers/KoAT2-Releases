@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic

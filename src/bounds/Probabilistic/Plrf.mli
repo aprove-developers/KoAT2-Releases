@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open ProbabilisticProgramModules
 
 type lrsm_cache

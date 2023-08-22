@@ -2,8 +2,6 @@ open Koat2
 open Batteries
 open OUnit2
 open Helper
-open Formulas
-open Constraints
 open Polynomials
 module Z3Solver = SMT.Z3Solver
 module Valuation = Valuation.Make (OurInt)

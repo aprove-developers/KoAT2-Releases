@@ -1,7 +1,5 @@
 open Batteries
 open Polynomials
-open Atoms
-open Constraints
 open ProgramModules
 open Bounds
 

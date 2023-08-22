@@ -2,7 +2,6 @@ open Batteries
 (** Modules used to infer time-bounds for transitions which are not part of a scc. *)
 
 open Bounds
-open ProgramModules
 
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.
     Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)

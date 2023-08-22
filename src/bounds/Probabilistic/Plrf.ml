@@ -1,10 +1,8 @@
-open OurBase
+open! OurBase
 open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open ProgramTypes
-open Valuation
 open ProbabilisticProgramModules
 module Valuation = Valuation.Make (OurRational)
 

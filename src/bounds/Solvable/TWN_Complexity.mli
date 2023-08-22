@@ -1,4 +1,3 @@
-open Atoms
 open Bounds
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) : sig

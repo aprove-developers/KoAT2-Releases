@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** Modules relevant for working with programs *)
 module ProgramModulesOver (L : ProgramTypes.Location) : ProgramTypes.ClassicalProgramModules = struct

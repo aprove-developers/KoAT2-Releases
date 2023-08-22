@@ -1,14 +1,10 @@
 open Automorphism
 open Batteries
-open ProgramTypes
-open Formulas
-open Polynomials
-open ProgramModules
 module ScaledMonomial = ScaledMonomials.Make (OurInt)
 module Monomial = Monomials.Make (OurInt)
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
+  open! PM
   module Loop = Loop.Make (PM)
   module Check_Solvable = Check_Solvable.Make (ProgramModules)
 

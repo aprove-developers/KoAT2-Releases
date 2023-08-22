@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides all modules related to polynomials. *)
 
 module type OurNumber = sig

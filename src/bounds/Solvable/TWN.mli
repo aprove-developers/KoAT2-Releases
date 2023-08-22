@@ -1,5 +1,4 @@
 open Bounds
-open ProgramModules
 
 type configuration = [ `NoTransformation | `Transformation ]
 

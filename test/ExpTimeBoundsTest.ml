@@ -1,6 +1,6 @@
 open OUnit2
 open Koat2
-open OurBase
+open! OurBase
 open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic

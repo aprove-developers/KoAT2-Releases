@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module MakeRV
     (TL : ProgramTypes.TransitionLabel)

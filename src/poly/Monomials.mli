@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides default implementation of a monomial. *)
 
 module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) :

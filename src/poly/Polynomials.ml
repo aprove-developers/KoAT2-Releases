@@ -1,5 +1,4 @@
-open OurBase
-open PolyTypes
+open! OurBase
 
 module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) = struct
   module Monomial_ = Monomials.MakeOverIndeterminate (I) (Value)
@@ -71,9 +70,9 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     let combine_monomials (pulled_out, add_left, add_right) =
       let open Sequence.Merge_with_duplicates_element in
       function
-      | Sequence.Merge_with_duplicates_element.Left sm -> (pulled_out, sm :: add_left, add_right)
-      | Sequence.Merge_with_duplicates_element.Right sm -> (pulled_out, add_left, sm :: add_right)
-      | Sequence.Merge_with_duplicates_element.Both (sml, smr) ->
+      | Left sm -> (pulled_out, sm :: add_left, add_right)
+      | Right sm -> (pulled_out, add_left, sm :: add_right)
+      | Both (sml, smr) ->
           let coeffl, coeffr = ScaledMonomial_.(coeff sml, coeff smr) in
           let absl, absr = (value_abs coeffl, value_abs coeffr) in
 

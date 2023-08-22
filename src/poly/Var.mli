@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** Provides default implementations of variables. *)
 

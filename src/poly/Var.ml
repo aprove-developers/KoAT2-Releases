@@ -1,10 +1,10 @@
-open OurBase
+open! OurBase
 
 module Inner = struct
   type sort = Real | Int [@@deriving eq, ord, sexp]
 
   module TempOpen = struct
-    open OurBase
+    open! OurBase
 
     type t = Var of String.t | Helper of sort * int | Argument of int [@@deriving eq, ord, sexp]
   end

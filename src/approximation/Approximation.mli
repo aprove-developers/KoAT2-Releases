@@ -1,7 +1,5 @@
-open OurBase
+open! OurBase
 (** Implementation of approximations containing time, size and cost-bounds. *)
-
-open Bounds
 
 type ('trans, 'bound, 'rv, 'trans_cmp_wit, 'rv_comp_wit) approximation_t
 

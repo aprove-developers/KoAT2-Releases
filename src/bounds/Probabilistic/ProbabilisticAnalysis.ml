@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open ProbabilisticProgramModules
 open Bounds
 open Approximation.Probabilistic
@@ -77,13 +77,11 @@ let knowledge_propagation program scc appr : ExpApproximation.t MaybeChanged.t =
           |> RationalBound.sum
         in
         if RationalBound.is_finite new_bound then (
-          ProofOutput.add_str_paragraph_to_proof
-            FormattedString.(
-              fun () ->
-                "knowledge_propagation leads to new time bound "
-                ^ RationalBound.to_string ~pretty:true new_bound
-                ^ " for transition "
-                ^ GeneralTransition.to_string_pretty gt);
+          ProofOutput.add_str_paragraph_to_proof (fun () ->
+              "knowledge_propagation leads to new time bound "
+              ^ RationalBound.to_string ~pretty:true new_bound
+              ^ " for transition "
+              ^ GeneralTransition.to_string_pretty gt);
           MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr))
         else
           MaybeChanged.same appr)

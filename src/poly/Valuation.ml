@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) = struct
   module M = MakeMapCreators1 (I)

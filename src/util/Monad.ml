@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module Make (M : sig
   type 'a t

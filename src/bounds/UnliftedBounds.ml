@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module UnliftedTimeBound = struct
   type ('trans, 'bound, 'trans_cmp_wit) compute_proof_ =

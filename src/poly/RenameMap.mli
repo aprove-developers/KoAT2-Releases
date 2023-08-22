@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Module provides mapping from variables to other variables. *)
 
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)

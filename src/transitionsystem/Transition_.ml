@@ -56,7 +56,7 @@ module Make (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) = st
     if Constraint.is_true (TL.guard t) then
       ""
     else
-      ":|:" ^ TL.(Guard.to_string (TL.guard t))
+      ":|:" ^ Guard.to_string (TL.guard t)
 
 
   let to_string_pretty (l, t, l') =
@@ -73,7 +73,7 @@ module Make (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) = st
     if Constraint.is_true (TL.guard t) then
       ""
     else
-      " :|: " ^ TL.(Guard.to_string ~pretty:true (TL.guard t))
+      " :|: " ^ Guard.to_string ~pretty:true (TL.guard t)
 end
 
 module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTypes.Location) = struct
@@ -82,7 +82,7 @@ module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTy
   let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
 end
 
-open OurBase
+open! OurBase
 
 module TransitionSetOver (T : ProgramTypes.Transition) (L : ProgramTypes.Location with type t = T.location) =
 struct

@@ -1,6 +1,4 @@
-open OurBase
-open Bounds
-open Formatter
+open! OurBase
 open FormattedString
 open Lens.Infix
 

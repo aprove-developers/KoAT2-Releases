@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open Bounds
 
 let logger = Logging.(get Size)

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides all modules related to result variable graphs. *)
 
 (** Module handling result variables. *)

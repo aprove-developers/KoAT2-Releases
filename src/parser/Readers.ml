@@ -1,5 +1,4 @@
-open OurBase
-open ConstraintTypes
+open! OurBase
 open Caml.Lexing
 
 let position_string lexbuf =

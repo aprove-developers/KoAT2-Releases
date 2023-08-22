@@ -1,9 +1,4 @@
-open OurBase
-(** Provides default module to handle programs. *)
-
-open Polynomials
-
-open Constraints
+open! OurBase
 (** Provides default module to handle programs. *)
 
 exception RecursionNotSupported

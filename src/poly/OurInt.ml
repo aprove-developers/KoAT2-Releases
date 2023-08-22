@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 let is_zero = Z.(equal zero)
 

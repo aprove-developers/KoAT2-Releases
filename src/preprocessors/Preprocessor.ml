@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open ProgramModules
 
 let logger = Logging.(get Preprocessor)
@@ -135,7 +135,7 @@ module Make
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) =
 struct
-  open PM
+  open! PM
 
   let transform (t : PM.Program.t t) (subject : PM.Program.t) : PM.Program.t MaybeChanged.t =
     match t with

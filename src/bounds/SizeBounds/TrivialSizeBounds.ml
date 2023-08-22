@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Modules used to infer size-bounds for trivial components. *)
 
 open Bounds

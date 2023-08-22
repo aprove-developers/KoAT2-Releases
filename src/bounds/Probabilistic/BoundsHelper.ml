@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open ProbabilisticProgramModules
 
 (* TODO unify both. Should be possible if we always keep the target location *)

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 include module type of Constraints.Constraint
 
 val simplify_guard : t -> t

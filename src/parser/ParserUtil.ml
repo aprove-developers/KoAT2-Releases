@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides implemenation of transition and program generation. *)
 
 open Formulas

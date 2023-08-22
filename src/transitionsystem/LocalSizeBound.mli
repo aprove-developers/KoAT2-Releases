@@ -1,10 +1,9 @@
-open OurBase
-(** Implementation of local size-bounds. *)
-
+open! OurBase
 open Bounds
 open Formulas
 open Polynomials
-open ProgramTypes
+
+(** Implementation of local size-bounds. *)
 
 val c_range : Formula.t -> int
 (** Estimate range of contant from guard formula *)

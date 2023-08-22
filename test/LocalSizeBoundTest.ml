@@ -1,9 +1,8 @@
 open Koat2
-open OurBase
+open! OurBase
 open OUnit2
 open Helper
 open LocalSizeBound
-open Formulas
 open Polynomials
 
 let tests =

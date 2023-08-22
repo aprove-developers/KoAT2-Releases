@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module Make (Num : PolyTypes.OurNumber) :
   BoundType.Bound with type value = Num.t and type polynomial = Polynomials.PolynomialOver(Num).t

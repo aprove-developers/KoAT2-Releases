@@ -1,7 +1,6 @@
 open Bounds
 open Formulas
 open Polynomials
-open ProgramTypes
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
   open PM

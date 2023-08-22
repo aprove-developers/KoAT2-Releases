@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open Bounds
 open Polynomials
 
@@ -217,7 +217,6 @@ let as_linear_abstract manager constr t new_var =
   let temp_vars = Set.diff all_vars keep_vars in
 
   let open ApronInterface.Koat2Apron in
-  let open ApronInterface.Apron2Koat in
   let environment = Apron.Environment.make (vars_to_apron all_vars) [||] in
 
   let post_update_abstract =

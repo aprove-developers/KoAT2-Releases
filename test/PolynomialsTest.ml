@@ -155,11 +155,11 @@ module Methods = struct
                       Polynomial.(Polynomial.value 1 + Polynomial.var "x"),
                       Polynomial.(Polynomial.int_helper 1 + Polynomial.var "x") );
                     ( "Parameter as a factor",
-                      Polynomial.(Polynomial.mul (Polynomial.value 1) (Polynomial.var "x")),
-                      Polynomial.(Polynomial.mul (Polynomial.int_helper 1) (Polynomial.var "x")) );
+                      Polynomial.mul (Polynomial.value 1) (Polynomial.var "x"),
+                      Polynomial.mul (Polynomial.int_helper 1) (Polynomial.var "x") );
                     ( "Parameter as a factor vanishes",
                       Polynomial.zero,
-                      Polynomial.(Polynomial.mul (Polynomial.int_helper 2) (Polynomial.var "x")) );
+                      Polynomial.mul (Polynomial.int_helper 2) (Polynomial.var "x") );
                     ( "Multiple parameters",
                       Polynomial.(Polynomial.var "x" - Polynomial.var "z"),
                       Polynomial.(

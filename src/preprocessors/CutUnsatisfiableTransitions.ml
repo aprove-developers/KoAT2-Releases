@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Implemenation of a preprocessor which removes all unsatisfiable transitions. *)
 
 open Formulas

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides a unified interface of the parser and lexer for transition graphs. *)
 
 open Bounds

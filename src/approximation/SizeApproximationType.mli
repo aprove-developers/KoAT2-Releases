@@ -1,7 +1,4 @@
-open OurBase
-open Bounds
-open ProgramModules
-open RVGTypes
+open! OurBase
 
 type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) size_approximation_t
 

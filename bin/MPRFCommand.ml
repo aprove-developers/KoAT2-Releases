@@ -1,9 +1,8 @@
 open Koat2
-(** Handles shell arguments and computes ranking functions for a program. *)
-
-open OurBase
+open! OurBase
 open ProgramModules
-open Readers
+
+(** Handles shell arguments and computes ranking functions for a program. *)
 
 let description = "Search for a multiphase linear ranking function"
 let command = "mprf"

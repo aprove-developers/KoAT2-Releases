@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module UnliftedTimeBound : sig
   type ('trans, 'bound, 'trans_cmp_wit) unlifted_time_bound

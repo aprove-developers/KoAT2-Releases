@@ -1,11 +1,7 @@
-open OurBase
-(** Implemenation of a preprocessor which eliminates tmp variables u(x) = T :|: T <= p(x) && T >= p(x). This is in particular useful for twn-loops. *)
-
-open Formulas
-open Constraints
-open Atoms
-open Polynomials
+open! OurBase
 open ProgramModules
+
+(** Implemenation of a preprocessor which eliminates tmp variables u(x) = T :|: T <= p(x) && T >= p(x). This is in particular useful for twn-loops. *)
 
 let logger = Logging.(get Preprocessor)
 

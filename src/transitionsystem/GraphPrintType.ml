@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module type LabelPrint = sig
   type label

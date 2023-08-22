@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) = struct
   type valuation = Valuation.MakeOverIndeterminate(I)(Value).t

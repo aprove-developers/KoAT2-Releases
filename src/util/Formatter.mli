@@ -1,5 +1,4 @@
-open OurBase
-open FormatMonad
+open! OurBase
 
 type format = Plain | Html | Markdown
 

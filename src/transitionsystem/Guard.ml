@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 include Constraints.Constraint
 
 let simplify_guard guard =

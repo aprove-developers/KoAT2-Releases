@@ -1,5 +1,4 @@
-open OurBase
-open ProgramModules
+open! OurBase
 open FormattedString
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** A transition connects two locations and is labeled with a transition label.*)
 

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module MakeFromClassical (PM : ProgramTypes.ClassicalProgramModules) :
   GraphPrintType.GraphPrint

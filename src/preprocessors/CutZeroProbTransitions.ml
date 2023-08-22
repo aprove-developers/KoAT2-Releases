@@ -1,5 +1,4 @@
-open OurBase
-open ProgramTypes
+open! OurBase
 open ProbabilisticProgramModules
 
 (** This preprocessor cuts all transitions with zero probability. *)

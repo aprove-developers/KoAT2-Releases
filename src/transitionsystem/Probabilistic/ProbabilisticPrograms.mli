@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t

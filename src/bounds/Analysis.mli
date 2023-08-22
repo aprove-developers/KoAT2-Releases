@@ -1,9 +1,4 @@
-open Batteries
 (** Performs improvement steps for the whole program to find better time-bounds. *)
-
-open Bounds
-open ProgramTypes
-open RVGTypes
 
 (** These types are used to limit certain analyses methods to the specified underlying types.
     Together with the GADTs they are used to prove type equalities *)

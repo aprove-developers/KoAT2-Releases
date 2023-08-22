@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** RVComparators only depend on Transition & Variable Comparators *)
 include Comparator.Derived2 (struct

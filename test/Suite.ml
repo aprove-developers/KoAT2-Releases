@@ -1,4 +1,3 @@
-open Batteries
 open OUnit2
 
 let suite =

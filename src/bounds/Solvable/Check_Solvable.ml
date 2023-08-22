@@ -2,7 +2,7 @@ open Batteries
 open Polynomials
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
+  open! PM
   module Loop = Loop.Make (PM)
 
   type blocks = Var.t list list

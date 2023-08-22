@@ -1,10 +1,7 @@
 open Batteries
-open ProgramTypes
 open ProgramModules
 open Polynomials
-open PolyExponential
 open Bounds
-open Constraints
 module Check_Solvable = Check_Solvable.Make (ProgramModules)
 module Loop = Loop.Make (ProgramModules)
 module SimpleCycle = SimpleCycle.Make (ProgramModules)

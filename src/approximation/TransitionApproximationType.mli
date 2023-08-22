@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** Module type of transitions for which we can create approximations *)
 module type ApproximableTransition = sig

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open Constraints
 
 module FormulaOver (C : ConstraintTypes.Constraint) = struct

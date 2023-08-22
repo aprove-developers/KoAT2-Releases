@@ -1,9 +1,8 @@
 open Batteries
-open Formulas
 open Polynomials
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
+  open! PM
   module Loop = Loop.Make (PM)
 
   (* TOPOLOGICAL ORDERING: *)

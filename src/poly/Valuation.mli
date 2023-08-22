@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides valuations which are functions mapping from variables to values. *)
 
 open PolyTypes

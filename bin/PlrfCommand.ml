@@ -1,9 +1,8 @@
 open Koat2
-(** Handles shell arguments and computes ranking functions for a program. *)
-
 open Koat2.OurBase
-open Readers
 open ProbabilisticProgramModules
+
+(** Handles shell arguments and computes ranking functions for a program. *)
 
 let description = "Search for a probabilistic ranking function"
 let command = "plrf"

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Implementation of cost-bounds.*)
 
 open Bounds

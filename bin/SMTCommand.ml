@@ -1,5 +1,5 @@
 open Koat2
-open OurBase
+open! OurBase
 module Valuation = Valuation.Make (OurInt)
 
 let description = "Find solutions for a constraint"

@@ -3,7 +3,6 @@ open Batteries
 open OUnit2
 open Helper
 open Constraints
-open Atoms
 open Polynomials
 
 module Parser = struct

@@ -3,7 +3,7 @@ open Batteries
 let logger = Logging.(get Size)
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
+  open! PM
   module RVG = RVGTypes.MakeRVG (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)

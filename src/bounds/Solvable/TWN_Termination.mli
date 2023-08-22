@@ -1,4 +1,3 @@
-open Atoms
 open PolyExponential
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) : sig

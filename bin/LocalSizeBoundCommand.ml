@@ -1,10 +1,9 @@
 open Koat2
-(** Handles shell arguments and computes for a guard and a specified variable a lower/upper local size-bound. *)
-
 open OurBase
-open Polynomials
 open Formulas
 open Bounds
+
+(** Handles shell arguments and computes for a guard and a specified variable a lower/upper local size-bound. *)
 
 let description = "Search for a local size bound"
 let command = "lsb"
@@ -22,7 +21,6 @@ type params = {
 
 let run (params : params) =
   Logging.(use_loggers [ (LocalSizeBound, Logger.DEBUG) ]);
-  let open ProgramModules.TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
   print_string

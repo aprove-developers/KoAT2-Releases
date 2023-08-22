@@ -1,8 +1,7 @@
-open OurBase
-(** Module provides methods to print a program or a result variable graph to png file. *)
-
-open ProgramModules
+open! OurBase
 open RVGTypes
+
+(** Module provides methods to print a program or a result variable graph to png file. *)
 
 let print_graph ~format out_dir name graph output_graph =
   let full_path ext = Fpath.(to_string (out_dir // (v name |> add_ext ext))) in

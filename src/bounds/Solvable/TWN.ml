@@ -1,12 +1,7 @@
 open Automorphism
-open Atoms
 open Batteries
 open Bounds
-open Constraints
-open Formulas
 open FormattedString
-open PolyExponential
-open Polynomials
 
 let logger = Logging.(get Twn)
 
@@ -96,7 +91,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let find_all_possible_loops_for_scc conf scc program :
       SimpleCycle.twn_loop ProofOutput.LocalProofOutput.with_proof List.t =
-    let open OurBase in
+    let open! OurBase in
     let create_proof trans =
       let twn_proofs = ProofOutput.LocalProofOutput.create () in
       ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->

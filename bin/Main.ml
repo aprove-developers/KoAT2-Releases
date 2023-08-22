@@ -1,9 +1,6 @@
 open Base
-(** Main Module *)
 
-open Koat2
-open ProgramModules
-open RVGTypes
+(** Main Module *)
 
 type main_params = { version : bool [@default false]  (** Print the git version *) } [@@deriving cmdliner]
 

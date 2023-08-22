@@ -1,7 +1,5 @@
-open OurBase
+open! OurBase
 (** Implementation of bounds, i.e., polynomials, exponential terms and max/min terms.*)
-
-open Polynomials
 
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module type Bound = sig

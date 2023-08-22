@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 include MakeSetCreators0 (Var)
 
 let equal = Set.equal

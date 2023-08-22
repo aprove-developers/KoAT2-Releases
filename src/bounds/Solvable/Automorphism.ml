@@ -1,7 +1,7 @@
-open OurBase
+open! OurBase
 open Bounds
 open Polynomials
-open ProgramModules
+open! ProgramModules
 open ProgramTypes
 
 module Automorphism = struct

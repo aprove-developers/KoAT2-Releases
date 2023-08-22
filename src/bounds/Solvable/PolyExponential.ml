@@ -1,10 +1,5 @@
 open Batteries
 open Polynomials
-open ProgramTypes
-open Formulas
-open Constraints
-open Atoms
-open Util
 
 module ConstantConstraint = struct
   module Comparator = struct

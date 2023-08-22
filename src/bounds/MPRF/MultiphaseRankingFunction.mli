@@ -1,10 +1,4 @@
-open Batteries
-(** Implementation of Multiphase Ranking Functions. *)
-
-open Constraints
-open Atoms
 open Polynomials
-open ProgramModules
 open Bounds
 
 (** Implementation of multiphase ranking function based on Linear Ranking Functions, flag --mrf has to be set to use multiphase ranking function. *)

@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module LocationSetOver (L : ProgramTypes.Location) = struct
   include Set

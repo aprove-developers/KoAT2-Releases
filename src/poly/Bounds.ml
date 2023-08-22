@@ -1,11 +1,9 @@
-open OurBase
+open! OurBase
 open Polynomials
 
 let logger = Logging.(get Bound)
 
 module Make (Num : PolyTypes.OurNumber) = struct
-  open Util
-
   type valuation = Valuation.Make(Num).t
   type polynomial = PolynomialOver(Num).t
   type value = Num.t

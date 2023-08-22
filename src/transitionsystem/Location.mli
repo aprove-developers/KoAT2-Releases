@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** The simples location possible. Identified just by it's name *)
 
 module LocationSetOver (L : ProgramTypes.Location) : sig

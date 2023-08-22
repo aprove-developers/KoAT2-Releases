@@ -76,9 +76,8 @@ let suite =
                   TransitionGraph.find_edge (Program.graph program) (Location.of_string l)
                     (Location.of_string l')
                 in
-                TransitionLabel.(
-                  assert_equal_bound bound
-                    LocalSizeBound.(sizebound_local program t var |> option_lsb_as_bound))));
+                assert_equal_bound bound LocalSizeBound.(sizebound_local program t var |> option_lsb_as_bound))
+         );
          ( "Print" >:: fun _ ->
            GraphPrint.print_system ~format:"png"
              ~label:(TransitionLabel.to_string % Transition.label)

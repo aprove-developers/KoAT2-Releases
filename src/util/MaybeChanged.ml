@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module Inner = struct
   type status = Changed | Same

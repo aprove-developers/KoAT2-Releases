@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 module M = MakeMapCreators1 (Var)
 
 type var = Var.t

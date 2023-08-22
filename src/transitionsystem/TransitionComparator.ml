@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 (** TransitionComparators only depend on Label & Location Comparators *)
 include Comparator.Derived2 (struct

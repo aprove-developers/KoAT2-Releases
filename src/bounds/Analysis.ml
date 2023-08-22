@@ -1,12 +1,6 @@
-open Atoms
 open Batteries
 open Bounds
-open Constraints
-open Formulas
-open PartialEvaluation
 open Polynomials
-open ProgramModules
-open RVGTypes
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
 type !'prog_modules_t cfr_configuration =
@@ -150,7 +144,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   let empty_twn_state = { remaining_twn_loops = [] }
 
   let improve_with_twn program scc twn_state conf appr =
-    let open OurBase in
+    let open! OurBase in
     let not_all_trans_bounded twn_loop =
       TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
       |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
@@ -282,7 +276,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let local_rank ~conf (scc : TransitionSet.t) measure program max_depth appr =
-    let open OurBase in
+    let open! OurBase in
     let get_unbounded_vars transition =
       match conf.analysis_type with
       | `Termination -> VarSet.empty

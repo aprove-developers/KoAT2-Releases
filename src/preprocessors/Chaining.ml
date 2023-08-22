@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *)
 
 open ProgramModules

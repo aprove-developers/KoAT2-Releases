@@ -1,8 +1,7 @@
 open Koat2
 (** Perform a full-fledged probabilistic analysis *)
 
-open OurBase
-open Readers
+open! OurBase
 open ProbabilisticProgramModules
 module OverapprAnalysis = Analysis.Make (NonProbOverappr)
 open Approximation.Probabilistic
@@ -49,7 +48,6 @@ let run (params : params) =
   in
 
   let classical_analysis_conf =
-    let open TWN in
     List.fold_left
       ~f:
         (fun conf -> function

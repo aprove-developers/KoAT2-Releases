@@ -1,7 +1,6 @@
-open OurBase
+open! OurBase
 open Constraints
 open Formulas
-open Util
 
 exception RecursionNotSupported
 

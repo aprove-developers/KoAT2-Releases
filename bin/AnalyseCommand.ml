@@ -1,12 +1,10 @@
 open Koat2
 (** Handles shell arguments and computes an upper time-bound. *)
 
-open OurBase
+open! OurBase
 open ProgramModules
 open RVGTypes
-open Readers
 open Bounds
-open Formatter
 
 let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"

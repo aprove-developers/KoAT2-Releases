@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 (** Provides implemenation variable sets. *)
 
 include module type of MakeSetCreators0 (Var)

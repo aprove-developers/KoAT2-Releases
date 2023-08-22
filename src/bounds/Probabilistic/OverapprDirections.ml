@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 let direction_to_string_time = function
   | `ExpTime -> "expected time bound"

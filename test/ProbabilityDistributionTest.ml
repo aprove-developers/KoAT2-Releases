@@ -1,10 +1,9 @@
 open Koat2
-open OurBase
+open! OurBase
 open OUnit2
 open Helper
-open Formulas
 open Polynomials
-open ProbabilisticProgramModules
+open! ProbabilisticProgramModules
 
 (* TODO more cases once moment computation in ProbabilityDistribution has been further extended *)
 let tests =

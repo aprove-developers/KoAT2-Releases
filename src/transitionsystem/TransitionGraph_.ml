@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 module Make_
     (T : ProgramTypes.Transition)

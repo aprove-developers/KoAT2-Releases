@@ -1,7 +1,6 @@
-open OurBase
+open! OurBase
 (** Implemenation of a preprocessor which eliminates variables that do not contribute to guards. *)
 
-open Formulas
 open Constraints
 open Polynomials
 

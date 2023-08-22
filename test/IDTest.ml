@@ -1,7 +1,6 @@
 open Koat2
 open Batteries
 open OUnit2
-open Helper
 
 let tests =
   "Fresh vars" >:: fun _ ->

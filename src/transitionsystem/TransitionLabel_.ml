@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 open Polynomials
 open Formulas
 open Atoms

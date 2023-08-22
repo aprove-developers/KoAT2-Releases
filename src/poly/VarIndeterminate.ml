@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 include Var
 (** Variables as indeterminates for polynomials, monomials, ... *)

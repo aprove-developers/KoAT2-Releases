@@ -73,7 +73,7 @@ let enum_to_string content_to_string enum =
 
 
 let sequence_to_string sequence ~f =
-  let open OurBase in
+  let open! OurBase in
   let list = Sequence.to_list @@ Sequence.map ~f sequence in
   "[" ^ String.concat ~sep:"; " list ^ "]"
 

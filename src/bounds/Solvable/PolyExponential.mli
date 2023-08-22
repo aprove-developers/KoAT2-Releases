@@ -1,10 +1,8 @@
 open Batteries
-(** Provides an implementation of polynomial-exponential expressions*)
-
 open Polynomials
-open ProgramModules
-open Formulas
 open Bounds
+
+(** Provides an implementation of polynomial-exponential expressions*)
 
 module ConstantConstraint : sig
   module Comparator : sig

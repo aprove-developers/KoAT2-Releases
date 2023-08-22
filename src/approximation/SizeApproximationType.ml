@@ -1,6 +1,4 @@
-open OurBase
-open ProgramTypes
-open RVGTypes
+open! OurBase
 
 type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) size_approximation_t =
   ('rvtuple_, 'bound, 'rvtuple__cmp_wit) Map.t

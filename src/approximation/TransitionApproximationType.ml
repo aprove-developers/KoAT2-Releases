@@ -1,4 +1,4 @@
-open OurBase
+open! OurBase
 
 type ('trans, 'bound, 'trans_cmp_wit) transition_approximation_t =
   string * ('trans, 'bound, 'trans_cmp_wit) Map.t

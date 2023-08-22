@@ -1,9 +1,6 @@
-open Atoms
 open Batteries
-open Constraints
 open Formulas
 open Polynomials
-open Transformation
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM

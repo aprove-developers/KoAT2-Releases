@@ -2,7 +2,6 @@ open Koat2
 open Batteries
 open Bounds
 open OUnit2
-open Helper
 open ProgramModules
 
 let preprocess =
