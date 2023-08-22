@@ -14,7 +14,6 @@
    ppx_deriving.show))
  (libraries
   batteries
-  netstring
   base
   stdio
   z3

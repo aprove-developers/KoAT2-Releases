@@ -68,7 +68,6 @@ KoAT2 makes use of the following external tools and libraries.
 - [FPath](<https://erratique.ch/software/fpath>)
 - [metapp](<https://github.com/thierry-martinez/metapp>)
 - [Ocamlgraph](<http://ocamlgraph.lri.fr/doc/>)
-- [Ocamlnet](<http://projects.camlcity.org/projects/ocamlnet.html>) for HTML proof output
 - [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)

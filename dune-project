@@ -35,7 +35,6 @@
    menhir
    metapp
    ocamlgraph
-   ocamlnet
    odoc
    ounit
    parmap

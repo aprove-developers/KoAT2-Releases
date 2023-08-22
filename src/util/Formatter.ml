@@ -46,6 +46,19 @@ let newline = write_format mk_newline
 let title = write_meta % set_title
 let initial_meta = { title = None }
 
+let html_escape_table : (char * string) List.t =
+  [ ('<', "&lt;"); ('>', "&gt;"); ('&', "&amp;"); ('"', "&quot;"); ('\'', "&#39;") ]
+
+
+let escape_html_string =
+  let handle_char c =
+    match List.find html_escape_table ~f:(fun (c', _) -> Char.equal c' c) with
+    | Some (_, escaped) -> escaped
+    | None -> String.of_char c
+  in
+  String.concat_map ~sep:"" ~f:handle_char
+
+
 let render_html meta f =
   let preamble = "<!DOCTYPE html>\n" in
   let header = "<html>\n<head>\n<title>" ^ Option.value ~default:"" meta.title ^ "</title>\n</head>\n" in
@@ -55,7 +68,7 @@ let render_html meta f =
   let rec render_f_only f' =
     match f' with
     | Empty -> ""
-    | Str s -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () s
+    | Str s -> escape_html_string s
     | RawStr s -> s ^ "\n"
     | Paragraph f'' -> "<p>\n" ^ render_f_only f'' ^ "</p>\n"
     | NewLine -> "<br/>\n"
@@ -78,7 +91,7 @@ let rec render_markdown meta f =
   | Empty -> ""
   (* TODO: Is this a useful encoding for strings in markdown? *)
   | Str s ->
-      Netencoding.Html.encode ~in_enc:`Enc_utf8 ()
+      escape_html_string
       @@ String.concat_map ~sep:""
            ~f:(fun c ->
              match c with

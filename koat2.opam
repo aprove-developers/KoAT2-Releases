@@ -22,7 +22,6 @@ depends: [
   "menhir"
   "metapp"
   "ocamlgraph"
-  "ocamlnet"
   "odoc"
   "ounit"
   "parmap"
