@@ -5,3 +5,9 @@ include Monad.Make (struct
   let pure (e : 'a) : 'a list = [ e ]
   let bind (xs : 'a list) (f : 'a -> 'b list) : 'b list = List.map f xs |> List.flatten
 end)
+
+let empty = []
+
+let guard = function
+  | true -> pure ()
+  | false -> empty
