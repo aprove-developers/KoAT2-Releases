@@ -121,10 +121,8 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       let var_overapprox = pre_size_exp v in
       let elcb = Map.find_exn elcbs ((gt, l), v) in
       let elcb_overapprox =
-        if RationalBound.is_linear elcb then
-          RationalBound.substitute_f pre_size_exp elcb
-        else
-          RationalBound.substitute_f pre_size_classical elcb
+        BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:pre_size_exp
+          ~class_subst:pre_size_classical elcb
       in
       RationalBound.add var_overapprox elcb_overapprox
       |> tap (fun r ->

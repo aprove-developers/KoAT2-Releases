@@ -216,7 +216,8 @@ module RealParameterAtom = struct
              if Mon.is_constant m || Mon.is_univariate_linear m then
                Poly.of_coeff_and_mon_list [ (c, m) ]
              else
-               Poly.of_var (Var.fresh_id Var.Real ()))
+               let m = Mon.of_var (Var.fresh_id Var.Real ()) in
+               Poly.of_coeff_and_mon_list [ (c, m) ])
       |> Poly.sum
     in
     (p, c)

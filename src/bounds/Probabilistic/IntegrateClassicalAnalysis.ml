@@ -246,12 +246,13 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound
       ~f:(fun ~key ~data t_and_s_map ->
         let classtime_bound = get_timebound `ClassTime apprs key in
         if Bound.is_finite classtime_bound then
-          if Bound.is_linear data then
-            let get_size = get_sizebound `ExpSize apprs key in
-            Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeExpSize)
-          else
-            let get_size = get_sizebound `ClassSize apprs key in
-            Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeClassSize)
+          let get_expsize = get_sizebound `ExpSize apprs key in
+          let get_classsize = get_sizebound `ClassSize apprs key in
+          let get_size =
+            BoundsHelper.SubstHelper.substitute_bound_with_exp_and_class_sizes_get_size ~exp_subst:get_expsize
+              ~class_subst:get_classsize data
+          in
+          Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeExpSize)
         else
           let exptime_bound = get_timebound `ExpTime apprs key in
           let get_classsize_bound = get_sizebound `ClassSize apprs key in

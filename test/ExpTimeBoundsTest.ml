@@ -99,5 +99,17 @@ let tests =
                       Polynomial 2,
                       "../../../examples/probabilistic/",
                       twn_conf );
+                    ( "nested_twn003_inner_loop_exptime_classsize",
+                      Polynomial 3,
+                      "../../../examples/probabilistic/",
+                      twn_conf );
+                    ( "nested_twn003_inner_loop_classtime_expsize",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      twn_conf );
+                    ( "nested_twn003_inner_loop_classtime_mixedsize",
+                      Polynomial 3,
+                      "../../../examples/probabilistic/",
+                      twn_conf );
                   ];
        ]
