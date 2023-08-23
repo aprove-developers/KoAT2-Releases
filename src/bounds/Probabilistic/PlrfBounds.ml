@@ -68,7 +68,7 @@ let improve_with_plrf program (class_appr, appr) rank =
   let non_inc = Plrf.non_increasing rank in
 
   let incoming_gts = BoundsHelper.entry_gts program non_inc in
-  let entry_locations = BoundsHelper.entry_locations_of_gts program non_inc incoming_gts in
+  let entry_locations = BoundsHelper.entry_locations program non_inc in
 
   let entry_time_and_size_bound_proofs = ProofOutput.LocalProofOutput.create () in
 

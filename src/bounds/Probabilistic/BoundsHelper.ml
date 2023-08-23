@@ -17,8 +17,5 @@ let entry_gts program of_gts =
   |> Set.of_sequence (module GeneralTransition)
 
 
-let entry_locations_of_gts program of_gts entry_gts =
-  Set.to_sequence of_gts
-  |> Sequence.map ~f:GeneralTransition.src
-  |> Set.of_sequence (module Location)
-  |> Set.filter ~f:(fun l -> Set.exists ~f:(flip Set.mem l % GeneralTransition.targets) entry_gts)
+let entry_locations program of_gts =
+  entry_gts_with_locs program of_gts |> Sequence.map ~f:Tuple2.second |> LocationSet.of_sequence
