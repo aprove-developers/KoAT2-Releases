@@ -215,6 +215,9 @@ module type Monomial = sig
   (* Get all vars occuring in the monomial*)
   val vars : t -> VarSet.t
 
+  val is_constant : t -> bool
+  (** Returns if the monomial is unaffected by indeterminates *)
+
   val is_univariate_linear : t -> bool
   (** Returns if the monomial is of the simplified form x^1 for any variable x. *)
 

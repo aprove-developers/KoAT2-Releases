@@ -50,4 +50,8 @@ module ParameterAtom : sig
   include module type of ParameterAtomOver (OurInt)
 end
 
-module RealParameterAtom : module type of ParameterAtomOver (OurRational)
+module RealParameterAtom : sig
+  include module type of ParameterAtomOver (OurRational)
+
+  val replace_nonlinear_monomials_with_temp_vars : t -> t
+end

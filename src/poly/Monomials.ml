@@ -19,6 +19,7 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
 
     (* A monomial is integral if the variables can only take integral values *)
     let is_integral = Map.for_alli ~f:(fun ~key ~data -> I.is_integral key)
+    let is_constant = Map.is_empty
 
     let of_sequence seq =
       let addEntry map (var, n) =

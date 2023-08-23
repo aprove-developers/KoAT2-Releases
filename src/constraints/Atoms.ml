@@ -204,4 +204,20 @@ module ParameterAtom = struct
     | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
 end
 
-module RealParameterAtom = ParameterAtomOver (OurRational)
+module RealParameterAtom = struct
+  include ParameterAtomOver (OurRational)
+  module Poly = ParameterPolynomialOver (OurRational)
+  module Mon = Monomials.Make (PolynomialOver (OurRational))
+
+  let replace_nonlinear_monomials_with_temp_vars ((p, c) : t) =
+    let p =
+      Sequence.of_list (Poly.monomials_with_coeffs p)
+      |> Sequence.map ~f:(fun (c, m) ->
+             if Mon.is_constant m || Mon.is_univariate_linear m then
+               Poly.of_coeff_and_mon_list [ (c, m) ]
+             else
+               Poly.of_var (Var.fresh_id Var.Real ()))
+      |> Poly.sum
+    in
+    (p, c)
+end

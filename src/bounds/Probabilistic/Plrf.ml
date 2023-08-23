@@ -164,7 +164,9 @@ let encode_update cache tguard (t : Transition.t) =
 let general_transition_constraint cache constraint_type gtrans : RationalFormula.t =
   let template = gtrans |> GeneralTransition.src |> Hashtbl.find_exn cache.template_table in
   let lift_paraatom pa =
-    (GeneralTransition.guard gtrans |> RealParameterConstraint.of_intconstraint, pa) |> List.return
+    ( GeneralTransition.guard gtrans |> RealParameterConstraint.of_intconstraint,
+      RealParameterAtom.replace_nonlinear_monomials_with_temp_vars pa )
+    |> List.return
   in
   let guard = GeneralTransition.guard gtrans in
   let guard_real = GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint in
