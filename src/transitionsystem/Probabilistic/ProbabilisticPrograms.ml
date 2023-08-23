@@ -892,7 +892,8 @@ module ProbabilisticProgram = struct
   let pre_gt t gt =
     (* All transitions in a gt have the same guard and hence the same pre transitions *)
     let pre_t = pre t (Set.choose_exn @@ GeneralTransition.transitions gt) in
-    Set.filter ~f:(Set.exists ~f:(Set.mem pre_t) % GeneralTransition.transitions) (gts t)
+
+    GeneralTransitionSet.map pre_t ~f:ProbabilisticTransition.gt
 
 
   let from_gts (start : Location.t) gts =
