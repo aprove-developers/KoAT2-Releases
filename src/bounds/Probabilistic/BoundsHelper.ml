@@ -1,7 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
+module GTAndLoc = MakeComparatorForTuples (GeneralTransition) (Location)
 
-(* TODO unify both. Should be possible if we always keep the target location *)
 let entry_gts_with_locs program of_gts =
   Set.to_sequence of_gts
   |> Sequence.map ~f:(fun gt ->
@@ -10,6 +10,8 @@ let entry_gts_with_locs program of_gts =
          |> Sequence.filter ~f:(fun gt -> not (Set.mem of_gts gt))
          |> Sequence.map ~f:(fun gt -> (gt, loc)))
   |> Sequence.join
+  |> Set.of_sequence (module GTAndLoc)
+  |> Set.to_sequence
 
 
 let entry_gts program of_gts =
