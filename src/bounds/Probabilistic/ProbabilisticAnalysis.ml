@@ -241,12 +241,15 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       in
       (* Propagate bounds iff all transitions have linear non-probabilistic updates *)
       match transitions_updates with
-      | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
+      | Some update_polys ->
           let get_pre_size_exp = get_pre_size_exp program appr gt in
+          let get_pre_size_classical = get_pre_size_classical program class_appr gt in
           let propagated_bound =
             Sequence.of_list update_polys
             |> Sequence.map ~f:(fun update_poly ->
-                   RationalBound.substitute_f get_pre_size_exp (RationalBound.of_intpoly update_poly))
+                   RationalBound.of_intpoly update_poly
+                   |> BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes
+                        ~exp_subst:get_pre_size_exp ~class_subst:get_pre_size_classical)
             |> RationalBound.sum
           in
           if
