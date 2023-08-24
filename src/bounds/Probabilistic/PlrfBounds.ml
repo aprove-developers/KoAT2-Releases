@@ -65,41 +65,21 @@ let get_timebound_and_sizebound_both_directions ?proof apprs =
 
 
 let improve_with_plrf program (class_appr, appr) rank =
-  let non_inc = Plrf.non_increasing rank in
-
-  let incoming_gts = BoundsHelper.entry_gts program non_inc in
-  let entry_locations = BoundsHelper.entry_locations program non_inc in
-
   let entry_time_and_size_bound_proofs = ProofOutput.LocalProofOutput.create () in
-
+  let entry_gts_and_locs = BoundsHelper.entry_gts_with_locs program (Plrf.non_increasing rank) in
+  let get_timebound, get_sizebound =
+    get_timebound_and_sizebound_both_directions ~proof:entry_time_and_size_bound_proofs (class_appr, appr)
+  in
   let new_bound =
-    Set.to_sequence entry_locations
-    |> Sequence.map ~f:(fun entry_loc ->
-           let entry_gts_to_loc =
-             Set.filter ~f:(flip Set.mem entry_loc % GeneralTransition.targets) incoming_gts
-           in
-           let get_timebound, get_sizebound =
-             get_timebound_and_sizebound_both_directions ~proof:entry_time_and_size_bound_proofs
-               (class_appr, appr)
-           in
+    Sequence.map entry_gts_and_locs ~f:(fun (gt, entry_loc) ->
+        let rank_size_bound v = get_sizebound (gt, entry_loc) v in
+        let rank_at_loc = Plrf.rank rank entry_loc in
 
-           let rank_size_bound v =
-             Set.to_sequence entry_gts_to_loc
-             |> Sequence.map ~f:(fun gt -> get_sizebound (gt, entry_loc) v)
-             |> RationalBound.sum
-           in
-           let rank_at_loc = Plrf.rank rank entry_loc in
-           (* Here we assume that rank_at_loc is linear as is always the case for PLRFs *)
-           let rank_bounded =
-             RationalBound.substitute_f rank_size_bound (RationalBound.of_poly rank_at_loc)
-           in
+        (* Here we assume that rank_at_loc is linear as is always the case for PLRFs *)
+        let rank_bounded = RationalBound.substitute_f rank_size_bound (RationalBound.of_poly rank_at_loc) in
+        let inc_timebound = get_timebound (gt, entry_loc) in
 
-           let inc_timebound =
-             Set.to_sequence entry_gts_to_loc
-             |> Sequence.map ~f:(fun gt -> get_timebound (gt, entry_loc))
-             |> RationalBound.sum
-           in
-           RationalBound.(inc_timebound * rank_bounded))
+        RationalBound.(inc_timebound * rank_bounded))
     |> RationalBound.sum
   in
   Logger.log logger Logger.DEBUG (fun () ->
