@@ -45,4 +45,17 @@ let tests =
                   ("X<=Y", "X'", "BINOMIAL(X,0.5) * UNIFORM(-3,4)^2", "X<=Y && 0 <= X' && X' <= 16*X")
                   (* imprecise due to overapproximation *);
                 ];
+         "check_exp_value"
+         >::: List.map
+                ~f:(fun (ue_str, exp_result) ->
+                  ue_str >:: fun _ ->
+                  let ue = Readers.read_update_element ue_str in
+                  let exp_value = UpdateElement.exp_value_poly ue in
+                  assert_equal_rationalpoly_smt exp_result exp_value)
+                (let open Polynomials.RationalPolynomial in
+                 [
+                   ("UNIFORM(0,3)", of_constant (OurRational.of_float 1.5));
+                   ("UNIFORM(0,3)*UNIFORM(0,3)", of_constant (OurRational.of_float (1.5 *. 1.5)));
+                   ("UNIFORM(0,3)^2", of_constant (OurRational.of_float (14. /. 4.)));
+                 ]);
        ]

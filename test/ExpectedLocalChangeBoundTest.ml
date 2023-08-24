@@ -17,7 +17,7 @@ let tests =
            let program_vars = GeneralTransition.input_vars gt in
            let elcb = ExpectedLocalChangeBound.compute_elcb program_vars ((gt, loc_g), var_first_arg) in
 
-           Helper.assert_equal_realpoly_smt
+           Helper.assert_equal_rationalpoly_smt
              (Option.value_exn @@ RationalBound.to_poly expected)
              (Option.value_exn @@ RationalBound.to_poly elcb))
          RationalBound.

@@ -4,22 +4,22 @@ open Polynomials
 
 module UpdateValue = struct
   module Inner = struct
-    type t = Var of Var.t | Dist of ProbabilityDistribution.t [@@deriving eq, ord]
+    type t = Var of Var.t | Dist of { id : int; dist : ProbabilityDistribution.t } [@@deriving eq, ord]
 
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
     let to_string ?(pretty = false) ?(to_file = false) = function
-      | Dist d -> ProbabilityDistribution.to_string ~pretty d
+      | Dist { dist; _ } -> ProbabilityDistribution.to_string ~pretty dist
       | Var v -> Var.to_string ~pretty v
 
 
     let rename m = function
-      | Dist d -> Dist (ProbabilityDistribution.rename m d)
+      | Dist { dist; id } -> Dist { id; dist = ProbabilityDistribution.rename m dist }
       | Var v -> Var (VarIndeterminate.rename m v)
 
 
     let vars = function
-      | Dist d -> ProbabilityDistribution.vars d
+      | Dist { dist; _ } -> ProbabilityDistribution.vars dist
       | Var v -> VarSet.singleton v
 
 
@@ -37,32 +37,32 @@ module UpdateValue = struct
 
     let exp_value_poly = function
       | Var v -> RationalPolynomial.of_var v
-      | Dist d -> ProbabilityDistribution.exp_value_poly d
+      | Dist { dist; _ } -> ProbabilityDistribution.exp_value_poly dist
 
 
     let moment_poly d i =
       match d with
       | Var v -> RationalPolynomial.pow (RationalPolynomial.of_var v) i
-      | Dist d -> ProbabilityDistribution.moment_poly d i
+      | Dist { dist; _ } -> ProbabilityDistribution.moment_poly dist i
 
 
     let moment_abs_bound d i =
       match d with
       | Var v -> RationalBound.(pow (of_var v) i)
-      | Dist d -> ProbabilityDistribution.moment_abs_bound d i
+      | Dist { dist; _ } -> ProbabilityDistribution.moment_abs_bound dist i
 
 
     let is_integral _ = true
 
     let admissibility_constraint = function
       | Var v -> Guard.mk_true
-      | Dist d -> ProbabilityDistribution.admissibility_constraint d
+      | Dist { dist; _ } -> ProbabilityDistribution.admissibility_constraint dist
 
 
     let as_guard uv new_var =
       match uv with
       | Var v -> Guard.Infix.(Polynomial.(of_var v = of_var new_var))
-      | Dist d -> ProbabilityDistribution.as_guard d new_var
+      | Dist { dist; _ } -> ProbabilityDistribution.as_guard dist new_var
   end
 
   include Inner
@@ -83,7 +83,7 @@ let to_polynomial =
 
 
 let of_poly = Polynomial.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
-let of_dist d = of_indeterminate (Dist d)
+let of_dist dist = of_indeterminate (Dist { dist; id = Unique.unique () })
 
 let as_guard ue new_var =
   let replaced_poly, dist_constrs =
@@ -91,9 +91,9 @@ let as_guard ue new_var =
       ~const:(fun c -> (Polynomial.of_constant c, Guard.mk_true))
       ~indeterminate:(function
         | Var v -> (Polynomial.of_var v, Guard.mk_true)
-        | Dist d ->
+        | Dist { dist; _ } ->
             let temp_v = Var.fresh_id Var.Int () in
-            (Polynomial.of_var temp_v, ProbabilityDistribution.as_guard d temp_v))
+            (Polynomial.of_var temp_v, ProbabilityDistribution.as_guard dist temp_v))
       ~plus:(fun (p1, g1) (p2, g2) -> (Polynomial.add p1 p2, Guard.mk_and g1 g2))
       ~times:(fun (p1, g1) (p2, g2) -> (Polynomial.mul p1 p2, Guard.mk_and g1 g2))
       ~pow:(fun (p, g) i -> (Polynomial.pow p i, g))
@@ -267,9 +267,9 @@ let as_linear_guard constr t new_var =
 let pull_out_of_uniform : t -> t =
   fold ~const:of_constant
     ~indeterminate:(function
-      | Dist (Uniform (a, b)) ->
+      | Dist { dist = Uniform (a, b); _ } ->
           let p, (a', b') = Polynomial.pull_out_common_addends a b in
-          add (of_poly p) (of_indeterminate @@ Dist (Uniform (a', b')))
+          add (of_poly p) (of_indeterminate @@ Dist { dist = Uniform (a', b'); id = Unique.unique () })
       | i -> of_indeterminate i)
     ~plus:add ~times:mul ~pow
 

@@ -23,7 +23,7 @@ let tests =
                   let dist = Readers.read_probability_distribution dist_str in
                   let result = ProbabilityDistribution.moment_poly dist order in
 
-                  assert_equal_realpoly_smt expected_result result)
+                  assert_equal_rationalpoly_smt expected_result result)
                 (let open RationalPolynomial in
                  [
                    (1, "UNIFORM(0,5)", of_constant (OurRational.of_float 2.5));

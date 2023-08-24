@@ -2,7 +2,7 @@ open! OurBase
 open Polynomials
 
 module UpdateValue : sig
-  type t = Var of Var.t | Dist of ProbabilityDistribution.t [@@deriving eq, ord]
+  type t [@@deriving eq, ord]
 
   val sexp_of_t : t -> Sexp.t
   val to_string : ?pretty:bool -> ?to_file:bool -> t -> string

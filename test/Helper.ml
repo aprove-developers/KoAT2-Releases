@@ -19,7 +19,7 @@ let assert_equal_value = assert_equal ~cmp:OurInt.( =~= ) ~printer:OurInt.to_str
 let assert_equal_varset = assert_equal ~cmp:Base.Set.equal ~printer:VarSet.to_string
 let assert_equal_poly = assert_equal ~cmp:Polynomial.( =~= ) ~printer:Polynomial.to_string
 
-let assert_equal_realpoly_smt =
+let assert_equal_rationalpoly_smt =
   let cmp p1 p2 =
     (* Z3Solver is *not* thread-safe compared to the incremental one *)
     let s = SMT.IncrementalZ3Solver.create () in
