@@ -129,6 +129,22 @@ let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.anal
   Util.find_fixpoint improve_scc_ appr
 
 
+let lift_appr_to_exp_costbounds program class_appr appr =
+  let gts = Program.gts program in
+  Set.fold gts ~init:appr ~f:(fun appr gt ->
+      let gtcost =
+        Set.to_sequence (GeneralTransition.transitions gt)
+        |> Sequence.map ~f:(fun (_, label, _) ->
+               let cbound = RationalBound.of_intpoly (TransitionLabel.cost label) in
+               RationalBound.substitute_f
+                 (ProbabilisticSizeBounds.get_pre_size_classical program class_appr gt)
+                 cbound)
+        |> RationalBound.sum
+      in
+      let new_bound = RationalBound.mul gtcost (ExpApproximation.timebound appr gt) in
+      ExpApproximation.add_costbound new_bound gt appr)
+
+
 let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = default_configuration) program
     class_appr : ExpApproximation.t =
   let program_vars = Program.input_vars program in
@@ -139,6 +155,7 @@ let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = d
     ~f:(fun appr scc_with_locs ->
       improve_scc ~classic_conf ~conf program program_vars scc_with_locs (class_appr, appr))
     ~init:appr sccs
+  |> lift_appr_to_exp_costbounds program class_appr
 
 
 module ClassicAnalysis = Analysis.Make (NonProbOverappr)
