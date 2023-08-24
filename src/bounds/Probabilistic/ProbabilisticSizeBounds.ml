@@ -92,13 +92,7 @@ let trivial_sizebounds program ~grvs_in elcbs class_appr appr =
 
 let nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs class_appr appr =
   let entry_rvts = Sequence.to_list (BoundsHelper.entry_gts_with_locs program scc) in
-  let overappr_var_in gt v =
-    GeneralTransition.transitions gt
-    (* transitions of a general transition share their guard and hence have the same pre transitions *)
-    |> Program.pre program % Set.choose_exn
-    |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Set.to_sequence
-    |> RationalBound.of_intbound % Bound.sum
-  in
+  let get_pre_size_classical = get_pre_size_classical program class_appr in
   let nontrivial_sizebound appr v =
     let execute () =
       let start_value =
@@ -111,7 +105,7 @@ let nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs class_appr 
       in
       let acc_change_grv (gt, l) =
         let elcb = Map.find_exn elcbs ((gt, l), v) in
-        let change_bound = RationalBound.substitute_f (overappr_var_in gt) elcb in
+        let change_bound = RationalBound.substitute_f (get_pre_size_classical gt) elcb in
         RationalBound.(change_bound * ExpApproximation.timebound appr gt)
         |> tap (fun r ->
                Logger.log size_logger Logger.DEBUG (fun () ->
