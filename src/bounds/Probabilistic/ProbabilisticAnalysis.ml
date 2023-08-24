@@ -92,37 +92,55 @@ let knowledge_propagation program scc appr : ExpApproximation.t MaybeChanged.t =
 
 module ELCBMap = MakeMapCreators1 (GRV)
 
+(** Get pre expected sizebounds. Should return [RationalBound.infinity] for temporary variables *)
+let get_pre_size_exp program appr gt =
+  if Program.is_initial_gt program gt then
+    fun v ->
+      if Set.mem (Program.vars program) v then
+        RationalBound.of_var v
+      else
+        RationalBound.infinity
+  else
+    let start_loc = GeneralTransition.src gt in
+    let pre_gt = Program.pre_gt program gt in
+    fun v ->
+      Set.to_sequence pre_gt
+      |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
+      |> RationalBound.sum
+
+
+(** Get pre classical sizebounds. Should return [RationalBound.infinity] for temporary variables *)
+let get_pre_size_classical program class_appr gt =
+  if Program.is_initial_gt program gt then
+    fun v ->
+      if Set.mem (Program.vars program) v then
+        RationalBound.of_var v
+      else
+        RationalBound.infinity
+  else
+    let start_loc = GeneralTransition.src gt in
+    let pre_gt = Program.pre_gt program gt in
+    fun v ->
+      Set.to_sequence pre_gt
+      |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
+      |> Sequence.join
+      |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
+      |> RationalBound.of_intbound % Bound.sum
+
+
 (* TODO rvs_in instead of rvs_out  *)
 let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) :
     ExpApproximation.t =
   let trivial_sizebounds appr =
     let trivial_sizebound_for_grv ((gt, l), v) =
       (* TODO *)
-      let pre_gt = Program.pre_gt program gt in
-      let start_loc = GeneralTransition.src gt in
-      let pre_size_exp v =
-        if Program.is_initial_gt program gt then
-          RationalBound.of_var v
-        else
-          Set.to_sequence pre_gt
-          |> Sequence.map ~f:(fun pre_gt -> ExpApproximation.sizebound appr (pre_gt, start_loc) v)
-          |> RationalBound.sum
-      in
-      let pre_size_classical v =
-        if Program.is_initial_gt program gt then
-          RationalBound.of_var v
-        else
-          Set.to_sequence pre_gt
-          |> Sequence.map ~f:(Set.to_sequence % GeneralTransition.transitions_to_target start_loc)
-          |> Sequence.join
-          |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
-          |> RationalBound.of_intbound % Bound.sum
-      in
-      let var_overapprox = pre_size_exp v in
+      let get_pre_size_exp = get_pre_size_exp program appr gt in
+      let get_pre_size_classical = get_pre_size_classical program class_appr gt in
+      let var_overapprox = get_pre_size_exp v in
       let elcb = Map.find_exn elcbs ((gt, l), v) in
       let elcb_overapprox =
-        BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:pre_size_exp
-          ~class_subst:pre_size_classical elcb
+        BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:get_pre_size_exp
+          ~class_subst:get_pre_size_classical elcb
       in
       let elcb_overapprox_plus_var = RationalBound.add var_overapprox elcb_overapprox in
       let propagated_bound =
@@ -137,9 +155,9 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
           |> OptionMonad.sequence |> Option.map ~f:RationalBound.sum_list
         in
         match combined_updates with
-        | Some combined_updates when Set.is_subset (RationalBound.vars combined_updates) ~of_:program_vars ->
-            BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:pre_size_exp
-              ~class_subst:pre_size_classical combined_updates
+        | Some combined_updates ->
+            BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes
+              ~exp_subst:get_pre_size_exp ~class_subst:get_pre_size_classical combined_updates
         | _ -> RationalBound.infinity
       in
       RationalBound.keep_simpler_bound elcb_overapprox_plus_var propagated_bound
@@ -224,20 +242,11 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
       (* Propagate bounds iff all transitions have linear non-probabilistic updates *)
       match transitions_updates with
       | Some update_polys when List.for_all update_polys ~f:Polynomials.Polynomial.is_linear ->
-          let pre_sizebound =
-            if Program.is_initial_gt program gt then
-              fun v -> RationalBound.of_var v
-            else
-              let pre_gts = Set.to_sequence (Program.pre_gt program gt) in
-              fun v ->
-                Sequence.map pre_gts ~f:(fun pre_gt ->
-                    ExpApproximation.sizebound appr (pre_gt, GeneralTransition.src gt) v)
-                |> RationalBound.sum
-          in
+          let get_pre_size_exp = get_pre_size_exp program appr gt in
           let propagated_bound =
             Sequence.of_list update_polys
             |> Sequence.map ~f:(fun update_poly ->
-                   RationalBound.substitute_f pre_sizebound (RationalBound.of_intpoly update_poly))
+                   RationalBound.substitute_f get_pre_size_exp (RationalBound.of_intpoly update_poly))
             |> RationalBound.sum
           in
           if
