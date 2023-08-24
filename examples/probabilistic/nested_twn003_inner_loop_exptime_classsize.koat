@@ -1,9 +1,9 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR x y z)
+(VAR x y z yreset)
 (RULES
-  f(x,y,z) -> g(x,y,z)
-  g(x,y,z) -> h(z,z,z) :|: z > 0
-  h(x,y,z) -> h(x - y * y, y + 1,z) :|: x > 0
-  h(x,y,z) -> 0.5:g(x,y,z) :+: 0.5:g(x,y,z-1)
+  f(x,y,z,yreset) -> g(x,y,z,yreset)
+  g(x,y,z,yreset) -> h(z,yreset,z,yreset) :|: z > 0
+  h(x,y,z,yreset) -> h(x - y * y, y + 1,z,yreset) :|: x > 0
+  h(x,y,z,yreset) -> 0.5:g(x,y,z,yreset) :+: 0.5:g(x,y,z-1,yreset)
 )

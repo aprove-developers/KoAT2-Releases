@@ -2,8 +2,8 @@
 
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR X Y)
+(VAR x)
 (RULES
-  f(X,Y) -> g(X,Y)
-  g(X,Y) -> [1/2]:g(X-UNIFORM(-1,2)*UNIFORM(-3,1)^2,Y) :+: [1/2]:g(X,Y)    :|: X>0
+  f(x) -> g(x)
+  g(x) -> [1/2]:g(x-UNIFORM(-1,2)*UNIFORM(-3,1)^2) :+: [1/2]:g(x)    :|: x>0
 )

@@ -1,5 +1,3 @@
-# Two nested probabilistic loops with bounded variable sizes
-
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y z reset)
