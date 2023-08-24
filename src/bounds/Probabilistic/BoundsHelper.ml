@@ -27,46 +27,58 @@ module MakeSubstHelper (Num : PolyTypes.OurNumber) = struct
   module Poly = Polynomials.PolynomialOver (Num)
   module Mon = Monomials.Make (Num)
 
+  (* This method could be improved by selecting a variable that is overapproximated using exp_subst per monomial.
+      However, this would complicate the current design as TWN requires a "get_sizebound" function. *)
   let substitute_bound_with_exp_and_class_sizes_and_get_size ~exp_subst ~class_subst b =
     match B.to_poly b with
     | None -> (B.substitute_f class_subst b, class_subst)
-    | Some p -> (
+    | Some p ->
         let all_vars = Poly.vars p in
-        let vars_of_degree_one =
+        (* Vars that only occur in linear monomials can always be safely overapproximated*)
+        let linear_in_vars =
           Poly.monomials_with_coeffs p
           |> List.fold_left ~init:all_vars ~f:(fun vset (_, m) ->
-                 let nonlinear_vars =
-                   Mon.to_sequence m
-                   |> Sequence.filter_map ~f:(fun (v, e) -> Option.some_if (e <> 1) v)
-                   |> VarSet.of_sequence
-                 in
-                 Set.diff vset nonlinear_vars)
-          |> Set.to_list
+                 if Mon.is_univariate_linear m then
+                   all_vars
+                 else
+                   Set.diff all_vars (Mon.vars m))
         in
+        let vars_of_degree_one_but_poly_not_linear_in =
+          let vars_of_degree_one =
+            Poly.monomials_with_coeffs p
+            |> List.fold_left ~init:all_vars ~f:(fun vset (_, m) ->
+                   let nonlinear_vars =
+                     Mon.to_sequence m
+                     |> Sequence.filter_map ~f:(fun (v, e) -> Option.some_if (e <> 1) v)
+                     |> VarSet.of_sequence
+                   in
+                   Set.diff vset nonlinear_vars)
+          in
+          Set.diff vars_of_degree_one linear_in_vars
+        in
+        let get_subst subst_with_exp v =
+          if Set.mem subst_with_exp v then
+            exp_subst v
+          else
+            class_subst v
+        in
+        let perform_subst subst_with_exp = B.substitute_f (get_subst subst_with_exp) b in
+        (* We might choose one of the variables that occur with degree 1 to be overapproximated with exp_subst *)
         let best_exp_subst =
           let all_possibilities =
             let open ListMonad in
-            let+ v_exp = vars_of_degree_one in
-            ( v_exp,
-              B.substitute_f
-                (fun v ->
-                  if Var.equal v v_exp then
-                    exp_subst v
-                  else
-                    class_subst v)
-                b )
+            let+ v_exp = Set.to_list vars_of_degree_one_but_poly_not_linear_in in
+            let exp_vars = Set.add linear_in_vars v_exp in
+            (exp_vars, perform_subst exp_vars)
           in
           all_possibilities |> List.min_elt ~compare:(fun (_, b1) (_, b2) -> B.compare_asy b1 b2)
         in
-        match best_exp_subst with
-        | Some (v_exp, b) ->
-            ( b,
-              fun v ->
-                if Var.equal v v_exp then
-                  exp_subst v_exp
-                else
-                  class_subst v )
-        | None -> (B.substitute_f class_subst b, class_subst))
+        let subst_with_exp, bound =
+          match best_exp_subst with
+          | Some (exp_vars, b) -> (exp_vars, b)
+          | None -> (linear_in_vars, perform_subst linear_in_vars)
+        in
+        (bound, get_subst subst_with_exp)
 
 
   let substitute_bound_with_exp_and_class_sizes ~exp_subst ~class_subst b =
