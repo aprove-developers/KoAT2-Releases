@@ -124,7 +124,25 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
         BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:pre_size_exp
           ~class_subst:pre_size_classical elcb
       in
-      RationalBound.add var_overapprox elcb_overapprox
+      let elcb_overapprox_plus_var = RationalBound.add var_overapprox elcb_overapprox in
+      let propagated_bound =
+        let combined_updates =
+          Set.to_list (GeneralTransition.transitions_to_target l gt)
+          |> List.map ~f:(fun (_, label, _) ->
+                 let open OptionMonad in
+                 let+ update = TransitionLabel.update label v in
+                 RationalBound.mul
+                   (RationalBound.of_constant @@ TransitionLabel.probability label)
+                   (UpdateElement.exp_value_abs_bound update))
+          |> OptionMonad.sequence |> Option.map ~f:RationalBound.sum_list
+        in
+        match combined_updates with
+        | Some combined_updates when Set.is_subset (RationalBound.vars combined_updates) ~of_:program_vars ->
+            BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes ~exp_subst:pre_size_exp
+              ~class_subst:pre_size_classical combined_updates
+        | _ -> RationalBound.infinity
+      in
+      RationalBound.keep_simpler_bound elcb_overapprox_plus_var propagated_bound
       |> tap (fun r ->
              Logger.log size_logger Logger.DEBUG (fun () ->
                  ( "trivial_sizebound_for_rv",
@@ -133,6 +151,8 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
                      ("var_overapprox", RationalBound.to_string var_overapprox);
                      ("elcb", RationalBound.to_string elcb);
                      ("elcb_overapprox", RationalBound.to_string elcb_overapprox);
+                     ("elcb_overapprox_plus_var", RationalBound.to_string elcb_overapprox_plus_var);
+                     ("propagated_bound", RationalBound.to_string propagated_bound);
                      ("result", RationalBound.to_string r);
                    ] )))
     in
@@ -192,8 +212,8 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
 
   (* propagate sizes through identity updates *)
   let propagate_sizes (appr : ExpApproximation.t) =
+    (* Only propagate for scc rvs as trivial size bounds should handle propagation for incoming grvs *)
     let rvs_scc = List.cartesian_product rvts_scc (Set.to_list program_vars) in
-    let all_rvs = List.append rvs_in rvs_scc in
     let propagate_for_grv appr ((gt, target_loc), v) =
       let transitions = Set.to_list (GeneralTransition.transitions_to_target target_loc gt) in
       let transitions_updates =
@@ -235,7 +255,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_
             MaybeChanged.same appr
       | _ -> MaybeChanged.same appr
     in
-    MaybeChanged.fold propagate_for_grv appr all_rvs
+    MaybeChanged.fold propagate_for_grv appr rvs_scc
   in
 
   trivial_sizebounds appr |> nontrivial_sizebounds |> Util.find_fixpoint propagate_sizes
