@@ -46,8 +46,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
              mk_str_header_small
                ("TWN - Lifting for " ^ TransitionSet.to_id_string cycle ^ " of "
                ^ Bound.to_string ~pretty:true local_bound)
-             <> (mk_str_line
-                   ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":")
+             <> (mk_str_line ("relevant size-bounds w.r.t. " ^ Transition.to_id_string_pretty entry ^ ":")
                 <> (Bound.vars local_bound |> Base.Set.to_list
                    |> List.map (fun v ->
                           Var.to_string ~pretty:true v ^ ": "

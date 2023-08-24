@@ -245,25 +245,35 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound
       ~init:(Map.empty (module NonProbOverappr.Transition))
       ~f:(fun ~key ~data t_and_s_map ->
         let classtime_bound = get_timebound `ClassTime apprs key in
+        let size_subst_proof = ProofOutput.LocalProofOutput.create () in
         if Bound.is_finite classtime_bound then
           let get_expsize = get_sizebound `ExpSize apprs key in
           let get_classsize = get_sizebound `ClassSize apprs key in
           let get_size =
-            BoundsHelper.SubstHelper.substitute_bound_with_exp_and_class_sizes_get_size ~exp_subst:get_expsize
-              ~class_subst:get_classsize data
+            BoundsHelper.SubstHelper.substitute_bound_with_exp_and_class_sizes_get_size
+              ~proof:size_subst_proof ~exp_subst:get_expsize ~class_subst:get_classsize data
           in
-          Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, `ClassTimeExpSize)
+          Map.add_exn t_and_s_map ~key ~data:(classtime_bound, get_size, (`ClassTimeExpSize, size_subst_proof))
         else
           let exptime_bound = get_timebound `ExpTime apprs key in
           let get_classsize_bound = get_sizebound `ClassSize apprs key in
-          Map.add_exn t_and_s_map ~key ~data:(exptime_bound, get_classsize_bound, `ExpTimeClassSize))
+          Map.add_exn t_and_s_map ~key
+            ~data:(exptime_bound, get_classsize_bound, (`ExpTimeClassSize, size_subst_proof)))
   in
-  let add_to_proof proof t dir =
-    ProofOutput.LocalProofOutput.add_to_proof proof
+  let add_to_proof proof t dir size_subst_proof =
+    ProofOutput.LocalProofOutput.add_to_proof_with_format proof
       FormattedString.(
-        fun () ->
-          mk_str_line @@ "Use " ^ direction_to_string dir ^ " for "
-          ^ Transition.to_id_string_pretty (nonprob_trans_to_prob_trans t))
+        fun format ->
+          let size_subst_proof =
+            let p = ProofOutput.LocalProofOutput.get_proof size_subst_proof format in
+            match p with
+            | Empty -> Empty
+            | p -> p
+          in
+          mk_str_line
+            ("Use " ^ direction_to_string dir ^ " for "
+            ^ Transition.to_id_string_pretty (nonprob_trans_to_prob_trans t))
+          <> size_subst_proof)
   in
   let get_timebound t =
     let bound, _, _ = Map.find_exn time_and_size_bounds_map t in
@@ -276,8 +286,8 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound
   (* add used directions to proof *)
   Option.iter proof ~f:(fun proof ->
       Map.iteri time_and_size_bounds_map ~f:(fun ~key ~data ->
-          let _, _, dir = data in
-          add_to_proof proof key dir));
+          let _, _, (dir, size_subst_proof) = data in
+          add_to_proof proof key dir size_subst_proof));
   (get_timebound, get_sizebound)
 
 
