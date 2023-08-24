@@ -62,6 +62,10 @@ let tests =
                     ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
                     ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
                     ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", classic_conf);
+                    ( "simple_multdist_advanced",
+                      Polynomial 1,
+                      "../../../examples/probabilistic/",
+                      classic_conf );
                     ( "probabilistic_nested_bounded",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
@@ -109,6 +113,10 @@ let tests =
                       twn_conf );
                     ( "nested_twn003_inner_loop_classtime_mixedsize",
                       Polynomial 3,
+                      "../../../examples/probabilistic/",
+                      twn_conf );
+                    ( "nested_twn003_inner_loop_classtime_mixedsize_exponential",
+                      Exponential 1,
                       "../../../examples/probabilistic/",
                       twn_conf );
                   ];

@@ -1,0 +1,9 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z xreset yreset)
+(RULES
+  f(x,y,z,xreset,yreset) -> g(x,y,z,xreset,yreset)
+  g(x,y,z,xreset,yreset) -> h(xreset,yreset,z,xreset,yreset) :|: z > 0
+  h(x,y,z,xreset,yreset) -> h(x - y * y, y + 1,z,xreset,yreset) :|: x > 0
+  h(x,y,z,xreset,yreset) -> g(x,y,z-1,xreset+GEOMETRIC(0.5),2*yreset)
+)
