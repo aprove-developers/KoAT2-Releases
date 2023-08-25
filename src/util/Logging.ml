@@ -18,30 +18,12 @@ type logger =
   | Twn  (** Logger handling twn local time-bound computation *)
 
 (** List of all available loggers *)
-let loggers =
+let all_available =
   [
     Approximation;
     Size;
     Time;
-    PRF;
-    Bound;
-    LocalSizeBound;
-    Program;
-    Preprocessor;
-    CFR;
-    Inv;
-    Twn;
-    ExpSize;
-    ExpTime;
-  ]
-
-
-(** List of all available loggers *)
-let all =
-  [
-    Approximation;
-    Size;
-    Time;
+    PLRF;
     PRF;
     Bound;
     LocalSizeBound;
@@ -76,7 +58,7 @@ let show_logger = function
 let get = Logger.make_log % show_logger
 
 let with_disabled_loggers (logs : (logger * Logger.level) list) =
-  loggers
+  all_available
   |> List.map (fun logger ->
          ( show_logger logger,
            List.find_opt (fun (l, level) -> l == logger) logs |> Option.map Tuple2.second |? Logger.NONE ))

@@ -35,8 +35,8 @@ type params = {
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
   logs : Logging.logger list;
-      [@enum Logging.(List.map (fun l -> (show_logger l, l)) loggers)]
-      [@default Logging.all]
+      [@enum Logging.(List.map (fun l -> (show_logger l, l)) all_available)]
+      [@default Logging.all_available]
       [@sep ',']
       [@aka [ "l" ]]
       (** The loggers which should be activated. *)
