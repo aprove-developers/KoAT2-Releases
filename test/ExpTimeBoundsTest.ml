@@ -119,5 +119,7 @@ let tests =
                       Exponential 1,
                       "../../../examples/probabilistic/",
                       twn_conf );
+                    ("non_past_rwalk", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
+                    ("non_past_size", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                   ];
        ]

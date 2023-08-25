@@ -1,0 +1,11 @@
+# This program consists of geometric loop that exponentially increases x and a consecutive loop that counts down x.
+# As the expected size of x after the first loop is unbounded this program is not PAST.
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x)
+(RULES
+  f(x) -> g(x)
+  g(x) -> [1/2]:g(2*x) :+: [1/2]:h(x)
+  h(x) -> h(x-1) :|: x>0
+)
