@@ -10,7 +10,7 @@ module Valuation = Valuation.Make (OurInt)
 type measure = [ `Cost | `Time ] [@@deriving show]
 type constraint_type = [ `Non_Increasing | `Decreasing ]
 
-let logger = Logging.(get PRF)
+let logger = Logging.(get MPRF)
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM

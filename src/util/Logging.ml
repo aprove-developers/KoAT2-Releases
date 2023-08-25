@@ -10,7 +10,7 @@ type logger =
   | Inv  (** Logger handling invariant creation *)
   | LocalSizeBound  (**  Logger handling local size-bounds  *)
   | PLRF  (** Logger handling probabilistic linear ranking functions *)
-  | PRF  (** Logger handling (multiphase) ranking function creation *)
+  | MPRF  (** Logger handling (multiphase) ranking function creation *)
   | Preprocessor  (**  Logger handling preprocessors  *)
   | Program  (** Logger handling creation of programs, e.g., possible elimination of recursion *)
   | Size  (** Logger handling size-bounds *)
@@ -24,7 +24,7 @@ let all_available =
     Size;
     Time;
     PLRF;
-    PRF;
+    MPRF;
     Bound;
     LocalSizeBound;
     Program;
@@ -47,7 +47,7 @@ let show_logger = function
   | Inv -> "invariants"
   | LocalSizeBound -> "lsb"
   | PLRF -> "plrf"
-  | PRF -> "prf"
+  | MPRF -> "mprf"
   | Preprocessor -> "preprocessor"
   | Program -> "program"
   | Size -> "size"
