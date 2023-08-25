@@ -28,7 +28,7 @@ module ParameterFormula : sig
 end
 
 module RationalFormula : sig
-  include module type of FormulaOver (RealConstraint)
+  include module type of FormulaOver (RationalConstraint)
 
   val of_intformula : Formula.t -> t
   val max_of_occurring_constants : t -> OurRational.t
@@ -36,8 +36,8 @@ module RationalFormula : sig
   (* Add operations specific to polynomial formula here if needed *)
 end
 
-module RealParameterFormula : sig
-  include module type of FormulaOver (RealParameterConstraint)
+module RationalParameterFormula : sig
+  include module type of FormulaOver (RationalParameterConstraint)
 
   (* Add operations specific to parameter polynomial formula here if needed *)
 end

@@ -81,5 +81,5 @@ end
 module ParameterPolynomial : module type of ParameterPolynomialOver (OurInt)
 (** Provides default implementation of polynomials where the coefficients are polynomials over [OurInt]. *)
 
-module RealParameterPolynomial : module type of ParameterPolynomialOver (OurRational)
+module RationalParameterPolynomial : module type of ParameterPolynomialOver (OurRational)
 (** Provides default implementation of polynomials where the coefficients are polynomials over [OurRational]. *)

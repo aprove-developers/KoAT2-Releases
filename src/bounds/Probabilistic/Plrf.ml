@@ -18,7 +18,7 @@ module CoeffTableEntry = struct
 end
 
 type coeffs_table_t = (CoeffTableEntry.t, Var.t) Hashtbl.t
-type template_table_t = (Location.t, RealParameterPolynomial.t) Hashtbl.t
+type template_table_t = (Location.t, RationalParameterPolynomial.t) Hashtbl.t
 
 type t = {
   rank : Location.t -> RationalPolynomial.t;
@@ -59,11 +59,11 @@ let logger = Logging.(get PLRF)
 (* Encode the expected update as parameter polynomial. *)
 let as_realparapoly label var =
   Option.value ~default:(UpdateElement.of_var var) (TransitionLabel.update label var)
-  |> UpdateElement.exp_value_poly |> RealParameterPolynomial.of_polynomial
+  |> UpdateElement.exp_value_poly |> RationalParameterPolynomial.of_polynomial
 
 
 (** Given a list of variables an affine template-parameter-polynomial is generated*)
-let ranking_template cache location (vars : VarSet.t) : RealParameterPolynomial.t * Var.t list * Var.t =
+let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynomial.t * Var.t list * Var.t =
   let vars = Set.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
@@ -74,10 +74,10 @@ let ranking_template cache location (vars : VarSet.t) : RealParameterPolynomial.
     ~f:(fun (v, v') -> Hashtbl.add_exn cache.coeffs_table ~key:(location, v) ~data:v')
     (List.zip_exn vars fresh_vars);
 
-  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let linear_poly = RationalParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Real () in
-  let constant_poly = RealParameterPolynomial.of_constant (RationalPolynomial.of_var constant_var) in
-  (RealParameterPolynomial.(linear_poly + constant_poly), fresh_vars, constant_var)
+  let constant_poly = RationalParameterPolynomial.of_constant (RationalPolynomial.of_var constant_var) in
+  (RationalParameterPolynomial.(linear_poly + constant_poly), fresh_vars, constant_var)
 
 
 (* This will store the added coefficients and constants for later optimisation *)
@@ -111,7 +111,7 @@ let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t li
     ~result:(fun () ->
       Hashtbl.to_sequence cache.template_table
       |> Util.sequence_to_string ~f:(fun (location, polynomial) ->
-             Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial))
+             Location.to_string location ^ ": " ^ RationalParameterPolynomial.to_string polynomial))
     execute
 
 
@@ -121,14 +121,14 @@ let expected_poly cache gtrans =
   let prob_branch_poly cache (l, t, l') =
     let template = Hashtbl.find_exn cache.template_table in
     let prob = t |> TransitionLabel.probability in
-    RealParameterPolynomial.mul
-      (prob |> RationalPolynomial.of_constant |> RealParameterPolynomial.of_polynomial)
-      (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
+    RationalParameterPolynomial.mul
+      (prob |> RationalPolynomial.of_constant |> RationalParameterPolynomial.of_polynomial)
+      (RationalParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
   in
   Set.fold
-    ~f:(fun poly trans -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly)
+    ~f:(fun poly trans -> RationalParameterPolynomial.add (prob_branch_poly cache trans) poly)
     (gtrans |> GeneralTransition.transitions)
-    ~init:RealParameterPolynomial.zero
+    ~init:RationalParameterPolynomial.zero
 
 
 (* Logically encode the update applied to templates of a single transition t.
@@ -137,7 +137,7 @@ let expected_poly cache gtrans =
 let encode_update cache tguard (t : Transition.t) =
   let start_template = Hashtbl.find_exn cache.template_table (Transition.target t) in
   let new_var_map =
-    let vars = RealParameterPolynomial.vars start_template in
+    let vars = RationalParameterPolynomial.vars start_template in
     Set.fold
       ~f:(fun var_map old_var -> Map.add_exn var_map ~key:old_var ~data:(Var.fresh_id Var.Int ()))
       vars
@@ -150,12 +150,13 @@ let encode_update cache tguard (t : Transition.t) =
   in
   let template_substituted =
     Hashtbl.find_exn cache.template_table (Transition.target t)
-    |> RealParameterPolynomial.rename (Map.to_alist new_var_map |> RenameMap.from)
+    |> RationalParameterPolynomial.rename (Map.to_alist new_var_map |> RenameMap.from)
   in
   let constrs =
     Map.fold
-      ~f:(fun ~key ~data -> RealConstraint.mk_and (RealConstraint.of_intconstraint @@ update_guard key data))
-      update_map ~init:RealConstraint.mk_true
+      ~f:(fun ~key ~data ->
+        RationalConstraint.mk_and (RationalConstraint.of_intconstraint @@ update_guard key data))
+      update_map ~init:RationalConstraint.mk_true
   in
   (constrs, template_substituted)
 
@@ -164,46 +165,48 @@ let encode_update cache tguard (t : Transition.t) =
 let general_transition_constraint cache constraint_type gtrans : RationalFormula.t =
   let template = gtrans |> GeneralTransition.src |> Hashtbl.find_exn cache.template_table in
   let lift_paraatom pa =
-    ( GeneralTransition.guard gtrans |> RealParameterConstraint.of_intconstraint,
-      RealParameterAtom.replace_nonlinear_monomials_with_temp_vars pa )
+    ( GeneralTransition.guard gtrans |> RationalParameterConstraint.of_intconstraint,
+      RationalParameterAtom.replace_nonlinear_monomials_with_temp_vars pa )
     |> List.return
   in
   let guard = GeneralTransition.guard gtrans in
-  let guard_real = GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint in
+  let guard_real = GeneralTransition.guard gtrans |> RationalConstraint.of_intconstraint in
   let constraints_and_atoms =
     match constraint_type with
-    | `Non_Increasing -> RealParameterAtom.Infix.(template >= expected_poly cache gtrans) |> lift_paraatom
+    | `Non_Increasing -> RationalParameterAtom.Infix.(template >= expected_poly cache gtrans) |> lift_paraatom
     | `Decreasing ->
-        RealParameterAtom.Infix.(
+        RationalParameterAtom.Infix.(
           template
-          >= RealParameterPolynomial.(
-               expected_poly cache gtrans + RealParameterPolynomial.of_polynomial RationalPolynomial.one))
+          >= RationalParameterPolynomial.(
+               expected_poly cache gtrans + RationalParameterPolynomial.of_polynomial RationalPolynomial.one))
         |> lift_paraatom
     | `Bounded ->
         (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
          * evaluated at the corresponding location is non-negative *)
         let transition_bound t =
           let upd_constrs, templ_subst = encode_update cache guard t in
-          ( RealParameterConstraint.of_constraint @@ RealConstraint.mk_and guard_real upd_constrs,
-            RealParameterAtom.Infix.(templ_subst >= RealParameterPolynomial.zero) )
+          ( RationalParameterConstraint.of_constraint @@ RationalConstraint.mk_and guard_real upd_constrs,
+            RationalParameterAtom.Infix.(templ_subst >= RationalParameterPolynomial.zero) )
         in
 
         GeneralTransition.transitions gtrans |> Set.to_list |> List.map ~f:transition_bound
     | `Bounded_Refined ->
         (* for every transition the guard needs to imply that all possible successor states have the same sign of the evaluated template *)
         let tlist = GeneralTransition.transitions gtrans |> Set.to_list in
-        let t1_nonneg_implies_t2_nonneg t1 t2 : RealParameterConstraint.t * RealParameterAtom.t =
+        let t1_nonneg_implies_t2_nonneg t1 t2 : RationalParameterConstraint.t * RationalParameterAtom.t =
           (* Under the condition that transition t1 leads to a state where the template is non-negative then transition t2
            * also leads to a succesor state such that the corresponding template is non-negative*)
           let upd_constraints_t1, template_subst_t1 = encode_update cache guard t1 in
           let upd_constraints_t2, template_subst_t2 = encode_update cache guard t2 in
-          let t1_pos = RealParameterConstraint.mk_ge template_subst_t1 RealParameterPolynomial.zero in
-          let t2_pos = RealParameterAtom.mk_ge template_subst_t2 RealParameterPolynomial.zero in
+          let t1_pos = RationalParameterConstraint.mk_ge template_subst_t1 RationalParameterPolynomial.zero in
+          let t2_pos = RationalParameterAtom.mk_ge template_subst_t2 RationalParameterPolynomial.zero in
           let extended_guard =
-            RealParameterConstraint.of_intconstraint guard
-            |> RealParameterConstraint.mk_and (RealParameterConstraint.of_constraint upd_constraints_t1)
-            |> RealParameterConstraint.mk_and (RealParameterConstraint.of_constraint upd_constraints_t2)
-            |> RealParameterConstraint.mk_and t1_pos
+            RationalParameterConstraint.of_intconstraint guard
+            |> RationalParameterConstraint.mk_and
+                 (RationalParameterConstraint.of_constraint upd_constraints_t1)
+            |> RationalParameterConstraint.mk_and
+                 (RationalParameterConstraint.of_constraint upd_constraints_t2)
+            |> RationalParameterConstraint.mk_and t1_pos
           in
 
           (extended_guard, t2_pos)
@@ -212,7 +215,8 @@ let general_transition_constraint cache constraint_type gtrans : RationalFormula
         List.cartesian_product tlist tlist |> List.map ~f:(uncurry t1_nonneg_implies_t2_nonneg)
   in
   List.map
-    ~f:(fun (c, a) -> RealParameterConstraint.farkas_transform (RealParameterConstraint.drop_nonlinear c) a)
+    ~f:(fun (c, a) ->
+      RationalParameterConstraint.farkas_transform (RationalParameterConstraint.drop_nonlinear c) a)
     constraints_and_atoms
   |> List.map ~f:RationalFormula.mk
   |> List.fold_left ~f:RationalFormula.mk_and ~init:RationalFormula.mk_true
@@ -301,7 +305,7 @@ let finalise_plrf cache ~refined solver non_increasing
     let model = Option.value_exn @@ Solver.model_real solver in
     let rfunc loc =
       Hashtbl.find_exn cache.template_table loc
-      |> RealParameterPolynomial.eval_coefficients (fun var ->
+      |> RationalParameterPolynomial.eval_coefficients (fun var ->
              Valuation.eval_opt var model |? OurRational.zero)
     in
     let ranking =

@@ -458,4 +458,4 @@ module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
 end
 
 module ParameterPolynomial = ParameterPolynomialOver (OurInt)
-module RealParameterPolynomial = ParameterPolynomialOver (OurRational)
+module RationalParameterPolynomial = ParameterPolynomialOver (OurRational)

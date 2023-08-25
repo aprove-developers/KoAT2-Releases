@@ -26,7 +26,7 @@ module Atom : sig
   (* Add operations specific to polynomial atoms here if needed *)
 end
 
-module RealAtom : sig
+module RationalAtom : sig
   include module type of AtomOver (PolynomialOver (OurRational))
 
   val is_linear : t -> bool
@@ -50,7 +50,7 @@ module ParameterAtom : sig
   include module type of ParameterAtomOver (OurInt)
 end
 
-module RealParameterAtom : sig
+module RationalParameterAtom : sig
   include module type of ParameterAtomOver (OurRational)
 
   val replace_nonlinear_monomials_with_temp_vars : t -> t

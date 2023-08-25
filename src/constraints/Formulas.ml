@@ -102,7 +102,7 @@ module ParameterFormula = struct
 end
 
 module RationalFormula = struct
-  include FormulaOver (RealConstraint)
+  include FormulaOver (RationalConstraint)
 
   let of_intformula =
     Formula.fold ~subject:Polynomials.RationalPolynomial.of_intpoly ~le:mk_le ~lt:mk_lt ~correct:mk_true
@@ -111,10 +111,10 @@ module RationalFormula = struct
 
   let max_of_occurring_constants constraints =
     constraints
-    |> List.map ~f:RealConstraint.max_of_occurring_constants
+    |> List.map ~f:RationalConstraint.max_of_occurring_constants
     |> List.fold_left ~f:OurRational.mul ~init:OurRational.one
 end
 
-module RealParameterFormula = struct
-  include FormulaOver (RealParameterConstraint)
+module RationalParameterFormula = struct
+  include FormulaOver (RationalParameterConstraint)
 end

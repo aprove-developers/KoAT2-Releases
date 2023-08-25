@@ -167,7 +167,7 @@ module Atom = struct
     | LE, LE -> Polynomial.(poly1 =~= poly2)
 end
 
-module RealAtom = struct
+module RationalAtom = struct
   include AtomOver (PolynomialOver (OurRational))
 
   let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
@@ -204,7 +204,7 @@ module ParameterAtom = struct
     | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
 end
 
-module RealParameterAtom = struct
+module RationalParameterAtom = struct
   include ParameterAtomOver (OurRational)
   module Poly = ParameterPolynomialOver (OurRational)
   module Mon = Monomials.Make (PolynomialOver (OurRational))

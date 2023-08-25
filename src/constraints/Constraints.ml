@@ -101,16 +101,17 @@ module Constraint = struct
   let simplify = List.dedup_and_sort ~compare:Atom.compare
 end
 
-module RealConstraint = struct
-  include ConstraintOver (RealAtom)
+module RationalConstraint = struct
+  include ConstraintOver (RationalAtom)
 
   let max_of_occurring_constants atoms =
     atoms
-    |> List.map ~f:RealAtom.max_of_occurring_constants
+    |> List.map ~f:RationalAtom.max_of_occurring_constants
     |> List.fold_left ~f:OurRational.mul ~init:OurRational.one
 
 
-  let of_intconstraint intconstraint = mk (List.map ~f:(fun atom -> RealAtom.of_intatom atom) intconstraint)
+  let of_intconstraint intconstraint =
+    mk (List.map ~f:(fun atom -> RationalAtom.of_intatom atom) intconstraint)
 end
 
 module ParameterConstraintOver (Value : PolyTypes.Ring) = struct
@@ -148,8 +149,8 @@ end
 
 module ParameterConstraint = ParameterConstraintOver (OurInt)
 
-module RealParameterConstraint = struct
+module RationalParameterConstraint = struct
   include ParameterConstraintOver (OurRational)
 
-  let of_intconstraint = of_constraint % RealConstraint.of_intconstraint
+  let of_intconstraint = of_constraint % RationalConstraint.of_intconstraint
 end
