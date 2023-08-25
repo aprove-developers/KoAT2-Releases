@@ -269,7 +269,7 @@ let pull_out_of_uniform : t -> t =
     ~indeterminate:(function
       | Dist { dist = Uniform (a, b); _ } ->
           let p, (a', b') = Polynomial.pull_out_common_addends a b in
-          add (of_poly p) (of_indeterminate @@ Dist { dist = Uniform (a', b'); id = Unique.unique () })
+          add (of_poly p) (of_dist @@ Uniform (a', b'))
       | i -> of_indeterminate i)
     ~plus:add ~times:mul ~pow
 
