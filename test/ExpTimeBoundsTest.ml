@@ -119,6 +119,14 @@ let tests =
                       Exponential 1,
                       "../../../examples/probabilistic/",
                       twn_conf );
+                    ( "prob_loop",
+                      Polynomial 1,
+                      "../../../examples/probabilistic/tacas21_paper/koat/",
+                      classic_conf );
+                    ( "simple_nested",
+                      Polynomial 2,
+                      "../../../examples/probabilistic/tacas21_paper/koat/",
+                      classic_conf );
                     ("non_past_rwalk", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                     ("non_past_size", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                   ];
