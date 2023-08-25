@@ -36,9 +36,9 @@ let mk_str_header_small = mk_header_small % mk_str
 let mk_paragraph form = Paragraph form
 let mk_block form = Block form
 
-type metadata = { title : String.t Option.t }
+type metadata = { title : String.t Option.t; koat2_version : String.t }
 
-let set_title str meta = { title = Some str }
+let set_title str meta = { meta with title = Some str }
 
 let map_t_field f = function
   | Empty as e -> e

@@ -44,7 +44,7 @@ let paragraph (a : 'a FormatMonad.t) : 'a FormatMonad.t =
 let str_paragraph = write_format % mk_paragraph % mk_str
 let newline = write_format mk_newline
 let title = write_meta % set_title
-let initial_meta = { title = None }
+let initial_meta = { title = None; koat2_version = VersionString.version }
 
 let html_escape_table : (char * string) List.t =
   [ ('<', "&lt;"); ('>', "&gt;"); ('&', "&amp;"); ('"', "&quot;"); ('\'', "&#39;") ]
@@ -63,6 +63,7 @@ let render_html meta f =
   let preamble = "<!DOCTYPE html>\n" in
   let header = "<html>\n<head>\n<title>" ^ Option.value ~default:"" meta.title ^ "</title>\n</head>\n" in
   let start_body = "<body>\n" in
+  let footer = "<hr/><footer><p>" ^ meta.koat2_version ^ "</p></footer>" in
   let end_body = "</body>\n" in
   let end_document = "</html>" in
   let rec render_f_only f' =
@@ -81,7 +82,7 @@ let render_html meta f =
         | Smallest -> "<h6>" ^ render_f_only f' ^ "</h6>\n")
     | SequentialComp (f1, f2) -> render_f_only f1 ^ render_f_only f2
   in
-  String.concat ~sep:"" [ preamble; header; start_body; render_f_only f; end_body; end_document ]
+  String.concat ~sep:"" [ preamble; header; start_body; render_f_only f; footer; end_body; end_document ]
 
 
 let render_plain _ f = render_string f

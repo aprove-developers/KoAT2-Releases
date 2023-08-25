@@ -22,7 +22,7 @@ let subcommands =
 
 let default_cmd params =
   if params.version then
-    `Ok (Stdio.printf "%s\n" VersionString.version)
+    `Ok (Stdio.printf "%s\n" Koat2.VersionString.version)
   else
     `Help (`Pager, None)
 

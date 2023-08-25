@@ -6,5 +6,5 @@
  (public_name koat2)
  (name main)
  (preprocess
-  (pps ppx_deriving.show metapp.ppx ppx_deriving_cmdliner))
+  (pps ppx_deriving.show ppx_deriving_cmdliner))
  (libraries koat2))
