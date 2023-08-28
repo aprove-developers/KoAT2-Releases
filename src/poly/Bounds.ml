@@ -237,9 +237,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let show ?(pretty = false) ?(complexity = true) ?(termination_only = false) bound =
     if termination_only then
       if Option.is_some bound then
-        "yes"
+        "YES"
       else
-        "maybe"
+        "MAYBE"
     else
       let complexity_str =
         if complexity then

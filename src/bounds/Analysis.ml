@@ -88,9 +88,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           ] ))
       ~result:(fun b ->
         if b then
-          "yes"
+          "YES"
         else
-          "maybe")
+          "MAYBE")
       (fun () -> terminates)
 
 
