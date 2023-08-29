@@ -2,8 +2,8 @@
 opam-version: "2.0"
 version: "2.0.0"
 synopsis: "KoAT2: Runtime Analysis of Integer Programs"
-maintainer: ["eleanore.meyer@cs.rwth-aachen.de"]
-authors: ["Eleanore Meyer"]
+maintainer: ["eleanore.meyer@cs.rwth-aachen.de" "lommen@cs.rwth-aachen.de"]
+authors: ["Eleanore Meyer" "Nils Lommen"]
 license: "LICENSE"
 homepage: "https://github.com/aprove-developers/Koat2"
 bug-reports: "https://github.com/aprove-developers/Koat2/issues"

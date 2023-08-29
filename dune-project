@@ -11,9 +11,9 @@
 (source
  (github aprove-developers/Koat2))
 
-(authors "Eleanore Meyer")
+(authors "Eleanore Meyer" "Nils Lommen")
 
-(maintainers "eleanore.meyer@cs.rwth-aachen.de")
+(maintainers "eleanore.meyer@cs.rwth-aachen.de" "lommen@cs.rwth-aachen.de")
 
 (license LICENSE)
 
