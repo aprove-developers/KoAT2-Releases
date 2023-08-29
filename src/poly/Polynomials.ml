@@ -407,6 +407,8 @@ module Polynomial = struct
     in
     let primitive_part = Map.map ~f:(fun coeff -> OurInt.div coeff content) t in
     (content, primitive_part)
+
+  let roots = Algebraic.Algebraic.complex_roots_of_integer_poly % degree_coeff_list
 end
 
 module RationalPolynomial = struct
