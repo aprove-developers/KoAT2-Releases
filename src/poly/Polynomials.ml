@@ -227,6 +227,9 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     | List.Or_unequal_lengths.Ok zipped ->
         List.map ~f:(fun (c, v) -> ScaledMonomial_.make c (Monomial_.of_indeterminate v)) zipped |> make
 
+  let of_coeff coeff var =
+    let coeff_deg = List.zip_truncate coeff (List.map (List.range 0 (List.length coeff)) ~f:(Monomial_.lift var)) in
+    of_coeff_and_mon_list coeff_deg
 
   let var str = of_var (Var.of_string str)
   let value c = of_constant (Value.of_int c)
