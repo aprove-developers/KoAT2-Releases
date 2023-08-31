@@ -133,18 +133,35 @@ end;;
 module Algebraic : sig
   type int
   type ordera = Eq | Lt | Gt
+  type 'a set
   type nat
+  val integer_of_nat : nat -> Z.t
+  val nat_of_integer : Z.t -> nat
   type char
   type rat
   type 'a poly
   type real_alg
   type real
+  type 'a mat_impl
+  type 'a mat
+  type 'a vec
+  val mat : nat -> nat -> (nat * nat -> 'a) -> 'a mat
   type complex
   type ('a, 'b) sum = Inl of 'a | Inr of 'b
+  val map_mat : ('a -> 'b) -> 'a mat -> 'b mat
   val croot_ca : Z.t -> complex -> complex
+  val mat_to_list : 'a mat -> ('a list) list
+  val coeffs_int : Z.t poly -> Z.t list
+  val kernel_basis : complex mat -> complex vec set
+  val of_integer_ca : Z.t -> complex
+  val schur_decomp :
+    Z.t mat -> complex list -> complex mat * (complex mat * complex mat)
+  val char_poly_int : Z.t mat -> Z.t poly
+  val dim_gen_eigenspace_ca : complex mat -> complex -> nat -> nat
   val of_real_imag_ca : real_alg * real_alg -> complex
   val complex_roots_of_complex_poly : complex list -> complex list
   val complex_roots_of_real_poly : real_alg list -> complex list
+  val triangular_to_jnf_vector_ca : complex mat -> (nat * complex) list
   val abs_ra : real_alg -> real_alg
   val one_ca : complex
   val one_ra : real_alg
@@ -183,7 +200,6 @@ module Algebraic : sig
   val decompose_ra : real_alg -> ((Z.t * Z.t), (Z.t list * Z.t)) sum
   val imag_unit_ca : complex
   val less_equal_ra : real_alg -> real_alg -> bool
-  val of_integer_ca : Z.t -> complex
   val of_integer_ra : Z.t -> real_alg
   val is_rational_ra : real_alg -> bool
   val of_rational_ca : Z.t * Z.t -> complex
@@ -226,10 +242,10 @@ Z.sub l s))))
 
 let rec fst (x1, x2) = x1;;
 
-let rec divide_integer k l = fst (divmod_integer k l);;
+let rec divide_integera k l = fst (divmod_integer k l);;
 
 let rec lcm_integer
-  a b = divide_integer (Z.mul (Z.abs a) (Z.abs b))
+  a b = divide_integera (Z.mul (Z.abs a) (Z.abs b))
           ((fun k l -> if Z.equal k Z.zero then Z.abs l else if Z.equal
              l Z.zero then Z.abs k else Z.gcd k l)
             a b);;
@@ -328,7 +344,7 @@ let rec modulo_nata
   m n = Nat (modulo_integer (integer_of_nat m) (integer_of_nat n));;
 
 let rec divide_nata
-  m n = Nat (divide_integer (integer_of_nat m) (integer_of_nat n));;
+  m n = Nat (divide_integera (integer_of_nat m) (integer_of_nat n));;
 
 let rec equal_nata m n = Z.equal (integer_of_nat m) (integer_of_nat n);;
 
@@ -840,7 +856,7 @@ let rec sgn_int
 let rec unit_factor_inta x = sgn_int x;;
 
 let rec divide_inta
-  k l = Int_of_integer (divide_integer (integer_of_int k) (integer_of_int l));;
+  k l = Int_of_integer (divide_integera (integer_of_int k) (integer_of_int l));;
 
 type 'a divide = {divide : 'a -> 'a -> 'a};;
 let divide _A = _A.divide;;
@@ -8250,6 +8266,24 @@ let floor_ceiling_real =
      floor = floor_real}
     : real floor_ceiling);;
 
+let rec equal_iarray _A asa bs = equal_lista _A (list_of asa) (list_of bs);;
+
+let rec vec_equal_impl _A
+  xa xc =
+    (let (n1, v1) = rep_vec_impl xa in
+      (fun (n2, v2) -> equal_nata n1 n2 && equal_iarray _A v1 v2))
+      (rep_vec_impl xc);;
+
+let rec equal_vec _A (Vec_impl v1) (Vec_impl v2) = vec_equal_impl _A v1 v2;;
+
+let rec ceq_veca _A = Some (equal_vec _A);;
+
+let rec ceq_vec _A = ({ceq = ceq_veca _A} : 'a vec ceq);;
+
+let ccompare_veca : ('a vec -> 'a vec -> ordera) option = None;;
+
+let ccompare_vec = ({ccompare = ccompare_veca} : 'a vec ccompare);;
+
 let rec gcdc (_A1, _A2)
   a b = (if eq _A2 b
               (zero _A1.euclidean_semiring_normalization_euclidean_semiring.semidom_modulo_euclidean_semiring.algebraic_semidom_semidom_modulo.semidom_divide_algebraic_semidom.semidom_semidom_divide.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
@@ -8716,6 +8750,15 @@ let idom_modulo_complex =
      semidom_modulo_idom_modulo = semidom_modulo_complex}
     : complex idom_modulo);;
 
+let rec cnj z = Complex (re z, uminus_reala (im z));;
+
+let rec conjugate_complexa x = cnj x;;
+
+type 'a conjugate = {conjugate : 'a -> 'a};;
+let conjugate _A = _A.conjugate;;
+
+let conjugate_complex = ({conjugate = conjugate_complexa} : complex conjugate);;
+
 let field_char_0_complex =
   ({field_field_char_0 = field_complex;
      ring_char_0_field_char_0 = ring_char_0_complex}
@@ -8755,6 +8798,24 @@ let is_rat_complex =
   ({field_char_0_is_rat = field_char_0_complex; is_rat = is_rat_complexa;
      to_rat = to_rat_complex}
     : complex is_rat);;
+
+type 'a conjugatable_ring =
+  {conjugate_conjugatable_ring : 'a conjugate;
+    ring_conjugatable_ring : 'a ring};;
+
+let conjugatable_ring_complex =
+  ({conjugate_conjugatable_ring = conjugate_complex;
+     ring_conjugatable_ring = ring_complex}
+    : complex conjugatable_ring);;
+
+type 'a conjugatable_field =
+  {conjugatable_ring_conjugatable_field : 'a conjugatable_ring;
+    field_conjugatable_field : 'a field};;
+
+let conjugatable_field_complex =
+  ({conjugatable_ring_conjugatable_field = conjugatable_ring_complex;
+     field_conjugatable_field = field_complex}
+    : complex conjugatable_field);;
 
 let normalization_semidom_multiplicative_complex =
   ({normalization_semidom_normalization_semidom_multiplicative =
@@ -10061,15 +10122,247 @@ let rec linorder_prod _A _B =
   ({order_linorder = (order_prod _A.order_linorder _B.order_linorder)} :
     ('a * 'b) linorder);;
 
+let times_integer = ({times = Z.mul} : Z.t times);;
+
+let dvd_integer = ({times_dvd = times_integer} : Z.t dvd);;
+
 let one_integera : Z.t = (Z.of_int 1);;
 
 let one_integer = ({one = one_integera} : Z.t one);;
 
+let plus_integer = ({plus = Z.add} : Z.t plus);;
+
+let semigroup_add_integer =
+  ({plus_semigroup_add = plus_integer} : Z.t semigroup_add);;
+
+let cancel_semigroup_add_integer =
+  ({semigroup_add_cancel_semigroup_add = semigroup_add_integer} :
+    Z.t cancel_semigroup_add);;
+
+let ab_semigroup_add_integer =
+  ({semigroup_add_ab_semigroup_add = semigroup_add_integer} :
+    Z.t ab_semigroup_add);;
+
+let minus_integer = ({minus = Z.sub} : Z.t minus);;
+
+let cancel_ab_semigroup_add_integer =
+  ({ab_semigroup_add_cancel_ab_semigroup_add = ab_semigroup_add_integer;
+     cancel_semigroup_add_cancel_ab_semigroup_add =
+       cancel_semigroup_add_integer;
+     minus_cancel_ab_semigroup_add = minus_integer}
+    : Z.t cancel_ab_semigroup_add);;
+
 let zero_integer = ({zero = Z.zero} : Z.t zero);;
+
+let monoid_add_integer =
+  ({semigroup_add_monoid_add = semigroup_add_integer;
+     zero_monoid_add = zero_integer}
+    : Z.t monoid_add);;
+
+let comm_monoid_add_integer =
+  ({ab_semigroup_add_comm_monoid_add = ab_semigroup_add_integer;
+     monoid_add_comm_monoid_add = monoid_add_integer}
+    : Z.t comm_monoid_add);;
+
+let cancel_comm_monoid_add_integer =
+  ({cancel_ab_semigroup_add_cancel_comm_monoid_add =
+      cancel_ab_semigroup_add_integer;
+     comm_monoid_add_cancel_comm_monoid_add = comm_monoid_add_integer}
+    : Z.t cancel_comm_monoid_add);;
+
+let mult_zero_integer =
+  ({times_mult_zero = times_integer; zero_mult_zero = zero_integer} :
+    Z.t mult_zero);;
+
+let semigroup_mult_integer =
+  ({times_semigroup_mult = times_integer} : Z.t semigroup_mult);;
+
+let semiring_integer =
+  ({ab_semigroup_add_semiring = ab_semigroup_add_integer;
+     semigroup_mult_semiring = semigroup_mult_integer}
+    : Z.t semiring);;
+
+let semiring_0_integer =
+  ({comm_monoid_add_semiring_0 = comm_monoid_add_integer;
+     mult_zero_semiring_0 = mult_zero_integer;
+     semiring_semiring_0 = semiring_integer}
+    : Z.t semiring_0);;
+
+let semiring_0_cancel_integer =
+  ({cancel_comm_monoid_add_semiring_0_cancel = cancel_comm_monoid_add_integer;
+     semiring_0_semiring_0_cancel = semiring_0_integer}
+    : Z.t semiring_0_cancel);;
+
+let ab_semigroup_mult_integer =
+  ({semigroup_mult_ab_semigroup_mult = semigroup_mult_integer} :
+    Z.t ab_semigroup_mult);;
+
+let comm_semiring_integer =
+  ({ab_semigroup_mult_comm_semiring = ab_semigroup_mult_integer;
+     semiring_comm_semiring = semiring_integer}
+    : Z.t comm_semiring);;
+
+let comm_semiring_0_integer =
+  ({comm_semiring_comm_semiring_0 = comm_semiring_integer;
+     semiring_0_comm_semiring_0 = semiring_0_integer}
+    : Z.t comm_semiring_0);;
+
+let comm_semiring_0_cancel_integer =
+  ({comm_semiring_0_comm_semiring_0_cancel = comm_semiring_0_integer;
+     semiring_0_cancel_comm_semiring_0_cancel = semiring_0_cancel_integer}
+    : Z.t comm_semiring_0_cancel);;
+
+let power_integer =
+  ({one_power = one_integer; times_power = times_integer} : Z.t power);;
+
+let monoid_mult_integer =
+  ({semigroup_mult_monoid_mult = semigroup_mult_integer;
+     power_monoid_mult = power_integer}
+    : Z.t monoid_mult);;
+
+let numeral_integer =
+  ({one_numeral = one_integer; semigroup_add_numeral = semigroup_add_integer} :
+    Z.t numeral);;
+
+let semiring_numeral_integer =
+  ({monoid_mult_semiring_numeral = monoid_mult_integer;
+     numeral_semiring_numeral = numeral_integer;
+     semiring_semiring_numeral = semiring_integer}
+    : Z.t semiring_numeral);;
 
 let zero_neq_one_integer =
   ({one_zero_neq_one = one_integer; zero_zero_neq_one = zero_integer} :
     Z.t zero_neq_one);;
+
+let semiring_1_integer =
+  ({semiring_numeral_semiring_1 = semiring_numeral_integer;
+     semiring_0_semiring_1 = semiring_0_integer;
+     zero_neq_one_semiring_1 = zero_neq_one_integer}
+    : Z.t semiring_1);;
+
+let semiring_1_cancel_integer =
+  ({semiring_0_cancel_semiring_1_cancel = semiring_0_cancel_integer;
+     semiring_1_semiring_1_cancel = semiring_1_integer}
+    : Z.t semiring_1_cancel);;
+
+let comm_monoid_mult_integer =
+  ({ab_semigroup_mult_comm_monoid_mult = ab_semigroup_mult_integer;
+     monoid_mult_comm_monoid_mult = monoid_mult_integer;
+     dvd_comm_monoid_mult = dvd_integer}
+    : Z.t comm_monoid_mult);;
+
+let comm_semiring_1_integer =
+  ({comm_monoid_mult_comm_semiring_1 = comm_monoid_mult_integer;
+     comm_semiring_0_comm_semiring_1 = comm_semiring_0_integer;
+     semiring_1_comm_semiring_1 = semiring_1_integer}
+    : Z.t comm_semiring_1);;
+
+let comm_semiring_1_cancel_integer =
+  ({comm_semiring_0_cancel_comm_semiring_1_cancel =
+      comm_semiring_0_cancel_integer;
+     comm_semiring_1_comm_semiring_1_cancel = comm_semiring_1_integer;
+     semiring_1_cancel_comm_semiring_1_cancel = semiring_1_cancel_integer}
+    : Z.t comm_semiring_1_cancel);;
+
+let comm_semiring_1_cancel_crossproduct_integer =
+  ({comm_semiring_1_cancel_comm_semiring_1_cancel_crossproduct =
+      comm_semiring_1_cancel_integer}
+    : Z.t comm_semiring_1_cancel_crossproduct);;
+
+let semiring_no_zero_divisors_integer =
+  ({semiring_0_semiring_no_zero_divisors = semiring_0_integer} :
+    Z.t semiring_no_zero_divisors);;
+
+let semiring_1_no_zero_divisors_integer =
+  ({semiring_1_semiring_1_no_zero_divisors = semiring_1_integer;
+     semiring_no_zero_divisors_semiring_1_no_zero_divisors =
+       semiring_no_zero_divisors_integer}
+    : Z.t semiring_1_no_zero_divisors);;
+
+let semiring_no_zero_divisors_cancel_integer =
+  ({semiring_no_zero_divisors_semiring_no_zero_divisors_cancel =
+      semiring_no_zero_divisors_integer}
+    : Z.t semiring_no_zero_divisors_cancel);;
+
+let uminus_integer = ({uminus = Z.neg} : Z.t uminus);;
+
+let group_add_integer =
+  ({cancel_semigroup_add_group_add = cancel_semigroup_add_integer;
+     minus_group_add = minus_integer; monoid_add_group_add = monoid_add_integer;
+     uminus_group_add = uminus_integer}
+    : Z.t group_add);;
+
+let ab_group_add_integer =
+  ({cancel_comm_monoid_add_ab_group_add = cancel_comm_monoid_add_integer;
+     group_add_ab_group_add = group_add_integer}
+    : Z.t ab_group_add);;
+
+let ring_integer =
+  ({ab_group_add_ring = ab_group_add_integer;
+     semiring_0_cancel_ring = semiring_0_cancel_integer}
+    : Z.t ring);;
+
+let ring_no_zero_divisors_integer =
+  ({ring_ring_no_zero_divisors = ring_integer;
+     semiring_no_zero_divisors_cancel_ring_no_zero_divisors =
+       semiring_no_zero_divisors_cancel_integer}
+    : Z.t ring_no_zero_divisors);;
+
+let neg_numeral_integer =
+  ({group_add_neg_numeral = group_add_integer;
+     numeral_neg_numeral = numeral_integer}
+    : Z.t neg_numeral);;
+
+let ring_1_integer =
+  ({neg_numeral_ring_1 = neg_numeral_integer; ring_ring_1 = ring_integer;
+     semiring_1_cancel_ring_1 = semiring_1_cancel_integer}
+    : Z.t ring_1);;
+
+let ring_1_no_zero_divisors_integer =
+  ({ring_1_ring_1_no_zero_divisors = ring_1_integer;
+     ring_no_zero_divisors_ring_1_no_zero_divisors =
+       ring_no_zero_divisors_integer;
+     semiring_1_no_zero_divisors_ring_1_no_zero_divisors =
+       semiring_1_no_zero_divisors_integer}
+    : Z.t ring_1_no_zero_divisors);;
+
+let comm_ring_integer =
+  ({comm_semiring_0_cancel_comm_ring = comm_semiring_0_cancel_integer;
+     ring_comm_ring = ring_integer}
+    : Z.t comm_ring);;
+
+let comm_ring_1_integer =
+  ({comm_ring_comm_ring_1 = comm_ring_integer;
+     comm_semiring_1_cancel_comm_ring_1 = comm_semiring_1_cancel_integer;
+     ring_1_comm_ring_1 = ring_1_integer}
+    : Z.t comm_ring_1);;
+
+let semidom_integer =
+  ({comm_semiring_1_cancel_semidom = comm_semiring_1_cancel_integer;
+     semiring_1_no_zero_divisors_semidom = semiring_1_no_zero_divisors_integer}
+    : Z.t semidom);;
+
+let idom_integer =
+  ({comm_ring_1_idom = comm_ring_1_integer;
+     ring_1_no_zero_divisors_idom = ring_1_no_zero_divisors_integer;
+     semidom_idom = semidom_integer;
+     comm_semiring_1_cancel_crossproduct_idom =
+       comm_semiring_1_cancel_crossproduct_integer}
+    : Z.t idom);;
+
+let divide_integer = ({divide = divide_integera} : Z.t divide);;
+
+let semidom_divide_integer =
+  ({divide_semidom_divide = divide_integer;
+     semidom_semidom_divide = semidom_integer;
+     semiring_no_zero_divisors_cancel_semidom_divide =
+       semiring_no_zero_divisors_cancel_integer}
+    : Z.t semidom_divide);;
+
+let idom_divide_integer =
+  ({idom_idom_divide = idom_integer;
+     semidom_divide_idom_divide = semidom_divide_integer}
+    : Z.t idom_divide);;
 
 let times_real_alg = ({times = times_real_alga} : real_alg times);;
 
@@ -10730,9 +11023,13 @@ type 'a nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_
   = Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
       of ('a * ('a poly * nat) list);;
 
+let rec col a j = vec (dim_row a) (fun i -> index_mat a (i, j));;
+
+let rec row a i = vec (dim_col a) (fun j -> index_mat a (i, j));;
+
 let rec filter (_A1, _A2) p a = inf_seta (_A1, _A2) a (Collect_set p);;
 
-let rec cnj z = Complex (re z, uminus_reala (im z));;
+let rec cols a = map (col a) (upt zero_nata (dim_col a));;
 
 let rec list_ex p x1 = match p, x1 with p, [] -> false
                   | p, x :: xs -> p x || list_ex p xs;;
@@ -10839,6 +11136,36 @@ let rec csqrt
             (sqrt (divide_reala (minus_reala (norm_complex z) (re z))
                     (ratreal (of_int (Int_of_integer (Z.of_int 2)))))));;
 
+let rec dim_vec_impl xa = fst (rep_vec_impl xa);;
+
+let rec dim_vec (Vec_impl v) = dim_vec_impl v;;
+
+let rec map_mat
+  f a = mat (dim_row a) (dim_col a) (fun ij -> f (index_mat a ij));;
+
+let rec one_mat (_A1, _A2)
+  n = mat n n (fun (i, j) -> (if equal_nata i j then one _A1 else zero _A2));;
+
+let rec scalar_prod _A
+  v w = sum_list _A.comm_monoid_add_semiring_0.monoid_add_comm_monoid_add
+          (map (fun i ->
+                 times _A.mult_zero_semiring_0.times_mult_zero (vec_index v i)
+                   (vec_index w i))
+            (upt zero_nata (dim_vec w)));;
+
+let rec times_mat _A
+  a b = mat (dim_row a) (dim_col b)
+          (fun (i, j) -> scalar_prod _A (row a i) (col b j));;
+
+let rec pow_mat _A
+  a k = (if equal_nata k zero_nata
+          then one_mat
+                 (_A.semiring_numeral_semiring_1.numeral_semiring_numeral.one_numeral,
+                   _A.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+                 (dim_row a)
+          else times_mat _A.semiring_0_semiring_1
+                 (pow_mat _A a (minus_nata k one_nata)) a);;
+
 let rec of_bool _A = function true -> one _A.one_zero_neq_one
                      | false -> zero _A.zero_zero_neq_one;;
 
@@ -10874,7 +11201,135 @@ let rec integer_of_char
 
 let rec implode cs = Str_Literal.literal_of_asciis (map integer_of_char cs);;
 
+let rec trivial_mute_fun _A
+  x y = (x, (y, one _A.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral));;
+
+let rec fst_sel_fun x = fst (hda x);;
+
+let rec prod_list _A
+  xs = foldr (times _A.power_monoid_mult.times_power) xs
+         (one _A.power_monoid_mult.one_power);;
+
+let rec find_non0 (_A1, _A2)
+  sel_fun l a =
+    (let is = upt (suc l) (dim_row a) in
+     let ais =
+       filtera
+         (fun (_, ail) ->
+           not (eq _A1 ail
+                 (zero _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)))
+         (map (fun i -> (i, index_mat a (i, l))) is)
+       in
+      (match ais with [] -> None | _ :: _ -> Some (sel_fun ais)));;
+
+let rec mat_addrow_gen_impl
+  xd xe xf xh xi xj =
+    Abs_mat_impl
+      (let (nr, (nc, a)) = rep_mat_impl xj in
+        (if less_nat xi nr
+          then (let ak = sub a xh in
+                let al = sub a xi in
+                let aka =
+                  of_fun (fun i -> xd (xe xf (sub al i)) (sub ak i))
+                    (min ord_nat (length ak) (length al))
+                  in
+                let aa =
+                  of_fun (fun i -> (if equal_nata i xh then aka else sub a i))
+                    (length a)
+                  in
+                 (nr, (nc, aa)))
+          else (nr, (nc, a))));;
+
+let rec mat_addrow_gen
+  ad mul aa k l (Mat_impl a) =
+    (if less_nat l (dim_row_impl a)
+      then Mat_impl (mat_addrow_gen_impl ad mul aa k l a)
+      else failwith "index out of bounds in mat_addrow"
+             (fun _ -> mat_addrow_gen ad mul aa k l (Mat_impl a)));;
+
+let rec mute (_A1, _A2)
+  mf a_ll k l (r, a) =
+    (let p = index_mat a (k, l) in
+      (if eq _A1 p
+            (zero _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+        then (r, a)
+        else (let (q, (pa, _)) = mf a_ll p in
+               (times _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd
+                  r q,
+                 mat_addrow_gen
+                   (plus _A2.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add)
+                   (times
+                     _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                   (uminus
+                     _A2.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+                     pa)
+                   k l (mat_multrow_gen
+                         (times
+                           _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                         k q a)))));;
+
+let rec sub1 (_A1, _A2)
+  mf q k l rA =
+    (if equal_nata k zero_nata then rA
+      else mute (_A1, _A2) mf q (plus_nata l (suc (minus_nata k one_nata))) l
+             (sub1 (_A1, _A2) mf q (minus_nata k one_nata) l rA));;
+
+let rec sub2 (_A1, _A2)
+  sel_fun mf d l (r, a) =
+    (match find_non0 (_A1, _A2) sel_fun l a with None -> (r, a)
+      | Some m ->
+        (let aa = mat_swaprows m l a in
+          sub1 (_A1, _A2) mf (index_mat aa (l, l)) (minus_nata d (suc l)) l
+            (uminus
+               _A2.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+               r,
+              aa)));;
+
+let rec sub3 (_A1, _A2)
+  sel_fun mf d l rA =
+    (if equal_nata l zero_nata then rA
+      else sub2 (_A1, _A2) sel_fun mf d (minus_nata l one_nata)
+             (sub3 (_A1, _A2) sel_fun mf d (minus_nata l one_nata) rA));;
+
+let rec triangulize (_A1, _A2)
+  sel_fun mf a =
+    sub3 (_A1, _A2) sel_fun mf (dim_row a) (dim_row a)
+      (one _A2.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+        a);;
+
+let rec diag_mat
+  a = map (fun i -> index_mat a (i, i)) (upt zero_nata (dim_row a));;
+
+let rec det_code (_A1, _A2)
+  sel_fun mf a =
+    (if equal_nata (dim_row a) (dim_col a)
+      then (let (m, aa) = triangulize (_A1, _A2) sel_fun mf a in
+             divide _A2.semidom_divide_idom_divide.divide_semidom_divide
+               (prod_list
+                 _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_numeral_semiring_1.monoid_mult_semiring_numeral
+                 (diag_mat aa))
+               m)
+      else zero _A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero);;
+
+let rec det (_A1, _A2)
+  a = det_code (_A1, _A2) fst_sel_fun
+        (trivial_mute_fun _A2.idom_idom_divide.comm_ring_1_idom) a;;
+
+let rec unit_vec _A
+  n i = vec n (fun j ->
+                (if equal_nata j i then one _A.one_zero_neq_one
+                  else zero _A.zero_zero_neq_one));;
+
+let rec zero_mat _A nr nc = mat nr nc (fun _ -> zero _A);;
+
+let rec zero_vec _A n = vec n (fun _ -> zero _A);;
+
 let rec monom (_A1, _A2) xa x = MPoly (single (_A1, _A2) xa x);;
+
+let rec smult_mat _A aa a = map_mat (times _A aa) a;;
+
+let rec smult_vec _A
+  a v = vec (dim_vec v) (fun i -> times _A a (vec_index v i));;
 
 let rec map_sum f1 f2 x2 = match f1, f2, x2 with f1, f2, Inl a -> Inl (f1 a)
                   | f1, f2, Inr a -> Inr (f2 a);;
@@ -11105,10 +11560,6 @@ let rec in_interval _A
 let rec in_complex_interval
   y x = (let Complex_Interval (r, i) = x in
           in_interval order_real (re y) r && in_interval order_real (im y) i);;
-
-let rec prod_list _A
-  xs = foldr (times _A.power_monoid_mult.times_power) xs
-         (one _A.power_monoid_mult.one_power);;
 
 let rec root_poly_Re
   p = (let fs =
@@ -11430,6 +11881,83 @@ let rec croot
 
 let rec croot_ca x = comp croot nat_of_integer x;;
 
+let rec carrier_vec n = Collect_set (fun v -> equal_nata (dim_vec v) n);;
+
+let rec mat_of_cols
+  n cs = mat n (size_list cs) (fun (i, j) -> vec_index (nth cs j) i);;
+
+let rec mat_to_list
+  a = map (fun i ->
+            map (fun j -> index_mat a (i, j)) (upt zero_nata (dim_col a)))
+        (upt zero_nata (dim_row a));;
+
+let rec split_block
+  a sr sc =
+    (let nr = dim_row a in
+     let nc = dim_col a in
+     let nr2 = minus_nata nr sr in
+     let nc2 = minus_nata nc sc in
+     let a1 = mat sr sc (index_mat a) in
+     let a2 = mat sr nc2 (fun (i, j) -> index_mat a (i, plus_nata j sc)) in
+     let a3 = mat nr2 sc (fun (i, j) -> index_mat a (plus_nata i sr, j)) in
+     let a4 =
+       mat nr2 nc2 (fun (i, j) -> index_mat a (plus_nata i sr, plus_nata j sc))
+       in
+      (a1, (a2, (a3, a4))));;
+
+let rec plus_mat _A
+  a b = mat (dim_row b) (dim_col b)
+          (fun ij -> plus _A (index_mat a ij) (index_mat b ij));;
+
+let rec char_poly_matrix (_A1, _A2, _A3)
+  a = plus_mat
+        (plus_poly
+          (_A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.comm_monoid_add_semiring_0,
+            _A1))
+        (smult_mat
+          (times_poly
+            (_A1, _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.comm_semiring_0_comm_semiring_1,
+              _A3))
+          (pCons
+            (_A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero,
+              _A1)
+            (zero _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+            (pCons
+              (_A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero,
+                _A1)
+              (one _A2.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
+              (zero_polya
+                _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)))
+          (one_mat
+            ((one_poly
+               _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel),
+              (zero_poly
+                _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+            (dim_row a)))
+        (map_mat
+          (fun aa ->
+            pCons (_A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero,
+                    _A1)
+              (uminus
+                _A2.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+                aa)
+              (zero_polya
+                _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+          a);;
+
+let rec char_poly (_A1, _A2)
+  a = det ((equal_poly
+             (_A2.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero,
+               _A1)),
+            (idom_divide_poly (_A1, _A2)))
+        (char_poly_matrix
+          (_A1, _A2.idom_idom_divide.comm_ring_1_idom,
+            _A2.idom_idom_divide.semidom_idom.semiring_1_no_zero_divisors_semidom.semiring_no_zero_divisors_semiring_1_no_zero_divisors)
+          a);;
+
+let rec mult_mat_vec _A
+  a v = vec (dim_row a) (fun i -> scalar_prod _A (row a i) v);;
+
 let rec shows_prec_nat x = showsp_nat x;;
 
 let rec show_factor
@@ -11580,6 +12108,8 @@ let rec show_real_alg
 
 let rec show_real x = comp show_real_alg real_alg_of_real x;;
 
+let rec coeffs_int x = coeffs zero_integer x;;
+
 let rec lcms _A
   xs = fold (lcma _A.comm_monoid_gcd_semiring_gcd.gcd_comm_monoid_gcd) xs
          (one _A.comm_monoid_gcd_semiring_gcd.gcd_comm_monoid_gcd.one_gcd);;
@@ -11588,7 +12118,312 @@ let rec int_of_rat x = fst (quotient_of x);;
 
 let rec to_int _A x = int_of_rat (to_rat _A x);;
 
+let rec char_matrix _A
+  a e = plus_mat
+          _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add
+          a (smult_mat
+              _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd
+              (uminus
+                _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+                e)
+              (one_mat
+                (_A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+                  _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+                (dim_row a)));;
+
+let rec conjugate_vec _A
+  v = vec (dim_vec v) (fun i -> conjugate _A (vec_index v i));;
+
+let rec plus_vec _A
+  v_1 v_2 =
+    vec (dim_vec v_2) (fun i -> plus _A (vec_index v_1 i) (vec_index v_2 i));;
+
+let rec adjuster _A
+  n w x2 = match n, w, x2 with
+    n, w, [] ->
+      zero_vec
+        _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+        n
+    | n, w, u :: us ->
+        plus_vec
+          _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add
+          (smult_vec
+            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd
+            (divide
+              _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
+              (uminus
+                _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+                (scalar_prod
+                  _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+                  w (conjugate_vec
+                      _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring
+                      u)))
+              (scalar_prod
+                _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+                u (conjugate_vec
+                    _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring
+                    u)))
+            u)
+          (adjuster _A n w us);;
+
+let rec four_block_mat
+  a b c d =
+    (let nra = dim_row a in
+     let nrd = dim_row d in
+     let nca = dim_col a in
+     let ncd = dim_col d in
+      mat (plus_nata nra nrd) (plus_nata nca ncd)
+        (fun (i, j) ->
+          (if less_nat i nra
+            then (if less_nat j nca then index_mat a (i, j)
+                   else index_mat b (i, minus_nata j nca))
+            else (if less_nat j nca then index_mat c (minus_nata i nra, j)
+                   else index_mat d (minus_nata i nra, minus_nata j nca)))));;
+
+let rec mat_kernel (_A1, _A2)
+  a = filter ((ceq_vec _A1), ccompare_vec)
+        (fun v ->
+          equal_vec _A1
+            (mult_mat_vec
+              _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+              a v)
+            (zero_vec
+              _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+              (dim_row a)))
+        (carrier_vec (dim_col a));;
+
+let rec kernel_basis a = mat_kernel (equal_complex, comm_ring_1_complex) a;;
+
+let rec of_integer_ca
+  x = comp (of_inta ring_1_complex) (fun a -> Int_of_integer a) x;;
+
+let rec basis_completion (_A1, _A2)
+  v = (let n = dim_vec v in
+       let drop_index =
+         hda (maps (fun i ->
+                     (if not (eq _A1 (vec_index v i)
+                               (zero _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+                       then [i] else []))
+               (upt zero_nata n))
+         in
+       let a =
+         maps (fun i ->
+                (if not (equal_nata i drop_index)
+                  then [unit_vec
+                          _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.zero_neq_one_semiring_1
+                          n i]
+                  else []))
+           (upt zero_nata n)
+         in
+        v :: a);;
+
+let rec vec_inv _A
+  v = smult_vec
+        _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd
+        (divide
+          _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
+          (one _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
+          (scalar_prod
+            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+            v (conjugate_vec
+                _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring
+                v)))
+        (conjugate_vec
+          _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring
+          v);;
+
+let rec corthogonal_inv _A
+  a = mat_of_rows (dim_row a) (map (vec_inv _A) (cols a));;
+
+let rec find_base_vector (_A1, _A2)
+  a = (let pp =
+         pivot_positions_gen _A1
+           (zero _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+           a
+         in
+       let cands =
+         filtera (fun j -> not (membera equal_nat (map snd pp) j))
+           (upt zero_nata (dim_col a))
+         in
+        non_pivot_base_gen
+          (uminus
+            _A2.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add)
+          (zero _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+          (one _A2.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
+          a pp (hda cands));;
+
+let rec eliminate_entries_gen
+  minus times v a i j =
+    mat (dim_row a) (dim_col a)
+      (fun (ia, ja) ->
+        (if not (equal_nata ia i)
+          then minus (index_mat a (ia, ja)) (times (v ia) (index_mat a (i, ja)))
+          else index_mat a (ia, ja)));;
+
+let rec gauss_jordan_main (_A1, _A2)
+  a b i j =
+    (let nr = dim_row a in
+     let nc = dim_col a in
+      (if less_nat i nr && less_nat j nc
+        then (let aij = index_mat a (i, j) in
+               (if eq _A2 aij
+                     (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+                 then (match
+                        maps (fun ia ->
+                               (if not (eq _A2 (index_mat a (ia, j))
+ (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+                                 then [ia] else []))
+                          (upt (suc i) nr)
+                        with [] -> gauss_jordan_main (_A1, _A2) a b i (suc j)
+                        | ia :: _ ->
+                          gauss_jordan_main (_A1, _A2) (mat_swaprows i ia a)
+                            (mat_swaprows i ia b) i j)
+                 else (if eq _A2 aij
+                            (one _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
+                        then (let v = (fun ia -> index_mat a (ia, j)) in
+                               gauss_jordan_main (_A1, _A2)
+                                 (eliminate_entries_gen
+                                   (minus
+                                     _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.minus_group_add)
+                                   (times
+                                     _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                   v a i j)
+                                 (eliminate_entries_gen
+                                   (minus
+                                     _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.minus_group_add)
+                                   (times
+                                     _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                   v b i j)
+                                 (suc i) (suc j))
+                        else (let iaij =
+                                inverse
+                                  _A1.division_ring_field.inverse_division_ring
+                                  aij
+                                in
+                              let aa =
+                                mat_multrow_gen
+                                  (times
+                                    _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                  i iaij a
+                                in
+                              let ba =
+                                mat_multrow_gen
+                                  (times
+                                    _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                  i iaij b
+                                in
+                              let v = (fun ia -> index_mat aa (ia, j)) in
+                               gauss_jordan_main (_A1, _A2)
+                                 (eliminate_entries_gen
+                                   (minus
+                                     _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.minus_group_add)
+                                   (times
+                                     _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                   v aa i j)
+                                 (eliminate_entries_gen
+                                   (minus
+                                     _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.minus_group_add)
+                                   (times
+                                     _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+                                   v ba i j)
+                                 (suc i) (suc j)))))
+        else (a, b)));;
+
+let rec gauss_jordan (_A1, _A2)
+  a b = gauss_jordan_main (_A1, _A2) a b zero_nata zero_nata;;
+
+let rec find_eigenvector (_A1, _A2)
+  a e = find_base_vector
+          (_A2, _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom)
+          (fst (gauss_jordan (_A1, _A2) (char_matrix _A1 a e)
+                 (zero_mat
+                   _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+                   (dim_row a) zero_nata)));;
+
+let rec gram_schmidt_sub2 _A
+  n us x2 = match n, us, x2 with n, us, [] -> []
+    | n, us, w :: ws ->
+        (let u =
+           plus_vec
+             _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add
+             (adjuster _A n w us) w
+           in
+          u :: gram_schmidt_sub2 _A n (u :: us) ws);;
+
+let rec gram_schmidt _A n ws = gram_schmidt_sub2 _A n [] ws;;
+
+let rec schur_decomposition (_A1, _A2)
+  a x1 = match a, x1 with
+    a, [] ->
+      (a, (one_mat
+             (_A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+             (dim_row a),
+            one_mat
+              (_A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+              (dim_row a)))
+    | a, e :: es ->
+        (let n = dim_row a in
+         let n1 = minus_nata n one_nata in
+         let v = find_eigenvector (_A1.field_conjugatable_field, _A2) a e in
+         let ws =
+           gram_schmidt _A1 n
+             (basis_completion
+               (_A2, _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1)
+               v)
+           in
+         let w = mat_of_cols n ws in
+         let wa = corthogonal_inv _A1 w in
+         let aa =
+           times_mat
+             _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+             (times_mat
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+               wa a)
+             w
+           in
+         let (a1, (a2, (a0, a3))) = split_block aa one_nata one_nata in
+         let (b, (p, q)) = schur_decomposition (_A1, _A2) a3 es in
+         let z_row =
+           zero_mat
+             _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+             one_nata n1
+           in
+         let z_col =
+           zero_mat
+             _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+             n1 one_nata
+           in
+         let one_1 =
+           one_mat
+             (_A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+             one_nata
+           in
+          (four_block_mat a1
+             (times_mat
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+               a2 p)
+             a0 b,
+            (times_mat
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+               w (four_block_mat one_1 z_row z_col p),
+              times_mat
+                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1
+                (four_block_mat one_1 z_row z_col q) wa)));;
+
+let rec schur_decomp
+  a es =
+    (let (b, (p, q)) =
+       schur_decomposition (conjugatable_field_complex, equal_complex)
+         (map_mat of_integer_ca a) es
+       in
+      (b, (p, q)));;
+
 let imaginary_unit : complex = Complex (zero_reala, one_reala);;
+
+let rec char_poly_int x = char_poly (equal_integer, idom_divide_integer) x;;
 
 let rec common_denom
   xs = (let nds = map quotient_of xs in
@@ -11597,6 +12432,19 @@ let rec common_denom
          (denom, a));;
 
 let rec is_int_rat x = equal_inta (snd (quotient_of x)) one_inta;;
+
+let rec gauss_jordan_single (_A1, _A2)
+  a = fst (gauss_jordan (_A1, _A2) a
+            (zero_mat
+              _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero
+              (dim_row a) zero_nata));;
+
+let rec kernel_dim (_A1, _A2)
+  a = minus_nata (dim_col a)
+        (size_list
+          (pivot_positions_gen _A2
+            (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)
+            (gauss_jordan_single (_A1, _A2) a)));;
 
 let rec show_complex
   x = (let r = re x in
@@ -11638,6 +12486,27 @@ let rec rat_to_int_poly
 
 let rec showsp_complex p x y = show_complex x @ y;;
 
+let rec mat_addcol _A
+  aa k l a =
+    mat (dim_row a) (dim_col a)
+      (fun (i, j) ->
+        (if equal_nata k j
+          then plus _A.semiring_numeral_semiring_1.numeral_semiring_numeral.semigroup_add_numeral.plus_semigroup_add
+                 (times
+                   _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power
+                   aa (index_mat a (i, l)))
+                 (index_mat a (i, j))
+          else index_mat a (i, j)));;
+
+let rec mat_multcol _A
+  k aa a =
+    mat (dim_row a) (dim_col a)
+      (fun (i, j) ->
+        (if equal_nata k j
+          then times _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power
+                 aa (index_mat a (i, j))
+          else index_mat a (i, j)));;
+
 let rec of_rat _A
   p = (let (a, b) = quotient_of p in
         divide
@@ -11646,6 +12515,36 @@ let rec of_rat _A
           (of_inta _A.ring_char_0_field_char_0.ring_1_ring_char_0 b));;
 
 let rec showsp_real_alg p x y = show_real_alg x @ y;;
+
+let rec mat_swapcols
+  k l a =
+    mat (dim_row a) (dim_col a)
+      (fun (i, j) ->
+        (if equal_nata k j then index_mat a (i, l)
+          else (if equal_nata l j then index_mat a (i, k)
+                 else index_mat a (i, j))));;
+
+let rec dim_gen_eigenspace (_A1, _A2)
+  a ev k =
+    kernel_dim (_A1, _A2)
+      (pow_mat
+        _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1
+        (char_matrix _A1 a ev) k);;
+
+let rec dim_gen_eigenspace_ca
+  x = dim_gen_eigenspace (field_complex, equal_complex) x;;
+
+let rec swap_cols_rows k l a = mat_swaprows k l (mat_swapcols k l a);;
+
+let rec add_col_sub_row _A
+  aa k l a =
+    mat_addrow_gen
+      (plus _A.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add)
+      (times
+        _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power)
+      (uminus _A.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add aa) k
+      l (mat_addcol _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel aa
+          l k a);;
 
 let rec
   rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
@@ -11959,6 +12858,180 @@ let rec resultant_impl_basic (_A1, _A2)
                           _A2.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
                           res)));;
 
+let rec mult_col_div_row _A
+  aa k a =
+    mat_multrow_gen
+      (times
+        _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.comm_monoid_mult_comm_semiring_1.dvd_comm_monoid_mult.times_dvd)
+      k (inverse _A.division_ring_field.inverse_division_ring aa)
+      (mat_multcol
+        _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1
+        k aa a);;
+
+let rec step_1_main (_A1, _A2)
+  n i j a =
+    (if less_eq_nat n j then a
+      else (if equal_nata i zero_nata
+             then step_1_main (_A1, _A2) n (plus_nata j one_nata)
+                    (plus_nata j one_nata) a
+             else (let ia = minus_nata i one_nata in
+                   let ev_left = index_mat a (ia, ia) in
+                   let ev_below = index_mat a (j, j) in
+                   let aij = index_mat a (ia, j) in
+                   let aa =
+                     (if not (eq _A2 ev_left ev_below) &&
+                           not (eq _A2 aij
+                                 (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+                       then add_col_sub_row
+                              _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+                              (divide
+                                _A1.division_ring_field.inverse_division_ring.divide_inverse
+                                aij (minus
+                                      _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.minus_group_add
+                                      ev_below ev_left))
+                              ia j a
+                       else a)
+                     in
+                    step_1_main (_A1, _A2) n ia j aa)));;
+
+let rec step_1 (_A1, _A2)
+  a = step_1_main (_A1, _A2) (dim_row a) zero_nata zero_nata a;;
+
+let rec swap_cols_rows_block
+  i j a =
+    (if less_nat i j then swap_cols_rows_block (suc i) j (swap_cols_rows i j a)
+      else a);;
+
+let rec lookup_ev _A
+  ev i a =
+    (if equal_nata i zero_nata then None
+      else (if eq _A (index_mat a
+                       (minus_nata i one_nata, minus_nata i one_nata))
+                 ev
+             then Some (minus_nata i one_nata)
+             else lookup_ev _A ev (minus_nata i one_nata) a));;
+
+let rec step_2_main (_A1, _A2)
+  n j a =
+    (if less_eq_nat n j then a
+      else (let ev = index_mat a (j, j) in
+            let aa =
+              (match lookup_ev _A2 ev j a with None -> a
+                | Some i -> swap_cols_rows_block (suc i) j a)
+              in
+             step_2_main (_A1, _A2) n (suc j) aa));;
+
+let rec step_2 (_A1, _A2) a = step_2_main (_A1, _A2) (dim_row a) zero_nata a;;
+
+let rec find_largest_block
+  block x1 = match block, x1 with block, [] -> block
+    | (m_start, m_end), (i_start, i_end) :: blocks ->
+        (if less_eq_nat (minus_nata m_end m_start) (minus_nata i_end i_start)
+          then find_largest_block (i_start, i_end) blocks
+          else find_largest_block (m_start, m_end) blocks);;
+
+let rec identify_block (_A1, _A2)
+  a i = (if equal_nata i zero_nata then zero_nata
+          else (if eq _A2
+                     (index_mat a
+                       (minus_nata i one_nata, suc (minus_nata i one_nata)))
+                     (one _A1)
+                 then identify_block (_A1, _A2) a (minus_nata i one_nata)
+                 else suc (minus_nata i one_nata)));;
+
+let rec identify_blocks_main (_A1, _A2)
+  a i_end lista =
+    (if equal_nata i_end zero_nata then lista
+      else (let i_begin =
+              identify_block
+                (_A2.neg_numeral_ring_1.numeral_neg_numeral.one_numeral, _A1) a
+                (minus_nata i_end one_nata)
+              in
+             identify_blocks_main (_A1, _A2) a i_begin
+               ((i_begin, minus_nata i_end one_nata) :: lista)));;
+
+let rec identify_blocks (_A1, _A2)
+  a i = identify_blocks_main (_A1, _A2) a i [];;
+
+let rec step_3_c_inner_loop _A
+  vala l i k a =
+    (if equal_nata k zero_nata then a
+      else step_3_c_inner_loop _A vala (minus_nata l one_nata)
+             (minus_nata i one_nata) (minus_nata k one_nata)
+             (add_col_sub_row
+               _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+               vala i l a));;
+
+let rec step_3_c _A
+  x l k xa3 a = match x, l, k, xa3, a with x, l, k, [], a -> a
+    | x, l, k, (i_begin, i_end) :: blocks, a ->
+        (let aa =
+           (if equal_nata i_end l then a
+             else step_3_c_inner_loop _A
+                    (divide
+                      _A.division_ring_field.inverse_division_ring.divide_inverse
+                      (index_mat a (i_end, k)) x)
+                    l i_end (minus_nata (suc i_end) i_begin) a)
+           in
+          step_3_c _A x l k blocks aa);;
+
+let rec step_3_a (_A1, _A2)
+  i j a =
+    (if equal_nata i zero_nata then a
+      else (let aij = index_mat a (minus_nata i one_nata, j) in
+            let aa =
+              (if eq _A2
+                    (index_mat a
+                      (minus_nata i one_nata,
+                        plus_nata (minus_nata i one_nata) one_nata))
+                    (one _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral) &&
+                    not (eq _A2 aij
+                          (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero))
+                then add_col_sub_row
+                       _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+                       (uminus
+                         _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add
+                         aij)
+                       (suc (minus_nata i one_nata)) j a
+                else a)
+              in
+             step_3_a (_A1, _A2) (minus_nata i one_nata) j aa));;
+
+let rec step_3_main (_A1, _A2)
+  n k a =
+    (if less_eq_nat n k then a
+      else (let b = step_3_a (_A1, _A2) (minus_nata k one_nata) k a in
+            let all_blocks =
+              identify_blocks
+                (_A2, _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1)
+                b k
+              in
+            let blocks =
+              filtera
+                (fun block ->
+                  not (eq _A2 (index_mat b (snd block, k))
+                        (zero _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom.comm_semiring_1_comm_semiring_1_cancel.semiring_1_comm_semiring_1.semiring_0_semiring_1.mult_zero_semiring_0.zero_mult_zero)))
+                all_blocks
+              in
+            let aa =
+              (if null blocks then b
+                else (let (_, l) = find_largest_block (hda blocks) (tla blocks)
+                        in
+                      let x = index_mat b (l, k) in
+                      let c = step_3_c _A1 x l k blocks b in
+                      let d =
+                        mult_col_div_row _A1
+                          (inverse _A1.division_ring_field.inverse_division_ring
+                            x)
+                          k c
+                        in
+                      let e = swap_cols_rows_block (suc l) k d in
+                       e))
+              in
+             step_3_main (_A1, _A2) n (suc k) aa));;
+
+let rec step_3 (_A1, _A2) a = step_3_main (_A1, _A2) (dim_row a) one_nata a;;
+
 let rec mpoly_to_poly (_A1, _A2, _A3, _A4, _A5)
   x p = Poly (let i =
                 image ((ceq_poly_mapping
@@ -12167,6 +13240,51 @@ let rec complex_roots_of_real_poly
   x = comp complex_roots_of_complex_poly
         (map (fun r -> of_real_imag_ca (r, zero_real_alga))) x;;
 
+let rec lookup_other_ev _A
+  ev i a =
+    (if equal_nata i zero_nata then None
+      else (if not (eq _A
+                     (index_mat a
+                       (minus_nata i one_nata, minus_nata i one_nata))
+                     ev)
+             then Some (minus_nata i one_nata)
+             else lookup_other_ev _A ev (minus_nata i one_nata) a));;
+
+let rec partition_ev_blocks _A
+  a bs =
+    (let n = dim_row a in
+      (if equal_nata n zero_nata then bs
+        else (match
+               lookup_other_ev _A
+                 (index_mat a (minus_nata n one_nata, minus_nata n one_nata))
+                 (minus_nata n one_nata) a
+               with None -> a :: bs
+               | Some i ->
+                 (let (ul, (_, (_, lr))) = split_block a (suc i) (suc i) in
+                   partition_ev_blocks _A ul (lr :: bs)))));;
+
+let rec jnf_vector_main (_A1, _A2)
+  i_end a =
+    (if equal_nata i_end zero_nata then []
+      else (let i_start =
+              identify_block (_A1, _A2) a (minus_nata i_end one_nata) in
+             jnf_vector_main (_A1, _A2) i_start a @
+               [(minus_nata (suc (minus_nata i_end one_nata)) i_start,
+                  index_mat a (i_start, i_start))]));;
+
+let rec jnf_vector (_A1, _A2) a = jnf_vector_main (_A1, _A2) (dim_row a) a;;
+
+let rec triangular_to_jnf_vector (_A1, _A2)
+  a = (let b = step_2 (_A1, _A2) (step_1 (_A1, _A2) a) in
+        maps (comp (jnf_vector
+                     (_A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral,
+                       _A2))
+               (step_3 (_A1, _A2)))
+          (partition_ev_blocks _A2 b []));;
+
+let rec triangular_to_jnf_vector_ca
+  x = triangular_to_jnf_vector (field_complex, equal_complex) x;;
+
 let rec abs_ra x = abs_real_alga x;;
 
 let one_ca : complex = one_complexa;;
@@ -12267,9 +13385,6 @@ let rec decompose_ra
 let imag_unit_ca : complex = imaginary_unit;;
 
 let rec less_equal_ra x = less_eq_real_alg x;;
-
-let rec of_integer_ca
-  x = comp (of_inta ring_1_complex) (fun a -> Int_of_integer a) x;;
 
 let rec of_integer_ra
   x = comp (of_inta ring_1_real_alg) (fun a -> Int_of_integer a) x;;

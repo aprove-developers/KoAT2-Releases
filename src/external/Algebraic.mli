@@ -39,18 +39,35 @@ module Algebraic :
   sig
     type int
     type ordera = Eq | Lt | Gt
+    type 'a set
     type nat
+    val integer_of_nat : nat -> Z.t
+    val nat_of_integer : Z.t -> nat
     type char
     type rat
     type 'a poly
     type real_alg
     type real
+    type 'a mat_impl
+    type 'a mat
+    type 'a vec
+    val mat : nat -> nat -> (nat * nat -> 'a) -> 'a mat
     type complex
     type ('a, 'b) sum = Inl of 'a | Inr of 'b
+    val map_mat : ('a -> 'b) -> 'a mat -> 'b mat
     val croot_ca : Z.t -> complex -> complex
+    val mat_to_list : 'a mat -> 'a list list
+    val coeffs_int : Z.t poly -> Z.t list
+    val kernel_basis : complex mat -> complex vec set
+    val of_integer_ca : Z.t -> complex
+    val schur_decomp :
+      Z.t mat -> complex list -> complex mat * (complex mat * complex mat)
+    val char_poly_int : Z.t mat -> Z.t poly
+    val dim_gen_eigenspace_ca : complex mat -> complex -> nat -> nat
     val of_real_imag_ca : real_alg * real_alg -> complex
     val complex_roots_of_complex_poly : complex list -> complex list
     val complex_roots_of_real_poly : real_alg list -> complex list
+    val triangular_to_jnf_vector_ca : complex mat -> (nat * complex) list
     val abs_ra : real_alg -> real_alg
     val one_ca : complex
     val one_ra : real_alg
@@ -89,7 +106,6 @@ module Algebraic :
     val decompose_ra : real_alg -> (Z.t * Z.t, Z.t list * Z.t) sum
     val imag_unit_ca : complex
     val less_equal_ra : real_alg -> real_alg -> bool
-    val of_integer_ca : Z.t -> complex
     val of_integer_ra : Z.t -> real_alg
     val is_rational_ra : real_alg -> bool
     val of_rational_ca : Z.t * Z.t -> complex

@@ -3,6 +3,12 @@ theory Algebraic
     Algebraic_Numbers.Algebraic_Numbers_External_Code
     Factor_Algebraic_Polynomial.Roots_of_Real_Complex_Poly    
     Cubic_Quartic_Equations.Complex_Roots
+    Jordan_Normal_Form.Matrix
+    Jordan_Normal_Form.Char_Poly
+    Jordan_Normal_Form.Schur_Decomposition
+    Jordan_Normal_Form.Jordan_Normal_Form_Existence
+    Jordan_Normal_Form.Matrix_Kernel
+    Jordan_Normal_Form.Jordan_Normal_Form_Uniqueness
 begin
 
 definition complex_roots_of_complex_poly :: "complex list \<Rightarrow> complex list" where
@@ -20,6 +26,24 @@ definition complex_roots_of_integer_poly :: "integer list \<Rightarrow> complex 
 
 definition croot_ca :: "integer \<Rightarrow> complex \<Rightarrow> complex" where
   "croot_ca = croot o nat_of_integer" 
+
+definition char_poly_int :: "integer mat \<Rightarrow> integer poly" where
+  "char_poly_int = char_poly"
+
+definition coeffs_int :: "integer poly \<Rightarrow> integer list" where
+  "coeffs_int = coeffs"
+
+definition schur_decomp :: "integer mat \<Rightarrow> complex list \<Rightarrow> complex mat \<times> complex mat \<times> complex mat" where 
+  "schur_decomp A es = (case schur_decomposition (map_mat of_integer_ca A) es of (B,P,Q) \<Rightarrow> (B,P,Q))"
+
+definition triangular_to_jnf_vector_ca :: "complex mat \<Rightarrow> (nat \<times> complex) list" where
+  "triangular_to_jnf_vector_ca = triangular_to_jnf_vector"
+
+definition dim_gen_eigenspace_ca :: "complex mat \<Rightarrow> complex \<Rightarrow> nat \<Rightarrow> nat" where
+  "dim_gen_eigenspace_ca = dim_gen_eigenspace"
+
+definition kernel_basis :: "complex mat \<Rightarrow> complex vec set" where
+  "kernel_basis A = mat_kernel A"
 
 export_code 
 
@@ -80,7 +104,22 @@ export_code
   complex_roots_of_rational_poly
   complex_roots_of_real_poly
   complex_roots_of_complex_poly
+  coeffs_int
 
-in OCaml module_name Algebraic 
+  (* JNF *)
+  char_poly_int
+  schur_decomp
+  triangular_to_jnf_vector_ca
+  dim_gen_eigenspace_ca
+  kernel_basis
+
+  (* Matrix *)
+  mat
+  map_mat
+  nat_of_integer
+  integer_of_nat
+  mat_to_list
+
+in OCaml module_name Algebraic
 
 end
