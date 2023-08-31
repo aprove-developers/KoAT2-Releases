@@ -223,6 +223,19 @@ module Methods = struct
                       [ of_int (-1); of_int 3; of_int (-2) ],
                       [ of_string "a"; of_string "b"; of_string "c" ] );
                   ];
+          (* "of_coeff"
+          >::: List.map
+                  (fun (expected, coeffs, var) ->
+                    expected >:: fun _ ->
+                    assert_equal_poly
+                      (Polynomial.of_coeff coeffs var)
+                      (Readers.read_polynomial expected))
+                  [
+                    ( "0", [], of_string "x");
+                    ( "3", [of_int 3], of_string "x");
+                    ( "3+5*x", [of_int 3; of_int 5], of_string "x");
+                    ( "3+5*x+7*x^2+11*x^3", [of_int 3; of_int 5; of_int 7; of_int 11], of_string "x");
+                  ]; *)
            "Math"
            >::: [
                   ( "zero" >:: fun _ ->
