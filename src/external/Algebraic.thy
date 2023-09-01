@@ -3,7 +3,8 @@ theory Algebraic
     Algebraic_Numbers.Algebraic_Numbers_External_Code
     Factor_Algebraic_Polynomial.Roots_of_Real_Complex_Poly    
     Cubic_Quartic_Equations.Complex_Roots
-    Jordan_Normal_Form.Matrix
+    Jordan_Normal_Form.Gauss_Jordan_Elimination 
+    Jordan_Normal_Form.Matrix_IArray_Impl
     Jordan_Normal_Form.Char_Poly
     Jordan_Normal_Form.Schur_Decomposition
     Jordan_Normal_Form.Jordan_Normal_Form_Existence
@@ -42,8 +43,17 @@ definition triangular_to_jnf_vector_ca :: "complex mat \<Rightarrow> (nat \<time
 definition dim_gen_eigenspace_ca :: "complex mat \<Rightarrow> complex \<Rightarrow> nat \<Rightarrow> nat" where
   "dim_gen_eigenspace_ca = dim_gen_eigenspace"
 
-definition kernel_basis :: "complex mat \<Rightarrow> complex vec set" where
-  "kernel_basis A = mat_kernel A"
+definition gen_eigenvector_ca :: "complex mat \<Rightarrow> complex \<Rightarrow> nat \<Rightarrow> complex mat" where
+  "gen_eigenvector_ca A ev k = gauss_jordan_single ((char_matrix A ev) ^\<^sub>m k)"
+
+definition mat_inv_ca :: "complex mat \<Rightarrow> complex mat option" where
+  "mat_inv_ca = mat_inverse"
+
+definition plus_mat :: "('a :: plus) mat \<Rightarrow> 'a mat \<Rightarrow> 'a mat" where
+  "plus_mat A B \<equiv> mat (dim_row B) (dim_col B) (\<lambda> ij. A $$ ij + B $$ ij)"
+
+definition gauss_jordan_single_ca :: "complex mat \<Rightarrow> complex mat" where
+  "gauss_jordan_single_ca = gauss_jordan_single"
 
 export_code 
 
@@ -111,14 +121,38 @@ export_code
   schur_decomp
   triangular_to_jnf_vector_ca
   dim_gen_eigenspace_ca
-  kernel_basis
 
   (* Matrix *)
   mat
   map_mat
+  mat_to_list
   nat_of_integer
   integer_of_nat
-  mat_to_list
+  dim_row
+  dim_col
+  index_mat
+  upper_triangular
+  row
+  rows
+  col
+  cols
+  zero_mat
+  smult_mat
+  transpose_mat
+  mat_inv_ca
+  plus_mat
+  gauss_jordan_single_ca
+
+
+  (* Vector *)
+  vec
+  map_vec
+  vec_of_list
+  list_of_vec
+  dim_vec
+  scalar_prod
+  smult_vec
+  vec_index
 
 in OCaml module_name Algebraic
 

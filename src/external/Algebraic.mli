@@ -1,69 +1,58 @@
-module Uint32 :
-  sig
-    val less : int32 -> int32 -> bool
-    val less_eq : int32 -> int32 -> bool
-    val set_bit : int32 -> Z.t -> bool -> int32
-    val shiftl : int32 -> Z.t -> int32
-    val shiftr : int32 -> Z.t -> int32
-    val shiftr_signed : int32 -> Z.t -> int32
-    val test_bit : int32 -> Z.t -> bool
-  end
-module Uint64 :
-  sig
-    val less : int64 -> int64 -> bool
-    val less_eq : int64 -> int64 -> bool
-    val set_bit : int64 -> Z.t -> bool -> int64
-    val shiftl : int64 -> Z.t -> int64
-    val shiftr : int64 -> Z.t -> int64
-    val shiftr_signed : int64 -> Z.t -> int64
-    val test_bit : int64 -> Z.t -> bool
-  end
-module Integer_Bit :
-  sig
-    val test_bit : Z.t -> Z.t -> bool
-    val shiftl : Z.t -> Z.t -> Z.t
-    val shiftr : Z.t -> Z.t -> Z.t
-  end
-module Str_Literal :
-  sig
-    val implode : ('a -> char) -> 'a list -> string
-    val explode : (char -> 'a) -> string -> 'a list
-    val z_128 : Z.t
-    val check_ascii : Z.t -> Z.t
-    val char_of_ascii : Z.t -> char
-    val ascii_of_char : char -> Z.t
-    val literal_of_asciis : Z.t list -> string
-    val asciis_of_literal : string -> Z.t list
-  end
 module Algebraic :
   sig
     type int
+    type 'a times = { times : 'a -> 'a -> 'a; }
     type ordera = Eq | Lt | Gt
-    type 'a set
+    type 'a zero = { zero : 'a; }
+    type 'a equal = { equal : 'a -> 'a -> bool; }
     type nat
     val integer_of_nat : nat -> Z.t
     val nat_of_integer : Z.t -> nat
     type char
+    type 'a plus = { plus : 'a -> 'a -> 'a; }
+    type 'a semiring_0
     type rat
     type 'a poly
     type real_alg
     type real
     type 'a mat_impl
     type 'a mat
+    type 'a vec_impl
     type 'a vec
+    val vec_index : 'a vec -> nat -> 'a
     val mat : nat -> nat -> (nat * nat -> 'a) -> 'a mat
+    val vec : nat -> (nat -> 'a) -> 'a vec
+    val index_mat : 'a mat -> nat * nat -> 'a
+    val dim_row : 'a mat -> nat
+    val dim_col : 'a mat -> nat
+    val transpose_mat : 'a mat -> 'a mat
+    val list_of_vec : 'a vec -> 'a list
     type complex
     type ('a, 'b) sum = Inl of 'a | Inr of 'b
+    val col : 'a mat -> nat -> 'a vec
+    val row : 'a mat -> nat -> 'a vec
+    val cols : 'a mat -> 'a vec list
+    val rows : 'a mat -> 'a vec list
+    val dim_vec : 'a vec -> nat
     val map_mat : ('a -> 'b) -> 'a mat -> 'b mat
+    val map_vec : ('a -> 'b) -> 'a vec -> 'b vec
+    val scalar_prod : 'a semiring_0 -> 'a vec -> 'a vec -> 'a
+    val zero_mat : 'a zero -> nat -> nat -> 'a mat
+    val smult_mat : 'a times -> 'a -> 'a mat -> 'a mat
+    val smult_vec : 'a times -> 'a -> 'a vec -> 'a vec
     val croot_ca : Z.t -> complex -> complex
+    val plus_mat : 'a plus -> 'a mat -> 'a mat -> 'a mat
     val mat_to_list : 'a mat -> 'a list list
+    val vec_of_list : 'a list -> 'a vec
     val coeffs_int : Z.t poly -> Z.t list
-    val kernel_basis : complex mat -> complex vec set
+    val mat_inv_ca : complex mat -> complex mat option
     val of_integer_ca : Z.t -> complex
     val schur_decomp :
       Z.t mat -> complex list -> complex mat * (complex mat * complex mat)
     val char_poly_int : Z.t mat -> Z.t poly
+    val upper_triangular : 'a zero * 'a equal -> 'a mat -> bool
     val dim_gen_eigenspace_ca : complex mat -> complex -> nat -> nat
+    val gauss_jordan_single_ca : complex mat -> complex mat
     val of_real_imag_ca : real_alg * real_alg -> complex
     val complex_roots_of_complex_poly : complex list -> complex list
     val complex_roots_of_real_poly : real_alg list -> complex list
