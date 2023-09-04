@@ -18,6 +18,12 @@
 (license LICENSE)
 
 (package
+ (name koat2_external)
+ (synopsis "External (automatically generated files) for KoAT2")
+ (depends (z3 (= 4.12.2)))
+)
+
+(package
  (name koat2)
  (synopsis "KoAT2: Runtime Analysis of Integer Programs")
  (depends
@@ -43,7 +49,6 @@
    ppx_sexp_conv
    zarith
    (z3 (= 4.12.2))
+   koat2_external
    )
  )
-
-

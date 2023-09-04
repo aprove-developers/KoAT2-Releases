@@ -1,5 +1,5 @@
 open! OurBase
-open Algebraic.Algebraic
+open Koat2_external.Algebraic.Algebraic
 
 type t = real_alg
 

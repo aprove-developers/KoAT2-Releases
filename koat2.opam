@@ -30,6 +30,7 @@ depends: [
   "ppx_sexp_conv"
   "zarith"
   "z3" {= "4.12.2"}
+  "koat2_external"
 ]
 build: [
   ["dune" "subst"] {dev}

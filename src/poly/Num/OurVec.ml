@@ -1,6 +1,5 @@
 open OurBase
-open Algebraic.Algebraic
-open Polynomials
+open Koat2_external.Algebraic.Algebraic
 
 module VectorOver (Value : PolyTypes.Ring) = struct
   type 'a t = 'a vec
@@ -8,14 +7,14 @@ module VectorOver (Value : PolyTypes.Ring) = struct
   let of_list = vec_of_list
   let to_list = list_of_vec
   let map = map_vec
-  let dim_vec vec = (OurInt.to_int % integer_of_nat % Algebraic.Algebraic.dim_vec) vec
+  let dim_vec vec = (OurInt.to_int % integer_of_nat % dim_vec) vec
 
   exception VectorIndexOutOfRange
   let index vec n =
     if n < 0 || n >= dim_vec vec then
       raise VectorIndexOutOfRange
     else
-      Algebraic.Algebraic.vec_index vec (nat_of_integer @@ OurInt.of_int n)
+      vec_index vec (nat_of_integer @@ OurInt.of_int n)
 
   let to_string vec = Util.sequence_to_string ~f:Value.to_string (Sequence.of_list vec)
 

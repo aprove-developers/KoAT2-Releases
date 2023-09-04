@@ -1,5 +1,5 @@
 open OurBase
-open Algebraic.Algebraic
+open Koat2_external.Algebraic.Algebraic
 open Polynomials
 
 module MatrixOver (Value : PolyTypes.Ring) = struct
@@ -11,22 +11,22 @@ module MatrixOver (Value : PolyTypes.Ring) = struct
 
   let to_list = mat_to_list
   let map = map_mat
-  let rows = Algebraic.Algebraic.rows
-  let cols = Algebraic.Algebraic.cols
-  let dim_row mat = (OurInt.to_int % integer_of_nat % Algebraic.Algebraic.dim_row) mat
-  let dim_col mat = (OurInt.to_int % integer_of_nat % Algebraic.Algebraic.dim_col) mat
+  let rows = rows
+  let cols = cols
+  let dim_row mat = (OurInt.to_int % integer_of_nat % dim_row) mat
+  let dim_col mat = (OurInt.to_int % integer_of_nat % dim_col) mat
   exception MatrixIndexOutOfRange
   let row mat n =
     if n < 0 || n >= dim_row mat then
       raise MatrixIndexOutOfRange
     else
-      Algebraic.Algebraic.row mat (nat_of_integer @@ OurInt.of_int n)
+      row mat (nat_of_integer @@ OurInt.of_int n)
 
   let col mat m =
     if m < 0 || m >= dim_col mat then
       raise MatrixIndexOutOfRange
     else
-      Algebraic.Algebraic.col mat (nat_of_integer @@ OurInt.of_int m)
+      col mat (nat_of_integer @@ OurInt.of_int m)
 
   let index mat m n =
     if n < 0 || n >= dim_row mat || m < 0 || m >= dim_col mat then
