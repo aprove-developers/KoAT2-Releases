@@ -6,8 +6,7 @@
  (public_name koat2_external)
  (name koat2_external)
  (libraries z3)
- (modules Algebraic)
-)
+ (modules Algebraic))
 
 (env
  (release
@@ -18,5 +17,3 @@
  (dev
   (flags
    (:standard -g -w +A-3-4-8-20-27-32-37-39-40-42-44-45-48-66-69))))
-
-

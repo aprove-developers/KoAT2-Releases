@@ -22,6 +22,7 @@ let of_ourint = identity
 let is_negative a = Compare.(zero > a)
 let is_ge = Compare.( >= )
 let is_gt = Compare.( > )
+let log x = of_int (Z.log2 x) + one
 
 let rec lcm_list = function
   | [] -> one
