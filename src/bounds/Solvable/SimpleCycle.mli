@@ -16,7 +16,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
     ?transformation_type:[< `NoTransformation | `TWNTransform > `NoTransformation ] ->
-    (Formula.t * Polynomial.t var_map -> bool) ->
+    (Formula.t * Polynomial.t var_map -> Transition.t -> bool) ->
     Program.t ->
     (TransitionSet.location * TransitionLabel.t * TransitionSet.location, 'a) Base.Set.t ->
     TransitionSet.location * TransitionLabel.t * TransitionSet.location ->

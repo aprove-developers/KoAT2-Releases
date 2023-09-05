@@ -103,7 +103,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       | None -> []
       | Some trans ->
           let all_cycles =
-            SimpleCycle.find_all_loops (create_proof trans) (requirement_for_cycle conf) program scc trans
+            SimpleCycle.find_all_loops (create_proof trans)
+              (fun loop _entry_trans -> requirement_for_cycle conf loop)
+              program scc trans
           in
           let scc' = Set.remove scc trans in
           List.append all_cycles (loop scc')
@@ -152,7 +154,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               TimeBoundTable.add termination_table (l, t, l') [ ((l, t, l'), false) ]
             in
             (* find all loops copies the proof output *)
-            SimpleCycle.find_all_loops !twn_proofs (requirement_for_cycle conf) program scc (l, t, l')
+            SimpleCycle.find_all_loops !twn_proofs
+              (fun loop entry_trans ->
+                (* We should really use UnliftedBounds here to provide the lifting instead of manually checking whether all incoming time bounds are finite *)
+                requirement_for_cycle conf loop && Approximation.is_time_bounded appr entry_trans)
+              program scc (l, t, l')
             |> Base.List.hd
             |> Option.map (fun with_proof ->
                    ProofOutput.LocalProofOutput.(with_proof.result, with_proof.proof))

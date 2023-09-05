@@ -147,7 +147,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     List.filter_map (fun cycle ->
         let twn_proofs = ProofOutput.LocalProofOutput.copy twn_proofs in
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
-        if List.for_all (fun (entry, loop) -> choose_circle loop) chained_cycle then (
+        if List.for_all (fun (entry, loop) -> choose_circle loop entry) chained_cycle then (
           let handled_transitions = handled_transitions cycle in
           TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions
             (Program.entry_transitions_with_logger logger program handled_transitions);
