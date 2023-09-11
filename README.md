@@ -5,7 +5,8 @@ Reimplementation of KoAT (see [here](https://koat.verify.rwth-aachen.de/) for mo
 
 ### Build directly from source code
 
-1. Use `opam init https://github.com/aprove-developers/opam-repository.git` and follow the instructions to set up Opam and install OCaml 4.06.1 if necessary
+1. Make sure [opam](https://opam.ocaml.org/) is installed
+1. Use `opam init https://github.com/aprove-developers/opam-repository.git` and follow the instructions to set up Opam and install OCaml if necessary
 2. `opam install -j$(nproc) . --deps-only`
       * requires the _gmp_ and _mpfr_ libraries
 3. Run `dune build` to build KoAT2
