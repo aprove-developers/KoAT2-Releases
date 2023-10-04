@@ -22,6 +22,8 @@ module Inner = struct
     { id = Unique.unique (); update = t.update; guard = t.guard; invariant = t.invariant; cost = t.cost }
 
 
+  let copy_rename _gt_rename_map t = fresh_id t
+
   let equivalent lbl1 lbl2 =
     Map.equal Polynomial.equal lbl1.update lbl2.update
     && Guard.equal lbl1.guard lbl2.guard

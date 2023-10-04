@@ -56,3 +56,8 @@ val rename : RenameMap.t -> t -> t
 
 val rename_temp_vars : t -> Var.t Sequence.t -> t
 (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
+
+val copy_rename : (int, int) Hashtbl.t -> t -> t
+(** Create an equivalent label with new id's, takes gt_id from the provided table and
+      if not available creates and adds a new id_for the general transition to the table.
+      *)

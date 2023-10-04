@@ -20,6 +20,8 @@ module type Location = sig
   val to_string : t -> string
   (** Returns a string representing a location. *)
 
+  val of_string : string -> t
+
   include Comparator.S with type t := t
 
   val sexp_of_t : t -> Sexp.t
@@ -172,6 +174,11 @@ module type ClassicalTransitionLabel = sig
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
+
+  (** Create an equivalent label with new id's, takes gt_id from the provided table and
+      if not available creates and adds a new id_for the general transition to the table.
+      *)
+  (* val copy_rename: (int, int) Hashtbl.t -> t -> t *)
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)

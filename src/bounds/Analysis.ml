@@ -2,10 +2,12 @@ open Batteries
 open Bounds
 open Polynomials
 
+type cfr_method = Chaining | PartialEvaluationIRankFinder | PartialEvaluationNative of bool * int * bool
+
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
 type !'prog_modules_t cfr_configuration =
   | NoCFR : 'a cfr_configuration
-  | PerformCFR : [ `Chaining | `PartialEvaluation ] list -> ProgramModules.program_modules_t cfr_configuration
+  | PerformCFR : cfr_method list -> ProgramModules.program_modules_t cfr_configuration
 
 type !'prog_modules_t closed_form_size_bounds =
   | NoClosedFormSizeBounds : 'a closed_form_size_bounds
@@ -44,6 +46,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module LSB_Table = Hashtbl.Make (PM.RV)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (PM)
+  module PENative = NativePartialEvaluation.ClassicPartialEvaluation (ProgramModules)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module SizeBounds_ = SizeBounds
@@ -542,28 +545,102 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               | `Termination -> handle_cfr_termination ()
               | `Complexity -> handle_cfr_complexity ())
         in
+        let compute_non_linear_transitions program appr =
+          Base.Set.filter
+            ~f:(not % Bound.is_linear % Approximation.timebound appr)
+            (Base.Set.inter scc (Program.transitions program))
+        in
         let partial_evaluation (program, appr, rvg) =
-          let non_linear_transitions =
-            Base.Set.filter
-              ~f:(not % Bound.is_linear % Approximation.timebound appr)
-              (Base.Set.inter scc (Program.transitions program))
+          let program, appr, rvg =
+            if List.mem Chaining cfr then
+              let opt =
+                Timeout.timed_run 10.
+                  ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                  (fun () ->
+                    apply_cfr "chaining"
+                      (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc)))
+                      (fun _ _ -> ())
+                      rvg 10. non_linear_transitions ~preprocess program appr)
+              in
+              match opt with
+              | Some (res, _time_used) -> res
+              | None -> (program, appr, rvg)
+            else
+              (program, appr, rvg)
           in
-          let time = PartialEvaluation.compute_timeout_time program appr scc in
-          Timeout.timed_run time
-            ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-            (fun () ->
-              apply_cfr "partial_evaluation"
-                (PartialEvaluation.apply_cfr non_linear_transitions)
-                PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program appr)
-          |> Option.map_default
-               (fun (res, time) ->
-                 PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time;
-                 res)
-               (program, appr, rvg)
+
+          let program, appr, rvg =
+            if List.mem PartialEvaluationIRankFinder cfr then
+              let non_linear_transitions =
+                (* TODO: why? *)
+                TransitionSet.filter
+                  (not % Bound.is_linear % Approximation.timebound appr)
+                  (TransitionSet.inter scc (Program.transitions program))
+              in
+              if !PartialEvaluation.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then
+                let time = PartialEvaluation.compute_timeout_time program appr scc in
+                let opt =
+                  Timeout.timed_run time
+                    ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                    (fun () ->
+                      apply_cfr "partial_evaluation"
+                        (PartialEvaluation.apply_cfr non_linear_transitions)
+                        PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
+                        appr)
+                in
+                match opt with
+                | Some (res, time_used) ->
+                    PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
+                    res
+                | None -> (program, appr, rvg)
+              else
+                (program, appr, rvg)
+            else
+              (program, appr, rvg)
+          in
+
+          let program, appr, rvg =
+            match
+              List.find_opt
+                (function
+                  | PartialEvaluationNative _ -> true
+                  | Chaining -> false
+                  | PartialEvaluationIRankFinder -> false)
+                cfr
+            with
+            | Some (PartialEvaluationNative (fvs, k_encounters, update_invariants)) -> (
+                let time = PartialEvaluation.compute_timeout_time program appr scc in
+                let pe_config =
+                  NativePartialEvaluation.
+                    {
+                      abstract =
+                        (if fvs then
+                           `FVS
+                         else
+                           `LoopHeads);
+                      k_encounters;
+                      update_invariants;
+                    }
+                in
+                let opt =
+                  Timeout.timed_run time
+                    ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                    (fun () ->
+                      apply_cfr "partial_evaluation_native"
+                        (MaybeChanged.changed % PENative.apply_sub_scc_cfr pe_config non_linear_transitions)
+                        PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
+                        appr)
+                in
+                match opt with
+                | Some (res, time_used) ->
+                    PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
+                    res
+                | None -> (program, appr, rvg))
+            | _ -> (program, appr, rvg)
+          in
+          (program, appr, rvg)
         in
-        let non_linear_transitions =
-          Base.Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc
-        in
+        let non_linear_transitions = compute_non_linear_transitions program appr in
         let chaining () =
           Timeout.timed_run 10.
             ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)

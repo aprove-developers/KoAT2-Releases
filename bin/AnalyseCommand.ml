@@ -46,7 +46,7 @@ let print_termcomp analysis_type (program : Program.t) (appr : Approximation.t) 
 type local = [ `MPRF | `TWN | `TWNTransform ]
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
 
-type cfr = [ `PartialEvaluation | `Chaining ]
+type cfr = [ `PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining ]
 
 type params = {
   print_system : bool;  (** Prints the integer transition system at the start as png *)
@@ -112,8 +112,17 @@ type params = {
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
   depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
-  cfr : cfr list; [@enum [ ("pe", `PartialEvaluation); ("chain", `Chaining) ]] [@default []] [@sep ',']
+  cfr : cfr list;
+      [@enum
+        [
+          ("pe_native", `PartialEvaluationNative); ("pe", `PartialEvaluationIRankFinder); ("chain", `Chaining);
+        ]]
+      [@default []]
+      [@sep ',']
       (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
+  no_pe_fvs : bool; [@default false]
+  pe_k : int; [@default 0]
+  pe_update_invariants : bool; [@default true]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
@@ -217,7 +226,15 @@ let run (params : params) =
       cfr_configuration =
         (match params.cfr with
         | [] -> NoCFR
-        | l -> PerformCFR l);
+        | l ->
+            l
+            |> List.map ~f:(function
+                 | `Chaining -> Chaining
+                 | `PartialEvaluationNative ->
+                     PartialEvaluationNative (not params.no_pe_fvs, params.pe_k, params.pe_update_invariants)
+                 | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder)
+            |> List.of_enum
+            |> fun l -> PerformCFR l);
     }
   in
   let input_filename =
@@ -244,7 +261,7 @@ let run (params : params) =
   let program =
     input
     |> Readers.read_input ~termination:params.termination
-         ~rename:(List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluation || params.rename)
+         ~rename:(List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluationIRankFinder || params.rename)
          params.simple_input
     |> tap (fun prog ->
            ProofOutput.add_to_proof @@ fun () ->
@@ -305,5 +322,6 @@ let run (params : params) =
   if params.show_proof then (
     print_string "\n\n";
     ProofOutput.print_proof params.proof_format);
-  if params.log_level == NONE && not (List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluation) then
+  if params.log_level == NONE && not (List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluationIRankFinder)
+  then
     ignore (Sys.command ("rm -f -r ./tmp_" ^ !PartialEvaluation.uid))
