@@ -113,12 +113,16 @@ module GeneralTransitionSet : sig
   val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
 end
 
-module ProbabilisticTransitionGraph :
-  ProgramTypes.TransitionGraph
-    with type location = Location.t
-     and type location_comparator_witness = Location.comparator_witness
-     and type transition_label = ProbabilisticTransitionLabel.t
-     and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
+module ProbabilisticTransitionGraph : sig
+  include
+    ProgramTypes.TransitionGraph
+      with type location = Location.t
+       and type location_comparator_witness = Location.comparator_witness
+       and type transition_label = ProbabilisticTransitionLabel.t
+       and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
+
+  val outgoing_gts : t -> Location.t -> GeneralTransitionSet.t
+end
 
 module ProbabilisticProgram : sig
   include

@@ -932,6 +932,12 @@ module ProbabilisticTransitionGraph = struct
       |> GeneralTransitionSet.of_sequence
     in
     map_gtsset out_gts ~f:(fun gt -> GeneralTransition.add_invariant gt invariant) t
+
+
+  let outgoing_gts t location =
+    Sequence.of_list (succ_e t location)
+    |> Sequence.map ~f:ProbabilisticTransition.gt
+    |> GeneralTransitionSet.of_sequence
 end
 
 module ProbabilisticProgram = struct
