@@ -233,7 +233,6 @@ let run (params : params) =
                  | `PartialEvaluationNative ->
                      PartialEvaluationNative (not params.no_pe_fvs, params.pe_k, params.pe_update_invariants)
                  | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder)
-            |> List.of_enum
             |> fun l -> PerformCFR l);
     }
   in

@@ -1,4 +1,4 @@
-open Batteries
+open! OurBase
 
 let cfr_logger = Logging.(get CFR)
 
@@ -11,69 +11,74 @@ type config = { abstract : [ `FVS | `LoopHeads ]; k_encounters : int; update_inv
 module Loops (PM : ProgramTypes.ProgramModules) = struct
   open PM
 
-  let loop_to_string loop = List.enum loop |> Util.enum_to_string Location.to_string
-  let loops_to_string loops = List.enum loops |> Util.enum_to_string loop_to_string
+  let loop_to_string loop = Sequence.of_list loop |> Util.sequence_to_string ~f:Location.to_string
+  let loops_to_string loops = Sequence.of_list loops |> Util.sequence_to_string ~f:loop_to_string
 
   (* mutable state *)
   type state = { blocked : (Location.t, bool) Hashtbl.t; b_lists : (Location.t, Location.t list) Hashtbl.t }
 
   (** Finds all loops in a graph, using the algorithm from Donald B. Johnson (1975)
-  By itself this function is probably not very useful. Use transition_loops_for in 
+  By itself this function is probably not very useful. Use transition_loops_for in
   order to get the loops with transitions.
   *)
   let find_loops graph =
     let all_locations = TransitionGraph.locations graph in
 
     (* initialize hashtables to the number of locations in the graph *)
-    let hashtbl_size = all_locations |> LocationSet.enum |> Enum.hard_count in
+    let hashtbl_size = Set.length all_locations in
 
     (* Initial state for circuit, based on a set of locations *)
     let initial_state locations =
-      let state = { blocked = Hashtbl.create hashtbl_size; b_lists = Hashtbl.create hashtbl_size } in
-      LocationSet.iter
-        (fun location ->
-          Hashtbl.add state.blocked location false;
-          Hashtbl.add state.b_lists location [])
+      let state =
+        {
+          blocked = Hashtbl.create ~size:hashtbl_size (module Location);
+          b_lists = Hashtbl.create ~size:hashtbl_size (module Location);
+        }
+      in
+      Set.iter
+        ~f:(fun location ->
+          Hashtbl.add_exn state.blocked ~key:location ~data:false;
+          Hashtbl.add_exn state.b_lists ~key:location ~data:[])
         locations;
       state
     in
 
     (* Check if a location is blocked, doesn't mutate s *)
-    let is_blocked s location = Option.default false (Hashtbl.find_option s.blocked location) in
+    let is_blocked s location = Option.value ~default:false (Hashtbl.find s.blocked location) in
 
     (* Get the b_list of a location, doesn't mutate s *)
-    let b_list_of s location = Option.default [] (Hashtbl.find_option s.b_lists location) in
+    let b_list_of s location = Option.value ~default:[] (Hashtbl.find s.b_lists location) in
 
     (* Add a location v to the b_list of w, if not already present; mutates s *)
     let add_to_b_list s w v =
       let old_b_list = b_list_of s w in
-      if not (List.mem v old_b_list) then
-        Hashtbl.replace s.b_lists w (v :: old_b_list)
+      if not (List.mem ~equal:Location.equal old_b_list v) then
+        Hashtbl.update s.b_lists w ~f:(fun _ -> v :: old_b_list)
     in
 
     (* Block a location, mutates s *)
-    let block s location = Hashtbl.replace s.blocked location true in
+    let block s location = Hashtbl.update s.blocked location ~f:(fun _ -> true) in
 
     (* Unblock a location, and clear b_lists, mutates s *)
     let rec unblock s location =
       if is_blocked s location then (
-        Hashtbl.replace s.blocked location false;
+        Hashtbl.update s.blocked location ~f:(fun _ -> false);
         List.iter
-          (fun l ->
+          ~f:(fun l ->
             log ~level:Logger.DEBUG "johnson" (fun () -> [ ("UNBLOCK", Location.to_string l) ]);
             unblock s l)
-          (Option.default [] (Hashtbl.find_option s.b_lists location));
-        Hashtbl.replace s.b_lists location [])
+          (Option.value ~default:[] (Hashtbl.find s.b_lists location));
+        Hashtbl.update s.b_lists location ~f:(fun _ -> []))
     in
 
     (* Transform the path into a list of locations, without mutating the path *)
-    let loop_of path = Stack.enum path |> Enum.fold (Fun.flip List.cons) [] in
+    let loop_of = Stack.to_list in
 
     (* We start with an empty path *)
     let path = Stack.create () in
 
     let rec circuit graph s prev_results start_location current_location =
-      Stack.push current_location path;
+      Stack.push path current_location;
       log ~level:Logger.DEBUG "johnson" (fun () -> [ ("BLOCK", Location.to_string current_location) ]);
       block s current_location;
       (* TransitionGraph.succ can contain repetitions *)
@@ -87,8 +92,8 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
                    ]))
       in
       let closed, new_results =
-        LocationSet.fold
-          (fun next_location (closed_acc, loops_acc) ->
+        Set.fold
+          ~f:(fun (closed_acc, loops_acc) next_location ->
             if Location.equal next_location start_location then (
               let loop = loop_of path in
               log ~level:Logger.DEBUG "johnson" (fun () -> [ ("FOUND_LOOP", loop_to_string loop) ]);
@@ -99,7 +104,7 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
               (closed_acc || inner_closed, inner_loops_acc)
             else
               (closed_acc, loops_acc))
-          successors (false, prev_results)
+          successors ~init:(false, prev_results)
       in
 
       if closed then
@@ -113,22 +118,21 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
 
     (* Locations are ordered; as is the LocationSet *)
     let _, results =
-      LocationSet.fold
-        (fun location (current_graph, prev_results) ->
+      Set.fold
+        ~f:(fun (current_graph, prev_results) location ->
           log ~level:Logger.DEBUG "johnson" (fun () -> [ ("MIN_LOCATION", Location.to_string location) ]);
           (* The SCC containing the smallest location according to the ordering *)
           let min_scc_opt =
-            List.find_opt
-              (fun scc -> TransitionSet.locations scc |> LocationSet.mem location)
-              (TransitionGraph.sccs current_graph)
+            List.find (TransitionGraph.sccs current_graph) ~f:(fun scc ->
+                Set.mem (TransitionSet.locations scc) location)
           in
           log ~level:Logger.DEBUG "johnson" (fun () ->
-              [ ("MIN_SCC", min_scc_opt |> Option.map TransitionSet.to_string |? "None") ]);
+              [ ("MIN_SCC", min_scc_opt |> Option.map ~f:TransitionSet.to_string |? "None") ]);
           (* the smallest location might be in a trivial scc and already filtered by TransitionGraph.sccs *)
           let new_results =
             match min_scc_opt with
             | Some scc ->
-                let scc_graph = TransitionGraph.mk (TransitionSet.enum scc)
+                let scc_graph = TransitionGraph.mk (Set.to_sequence scc)
                 and scc_locations = TransitionSet.locations scc in
                 let _closed, results =
                   circuit scc_graph (initial_state scc_locations) prev_results location location
@@ -137,7 +141,7 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
             | None -> prev_results
           in
           (TransitionGraph.remove_vertex current_graph location, new_results))
-        (TransitionGraph.locations graph) (graph, [])
+        (TransitionGraph.locations graph) ~init:(graph, [])
     in
     log ~level:Logger.INFO "loops" (fun () -> [ ("LOOPS", loops_to_string results) ]);
     results
@@ -145,22 +149,22 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
 
   (** Find all loops in a given scc using the algorithm from Donald B. Johnson (1975) **)
   let find_loops_scc graph scc =
-    let scc_graph = TransitionSet.enum scc |> TransitionGraph.mk in
+    let scc_graph = Set.to_sequence scc |> TransitionGraph.mk in
     find_loops scc_graph
 
 
   (** For a list of location loops, this function creates the list of all transition loops
-      containing a loop from the location loops. 
+      containing a loop from the location loops.
 
-      Example: 
-      The graph G contains transitions 
+      Example:
+      The graph G contains transitions
       (l0, t0, l1)
       (l1, t1, l2)
       (l1, t2, l2)
       (l2, t3, l1)
 
       The loop detection `find_loops` would only find the loop [l1, l2].
-      This function expands the (location) loop [l1,l2] the the transition loops 
+      This function expands the (location) loop [l1,l2] the the transition loops
       [t1,t3], [t2,t3].
 
       *)
@@ -178,9 +182,9 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     let combine (transitions : Transition.t list) (suffixes : Transition.t list list) : Transition.t list list
         =
       List.fold
-        (fun results suffix ->
-          List.fold (fun results transition -> (transition :: suffix) :: results) [] transitions)
-        [] suffixes
+        ~f:(fun results suffix ->
+          List.fold ~f:(fun results transition -> (transition :: suffix) :: results) ~init:[] transitions)
+        ~init:[] suffixes
     in
 
     (* computes for every step in the loop the walkable transitions *)
@@ -194,8 +198,8 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     in
 
     List.fold
-      (fun results loc_loop -> List.append (transition_loops (List.hd loc_loop) loc_loop) results)
-      [] loc_loops
+      ~f:(fun results loc_loop -> List.append (transition_loops (List.hd_exn loc_loop) loc_loop) results)
+      ~init:[] loc_loops
 
 
   (** Rotate a loop, so that its head is the first location *)
@@ -218,14 +222,13 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
 
   (** Returns the first locations of the loops *)
   let loop_heads loops =
-    List.fold (fun loop_heads loop -> LocationSet.add (List.hd loop) loop_heads) LocationSet.empty loops
+    List.fold ~f:(fun loop_heads loop -> Set.add loop_heads (List.hd_exn loop)) ~init:LocationSet.empty loops
 end
 
 module FVS (PM : ProgramTypes.ProgramModules) = struct
   module Loops = Loops (PM)
   (* TODO: move this module to SMT module *)
 
-  open Z3
   open PM
 
   exception FVSFailed
@@ -254,79 +257,77 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
     let locations = TransitionGraph.locations graph in
 
     (* initialize hashtables to the number of locations in the graph *)
-    let location_var_map = locations |> LocationSet.enum |> Enum.hard_count |> Hashtbl.create in
+    let location_var_map = Hashtbl.create ~size:(Set.length locations) (module Location) in
 
     (* create and remember a (z3) integer variable for every location. it will
        represent if the location is part of the FVS or Hitting Set *)
-    LocationSet.iter
-      (fun location ->
-        location |> Location.to_string |> Arithmetic.Integer.mk_const_s ctx
-        |> Hashtbl.add location_var_map location)
+    Set.iter
+      ~f:(fun location ->
+        let ivar = location |> Location.to_string |> Z3.Arithmetic.Integer.mk_const_s ctx in
+        Hashtbl.add_exn location_var_map ~key:location ~data:ivar)
       locations;
 
     (* get the integer variable representing a location *)
-    let var_for location = Hashtbl.find location_var_map location in
+    let var_for location = Hashtbl.find_exn location_var_map location in
 
-    let zero = Arithmetic.Integer.mk_numeral_i ctx 0 and one = Arithmetic.Integer.mk_numeral_i ctx 1 in
+    let zero = Z3.Arithmetic.Integer.mk_numeral_i ctx 0 and one = Z3.Arithmetic.Integer.mk_numeral_i ctx 1 in
 
     (* create an optimization problem *)
-    let o = Optimize.mk_opt ctx in
+    let o = Z3.Optimize.mk_opt ctx in
 
     (* restrict every variable to be in {0, 1} *)
-    Hashtbl.values location_var_map
-    |> Enum.fold
-         (fun constraints var ->
+    Hashtbl.data location_var_map
+    |> List.fold
+         ~f:(fun constraints var ->
            let ge0 = Z3.Arithmetic.mk_ge ctx var zero and le1 = Z3.Arithmetic.mk_le ctx var one in
            ge0 :: le1 :: constraints)
-         []
-    |> Optimize.add o;
+         ~init:[]
+    |> Z3.Optimize.add o;
 
     (* require every loop to contain one marked/hit location *)
     List.fold
-      (fun constraints loop ->
+      ~f:(fun constraints loop ->
         let loop_constraint =
-          List.fold (fun expressions location -> var_for location :: expressions) [] loop
+          List.fold ~f:(fun expressions location -> var_for location :: expressions) ~init:[] loop
           |> Z3.Arithmetic.mk_add ctx
           (* |> tap (fun e -> Z3.Expr.to_string e |> String.println stdout ) *)
           |> Z3.Arithmetic.mk_le ctx one
         in
         loop_constraint :: constraints)
-      [] loops
-    |> Optimize.add o;
+      ~init:[] loops
+    |> Z3.Optimize.add o;
 
     (* Solve ILP, minimizing the number of marked locations *)
-    let _handle =
-      Hashtbl.values location_var_map |> List.of_enum |> Z3.Arithmetic.mk_add ctx |> Optimize.minimize o
-    in
+    let _handle = Hashtbl.data location_var_map |> Z3.Arithmetic.mk_add ctx |> Z3.Optimize.minimize o in
 
-    log ~level:Logger.DEBUG "fvs" (fun () -> [ ("Z3_INPUT", "\n" ^ Optimize.to_string o) ]);
+    log ~level:Logger.DEBUG "fvs" (fun () -> [ ("Z3_INPUT", "\n" ^ Z3.Optimize.to_string o) ]);
 
-    match Optimize.check o with
-    | Solver.UNSATISFIABLE
-    | Solver.UNKNOWN ->
+    match Z3.Optimize.check o with
+    | Z3.Solver.UNSATISFIABLE
+    | Z3.Solver.UNKNOWN ->
         raise FVSFailed
-    | Solver.SATISFIABLE ->
+    | Z3.Solver.SATISFIABLE ->
         ();
 
         let model =
-          match Optimize.get_model o with
+          match Z3.Optimize.get_model o with
           | Some m -> m
           | None -> raise FVSFailed
         in
 
-        log ~level:Logger.DEBUG "fvs" (fun () -> [ ("Z3_MODEL", "\n" ^ Model.to_string model) ]);
+        log ~level:Logger.DEBUG "fvs" (fun () -> [ ("Z3_MODEL", "\n" ^ Z3.Model.to_string model) ]);
 
         let fvs_solution =
           Hashtbl.fold
-            (fun location var fvs_solution ->
-              match Model.get_const_interp_e model var with
+            ~f:(fun ~key:location ~data:var fvs_solution ->
+              match Z3.Model.get_const_interp_e model var with
               | Some value ->
-                  if Expr.equal value one then
-                    LocationSet.add location fvs_solution
+                  if Z3.Expr.equal value one then
+                    Set.add fvs_solution location
                   else
                     fvs_solution
               | None -> raise FVSFailed)
-            location_var_map LocationSet.empty
+            location_var_map ~init:LocationSet.empty
         in
 
         log ~level:Logger.INFO "fvs" (fun () -> [ ("FVS", LocationSet.to_string fvs_solution) ]);
@@ -340,37 +341,43 @@ end
 module type Adapter = sig
   type update_element
   type transition_label
+  type transition_graph
+  type program
   type location
   type approx = Polynomials.Polynomial.t * Guard.t
 
-  module VarMap : module type of Map.Make (Var)
-
   val overapprox_indeterminates : update_element -> approx
   val location_with_index : int -> location -> location
+  val create_new_program : location -> transition_graph -> program
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Trivial implementation of overapproxmation in classical programs *)
-module ClassicAdapter (PM : ProgramTypes.ClassicalProgramModules) :
+module ClassicAdapter :
   Adapter
-    with type update_element = PM.UpdateElement.t
-     and type transition_label = PM.TransitionLabel.t
-     and type location = PM.Location.t = struct
-  open PM
+    with type update_element = ProgramModules.UpdateElement.t
+     and type transition_label = ProgramModules.TransitionLabel.t
+     and type location = ProgramModules.Location.t
+     and type transition_graph = ProgramModules.TransitionGraph.t
+     and type program = ProgramModules.Program.t = struct
+  open ProgramModules
 
-  type update_element = PM.UpdateElement.t
+  type update_element = UpdateElement.t
   type approx = Polynomials.Polynomial.t * Guard.t
-  type transition_label = PM.TransitionLabel.t
-  type location = PM.Location.t
-
-  module VarMap = Map.Make (Var)
+  type transition_label = TransitionLabel.t
+  type location = Location.t
+  type transition_graph = TransitionGraph.t
+  type program = Program.t
 
   (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
   let overapprox_indeterminates poly = (poly, Guard.mk_true)
 
   let location_with_index index location =
     Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
+
+
+  let create_new_program = Program.from_graph
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
@@ -380,42 +387,39 @@ module ProbabilisticAdapter :
   Adapter
     with type update_element = ProbabilisticProgramModules.UpdateElement.t
      and type transition_label = ProbabilisticProgramModules.TransitionLabel.t
-     and type location = ProbabilisticProgramModules.Location.t = struct
+     and type location = ProbabilisticProgramModules.Location.t
+     and type transition_graph = ProbabilisticProgramModules.TransitionGraph.t
+     and type program = ProbabilisticProgramModules.Program.t = struct
   open ProbabilisticProgramModules
 
   type update_element = UpdateElement.t
   type approx = Polynomials.Polynomial.t * Guard.t
   type transition_label = TransitionLabel.t
   type location = Location.t
+  type transition_graph = TransitionGraph.t
+  type program = Program.t
 
-  module VarMap = Map.Make (Var)
   module P = Polynomials.Polynomial
 
-  let overapprox_indeterminates =
-    UpdateElement.fold
-      ~const:(fun c -> (P.of_constant c, Guard.mk_true))
-      ~indeterminate:(fun i ->
-        match i with
-        | UpdateElement_.UpdateValue.Var v -> (P.of_var v, Guard.mk_true)
-        | UpdateElement_.UpdateValue.Dist d ->
-            let new_var = Var.fresh_id Var.Int () in
-            let guard = ProbabilityDistribution.as_guard d new_var in
-            (P.of_var new_var, guard))
-      ~neg:(fun (p, g) -> (P.neg p, g))
-      ~plus:(fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
-      ~times:(fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
-      ~pow:(fun (p, g) exp -> (P.pow p exp, g))
+  let overapprox_indeterminates ue =
+    let new_var = Var.fresh_id Var.Int () in
+    (P.of_var new_var, UpdateElement_.as_guard ue new_var)
 
 
   let location_with_index index location =
     Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
+
+
+  let create_new_program start graph =
+    Set.to_sequence (TransitionGraph.transitions graph)
+    |> Sequence.map ~f:Transition.gt |> GeneralTransitionSet.of_sequence |> Program.from_gts start
 end
 
 module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
   open Constraints
   open Polynomials
   open PM
-  module VarMap = Map.Make (Var)
+  module VarMap = MakeMapCreators1 (Var)
 
   type polyhedron
   type guard = Constraint.t
@@ -453,13 +457,13 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
   (* TODO: move to ApronInterface *)
 
   (** converts an update map over polynomials to apron arrays *)
-  let update_to_apron env (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
-    VarMap.enum update
-    |> Enum.map (fun (var, ue) ->
+  let update_to_apron env (update : Polynomials.Polynomial.t VarMap.t) =
+    Map.to_sequence update
+    |> Sequence.map ~f:(fun (var, ue) ->
            let apron_var = ApronInterface.Koat2Apron.var_to_apron var
            and apron_expr = ApronInterface.Koat2Apron.poly_to_apron env ue in
            (apron_var, apron_expr))
-    |> Array.of_enum |> Array.split
+    |> Sequence.to_array |> Array.unzip
 
 
   (** Adapter for polyheron operations used directly on constraints *)
@@ -481,10 +485,10 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     For an abstract domain `'a` there is a manager `'a Manager.t` handling the
     library stuff underneath. It is not important to this implementation, but
     is required for most of the operations. We will use the Ppl abstract domain
-    for partial evaluation, but others might be used at will. 
+    for partial evaluation, but others might be used at will.
 
     A value in the abstract domain `'a` is an `'a Abstract.t`. It holds a reference
-    to the environment (variables). 
+    to the environment (variables).
   *)
 
   (** add new dimensions to to an abstract value, ignores already existing dimenstions *)
@@ -492,7 +496,7 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     let prev_env = Apron.Abstract1.env polyh in
     let prev_vars = Apron.Environment.vars prev_env |> fst |> ApronInterface.Apron2Koat.vars_from_apron in
     (* Apron would panic if the variable is alread in the environment *)
-    let new_vars = VarSet.filter (fun var -> not (VarSet.mem var prev_vars)) vars in
+    let new_vars = Set.filter ~f:(fun var -> not (Set.mem prev_vars var)) vars in
 
     (* log ~level:Logger.DEBUG "add_vars_to_polyh" (fun () -> *)
     (*     [ *)
@@ -505,7 +509,7 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     Apron.Abstract1.change_environment am polyh new_env false
 
 
-  (** project a polyhedron onto the given variable dimensions 
+  (** project a polyhedron onto the given variable dimensions
   Does not add new dimensions for variables not in the polyhedron
    *)
   let project_polyh am vars polyh =
@@ -519,7 +523,7 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     (* Apron.Abstract1.forget_array am polyh forget_vars false *)
     let prev_env = Apron.Abstract1.env polyh in
     let apron_vars =
-      ApronInterface.Koat2Apron.vars_to_apron vars |> Array.filter (Apron.Environment.mem_var prev_env)
+      ApronInterface.Koat2Apron.vars_to_apron vars |> Array.filter ~f:(Apron.Environment.mem_var prev_env)
     in
     let new_env = Apron.Environment.make apron_vars [||] in
     (* Implicitly projects all removed dimensions *)
@@ -555,28 +559,28 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
   (** Find bounds of the form x ⋄ c for variables x and bounds c *)
   let bound_variables_polyh am vars polyh =
     let env = Apron.Abstract1.env polyh in
-    VarSet.enum vars
-    |> Enum.map (fun variable ->
+    Set.to_sequence vars
+    |> Sequence.map ~f:(fun variable ->
            let apron_var = ApronInterface.Koat2Apron.var_to_apron variable in
            if Apron.Environment.mem_var env apron_var then
              Apron.Abstract1.bound_variable am polyh apron_var |> interval_from_apron variable
            else
              Guard.mk_true)
-    |> Enum.fold Constraint.mk_and Constraint.mk_true
+    |> Sequence.fold ~f:Constraint.mk_and ~init:Constraint.mk_true
 
 
   let bound_variables_guard am vars guard = guard_to_polyh am guard |> bound_variables_polyh am vars
 
   let vars_in_update update =
-    VarMap.fold
-      (fun var ue vars -> vars |> VarSet.add var |> VarSet.union (Polynomials.Polynomial.vars ue))
-      update VarSet.empty
+    Map.fold
+      ~f:(fun ~key:var ~data:ue vars -> Set.add vars var |> Set.union (Polynomials.Polynomial.vars ue))
+      update ~init:VarSet.empty
 
 
   let update_polyh am update polyh =
     let vars_in_update =
-      VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
-      |> (VarSet.union % VarSet.of_enum % ProgramTypes.VarMap.keys) update
+      Map.fold ~f:(fun ~key:_ ~data:poly -> Set.union (Polynomial.vars poly)) update ~init:VarSet.empty
+      |> Set.union (VarSet.of_list @@ Map.keys update)
     in
     let polyh_with_new_vars = add_vars_to_polyh am vars_in_update polyh in
     let env = Apron.Abstract1.env polyh_with_new_vars in
@@ -591,11 +595,12 @@ module OverApproximationUtils (A : Adapter) = struct
   open A
 
   let overapprox_update update =
-    VarMap.fold
-      (fun var ue (new_update, guards) ->
+    Map.fold
+      ~f:(fun ~key:var ~data:ue (new_update, guards) ->
         let ue_approx, guard = overapprox_indeterminates ue in
-        (VarMap.add var ue_approx new_update, Guard.mk_and guards guard))
-      update (VarMap.empty, Guard.mk_true)
+        (Map.add_exn ~key:var ~data:ue_approx new_update, Guard.mk_and guards guard))
+      update
+      ~init:(Map.empty (module Var), Guard.mk_true)
 end
 
 module Unfolding
@@ -604,8 +609,6 @@ module Unfolding
            with type update_element = PM.UpdateElement.t
             and type transition_label = PM.TransitionLabel.t) =
 struct
-  open PM
-  open A
   open OverApproximationUtils (A)
   open ApronUtils (PM)
 
@@ -614,20 +617,20 @@ struct
     let update_approx, update_guard = overapprox_update update in
     let temp_vars =
       [ Guard.vars guard; Guard.vars update_guard; vars_in_update update_approx ]
-      |> List.fold VarSet.union VarSet.empty
-      |> VarSet.filter (fun v -> not (VarSet.mem v program_vars))
+      |> VarSet.union_list
+      |> Set.filter ~f:(fun v -> not (Set.mem program_vars v))
     in
     let used_program_vars =
       [ Guard.vars constr; Guard.vars guard; Guard.vars update_guard; vars_in_update update_approx ]
-      |> List.fold VarSet.union VarSet.empty
-      |> VarSet.filter (fun v -> VarSet.mem v program_vars)
+      |> VarSet.union_list
+      |> Set.filter ~f:(fun v -> Set.mem program_vars v)
     in
 
     constr
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
     |> guard_to_polyh am
-    |> add_vars_to_polyh am (VarSet.union used_program_vars temp_vars)
+    |> add_vars_to_polyh am (Set.union used_program_vars temp_vars)
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
@@ -646,8 +649,8 @@ struct
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
                  ( "UPDATE",
-                   VarMap.enum update_approx
-                   |> Util.enum_to_string (fun (x, p) ->
+                   Map.to_sequence update_approx
+                   |> Util.sequence_to_string ~f:(fun (x, p) ->
                           Printf.sprintf "%s = %s" (Var.to_string ~pretty:true x)
                             (Polynomials.Polynomial.to_string_pretty p)) );
                  ("WITH_UPDATE", polyh_to_guard am p |> Guard.to_string ~pretty:true);
@@ -702,12 +705,17 @@ end = struct
   open Atoms
 
   module AtomSet = struct
-    include Set.Make (Atom)
+    include MakeSetCreators0 (Atom)
 
-    let to_string ?(pretty = false) t = enum t |> Util.enum_to_string (Atom.to_string ~pretty)
+    let to_string ?(pretty = false) t =
+      Set.to_sequence t |> Util.sequence_to_string ~f:(Atom.to_string ~pretty)
+
+
+    let compare = Set.compare_direct
+    let equal s1 s2 = compare s1 s2 == 0
   end
 
-  module LocationMap = Map.Make (PM.Location)
+  module LocationMap = MakeMapCreators1 (PM.Location)
   module Loops = Loops (PM)
   module FVS = FVS (PM)
 
@@ -769,7 +777,7 @@ end = struct
     let pr_d (loop : Transition.t list) =
       (* Backward propagation captures the properties needed for a full loop *)
       List.fold_right
-        (fun transition combined ->
+        ~f:(fun transition combined ->
           log ~level:Logger.DEBUG "heuristic.backprop" (fun () ->
               [
                 ("TRANSITION", Transition.to_string transition);
@@ -782,7 +790,7 @@ end = struct
             constr && update_guard
             && Constraint.map_polynomial (Polynomials.Polynomial.substitute_all update_approx) combined)
           |> project_guard am program_variables)
-        loop Constraint.mk_true
+        loop ~init:Constraint.mk_true
       |> AtomSet.of_list
     in
 
@@ -791,8 +799,8 @@ end = struct
         | [] -> selected
         | prop :: props ->
             if
-              List.find_opt
-                (fun other_prop ->
+              List.find
+                ~f:(fun other_prop ->
                   SMT.Z3Solver.equivalent
                     (Formula.mk (Guard.mk [ prop ]))
                     (Formula.mk (Guard.mk [ other_prop ])))
@@ -804,14 +812,16 @@ end = struct
               dedup (prop :: selected) props
       in
 
-      dedup [] (AtomSet.to_list props) |> AtomSet.of_list
+      dedup [] (Set.to_list props) |> AtomSet.of_list
     in
 
     let for_transitions f transitions =
-      List.fold (fun props t -> f t |> AtomSet.union props) AtomSet.empty transitions
+      List.fold ~f:(fun props t -> f t |> Set.union props) ~init:AtomSet.empty transitions
     in
 
-    let for_loops f loops = List.fold (fun props loop -> f loop |> AtomSet.union props) AtomSet.empty loops in
+    let for_loops f loops =
+      List.fold ~f:(fun props loop -> f loop |> Set.union props) ~init:AtomSet.empty loops
+    in
 
     let log_props location name props =
       log ~level:Logger.DEBUG "heuristic" (fun () ->
@@ -828,23 +838,27 @@ end = struct
       | `LoopHeads -> Loops.loop_heads loops
     in
 
-    LocationSet.fold
-      (fun head properties ->
+    Set.fold
+      ~f:(fun properties head ->
         let outgoing_transitions = TransitionGraph.succ_e graph head in
         let incoming_transitions = TransitionGraph.pred_e graph head in
         (* Find loops containing the head, and rotate *)
-        let loops_with_head = loops |> List.filter (List.mem head) |> List.map (Loops.rotate head) in
+        let loops_with_head =
+          loops
+          |> List.filter ~f:(fun l -> List.mem ~equal:Location.equal l head)
+          |> List.map ~f:(Loops.rotate head)
+        in
         log ~level:Logger.DEBUG "heuristic" (fun () ->
             [
               ("LOCATION", Location.to_string head); ("ROTATED_LOOPS", Loops.loops_to_string loops_with_head);
             ]);
         let properties_for_head =
           AtomSet.empty
-          |> AtomSet.union (for_transitions pr_h outgoing_transitions |> log_props head "PR_h")
-          |> AtomSet.union (for_transitions pr_hv outgoing_transitions |> log_props head "PR_hv")
-          |> AtomSet.union (for_transitions pr_c incoming_transitions |> log_props head "PR_c")
-          |> AtomSet.union (for_transitions pr_cv incoming_transitions |> log_props head "PR_cv")
-          |> AtomSet.union
+          |> Set.union (for_transitions pr_h outgoing_transitions |> log_props head "PR_h")
+          |> Set.union (for_transitions pr_hv outgoing_transitions |> log_props head "PR_hv")
+          |> Set.union (for_transitions pr_c incoming_transitions |> log_props head "PR_c")
+          |> Set.union (for_transitions pr_cv incoming_transitions |> log_props head "PR_cv")
+          |> Set.union
                (Loops.transition_loops_from graph loops_with_head |> for_loops pr_d |> log_props head "PR_d")
           |> deduplicate_props
           |> tap (fun props ->
@@ -854,8 +868,8 @@ end = struct
                        ("PROPERTIES", AtomSet.to_string ~pretty:true props);
                      ]))
         in
-        LocationMap.add head properties_for_head properties)
-      heads LocationMap.empty
+        Map.add_exn ~key:head ~data:properties_for_head properties)
+      heads ~init:LocationMap.empty
 
 
   let abstract context location guard =
@@ -882,8 +896,8 @@ end = struct
           (* Check entailment for every propery it's negation *)
         else
           let entailed_props =
-            AtomSet.enum properties
-            |> Enum.filter_map (fun prop ->
+            Set.to_sequence properties
+            |> Sequence.filter_map ~f:(fun prop ->
                    if entails_prop prop then (
                      log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS", Atom.to_string prop) ]);
                      (* (Constraint.to_string constr) *)
@@ -897,19 +911,19 @@ end = struct
                      Some (Atom.neg prop))
                    else
                      None)
-            |> AtomSet.of_enum
+            |> AtomSet.of_sequence
           in
           Some entailed_props)
     in
 
-    match LocationMap.find_opt location context with
+    match Map.find context location with
     | Some properties ->
         log ~level:Logger.DEBUG "abstract" (fun () ->
             [
               ("LOCATION", Location.to_string location);
               ("PROPERTIES", AtomSet.to_string ~pretty:true properties);
             ]);
-        abstract_guard_ properties guard |> Option.map (fun a -> Abstr a)
+        abstract_guard_ properties guard |> Option.map ~f:(fun a -> Abstr a)
     | None ->
         log ~level:Logger.DEBUG "abstract" (fun () ->
             [ ("LOCATION", Location.to_string location); ("PROPERTIES", "NONE") ]);
@@ -919,7 +933,7 @@ end = struct
           None
 
 
-  let abstract_to_guard a = AtomSet.to_list a |> Constraint.mk
+  let abstract_to_guard a = Set.to_list a |> Constraint.mk
 
   let to_guard a =
     match a with
@@ -935,22 +949,28 @@ end
 (** A version is a location with an (possibly abstracted) constraint used
   in the partial evaluation graph *)
 module Version (L : ProgramTypes.Location) (A : Abstraction) = struct
-  open Constraints
+  module Inner = struct
+    open Constraints
 
-  type location = L.t
-  type t = L.t * A.t [@@deriving eq, ord]
+    type location = L.t
+    type t = L.t * A.t [@@deriving eq, ord]
 
-  let to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:false a)
-  let to_string_pretty (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:true a)
-  let hash l = Hashtbl.hash l
-  let mk location abstracted = (location, abstracted)
-  let mk_true location = (location, A.Constr Constraint.mk_true)
+    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+    let to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:false a)
+    let to_string_pretty (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:true a)
+    let hash l = Hashtbl.hash l
+    let mk location abstracted = (location, abstracted)
+    let mk_true location = (location, A.Constr Constraint.mk_true)
 
-  (* TODO: this is broken, because it doesn't parse the guard, but this isn't used anyway and only
-     here for interface compatibility *)
-  let of_string s = mk_true (L.of_string s)
-  let location (l, _) = l
-  let abstracted (_, a) = a
+    (* TODO: this is broken, because it doesn't parse the guard, but this isn't used anyway and only
+       here for interface compatibility *)
+    let of_string s = mk_true (L.of_string s)
+    let location (l, _) = l
+    let abstracted (_, a) = a
+  end
+
+  include Inner
+  include Comparator.Make (Inner)
 end
 
 (* TODO: move somewhere else *)
@@ -970,19 +990,17 @@ module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
   module Djikstra = Graph.Path.Dijkstra (PM.TransitionGraph) (TransitionGraphWeight (OurInt))
 
   let entry_transitions graph scc =
-    TransitionSet.locations scc |> LocationSet.enum
-    |> Enum.map (fun l -> TransitionGraph.pred_e graph l |> List.enum)
-    |> Enum.flatten
-    |> Enum.filter (fun t -> not (TransitionSet.mem t scc))
-    |> TransitionSet.of_enum
+    TransitionSet.locations scc |> Set.to_sequence
+    |> Sequence.concat_map ~f:(fun l -> TransitionGraph.pred_e graph l |> Sequence.of_list)
+    |> Sequence.filter ~f:(fun t -> not (Set.mem scc t))
+    |> TransitionSet.of_sequence
 
 
   let exit_transitions graph scc =
-    TransitionSet.locations scc |> LocationSet.enum
-    |> Enum.map (fun l -> TransitionGraph.succ_e graph l |> List.enum)
-    |> Enum.flatten
-    |> Enum.filter (fun t -> not (TransitionSet.mem t scc))
-    |> TransitionSet.of_enum
+    TransitionSet.locations scc |> Set.to_sequence
+    |> Sequence.concat_map ~f:(fun l -> TransitionGraph.succ_e graph l |> Sequence.of_list)
+    |> Sequence.filter ~f:(fun t -> not (Set.mem scc t))
+    |> TransitionSet.of_sequence
 end
 
 module PEModules
@@ -992,14 +1010,14 @@ module PEModules
 struct
   module Version = Version (PM.Location) (A)
   module VersionSet = Location.LocationSetOver (Version)
-  module Transition = Transition_.TransitionOver (PM.TransitionLabel) (Version)
-  module TransitionSet = Set.Make (Transition)
+  module Transition = Transition_.Make (PM.TransitionLabel) (Version)
+  module TransitionSet = Transition_.TransitionSetOver (Transition) (Version)
 
   module TransitionGraph =
     TransitionGraph_.Make_ (Transition) (Version)
       (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Version) (PM.TransitionLabel))
 
-  let rename_versions versions =
+  let rename_versions (versions : TransitionGraph.location_set) =
     (* There is no nice way of renaming locations.
        1. We reuse the original name, if the location is unique in the pe_graph,
           that happens when the location was not part of the scc.
@@ -1012,30 +1030,30 @@ struct
 
        TODO: rewrite, and probably move to Location module.
     *)
-    let num_versions = VersionSet.cardinal versions in
-    let num_of_location_occurences = Hashtbl.create num_versions in
-    VersionSet.iter
-      (fun version ->
+    let num_versions = Set.length versions in
+    let num_of_location_occurences = Hashtbl.create ~size:num_versions (module PM.Location) in
+    Set.iter
+      ~f:(fun version ->
         let location = Version.location version in
-        Hashtbl.find_option num_of_location_occurences location
-        |? 0 |> ( + ) 1
-        |> Hashtbl.replace num_of_location_occurences location)
+        let num = Hashtbl.find num_of_location_occurences location |? 0 |> ( + ) 1 in
+        Hashtbl.update num_of_location_occurences location ~f:(fun _ -> num))
       versions;
 
-    let suffix_counters = Hashtbl.create num_versions and rename_map = Hashtbl.create num_versions in
-    VersionSet.iter
-      (fun version ->
+    let suffix_counters = Hashtbl.create ~size:num_versions (module PM.Location)
+    and rename_map = Hashtbl.create ~size:num_versions (module Version) in
+    Set.iter
+      ~f:(fun version ->
         let location = Version.location version in
-        let num_occ = Hashtbl.find num_of_location_occurences location in
+        let num_occ = Hashtbl.find_exn num_of_location_occurences location in
         assert (num_occ >= 1);
         if num_occ == 1 then
           (* reuse location *)
-          Hashtbl.add rename_map version location
+          Hashtbl.add_exn rename_map ~key:version ~data:location
         else
           (* generate a fresh suffix *)
           let rec gen_new_location () =
-            let next_index = Hashtbl.find_default suffix_counters location 0 in
-            Hashtbl.replace suffix_counters location (next_index + 1);
+            let next_index = Hashtbl.find suffix_counters location |> Option.value ~default:0 in
+            Hashtbl.update suffix_counters location ~f:(fun _ -> next_index + 1);
             let potential_new_location = Adapter.location_with_index next_index location in
             if Hashtbl.mem num_of_location_occurences potential_new_location then
               gen_new_location ()
@@ -1043,23 +1061,29 @@ struct
               potential_new_location
           in
 
-          Hashtbl.add rename_map version (gen_new_location ()))
+          Hashtbl.add_exn rename_map ~key:version ~data:(gen_new_location ()))
       versions;
     rename_map
 
 
   let remove_abstractions update_invariants pe_graph =
     let rename_map = rename_versions (TransitionGraph.locations pe_graph) in
-    TransitionGraph.transitions pe_graph |> TransitionSet.enum
-    |> Enum.map (fun (src_version, label, target_version) ->
-           let new_label =
-             if update_invariants then
-               PM.TransitionLabel.add_invariant label (Version.abstracted src_version |> A.to_guard)
-             else
-               label
-           in
-           (Hashtbl.find rename_map src_version, new_label, Hashtbl.find rename_map target_version))
-    |> PM.TransitionGraph.mk
+    let renamed_graph =
+      TransitionGraph.transitions pe_graph |> Set.to_sequence
+      |> Sequence.map ~f:(fun (src_version, label, target_version) ->
+             (Hashtbl.find_exn rename_map src_version, label, Hashtbl.find_exn rename_map target_version))
+      |> PM.TransitionGraph.mk
+    in
+    if update_invariants then
+      TransitionGraph.locations pe_graph
+      |> Set.fold
+           ~f:(fun graph version ->
+             let renamed_loc = Hashtbl.find_exn rename_map version in
+             let inv = A.to_guard (Version.abstracted version) in
+             PM.TransitionGraph.add_invariant renamed_loc inv graph)
+           ~init:renamed_graph
+    else
+      renamed_graph
 end
 
 module PartialEvaluation
@@ -1067,7 +1091,9 @@ module PartialEvaluation
     (Adapter : Adapter
                  with type update_element = PM.UpdateElement.t
                   and type transition_label = PM.TransitionLabel.t
-                  and type location = PM.Location.t) =
+                  and type program = PM.Program.t
+                  and type location = PM.Location.t
+                  and type transition_graph = PM.TransitionGraph.t) =
 struct
   module PM = PM
   module Abstraction = PropertyBasedAbstraction (PM) (Adapter)
@@ -1082,9 +1108,9 @@ struct
   open GraphUtils (PM)
 
   exception UnsatEntryTransition
-  (** Unsat transitions must be removed before the partial evaluation, hence 
-      unfolded entry transition to an scc <l, true> -> <l', v'> must always 
-      have a satisfiable version v' 
+  (** Unsat transitions must be removed before the partial evaluation, hence
+      unfolded entry transition to an scc <l, true> -> <l', v'> must always
+      have a satisfiable version v'
       *)
 
   let am = Ppl.manager_alloc_loose ()
@@ -1100,11 +1126,12 @@ struct
 
     let abstr_ctx = Abstraction.mk_from_heuristic_scc config graph component program_vars in
     let result_graph_without_sub =
-      TransitionGraph.transitions graph |> PM.TransitionSet.enum
-      |> Enum.filter (fun transition -> not (TransitionSet.mem transition component))
+      TransitionGraph.transitions graph |> Set.to_sequence
+      |> Sequence.filter ~f:(fun transition -> not (Set.mem component transition))
       (* Exit transitions will be readded by the evaluation *)
-      |> Enum.filter (fun transition -> not (TransitionSet.mem transition exit_transitions))
-      |> Enum.map (fun (src, label, target) -> (PEM.Version.mk_true src, label, Version.mk_true target))
+      |> Sequence.filter ~f:(fun transition -> not (Set.mem exit_transitions transition))
+      |> Sequence.map ~f:(fun (src, label, target) ->
+             (PEM.Version.mk_true src, label, Version.mk_true target))
       |> PEGraph.mk
     in
 
@@ -1153,61 +1180,63 @@ struct
               (already_unfolded_versions, result_graph)
       in
 
-      if PEM.VersionSet.mem current_version already_unfolded_versions then (
+      if Set.mem already_unfolded_versions current_version then (
         log ~level:DEBUG "pe.version" (fun () ->
             [ ("VERSION", Version.to_string_pretty current_version); ("NEW", "false") ]);
         (already_unfolded_versions, result_graph))
       else (
         log ~level:DEBUG "pe.version" (fun () ->
             [ ("VERSION", Version.to_string_pretty current_version); ("NEW", "true") ]);
-        let already_unfolded_versions = PEM.VersionSet.add current_version already_unfolded_versions in
+        let already_unfolded_versions = Set.add already_unfolded_versions current_version in
         let location = Version.location current_version in
 
-        let gt_id_map = Hashtbl.create 10 in
+        let gt_id_map = Hashtbl.create ~size:10 (module Int) in
         let outgoing_transitions =
           TransitionGraph.succ_e graph location
-          |> List.enum
-          |> Enum.map (fun transition -> (transition, TransitionSet.mem transition exit_transitions))
-          |> Enum.map (fun ((src, label, target), is_exit) ->
+          |> Sequence.of_list
+          |> Sequence.map ~f:(fun transition -> (transition, Set.mem exit_transitions transition))
+          |> Sequence.map ~f:(fun ((src, label, target), is_exit) ->
+                 (* ((src, TransitionLabel.copy_rename gt_id_map label, target), is_exit)) *)
                  ((src, TransitionLabel.copy_rename gt_id_map label, target), is_exit))
-          |> Enum.map
-               (tap (fun (t, is_exit) ->
-                    log ~level:DEBUG "pe.version" (fun () ->
-                        [
-                          ("RENAMED_TRANSITION", Transition.to_string t); ("IS_EXIT", Bool.to_string is_exit);
-                        ])))
-          |> List.of_enum
+          |> Sequence.map
+               ~f:
+                 (tap (fun (t, is_exit) ->
+                      log ~level:DEBUG "pe.version" (fun () ->
+                          [
+                            ("RENAMED_TRANSITION", Transition.to_string t); ("IS_EXIT", Bool.to_string is_exit);
+                          ])))
+          |> Sequence.to_list
         in
 
         (* Evaluate from every outgoing transition *)
         List.fold
-          (evaluate_transition current_version)
-          (already_unfolded_versions, result_graph)
+          ~f:(evaluate_transition current_version)
+          ~init:(already_unfolded_versions, result_graph)
           outgoing_transitions)
     in
 
     let entry_versions =
-      TransitionSet.fold
-        (fun entry_transition entry_versions ->
+      Set.fold
+        ~f:(fun entry_versions entry_transition ->
           let entry_location = Transition.target entry_transition in
           let entry_version = Version.mk_true entry_location in
-          PEM.VersionSet.add entry_version entry_versions)
-        entry_transitions PEM.VersionSet.empty
+          Set.add entry_versions entry_version)
+        entry_transitions ~init:PEM.VersionSet.empty
     in
 
     let entry_versions =
-      if LocationSet.mem start_location (TransitionSet.locations component) then
-        PEM.VersionSet.add (Version.mk_true start_location) entry_versions
+      if Set.mem (TransitionSet.locations component) start_location then
+        Set.add entry_versions (Version.mk_true start_location)
       else
         entry_versions
     in
 
     let _, pe_graph =
-      PEM.VersionSet.fold
-        (fun entry_version (already_unfolded_versions, result_graph) ->
+      Set.fold
+        ~f:(fun (already_unfolded_versions, result_graph) entry_version ->
           evaluate_version entry_version (already_unfolded_versions, result_graph))
         entry_versions
-        (PEM.VersionSet.empty, result_graph_without_sub)
+        ~init:(PEM.VersionSet.empty, result_graph_without_sub)
     in
 
     let pe_graph = PEM.remove_abstractions config.update_invariants pe_graph in
@@ -1219,21 +1248,17 @@ struct
       Program.input_vars program
       |> tap (fun x -> log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
+    let orig_graph = Program.graph program in
+    let pe_graph =
+      evaluate_component config
+        (TransitionGraph.transitions orig_graph)
+        program_vars (Program.start program) orig_graph
+    in
     let pe_prog =
-      Program.map_graph
-        (fun graph ->
-          (* Evaluate every scc in the program *)
-          (* Note: the start location cannot be part of an SCC and hence is
-             Also present in the result graph.
-          *)
-          (* Program.sccs program *)
-          (* |> Enum.fold *)
-          (*      (fun result_graph scc -> *)
-          (*        evaluate_component config scc program_vars result_graph) *)
-          (*      graph) *)
-          evaluate_component config (TransitionGraph.transitions graph) program_vars (Program.start program)
-            graph)
-        program
+      (* Note: the start location cannot be part of an SCC and hence is
+         Also present in the result graph.
+      *)
+      Adapter.create_new_program (Program.start program) pe_graph
     in
     assert (VarSet.equal (Program.input_vars program) (Program.input_vars pe_prog));
     pe_prog
@@ -1244,39 +1269,35 @@ struct
       Program.input_vars program
       |> tap (fun x -> log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
+    let orig_graph = Program.graph program in
 
-    let pe_prog =
-      Program.map_graph
-        (fun graph ->
-          let find_smallest_loop transition =
-            let src, _, target = transition in
-            let shortest_path, _length = Djikstra.shortest_path graph target src in
-            transition :: shortest_path |> TransitionSet.of_list
-          in
+    let pe_graph =
+      let find_smallest_loop transition =
+        let src, _, target = transition in
+        let shortest_path, _length = Djikstra.shortest_path orig_graph target src in
+        transition :: shortest_path |> TransitionSet.of_list
+      in
 
-          let find_parallel_transitions transition =
-            let src, _, target = transition in
-            TransitionGraph.find_all_edges graph src target |> TransitionSet.of_list
-          in
+      let find_parallel_transitions transition =
+        let src, _, target = transition in
+        TransitionGraph.find_all_edges orig_graph src target |> TransitionSet.of_list
+      in
 
-          let component =
-            nonLinearTransitions
-            |> TransitionSet.fold
-                 (fun transition loops -> TransitionSet.union loops (find_smallest_loop transition))
-                 TransitionSet.empty
-            |> TransitionSet.fold
-                 (fun transition parallel ->
-                   TransitionSet.union parallel (find_parallel_transitions transition))
-                 TransitionSet.empty
-          in
-          evaluate_component config component program_vars (Program.start program) graph)
-        program
+      let component =
+        nonLinearTransitions
+        |> Set.fold
+             ~f:(fun loops transition -> Set.union loops (find_smallest_loop transition))
+             ~init:TransitionSet.empty
+        |> Set.fold
+             ~f:(fun parallel transition -> Set.union parallel (find_parallel_transitions transition))
+             ~init:TransitionSet.empty
+      in
+      evaluate_component config component program_vars (Program.start program) orig_graph
     in
+    let pe_prog = Adapter.create_new_program (Program.start program) pe_graph in
     log ~level:INFO "pe" (fun () -> [ ("PE", Program.to_string pe_prog) ]);
     pe_prog
 end
 
-module ClassicPartialEvaluation (PM : ProgramTypes.ClassicalProgramModules) =
-  PartialEvaluation (PM) (ClassicAdapter (PM))
-
+module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ClassicAdapter)
 module ProbabilisticPartialEvaluation = PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticAdapter)

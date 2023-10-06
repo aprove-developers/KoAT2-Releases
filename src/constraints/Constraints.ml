@@ -79,7 +79,7 @@ module ConstraintOver (A : ConstraintTypes.Atom) = struct
   let get_matrix vars constr = List.map ~f:(fun var -> get_coefficient_vector var constr) vars
 
   (** returns a list of lists of the coefficients of the constraint*)
-  let dualise vars (matrix : A.P.t list list) column =
+  let dualise vars (matrix : A.polynomial list list) column =
     let dualised_left =
       List.map
         ~f:(fun row ->

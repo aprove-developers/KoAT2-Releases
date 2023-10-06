@@ -581,6 +581,17 @@ module ProbabilisticTransition = struct
     ^ ":" ^ Location.to_string l'
 
 
+  let to_file_string_rhs (_, label, l') =
+    let prob = ProbabilisticTransitionLabel.probability label in
+    let prob_string =
+      if OurRational.(equal one prob) then
+        ""
+      else
+        "[" ^ OurRational.to_string prob ^ "]:"
+    in
+    prob_string ^ Location.to_string l' ^ ProbabilisticTransitionLabel.update_to_string_rhs label
+
+
   let to_string_rhs (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
@@ -791,6 +802,31 @@ module GeneralTransition = struct
       ^ Guard.to_string ~pretty:false (guard t)
 
 
+    let to_file_string t =
+      let vars =
+        ProbabilisticTransitionLabel.update_to_string_lhs
+        @@ ProbabilisticTransition.label (Set.choose_exn t.transitions)
+      in
+      let trans = Set.to_sequence t.transitions in
+      let cost_str =
+        if Polynomial.(equal (cost t) one) then
+          ""
+        else
+          "{" ^ Polynomial.to_string (cost t) ^ "}"
+      in
+      let trans_string =
+        Sequence.map ~f:ProbabilisticTransition.to_file_string_rhs trans
+        |> Sequence.reduce_exn ~f:(fun a b -> a ^ " :+: " ^ b)
+      in
+      Location.to_string (src t)
+      ^ vars ^ " -" ^ cost_str ^ "> " ^ trans_string
+      ^
+      if Guard.is_true (guard t) then
+        ""
+      else
+        " :|: " ^ Guard.to_string ~pretty:false (guard t)
+
+
     let to_string_pretty t =
       let id_string = "g" ^ Util.natural_to_subscript (gt_id t) ^ ":" in
       let vars =
@@ -878,8 +914,25 @@ end
 module TransitionGraph_Ocamlgraph_Repr_ =
   Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Location) (ProbabilisticTransitionLabel_)
 
-module ProbabilisticTransitionGraph =
-  TransitionGraph_.Make_ (ProbabilisticTransition) (Location) (TransitionGraph_Ocamlgraph_Repr_)
+module ProbabilisticTransitionGraph = struct
+  include TransitionGraph_.Make_ (ProbabilisticTransition) (Location) (TransitionGraph_Ocamlgraph_Repr_)
+
+  let map_gtsset ~f (gts : GeneralTransitionSet.t) (t : t) : t =
+    (* Here, after applying f to the general transitions in gts the transitions contained in the original graph will point back to the wrong general transition.
+       Hence, we replace them here. *)
+    let graph = GeneralTransitionSet.all_transitions gts |> Set.fold ~init:t ~f:remove_edge_e in
+    let gts = GeneralTransitionSet.map gts ~f in
+    GeneralTransitionSet.all_transitions gts |> Set.fold ~init:graph ~f:add_edge_e
+
+
+  let add_invariant location invariant t =
+    let out_gts =
+      Sequence.of_list (succ_e t location)
+      |> Sequence.map ~f:ProbabilisticTransition.gt
+      |> GeneralTransitionSet.of_sequence
+    in
+    map_gtsset out_gts ~f:(fun gt -> GeneralTransition.add_invariant gt invariant) t
+end
 
 module ProbabilisticProgram = struct
   include
@@ -907,29 +960,10 @@ module ProbabilisticProgram = struct
   let tmp_vars t = Set.diff (vars t) (input_vars t)
   let is_initial_gt t gt = Location.equal (start t) (GeneralTransition.src gt)
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
+  let add_invariant loc inv = map_graph (ProbabilisticTransitionGraph.add_invariant loc inv)
 
   let map_gtsset ~f (gts : GeneralTransitionSet.t) (t : t) : t =
-    map_graph
-      (fun graph ->
-        (* Here, after applying f to the general transitions in gts the transitions contained in the original graph will point back to the wrong general transition.
-           Hence, we replace them here. *)
-        let graph =
-          GeneralTransitionSet.all_transitions gts
-          |> Set.fold ~init:graph ~f:ProbabilisticTransitionGraph.remove_edge_e
-        in
-        let gts = GeneralTransitionSet.map gts ~f in
-        GeneralTransitionSet.all_transitions gts
-        |> Set.fold ~init:graph ~f:ProbabilisticTransitionGraph.add_edge_e)
-      t
-
-
-  let add_invariant location invariant t =
-    let out_gts =
-      Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph t) location)
-      |> Sequence.map ~f:ProbabilisticTransition.gt
-      |> GeneralTransitionSet.of_sequence
-    in
-    map_gtsset out_gts ~f:(fun gt -> GeneralTransition.add_invariant gt invariant) t
+    map_graph (ProbabilisticTransitionGraph.map_gtsset ~f gts) t
 
 
   let simplify_all_guards (t : t) : t = map_gtsset (gts t) ~f:GeneralTransition.simplify_guard t
@@ -979,9 +1013,14 @@ module ProbabilisticProgram = struct
         remove_transition prog (l, t, l'))
 end
 
-module ProbabilisticTransitionGraphNonProbOverappr =
-  TransitionGraph_.Make_ (ProbabilisticTransitionNonProbOverappr) (Location)
-    (TransitionGraph_Ocamlgraph_Repr_)
+module ProbabilisticTransitionGraphNonProbOverappr = struct
+  include
+    TransitionGraph_.Make_ (ProbabilisticTransitionNonProbOverappr) (Location)
+      (TransitionGraph_Ocamlgraph_Repr_)
+
+  (** This is the same for normal prob. programs and non prob. overapproximated ones *)
+  let add_invariant = ProbabilisticTransitionGraph.add_invariant
+end
 
 module ProbabilisticProgramNonProbOverappr = struct
   include

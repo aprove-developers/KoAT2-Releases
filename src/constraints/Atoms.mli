@@ -12,7 +12,12 @@ module AtomOver (P : ConstraintTypes.Atomizable) :
 
 (** Provides an implementation of atoms over polynomials. *)
 module Atom : sig
-  include module type of AtomOver (PolynomialOver (OurInt))
+  include
+    ConstraintTypes.Atom
+      with type polynomial = Polynomial.t
+       and type value = Polynomial.value
+       and module P = Polynomial
+       and type t = AtomOver(PolynomialOver(OurInt)).t
 
   val max_of_occurring_constants : t -> OurInt.t
   (** TODO doc*)
@@ -27,7 +32,12 @@ module Atom : sig
 end
 
 module RationalAtom : sig
-  include module type of AtomOver (PolynomialOver (OurRational))
+  include
+    ConstraintTypes.Atom
+      with type polynomial = RationalPolynomial.t
+       and type value = RationalPolynomial.value
+       and module P = RationalPolynomial
+       and type t = AtomOver(PolynomialOver(OurRational)).t
 
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
@@ -43,15 +53,30 @@ end
 
 (** Provides an implementation of atoms over parameter polynomials. *)
 module ParameterAtomOver (Value : PolyTypes.Ring) : sig
-  include module type of AtomOver (ParameterPolynomialOver (Value))
+  include
+    ConstraintTypes.Atom
+      with type polynomial = ParameterPolynomialOver(Value).t
+       and type value = ParameterPolynomialOver(Value).value
+       and module P = ParameterPolynomialOver(Value)
+       and type t = AtomOver(ParameterPolynomialOver(Value)).t
 end
 
 module ParameterAtom : sig
-  include module type of ParameterAtomOver (OurInt)
+  include
+    ConstraintTypes.Atom
+      with type polynomial = ParameterPolynomial.t
+       and type value = ParameterPolynomial.value
+       and module P = ParameterPolynomial
+       and type t = AtomOver(ParameterPolynomialOver(OurInt)).t
 end
 
 module RationalParameterAtom : sig
-  include module type of ParameterAtomOver (OurRational)
+  include
+    ConstraintTypes.Atom
+      with type polynomial = RationalParameterPolynomial.t
+       and type value = RationalParameterPolynomial.value
+       and module P = RationalParameterPolynomial
+       and type t = AtomOver(ParameterPolynomialOver(OurRational)).t
 
   val replace_nonlinear_monomials_with_temp_vars : t -> t
 end

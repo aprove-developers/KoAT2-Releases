@@ -1,5 +1,5 @@
-open Batteries
 open Koat2
+open! OurBase
 
 let command = "cfr"
 let description = "Do a control-flow refinement of a full (probabilistic) integer transition system"
@@ -46,7 +46,9 @@ let sane_program_to_file file program =
   let oc = open_out file in
   Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
     (Location.to_string (Program.start program))
-    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (Program.input_vars program) "")
+    (Set.fold
+       ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var)
+       (Program.input_vars program) ~init:"")
     (TransitionGraph.fold_edges_e
        (fun t str -> str ^ " " ^ Transition.to_file_string t ^ "\n")
        (Program.graph program) "");
@@ -58,10 +60,12 @@ let prob_program_to_file file program =
   let oc = open_out file in
   Printf.fprintf oc "(GOAL EXPECTEDCOMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
     (Location.to_string (Program.start program))
-    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (Program.input_vars program) "")
-    (GeneralTransitionSet.fold
-       (fun gt str -> str ^ " " ^ GeneralTransition.to_file_string gt ^ "\n")
-       (Program.gts program) "");
+    (Set.fold
+       ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var)
+       (Program.input_vars program) ~init:"")
+    (Set.fold
+       ~f:(fun str gt -> str ^ " " ^ GeneralTransition.to_file_string gt ^ "\n")
+       (Program.gts program) ~init:"");
   close_out oc
 
 
@@ -88,7 +92,7 @@ let run (params : params) =
         Readers.read_probabilistic_program input
         |> PE.evaluate_program cfr_config |> prob_program_to_file output
       else
-        let module PE = NativePartialEvaluation.ClassicPartialEvaluation (ProgramModules) in
+        let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
         Readers.read_file input |> PE.evaluate_program cfr_config |> sane_program_to_file output
   | `PartialEvaluationIRankFinder ->
       if params.probabilistic then

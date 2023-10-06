@@ -46,7 +46,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module LSB_Table = Hashtbl.Make (PM.RV)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (PM)
-  module PENative = NativePartialEvaluation.ClassicPartialEvaluation (ProgramModules)
+  module PENative = NativePartialEvaluation.ClassicPartialEvaluation
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module SizeBounds_ = SizeBounds
@@ -552,32 +552,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         in
         let partial_evaluation (program, appr, rvg) =
           let program, appr, rvg =
-            if List.mem Chaining cfr then
-              let opt =
-                Timeout.timed_run 10.
-                  ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                  (fun () ->
-                    apply_cfr "chaining"
-                      (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc)))
-                      (fun _ _ -> ())
-                      rvg 10. non_linear_transitions ~preprocess program appr)
-              in
-              match opt with
-              | Some (res, _time_used) -> res
-              | None -> (program, appr, rvg)
-            else
-              (program, appr, rvg)
-          in
-
-          let program, appr, rvg =
             if List.mem PartialEvaluationIRankFinder cfr then
               let non_linear_transitions =
                 (* TODO: why? *)
-                TransitionSet.filter
-                  (not % Bound.is_linear % Approximation.timebound appr)
-                  (TransitionSet.inter scc (Program.transitions program))
+                compute_non_linear_transitions program appr
               in
-              if !PartialEvaluation.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then
+              if !PartialEvaluation.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) then
                 let time = PartialEvaluation.compute_timeout_time program appr scc in
                 let opt =
                   Timeout.timed_run time
@@ -609,33 +589,37 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 cfr
             with
             | Some (PartialEvaluationNative (fvs, k_encounters, update_invariants)) -> (
-                let time = PartialEvaluation.compute_timeout_time program appr scc in
-                let pe_config =
-                  NativePartialEvaluation.
-                    {
-                      abstract =
-                        (if fvs then
-                           `FVS
-                         else
-                           `LoopHeads);
-                      k_encounters;
-                      update_invariants;
-                    }
-                in
-                let opt =
-                  Timeout.timed_run time
-                    ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                    (fun () ->
-                      apply_cfr "partial_evaluation_native"
-                        (MaybeChanged.changed % PENative.apply_sub_scc_cfr pe_config non_linear_transitions)
-                        PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
-                        appr)
-                in
-                match opt with
-                | Some (res, time_used) ->
-                    PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
-                    res
-                | None -> (program, appr, rvg))
+                let non_linear_transitions = compute_non_linear_transitions program appr in
+                if Base.Set.is_empty non_linear_transitions then
+                  (program, appr, rvg)
+                else
+                  let time = PartialEvaluation.compute_timeout_time program appr scc in
+                  let pe_config =
+                    NativePartialEvaluation.
+                      {
+                        abstract =
+                          (if fvs then
+                             `FVS
+                           else
+                             `LoopHeads);
+                        k_encounters;
+                        update_invariants;
+                      }
+                  in
+                  let opt =
+                    Timeout.timed_run time
+                      ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                      (fun () ->
+                        apply_cfr "partial_evaluation_native"
+                          (MaybeChanged.changed % PENative.apply_sub_scc_cfr pe_config non_linear_transitions)
+                          PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
+                          appr)
+                  in
+                  match opt with
+                  | Some (res, time_used) ->
+                      PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
+                      res
+                  | None -> (program, appr, rvg))
             | _ -> (program, appr, rvg)
           in
           (program, appr, rvg)
@@ -651,7 +635,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 rvg 10. non_linear_transitions ~preprocess program appr)
           |> Option.map_default Tuple2.first (program, appr, rvg)
         in
-        (if (not (Base.Set.is_empty non_linear_transitions)) && List.mem `Chaining cfr then
+        (if (not (Base.Set.is_empty non_linear_transitions)) && List.mem Chaining cfr then
            chaining ()
          else
            (program, appr, rvg))
@@ -659,7 +643,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         if
           !PartialEvaluation.time_cfr > 0.
           && (not (Base.Set.is_empty non_linear_transitions))
-          && List.mem `PartialEvaluation cfr
+          && List.mem PartialEvaluationIRankFinder cfr
         then
           partial_evaluation
         else

@@ -292,6 +292,9 @@ module type TransitionGraph = sig
   val loc_transitions : t -> location list -> transition_set
   (** Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list. *)
 
+  val add_invariant : location -> Constraint.t -> t -> t
+  (** Adds the invariant to a location of the program. *)
+
   val equivalent : t -> t -> bool
   (** Checks fore equivalence TODO: lies everywhere...*)
 

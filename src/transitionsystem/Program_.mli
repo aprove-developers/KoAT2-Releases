@@ -47,6 +47,7 @@ module ClassicalProgramOverLocation (L : ProgramTypes.Location) : sig
 
   val map_graph : (transition_graph -> transition_graph) -> t -> t
   val from_sequence : location -> transition Sequence.t -> t
+  val from_graph : location -> transition_graph -> t
   val remove_transition : t -> transition -> t
 end
 

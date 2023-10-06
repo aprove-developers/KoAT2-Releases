@@ -12,6 +12,7 @@ end
 
 type general_transition
 
+(** Note that General Transitions are cyclic with Probabilistictransitions! So do not modify Probabilistictransitions directly! *)
 module ProbabilisticTransition : sig
   include
     ProgramTypes.Transition
@@ -37,6 +38,7 @@ module ProbabilisticTransitionNonProbOverappr : sig
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
 end
 
+(** Note that General Transitions are cyclic with Probabilistictransitions! So do not modify Probabilistictransitions directly! *)
 module GeneralTransition : sig
   type t = general_transition
 
@@ -66,6 +68,7 @@ module GeneralTransition : sig
   val add_invariant : t -> Guard.t -> t
   val to_string : t -> string
   val to_string_pretty : t -> string
+  val to_file_string : t -> string
 
   val ids_to_string : ?pretty:bool -> t -> string
   (** Obtain a string only containing the transition's id, e.g., [ "g3" ] *)

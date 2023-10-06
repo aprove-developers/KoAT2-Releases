@@ -127,6 +127,8 @@ module type Atom = sig
   val poly : t -> polynomial
   val is_lt : t -> bool
   val is_le : t -> bool
+
+  include Base.Comparator.S with type t := t
 end
 
 (** A constraint is a conjunction of atoms, i.e., we store those atoms in a list. *)

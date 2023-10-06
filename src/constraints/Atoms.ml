@@ -4,144 +4,152 @@ open Polynomials
 module AtomOver (P : ConstraintTypes.Atomizable) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
-  module P = P
+  module Inner = struct
+    module P = P
 
-  type polynomial = P.t
-  type value = P.value
+    type polynomial = P.t
+    type value = P.value
 
-  module Comparator = struct
-    type t = GT | GE | LT | LE
+    module Comparator = struct
+      type t = GT | GE | LT | LE
 
-    let values = [ GT; GE; LT; LE ]
+      let values = [ GT; GE; LT; LE ]
 
-    let to_string = function
-      | GT -> ">"
-      | GE -> ">="
-      | LT -> "<"
-      | LE -> "<="
+      let to_string = function
+        | GT -> ">"
+        | GE -> ">="
+        | LT -> "<"
+        | LE -> "<="
 
 
-    let str_values = List.map ~f:to_string values
+      let str_values = List.map ~f:to_string values
+
+      (*
+          let to_function =
+            let open P.Value.Compare in function
+            | GT -> (>)
+            | GE -> (>=)
+            | LT -> (<)
+            | LE -> (<=)
+                          *)
+    end
+
+    (* Always in normalised form: polynomial <= 0 *)
+    type compkind = LE | LT [@@deriving eq, ord]
+    type t = P.t * compkind [@@deriving eq, ord]
+
+    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+
+    let comp_to_string ?(pretty = false) = function
+      | LE ->
+          if pretty then
+            " ≤ "
+          else
+            "<="
+      | LT ->
+          if pretty then
+            " < "
+          else
+            "<"
+
+
+    (* Helper function *)
+    let normalise poly1 poly2 = function
+      | Comparator.LE -> (P.sub poly1 poly2, LE)
+      | Comparator.GE -> (P.sub poly2 poly1, LE)
+      | Comparator.LT -> (P.sub poly1 poly2, LT)
+      | Comparator.GT -> (P.sub poly2 poly1, LT)
+
+
+    let mk comp poly1 poly2 = (*P.scale_coefficients*) normalise poly1 poly2 comp
+    let mk_gt = mk Comparator.GT
+    let mk_ge = mk Comparator.GE
+    let mk_lt = mk Comparator.LT
+    let mk_le = mk Comparator.LE
+
+    module Infix = struct
+      let ( > ) = mk_gt
+      let ( >= ) = mk_ge
+      let ( < ) = mk_lt
+      let ( <= ) = mk_le
+    end
+
+    (* TODO We can not decide all equalities right now because of some integer arithmetic *)
+    (* Maybe use SMT-solver here *)
+    let ( =~= ) (poly1, comp1) (poly2, comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
+
+    let neg = function
+      | poly, LE -> (P.neg poly, LT)
+      | poly, LT -> (P.neg poly, LE)
+
+
+    let flip_comp = function
+      | poly, LE -> (P.neg poly, LE)
+      | poly, LT -> (P.neg poly, LT)
+
+
+    let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
+      P.to_string poly ^ comp_to_string comp ^ "0"
+
+
+    let remove_strict = function
+      | p, LE -> (p, LE)
+      | p, LT ->
+          if P.is_integral p then
+            (P.(add one p), LE)
+          else
+            raise
+              (ConstraintTypes.StrictUnremovable ("Can not remove strict comperator in " ^ to_string (p, LT)))
+
+
+    let vars (poly, _) = P.vars poly
+    let normalised_lhs (poly, _) = poly
+    let rename (poly, comp) varmapping = (P.rename varmapping poly, comp)
+
+    let fold ~subject ~le ~lt (poly, comp) =
+      if equal_compkind comp LE then
+        le (subject poly) (subject P.zero)
+      else
+        lt (subject poly) (subject P.zero)
+
 
     (*
-        let to_function =
-          let open P.Value.Compare in function
-          | GT -> (>)
-          | GE -> (>=)
-          | LT -> (<)
-          | LE -> (<=)
-                        *)
+      (* TODO It's maybe possible to compare polynomials without full evaluation *)
+      (* However, there are probably more expensive operations *)
+      let models atom valuation =
+        P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
+                                  *)
+    let is_linear (poly, comp) = P.is_linear poly
+    let get_coefficient var atom = P.coeff_of_var var (normalised_lhs atom)
+
+    let get_constant (poly, compkind) =
+      match compkind with
+      | LE -> P.get_constant (P.neg poly)
+      (* Implicitly convert from < to <=*)
+      | LT -> P.get_constant (P.neg @@ P.add P.one poly)
+
+
+    let poly (poly, _) = poly
+
+    let is_lt (_, comp) =
+      match comp with
+      | LT -> true
+      | _ -> false
+
+
+    let is_le (_, comp) =
+      match comp with
+      | LE -> true
+      | _ -> false
   end
 
-  (* Always in normalised form: polynomial <= 0 *)
-  type compkind = LE | LT [@@deriving eq, ord]
-  type t = P.t * compkind [@@deriving eq, ord]
-
-  let comp_to_string ?(pretty = false) = function
-    | LE ->
-        if pretty then
-          " ≤ "
-        else
-          "<="
-    | LT ->
-        if pretty then
-          " < "
-        else
-          "<"
-
-
-  (* Helper function *)
-  let normalise poly1 poly2 = function
-    | Comparator.LE -> (P.sub poly1 poly2, LE)
-    | Comparator.GE -> (P.sub poly2 poly1, LE)
-    | Comparator.LT -> (P.sub poly1 poly2, LT)
-    | Comparator.GT -> (P.sub poly2 poly1, LT)
-
-
-  let mk comp poly1 poly2 = (*P.scale_coefficients*) normalise poly1 poly2 comp
-  let mk_gt = mk Comparator.GT
-  let mk_ge = mk Comparator.GE
-  let mk_lt = mk Comparator.LT
-  let mk_le = mk Comparator.LE
-
-  module Infix = struct
-    let ( > ) = mk_gt
-    let ( >= ) = mk_ge
-    let ( < ) = mk_lt
-    let ( <= ) = mk_le
-  end
-
-  (* TODO We can not decide all equalities right now because of some integer arithmetic *)
-  (* Maybe use SMT-solver here *)
-  let ( =~= ) (poly1, comp1) (poly2, comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
-
-  let neg = function
-    | poly, LE -> (P.neg poly, LT)
-    | poly, LT -> (P.neg poly, LE)
-
-
-  let flip_comp = function
-    | poly, LE -> (P.neg poly, LE)
-    | poly, LT -> (P.neg poly, LT)
-
-
-  let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
-    P.to_string poly ^ comp_to_string comp ^ "0"
-
-
-  let remove_strict = function
-    | p, LE -> (p, LE)
-    | p, LT ->
-        if P.is_integral p then
-          (P.(add one p), LE)
-        else
-          raise
-            (ConstraintTypes.StrictUnremovable ("Can not remove strict comperator in " ^ to_string (p, LT)))
-
-
-  let vars (poly, _) = P.vars poly
-  let normalised_lhs (poly, _) = poly
-  let rename (poly, comp) varmapping = (P.rename varmapping poly, comp)
-
-  let fold ~subject ~le ~lt (poly, comp) =
-    if equal_compkind comp LE then
-      le (subject poly) (subject P.zero)
-    else
-      lt (subject poly) (subject P.zero)
-
-
-  (*
-    (* TODO It's maybe possible to compare polynomials without full evaluation *)
-    (* However, there are probably more expensive operations *)
-    let models atom valuation =
-      P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
-                                *)
-  let is_linear (poly, comp) = P.is_linear poly
-  let get_coefficient var atom = P.coeff_of_var var (normalised_lhs atom)
-
-  let get_constant (poly, compkind) =
-    match compkind with
-    | LE -> P.get_constant (P.neg poly)
-    (* Implicitly convert from < to <=*)
-    | LT -> P.get_constant (P.neg @@ P.add P.one poly)
-
-
-  let poly (poly, _) = poly
-
-  let is_lt (_, comp) =
-    match comp with
-    | LT -> true
-    | _ -> false
-
-
-  let is_le (_, comp) =
-    match comp with
-    | LE -> true
-    | _ -> false
+  include Inner
+  include Base.Comparator.Make (Inner)
 end
 
 module Atom = struct
   include AtomOver (PolynomialOver (OurInt))
+  module P = Polynomial
 
   let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
     let poly_print =
@@ -169,6 +177,7 @@ end
 
 module RationalAtom = struct
   include AtomOver (PolynomialOver (OurRational))
+  module P = RationalPolynomial
 
   let to_string ?(to_file = false) ?(pretty = false) (poly, comp) =
     let poly_print =
@@ -193,10 +202,14 @@ module RationalAtom = struct
     | LT -> mk Comparator.LE (RationalPolynomial.of_intpoly poly) realpoly_minus_1
 end
 
-module ParameterAtomOver (Value : PolyTypes.Ring) = AtomOver (ParameterPolynomialOver (Value))
+module ParameterAtomOver (Value : PolyTypes.Ring) = struct
+  include AtomOver (ParameterPolynomialOver (Value))
+  module P = ParameterPolynomialOver (Value)
+end
 
 module ParameterAtom = struct
   include ParameterAtomOver (OurInt)
+  module P = ParameterPolynomial
 
   let remove_strict (poly, comp) =
     match comp with
@@ -206,19 +219,19 @@ end
 
 module RationalParameterAtom = struct
   include ParameterAtomOver (OurRational)
-  module Poly = ParameterPolynomialOver (OurRational)
+  module P = RationalParameterPolynomial
   module Mon = Monomials.Make (PolynomialOver (OurRational))
 
   let replace_nonlinear_monomials_with_temp_vars ((p, c) : t) =
     let p =
-      Sequence.of_list (Poly.monomials_with_coeffs p)
+      Sequence.of_list (P.monomials_with_coeffs p)
       |> Sequence.map ~f:(fun (c, m) ->
              if Mon.is_constant m || Mon.is_univariate_linear m then
-               Poly.of_coeff_and_mon_list [ (c, m) ]
+               P.of_coeff_and_mon_list [ (c, m) ]
              else
                let m = Mon.of_var (Var.fresh_id Var.Real ()) in
-               Poly.of_coeff_and_mon_list [ (c, m) ])
-      |> Poly.sum
+               P.of_coeff_and_mon_list [ (c, m) ])
+      |> P.sum
     in
     (p, c)
 end
