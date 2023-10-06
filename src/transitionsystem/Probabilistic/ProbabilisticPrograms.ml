@@ -881,6 +881,7 @@ module GeneralTransitionSet = struct
   let to_string = Util.sequence_to_string ~f:GeneralTransition.to_id_string % Set.to_sequence
   let to_id_string = Util.sequence_to_string ~f:GeneralTransition.to_id_string % Set.to_sequence
   let to_id_string_pretty = Util.sequence_to_string ~f:GeneralTransition.to_id_string_pretty % Set.to_sequence
+  let of_tset = map ~f:ProbabilisticTransition.gt
 
   let locations t =
     Set.fold
@@ -917,6 +918,8 @@ module TransitionGraph_Ocamlgraph_Repr_ =
 module ProbabilisticTransitionGraph = struct
   include TransitionGraph_.Make_ (ProbabilisticTransition) (Location) (TransitionGraph_Ocamlgraph_Repr_)
 
+  let gts = GeneralTransitionSet.of_tset % transitions
+
   let map_gtsset ~f (gts : GeneralTransitionSet.t) (t : t) : t =
     (* Here, after applying f to the general transitions in gts the transitions contained in the original graph will point back to the wrong general transition.
        Hence, we replace them here. *)
@@ -945,9 +948,6 @@ module ProbabilisticProgram = struct
     Program_.Make (ProbabilisticTransitionLabel) (ProbabilisticTransition) (Location)
       (ProbabilisticTransitionGraph)
 
-  let gts_of_ts = GeneralTransitionSet.map ~f:ProbabilisticTransition.gt
-  let gts = gts_of_ts % transitions
-
   let pre_gt t gt =
     (* All transitions in a gt have the same guard and hence the same pre transitions *)
     let pre_t = pre t (Set.choose_exn @@ GeneralTransition.transitions gt) in
@@ -972,6 +972,7 @@ module ProbabilisticProgram = struct
     map_graph (ProbabilisticTransitionGraph.map_gtsset ~f gts) t
 
 
+  let gts = ProbabilisticTransitionGraph.gts % graph
   let simplify_all_guards (t : t) : t = map_gtsset (gts t) ~f:GeneralTransition.simplify_guard t
 
   let sccs_gts t =

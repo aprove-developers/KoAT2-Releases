@@ -111,6 +111,7 @@ module GeneralTransitionSet : sig
 
   val locations : t -> location_set
   val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
+  val of_tset : (ProbabilisticTransition.t, 'a) Set.t -> t
 end
 
 module ProbabilisticTransitionGraph : sig
@@ -122,6 +123,7 @@ module ProbabilisticTransitionGraph : sig
        and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
 
   val outgoing_gts : t -> Location.t -> GeneralTransitionSet.t
+  val gts : t -> GeneralTransitionSet.t
 end
 
 module ProbabilisticProgram : sig

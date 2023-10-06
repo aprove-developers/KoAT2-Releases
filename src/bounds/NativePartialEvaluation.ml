@@ -612,37 +612,39 @@ struct
   open OverApproximationUtils (A)
   open ApronUtils (PM)
 
+  (** [initial_guard_polyh am constr guard] computes a polyhedron overapproximating satisfying assignments for the conjunction of [constr] and [guard] *)
+  let initial_guard_polyh am constr guard =
+    Guard.mk_and constr guard
+    |> tap (fun p ->
+           log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
+    |> guard_to_polyh am
+
+
   (** Unfolds the guard with an update, returns None if the guard was UNSAT.*)
-  let unfold am constr program_vars guard update =
+  let unfold_update am initial_polyh program_vars update =
     let update_approx, update_guard = overapprox_update update in
-    let temp_vars =
-      [ Guard.vars guard; Guard.vars update_guard; vars_in_update update_approx ]
+    let update_temp_vars =
+      [ Guard.vars update_guard; vars_in_update update_approx ]
       |> VarSet.union_list
       |> Set.filter ~f:(fun v -> not (Set.mem program_vars v))
     in
-    let used_program_vars =
-      [ Guard.vars constr; Guard.vars guard; Guard.vars update_guard; vars_in_update update_approx ]
+    let update_program_vars =
+      [ Guard.vars update_guard; vars_in_update update_approx ]
       |> VarSet.union_list
       |> Set.filter ~f:(fun v -> Set.mem program_vars v)
     in
 
-    constr
+    initial_polyh
+    |> add_vars_to_polyh am (Set.union update_program_vars update_temp_vars)
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
-    |> guard_to_polyh am
-    |> add_vars_to_polyh am (Set.union used_program_vars temp_vars)
+           log ~level:Logger.DEBUG "unfold" (fun () ->
+               [ ("WITH_UPDATE_VARS", polyh_to_guard am p |> Guard.to_string ~pretty:true) ]))
+    |> meet am update_guard
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
-                 ("TEMP_VARS", VarSet.to_string temp_vars);
-                 ("WITH_NEW_VARS", polyh_to_guard am p |> Guard.to_string ~pretty:true);
-               ]))
-    |> meet am (Guard.all [ guard; update_guard ])
-    |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ("GUARD", Guard.to_string guard);
-                 ("WITH_GUARD", polyh_to_guard am p |> Guard.to_string ~pretty:true);
+                 ("INITIAL_POLYH", polyh_to_guard am initial_polyh |> Guard.to_string ~pretty:true);
+                 ("WITH_UPDATE_GUARD", polyh_to_guard am p |> Guard.to_string ~pretty:true);
                ]))
     |> update_polyh am update_approx
     |> tap (fun p ->
