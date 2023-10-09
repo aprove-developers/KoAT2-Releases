@@ -15,9 +15,7 @@ type general_transition
 module ProbabilisticTransition : sig
   include
     ProgramTypes.Transition
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = ProbabilisticTransitionLabel.t
+      with type transition_label = ProbabilisticTransitionLabel.t
        and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
 
   val same_gt : t -> t -> bool
@@ -30,9 +28,7 @@ end
 module ProbabilisticTransitionNonProbOverappr : sig
   include
     ProgramTypes.ClassicalTransition
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
+      with type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
        and type transition_label_comparator_witness =
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
 end
@@ -50,7 +46,7 @@ module GeneralTransition : sig
     t
 
   val src : t -> Location.t
-  val targets : t -> Location.LocationSetOver(Location).t
+  val targets : t -> LocationSet.t
   val guard : t -> Guard.t
   val invariant : t -> Guard.t
   val guard_without_inv : t -> Guard.t
@@ -79,7 +75,7 @@ module GeneralTransition : sig
   val vars : t -> VarSet.t
   val input_vars : t -> VarSet.t
 
-  val locations : t -> Location.LocationSetOver(Location).t
+  val locations : t -> LocationSet.t
   (** all locations, i.e. the input location and all target locations *)
 
   val map_transitions : (ProbabilisticTransition.t -> ProbabilisticTransition.t) -> t -> t
@@ -93,8 +89,6 @@ module GeneralTransitionSet : sig
     ProgramTypes.TransitionSet
       with type elt = GeneralTransition.t
        and type elt_comparator_witness = GeneralTransition.comparator_witness
-       and type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
 
   include module type of MakeSetCreators0 (GeneralTransition)
 
@@ -104,25 +98,19 @@ module GeneralTransitionSet : sig
   val to_id_string : t -> string
   (** Returns a short string representing the transition set. *)
 
-  type location_set = (Location.t, Location.comparator_witness) Set.t
-
-  val locations : t -> location_set
-  val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
+  val locations : t -> LocationSet.t
+  val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition).t
 end
 
 module ProbabilisticTransitionGraph :
   ProgramTypes.TransitionGraph
-    with type location = Location.t
-     and type location_comparator_witness = Location.comparator_witness
-     and type transition_label = ProbabilisticTransitionLabel.t
+    with type transition_label = ProbabilisticTransitionLabel.t
      and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
 
 module ProbabilisticProgram : sig
   include
     ProgramTypes.Program
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = ProbabilisticTransitionLabel.t
+      with type transition_label = ProbabilisticTransitionLabel.t
        and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
        and type transition_graph = ProbabilisticTransitionGraph.t
 
@@ -150,18 +138,14 @@ end
 
 module ProbabilisticTransitionGraphNonProbOverappr :
   ProgramTypes.TransitionGraph
-    with type location = Location.t
-     and type location_comparator_witness = Location.comparator_witness
-     and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
+    with type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
      and type transition_label_comparator_witness =
       ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
 
 module ProbabilisticProgramNonProbOverappr : sig
   include
     ProgramTypes.Program
-      with type location = Location.t
-      with type location_comparator_witness = Location.comparator_witness
-       and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
+      with type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
        and type transition_label_comparator_witness =
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
        and type transition_graph = ProbabilisticTransitionGraphNonProbOverappr.t

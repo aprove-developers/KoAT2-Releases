@@ -9,41 +9,27 @@ module Make
     (T : ProgramTypes.Transition
            with type transition_label = TL.t
             and type transition_label_comparator_witness = TL.comparator_witness)
-    (L : ProgramTypes.Location
-           with type t = T.location
-            and type comparator_witness = T.location_comparator_witness)
     (G : ProgramTypes.TransitionGraph
-           with type location = L.t
-            and type location_comparator_witness = L.comparator_witness
-            and type transition_label = TL.t
+           with type transition_label = TL.t
             and type transition_label_comparator_witness = TL.comparator_witness) =
 struct
-  type location = L.t
-  type location_comparator_witness = L.comparator_witness
-  type location_set = (location, location_comparator_witness) Set.t
   type transition_label = TL.t
   type transition_label_comparator_witness = TL.comparator_witness
-  type transition = L.t * TL.t * L.t
+  type transition = Location.t * TL.t * Location.t
   type transition_comparator_witness = T.comparator_witness
   type transition_set = (transition, transition_comparator_witness) Set.t
   type transition_graph = G.t
 
-  module TransitionSet = Transition_.TransitionSetOver (T) (L)
+  module TransitionSet = Transition_.TransitionSetOver (T)
   open GenericProgram_
 
-  type t =
-    ( transition_label,
-      transition_label_comparator_witness,
-      location,
-      location_comparator_witness,
-      transition_graph )
-    GenericProgram_.t
+  type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
 
   let start program = program.start
   let graph g = g.graph
 
   let equal equal_graph (program1 : t) (program2 : t) =
-    equal_graph program1.graph program2.graph && L.equal program1.start program2.start
+    equal_graph program1.graph program2.graph && Location.equal program1.start program2.start
 
 
   let equivalent : t -> t -> bool = equal G.equivalent
@@ -93,7 +79,7 @@ struct
   let map_graph f program = invalidate_complete_pre_cache { program with graph = f program.graph }
   let map_transitions f = map_graph (G.map_transitions f)
   let map_labels f = map_transitions (fun (l, t, l') -> (l, f t, l'))
-  let locations : t -> location_set = G.locations % graph
+  let locations : t -> LocationSet.t = G.locations % graph
   let transitions = G.transitions % graph
   let simplify_all_guards = ()
 
@@ -162,14 +148,14 @@ struct
   let sccs program = G.sccs program.graph |> List.rev (* scc_list is in reverse topological order *)
 
   let parallel_transitions graph (l, _, l') =
-    transitions graph |> Set.filter ~f:(fun (l1, _, l1') -> L.equal l l1 && L.equal l' l1')
+    transitions graph |> Set.filter ~f:(fun (l1, _, l1') -> Location.equal l l1 && Location.equal l' l1')
 
 
   let non_trivial_transitions : t -> transition_set = TransitionSet.union_list % sccs
   let add_invariant = ()
   let remove_unsatisfiable_transitions = ()
-  let is_initial program trans = L.(equal program.start (T.src trans))
-  let is_initial_location program location = L.(equal program.start location)
+  let is_initial program trans = Location.(equal program.start (T.src trans))
+  let is_initial_location program location = Location.(equal program.start location)
 
   let to_formatted_string ?(pretty = false) (program : t) =
     let transitions =
@@ -186,11 +172,11 @@ struct
       |> FormattedString.mappend % List.map ~f:FormattedString.mk_str_line
     in
     let locations =
-      String.concat ~sep:", " (G.fold_vertex (fun l str -> str @ [ L.to_string l ]) program.graph [])
+      String.concat ~sep:", " (G.fold_vertex (fun l str -> str @ [ Location.to_string l ]) program.graph [])
     in
     FormattedString.format_append
       ([
-         "Start:  " ^ L.to_string program.start;
+         "Start:  " ^ Location.to_string program.start;
          "Program_Vars:  "
          ^ (input_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ~sep:", ");
          "Temp_Vars:  "
@@ -246,13 +232,10 @@ struct
   end
 end
 
-module ClassicalProgramOverLocation (L : ProgramTypes.Location) = struct
-  include
-    Make (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_) (L)) (L)
-      (TransitionGraph_.TransitionGraphOverLocation (L))
-
-  module Transition = Transition_.MakeClassical (TransitionLabel_) (L)
-  module TransitionGraph = TransitionGraph_.TransitionGraphOverLocation (L)
+module ClassicalProgram = struct
+  include Make (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_)) (TransitionGraph_)
+  module Transition = Transition_.MakeClassical (TransitionLabel_)
+  module TransitionGraph = TransitionGraph_
 
   let add_invariant location invariant =
     map_graph @@ fun graph ->
@@ -274,7 +257,7 @@ module ClassicalProgramOverLocation (L : ProgramTypes.Location) = struct
 end
 
 open GenericProgram_
-include ClassicalProgramOverLocation (Location)
+include ClassicalProgram
 
 let from_com_transitions ?(termination = false) com_transitions start =
   let all_trans = List.join com_transitions in

@@ -20,9 +20,7 @@ type 'trans_label_cmp transition_label_ = {
 }
 
 and 'trans_label_cmp transition_ = Location.t * 'trans_label_cmp transition_label_ * Location.t
-
-and 'trans_label_cmp trans_comparator_ =
-  ('trans_label_cmp, Location.comparator_witness) TransitionComparator.comparator_witness
+and 'trans_label_cmp trans_comparator_ = 'trans_label_cmp TransitionComparator.comparator_witness
 
 and 'trans_label_cmp general_transition_ = {
   gt_id : int;
@@ -487,10 +485,8 @@ end
 module ProbabilisticTransitionShared = struct
   module Inner = struct
     (* do not use include here so that we have to manually check changes in TransitionOver *)
-    module GenericTransition = Transition_.Make (ProbabilisticTransitionLabel) (Location)
+    module GenericTransition = Transition_.Make (ProbabilisticTransitionLabel)
 
-    type location = GenericTransition.location
-    type location_comparator_witness = Location.comparator_witness
     type t = GenericTransition.t
     type transition_label = GenericTransition.transition_label
     type transition_label_comparator_witness = GenericTransition.transition_label_comparator_witness
@@ -511,10 +507,9 @@ module ProbabilisticTransitionShared = struct
 
   include Inner
 
-  type comparator_witness =
-    (transition_label_comparator_witness, location_comparator_witness) TransitionComparator.comparator_witness
+  type comparator_witness = transition_label_comparator_witness TransitionComparator.comparator_witness
 
-  let comparator = TransitionComparator.comparator ProbabilisticTransitionLabel.comparator Location.comparator
+  let comparator = TransitionComparator.comparator ProbabilisticTransitionLabel.comparator
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 end
 
@@ -617,7 +612,7 @@ module ProbabilisticTransition = struct
 end
 
 module ProbabilisticTransitionNonProbOverappr = struct
-  module GenericClassical = Transition_.MakeClassical (ProbabilisticTransitionLabelNonProbOverappr) (Location)
+  module GenericClassical = Transition_.MakeClassical (ProbabilisticTransitionLabelNonProbOverappr)
   include ProbabilisticTransitionShared
 
   let to_id_string = GenericClassical.to_id_string
@@ -628,7 +623,7 @@ module ProbabilisticTransitionNonProbOverappr = struct
 end
 
 module GeneralTransition = struct
-  module ProbabilisticTransitionSet = Transition_.TransitionSetOver (ProbabilisticTransition) (Location)
+  module ProbabilisticTransitionSet = Transition_.TransitionSetOver (ProbabilisticTransition)
 
   module Inner = struct
     type t = general_transition
@@ -833,13 +828,7 @@ module GeneralTransition = struct
 end
 
 module GeneralTransitionSet = struct
-  module LocationSet = Location.LocationSetOver (Location)
   module GeneralTransition = GeneralTransition
-
-  type location = Location.t
-  type location_comparator_witness = Location.comparator_witness
-  type location_set = LocationSet.t
-
   include MakeSetCreators0 (GeneralTransition)
 
   let to_string = Util.sequence_to_string ~f:GeneralTransition.to_id_string % Set.to_sequence
@@ -879,12 +868,11 @@ module TransitionGraph_Ocamlgraph_Repr_ =
   Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Location) (ProbabilisticTransitionLabel_)
 
 module ProbabilisticTransitionGraph =
-  TransitionGraph_.Make_ (ProbabilisticTransition) (Location) (TransitionGraph_Ocamlgraph_Repr_)
+  TransitionGraph_.Make_ (ProbabilisticTransition) (TransitionGraph_Ocamlgraph_Repr_)
 
 module ProbabilisticProgram = struct
   include
-    Program_.Make (ProbabilisticTransitionLabel) (ProbabilisticTransition) (Location)
-      (ProbabilisticTransitionGraph)
+    Program_.Make (ProbabilisticTransitionLabel) (ProbabilisticTransition) (ProbabilisticTransitionGraph)
 
   let gts_of_ts = GeneralTransitionSet.map ~f:ProbabilisticTransition.gt
   let gts = gts_of_ts % transitions
@@ -980,13 +968,11 @@ module ProbabilisticProgram = struct
 end
 
 module ProbabilisticTransitionGraphNonProbOverappr =
-  TransitionGraph_.Make_ (ProbabilisticTransitionNonProbOverappr) (Location)
-    (TransitionGraph_Ocamlgraph_Repr_)
+  TransitionGraph_.Make_ (ProbabilisticTransitionNonProbOverappr) (TransitionGraph_Ocamlgraph_Repr_)
 
 module ProbabilisticProgramNonProbOverappr = struct
   include
     Program_.Make (ProbabilisticTransitionLabelNonProbOverappr) (ProbabilisticTransitionNonProbOverappr)
-      (Location)
       (ProbabilisticTransitionGraphNonProbOverappr)
 
   let add_invariant = ProbabilisticProgram.add_invariant
