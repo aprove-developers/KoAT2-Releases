@@ -10,7 +10,8 @@ type params = {
   input : string; [@aka [ "i" ]]
       (** Either an absolute or relative path to the koat input file which defines the integer transition system. *)
   output : string option; [@aka [ "o" ]]
-      (** An absolute or relative path to the output file, where refined program should end up. *)
+      (** An absolute or relative path to the output file, where refined program should end up.
+      If ommited, the program will be printed to stdout. *)
   show_steps : bool;  (** Displays the steps of the control flow refinement. *)
   log_level : Logger.level;
       [@enum
@@ -25,7 +26,10 @@ type params = {
           ("irankfinder", `PartialEvaluationIRankFinder);
           ("chaining", `Chaining);
         ]]
-  abstract : [ `LoopHeads | `FVS ]; [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]]
+      [@default `PartialEvaluationNative]
+      (** Choose the cfr method. One of native, irankfinder, or chaining *)
+  abstract : [ `LoopHeads | `FVS ]; [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]] [@default `LoopHeads]
+      (** Where to abstract. One of loop_heads or fvs. *)
 }
 [@@deriving cmdliner]
 (** The shell arguments which can be defined in the console. *)
@@ -41,10 +45,9 @@ type params = {
 *)
 
 (** Write a program to a file *)
-let sane_program_to_file file program =
+let sane_program_to_file oc program =
   let open ProgramModules in
-  let oc = open_out file in
-  Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+  Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)\n"
     (Location.to_string (Program.start program))
     (Set.fold
        ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var)
@@ -55,10 +58,9 @@ let sane_program_to_file file program =
   close_out oc
 
 
-let prob_program_to_file file program =
+let prob_program_to_file oc program =
   let open ProbabilisticProgramModules in
-  let oc = open_out file in
-  Printf.fprintf oc "(GOAL EXPECTEDCOMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+  Printf.fprintf oc "(GOAL EXPECTEDCOMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)\n"
     (Location.to_string (Program.start program))
     (Set.fold
        ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var)
@@ -72,12 +74,9 @@ let prob_program_to_file file program =
 let run (params : params) =
   let input = params.input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
   let output =
-    params.output
-    |?
-    let input_directory, input_filename = Fpath.v input |> Fpath.split_base in
-    let input_rem, input_ext = Fpath.split_ext input_filename in
-    Fpath.to_string input_rem ^ "-pe"
-    |> Fpath.v |> Fpath.add_ext "koat" |> Fpath.append input_directory |> Fpath.to_string
+    match params.output with
+    | Some filename -> Stdio.Out_channel.create ~binary:false ~append:false ~fail_if_exists:false filename
+    | None -> Stdio.Out_channel.stdout
   in
 
   Logging.use_loggers [ (Logging.CFR, params.log_level) ];
