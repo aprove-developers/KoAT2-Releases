@@ -10,7 +10,7 @@ module Inner = struct
 
   type t = {
     id : int;
-    update : Polynomial.t ProgramTypes.var_map;
+    update : Polynomial.t ProgramTypes.VarMap.t;
     guard : Guard.t;
     invariant : Invariant.t;
     cost : Polynomial.t;

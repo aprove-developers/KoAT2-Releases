@@ -12,9 +12,9 @@ type 'trans_label_cmp transition_label_ = {
   id : int;
   gt : 'trans_label_cmp general_transition_ ptr;
   probability : OurRational.t;
-  update : UpdateElement_.t ProgramTypes.var_map;
+  update : UpdateElement_.t ProgramTypes.VarMap.t;
       (** Non-determinstically Overapproximated non-probabilistic versions for classic analysis *)
-  overappr_nonprob_update : Polynomial.t ProgramTypes.var_map;
+  overappr_nonprob_update : Polynomial.t ProgramTypes.VarMap.t;
   overappr_guard : Guard.t;
   cost : Polynomial.t;
 }

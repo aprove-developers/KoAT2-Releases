@@ -23,7 +23,7 @@ val append : t -> t -> t
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 
-val update_map : t -> Polynomials.Polynomial.t ProgramTypes.var_map
+val update_map : t -> Polynomials.Polynomial.t ProgramTypes.VarMap.t
 (** Returns the update map of the transitionlabel *)
 
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t

@@ -5,7 +5,7 @@ open! ProgramModules
 open ProgramTypes
 
 module Automorphism = struct
-  type t = { poly : RationalPolynomial.t var_map; inv_poly : RationalPolynomial.t var_map }
+  type t = { poly : RationalPolynomial.t VarMap.t; inv_poly : RationalPolynomial.t VarMap.t }
 
   let to_string t =
     "Automorphism:\n"

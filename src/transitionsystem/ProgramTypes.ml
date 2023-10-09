@@ -4,7 +4,7 @@ open Constraints
 open Polynomials
 (** Provides commonly used module types in programs *)
 
-type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
+module VarMap = MakeMapCreators1 (Var)
 
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
@@ -72,7 +72,7 @@ module type TransitionLabel = sig
   val default : t
   (** Returns a default label with id 0, [true] as the guard,no update function and the default cost function. *)
 
-  val update_map : t -> update_element var_map
+  val update_map : t -> update_element VarMap.t
   (** Returns the update map of the transitionlabel *)
 
   val update : t -> Var.t -> update_element Option.t
