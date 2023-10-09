@@ -111,7 +111,6 @@ module Make
 struct
   open PM
 
-  type location = PM.Location.t
   type transition = PM.Transition.t
   type transition_label = PM.TransitionLabel.t
   type transition_comparator_witness = PM.Transition.comparator_witness

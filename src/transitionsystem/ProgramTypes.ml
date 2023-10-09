@@ -6,32 +6,6 @@ open Polynomials
 
 type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
 
-(** A location is a node of a transition system and can be connected to other locations via transitions. *)
-module type Location = sig
-  type t
-  (** Type of location, we use strings. *)
-
-  val equal : t -> t -> bool
-  val compare : t -> t -> int
-
-  val hash : t -> int
-  (** Generates a hash value for a location.*)
-
-  val to_string : t -> string
-  (** Returns a string representing a location. *)
-
-  include Comparator.S with type t := t
-
-  val sexp_of_t : t -> Sexp.t
-end
-
-module type LocationSet = sig
-  include SetCreators'0
-
-  val to_string : t -> string
-  (** Returns a string representing the transition set. *)
-end
-
 module type TransitionSet = sig
   (** A set of transitions. *)
 
@@ -46,13 +20,9 @@ module type TransitionSet = sig
   val to_id_string_pretty : t -> string
   (** [to_id_string] but prettier *)
 
-  type location
-  type location_comparator_witness
-  type location_set = (location, location_comparator_witness) Set.t
+  val locations : t -> LocationSet.t
 
-  val locations : t -> location_set
-
-  val targets : t -> location_set
+  val targets : t -> LocationSet.t
   (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
 
   val find_by_id : t -> int -> elt Option.t
@@ -176,12 +146,10 @@ end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 module type Transition = sig
-  type location
-  type location_comparator_witness
   type transition_label
   type transition_label_comparator_witness
 
-  type t = location * transition_label * location
+  type t = Location.t * transition_label * Location.t
   (** Type of a transition, i.e., two connected locations and a label. *)
 
   val equal : t -> t -> bool
@@ -205,7 +173,7 @@ module type Transition = sig
 
   val to_string_pretty : t -> string
 
-  val src : t -> location
+  val src : t -> Location.t
   (** Returns the source location of a transition. *)
 
   val label : t -> transition_label
@@ -214,7 +182,7 @@ module type Transition = sig
   val map_label : (transition_label -> transition_label) -> t -> t
   (** Apply a function to a transitions label *)
 
-  val target : t -> location
+  val target : t -> Location.t
   (** Returns the target location of a transition. *)
 
   val id : t -> int
@@ -227,9 +195,7 @@ module type Transition = sig
     Comparator.S
       with type t := t
        and type comparator_witness =
-        ( transition_label_comparator_witness,
-          location_comparator_witness )
-        TransitionComparator.comparator_witness
+        transition_label_comparator_witness TransitionComparator.comparator_witness
 
   val sexp_of_t : t -> Sexp.t
 end
@@ -242,29 +208,26 @@ end
 
 (** This module represents a transition graph. *)
 module type TransitionGraph = sig
-  type location
-  type location_comparator_witness
-  type location_set = (location, location_comparator_witness) Set.t
   type transition_label
   type transition_label_comparator_witness
-  type transition = location * transition_label * location
+  type transition = Location.t * transition_label * Location.t
 
   type transition_comparator_witness =
-    (transition_label_comparator_witness, location_comparator_witness) TransitionComparator.comparator_witness
+    transition_label_comparator_witness TransitionComparator.comparator_witness
 
   type transition_set = (transition, transition_comparator_witness) Set.t
 
   include
     Graph.Sig.P
-      with type V.t = location
-       and type V.label = location
+      with type V.t = Location.t
+       and type V.label = Location.t
        and type E.t = transition
        and type E.label = transition_label
 
   val mk : transition Sequence.t -> t
   (** Creates a transition graph from an enum of transitions. *)
 
-  val add_locations : location Sequence.t -> t -> t
+  val add_locations : Location.t Sequence.t -> t -> t
   (** Adds all locations from an enum to a transtion graph. *)
 
   val add_transitions : transition Sequence.t -> t -> t
@@ -276,13 +239,13 @@ module type TransitionGraph = sig
   val map_labels : (transition_label -> transition_label) -> t -> t
   (** Apply function to the graphs labels  *)
 
-  val locations : t -> location_set
+  val locations : t -> LocationSet.t
   (** Returns the set of locations. *)
 
   val transitions : t -> transition_set
   (** Returns the set of transitions. *)
 
-  val loc_transitions : t -> location list -> transition_set
+  val loc_transitions : t -> Location.t list -> transition_set
   (** Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list. *)
 
   val equivalent : t -> t -> bool
@@ -299,29 +262,20 @@ module type TransitionGraph = sig
 end
 
 module type Program = sig
-  type location
-  type location_comparator_witness
   type transition_label
   type transition_label_comparator_witness
-  type transition = location * transition_label * location
+  type transition = Location.t * transition_label * Location.t
 
   type transition_comparator_witness =
-    (transition_label_comparator_witness, location_comparator_witness) TransitionComparator.comparator_witness
+    transition_label_comparator_witness TransitionComparator.comparator_witness
 
-  type location_set = (location, location_comparator_witness) Set.t
   type transition_set = (transition, transition_comparator_witness) Set.t
   type transition_graph
 
-  type t =
-    ( transition_label,
-      transition_label_comparator_witness,
-      location,
-      location_comparator_witness,
-      transition_graph )
-    GenericProgram_.t
+  type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
   (** Type of a program consisting of a program graph and a start location. *)
 
-  val remove_location : t -> location -> t
+  val remove_location : t -> Location.t -> t
   (** Removes the location from the program and all edges to it. *)
 
   val remove_unsatisfiable_transitions : t -> transition_set -> t
@@ -337,7 +291,7 @@ module type Program = sig
   val graph : t -> transition_graph
   (** Returns transition graph of a program. *)
 
-  val add_invariant : location -> Constraint.t -> t -> t
+  val add_invariant : Location.t -> Constraint.t -> t -> t
   (** Adds the invariant to a location of the program. *)
 
   val simplify_all_guards : t -> t
@@ -358,7 +312,7 @@ module type Program = sig
   val is_initial : t -> transition -> bool
   (** Returns true if the given transition is an initial transition. *)
 
-  val is_initial_location : t -> location -> bool
+  val is_initial_location : t -> Location.t -> bool
   (** Returns true if the given transition is an initial transition. *)
 
   val equivalent : t -> t -> bool
@@ -382,13 +336,13 @@ module type Program = sig
   val tmp_vars : t -> VarSet.t
   (** Returns the set of temporay variables of the transition. *)
 
-  val locations : t -> location_set
+  val locations : t -> LocationSet.t
   (** Returns all locations which occur in the transitions, but each location only once. *)
 
   val transitions : t -> transition_set
   (** Returns a set of all transitions which occur in the program graph of the program. *)
 
-  val start : t -> location
+  val start : t -> Location.t
   (** Returns start location. *)
 
   val sccs : t -> transition_set List.t
@@ -454,44 +408,29 @@ end
 type !'a program_modules_meta
 
 module type ProgramModules = sig
-  module Location : Location
-
-  module LocationSet :
-    LocationSet with type elt = Location.t and type elt_comparator_witness = Location.comparator_witness
-
   module UpdateElement : PolyTypes.Polynomial with type value = OurInt.t
   module TransitionLabel : TransitionLabel with type update_element = UpdateElement.t
 
   module Transition :
     Transition
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
 
   module TransitionSet :
     TransitionSet
       with type elt = Transition.t
        and type elt_comparator_witness =
-        ( TransitionLabel.comparator_witness,
-          Location.comparator_witness )
-        TransitionComparator.comparator_witness
-       and type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
+        TransitionLabel.comparator_witness TransitionComparator.comparator_witness
 
   module TransitionGraph :
     TransitionGraph
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
        and type transition = Transition.t
 
   module Program :
     Program
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
        and type transition = Transition.t
        and type transition_graph = TransitionGraph.t
@@ -499,55 +438,36 @@ module type ProgramModules = sig
   module RV : RV
 
   type program_modules_t =
-    (TransitionLabel.t
-    * TransitionLabel.comparator_witness
-    * Location.t
-    * Location.comparator_witness
-    * TransitionGraph.t)
-    program_modules_meta
+    (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t) program_modules_meta
 end
 
 (** For classical/non-probabilistic programs we want polynomial updates only and RV.transition = Transition.t *)
 module type ClassicalProgramModules = sig
   (* Can we avoid copy/pasting below? *)
-  module Location : Location
-
-  module LocationSet :
-    LocationSet with type elt = Location.t and type elt_comparator_witness = Location.comparator_witness
 
   module UpdateElement : module type of Polynomial
   module TransitionLabel : ClassicalTransitionLabel
 
   module Transition :
     ClassicalTransition
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
 
   module TransitionSet :
     TransitionSet
       with type elt = Transition.t
        and type elt_comparator_witness =
-        ( TransitionLabel.comparator_witness,
-          Location.comparator_witness )
-        TransitionComparator.comparator_witness
-       and type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
+        TransitionLabel.comparator_witness TransitionComparator.comparator_witness
 
   module TransitionGraph :
     TransitionGraph
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
        and type transition = Transition.t
 
   module Program :
     Program
-      with type location = Location.t
-       and type location_comparator_witness = Location.comparator_witness
-       and type transition_label = TransitionLabel.t
+      with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
        and type transition = Transition.t
        and type transition_graph = TransitionGraph.t
@@ -558,10 +478,5 @@ module type ClassicalProgramModules = sig
        and type transition_comparator_witness = Transition.comparator_witness
 
   type program_modules_t =
-    (TransitionLabel.t
-    * TransitionLabel.comparator_witness
-    * Location.t
-    * Location.comparator_witness
-    * TransitionGraph.t)
-    program_modules_meta
+    (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t) program_modules_meta
 end

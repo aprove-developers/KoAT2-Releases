@@ -10,7 +10,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
   type t
   (** Type of ranking function consisting of a function mapping from locations to lists of polynomials, a decreasing transition, a set of non-increasing transitions and the depth of the ranking function. *)
 
-  val rank : t -> (PM.Location.t -> Polynomial.t) list
+  val rank : t -> (Location.t -> Polynomial.t) list
   (** Returns a list of polynomials representing a multiphase ranking function. *)
 
   val decreasing : t -> PM.Transition.t

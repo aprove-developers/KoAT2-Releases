@@ -3,30 +3,22 @@ open! OurBase
 (** A transition connects two locations and is labeled with a transition label.*)
 
 (** Creates a transition over a given label and location type *)
-module Make (TL : ProgramTypes.TransitionLabel) (L : ProgramTypes.Location) : sig
+module Make (TL : ProgramTypes.TransitionLabel) : sig
   include
     ProgramTypes.Transition
-      with type location = L.t
-       and type location_comparator_witness = L.comparator_witness
-       and type transition_label = TL.t
+      with type transition_label = TL.t
        and type transition_label_comparator_witness = TL.comparator_witness
 end
 
 (** Creates a classical transition over a given transition label and location type *)
-module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) (L : ProgramTypes.Location) : sig
+module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) : sig
   include
     ProgramTypes.ClassicalTransition
-      with type location = L.t
-       and type location_comparator_witness = L.comparator_witness
-       and type transition_label = TL.t
+      with type transition_label = TL.t
        and type transition_label_comparator_witness = TL.comparator_witness
 end
 
-module TransitionSetOver
-    (T : ProgramTypes.Transition)
-    (L : ProgramTypes.Location
-           with type t = T.location
-            and type comparator_witness = T.location_comparator_witness) : sig
+module TransitionSetOver (T : ProgramTypes.Transition) : sig
   (** A set of transitions. *)
 
   type elt = T.t
@@ -35,18 +27,12 @@ module TransitionSetOver
   include SetCreators'0 with type elt := elt and type elt_comparator_witness := elt_comparator_witness
 
   include
-    ProgramTypes.TransitionSet
-      with type elt := elt
-       and type elt_comparator_witness := elt_comparator_witness
-       and type location = L.t
-       and type location_comparator_witness = L.comparator_witness
+    ProgramTypes.TransitionSet with type elt := elt and type elt_comparator_witness := elt_comparator_witness
 end
 
 include
   ProgramTypes.ClassicalTransition
-    with type location = Location.t
-     and type location_comparator_witness = Location.comparator_witness
-     and type transition_label = TransitionLabel_.t
+    with type transition_label = TransitionLabel_.t
      and type transition_label_comparator_witness = TransitionLabel_.comparator_witness
 
 val to_file_string : t -> string
