@@ -1,9 +1,18 @@
 open! OurBase
 
+type label_without_backlink = {
+  probability : OurRational.t;
+  overappr_guard : Guard.t;
+  update : UpdateElement_.t ProgramTypes.VarMap.t;
+  overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
+  cost : Polynomials.Polynomial.t;
+}
+
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
   val probability : t -> OurRational.t
+  val without_backlink : t -> label_without_backlink
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
@@ -23,6 +32,8 @@ module ProbabilisticTransition : sig
 
   val same_gt : t -> t -> bool
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
+
+  val without_backlink : t -> Location.t * label_without_backlink * Location.t
 
   val gt : t -> general_transition
   (** Obtain the general transition from the program that contains this transition *)
