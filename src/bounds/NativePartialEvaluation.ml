@@ -341,38 +341,34 @@ end
 (** Generic adapter for program modules with generic overapproximation *)
 module type Adapter = sig
   type update_element
-  type transition_label
+  type transition
   type transition_graph
   type grouped_transition
   type grouped_transition_cmp_wit
   type program
-  type location
   type approx = Polynomials.Polynomial.t * Guard.t
 
   val overapprox_indeterminates : update_element -> approx
-  val location_with_index : int -> location -> location
-  val outgoing_grouped_transitions : transition_graph -> location -> grouped_transition Sequence.t
-
-  (* val copy_grouped_transition : grouped_transition -> grouped_transition *)
+  val outgoing_grouped_transitions : transition_graph -> Location.t -> grouped_transition Sequence.t
   val empty_grouped_transition_set : (grouped_transition, grouped_transition_cmp_wit) Set.t
   val guard_of_grouped_transition : grouped_transition -> Guard.t
 
   val all_grouped_transitions_of_graph :
     transition_graph -> (grouped_transition, grouped_transition_cmp_wit) Set.t
 
-  val grouped_transition_of_transition : location * transition_label * location -> grouped_transition
+  val grouped_transition_of_transition : transition -> grouped_transition
 
   val copy_and_modify_grouped_transition :
-    new_start:location ->
+    new_start:Location.t ->
     add_invariant:Guard.t ->
-    redirect:(location * transition_label * location -> location) ->
+    redirect:(transition -> Location.t) ->
     grouped_transition ->
     grouped_transition
 
   (* val copy_grouped_transition : grouped_transition -> grouped_transition *)
   (** Copy the grouped transition and assign fresh ids *)
 
-  val create_new_program : location -> (grouped_transition, grouped_transition_cmp_wit) Set.t -> program
+  val create_new_program : Location.t -> (grouped_transition, grouped_transition_cmp_wit) Set.t -> program
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
@@ -381,16 +377,14 @@ end
 module ClassicAdapter :
   Adapter
     with type update_element = ProgramModules.UpdateElement.t
-     and type transition_label = ProgramModules.TransitionLabel.t
-     and type location = ProgramModules.Location.t
+     and type transition = ProgramModules.Transition.t
      and type transition_graph = ProgramModules.TransitionGraph.t
      and type program = ProgramModules.Program.t = struct
   open ProgramModules
 
   type update_element = UpdateElement.t
   type approx = Polynomials.Polynomial.t * Guard.t
-  type transition_label = TransitionLabel.t
-  type location = Location.t
+  type transition = Transition.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
   type grouped_transition = Transition.t
@@ -398,10 +392,6 @@ module ClassicAdapter :
 
   (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
   let overapprox_indeterminates poly = (poly, Guard.mk_true)
-
-  let location_with_index index location =
-    Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
-
 
   let outgoing_grouped_transitions trans_graph location =
     TransitionGraph.succ_e trans_graph location |> Sequence.of_list
@@ -412,34 +402,26 @@ module ClassicAdapter :
   let all_grouped_transitions_of_graph = TransitionGraph.transitions
   let grouped_transition_of_transition = identity
 
-  let copy_and_modify_grouped_transition ~(new_start : location) ~(add_invariant : Guard.t)
-      ~(redirect : location * transition_label * location -> location) ((l, label, l') as transition) :
-      grouped_transition =
+  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect ((l, label, l') as transition) =
     let new_label = TransitionLabel.fresh_id label |> flip TransitionLabel.add_invariant add_invariant in
     (new_start, new_label, redirect transition)
 
 
-  (* TODO let copy_new_ *)
-
   let create_new_program location tset = Program.from_sequence location (Set.to_sequence tset)
 end
-
-(* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Use already existing overapproximation *)
 module ProbabilisticAdapter :
   Adapter
     with type update_element = ProbabilisticProgramModules.UpdateElement.t
-     and type transition_label = ProbabilisticProgramModules.TransitionLabel.t
-     and type location = ProbabilisticProgramModules.Location.t
+     and type transition = ProbabilisticProgramModules.Transition.t
      and type transition_graph = ProbabilisticProgramModules.TransitionGraph.t
      and type program = ProbabilisticProgramModules.Program.t = struct
   open ProbabilisticProgramModules
 
   type update_element = UpdateElement.t
   type approx = Polynomials.Polynomial.t * Guard.t
-  type transition_label = TransitionLabel.t
-  type location = Location.t
+  type transition = Transition.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
   type grouped_transition = GeneralTransition.t
@@ -452,10 +434,6 @@ module ProbabilisticAdapter :
     (P.of_var new_var, UpdateElement_.as_guard ue new_var)
 
 
-  let location_with_index index location =
-    Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
-
-
   let outgoing_grouped_transitions trans_graph location =
     ProbabilisticProgramModules.TransitionGraph.outgoing_gts trans_graph location |> Set.to_sequence
 
@@ -465,8 +443,7 @@ module ProbabilisticAdapter :
   let all_grouped_transitions_of_graph = TransitionGraph.gts
   let grouped_transition_of_transition = Transition.gt
 
-  let copy_and_modify_grouped_transition ~(new_start : location) ~(add_invariant : Guard.t)
-      ~(redirect : location * transition_label * location -> location) gt =
+  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect gt =
     GeneralTransition.mk_from_labels_without_backlink ~start:new_start ~guard:(GeneralTransition.guard gt)
       ~invariant:(Guard.mk_and (GeneralTransition.invariant gt) add_invariant)
       ~cost:(GeneralTransition.cost gt)
@@ -481,14 +458,9 @@ module ProbabilisticAdapter :
   let create_new_program = Program.from_gts
 end
 
-module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
+module ApronUtils = struct
   open Constraints
   open Polynomials
-  open PM
-
-  type polyhedron
-  type guard = Constraint.t
-  type update = UpdateElement.t ProgramTypes.VarMap.t
 
   (* TODO: move to ApronInterface *)
 
@@ -670,12 +642,10 @@ end
 
 module Unfolding
     (PM : ProgramTypes.ProgramModules)
-    (A : Adapter
-           with type update_element = PM.UpdateElement.t
-            and type transition_label = PM.TransitionLabel.t) =
+    (A : Adapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) =
 struct
   open OverApproximationUtils (A)
-  open ApronUtils (PM)
+  open ApronUtils
 
   (** [initial_guard_polyh am constr guard] computes a polyhedron overapproximating satisfying assignments for the conjunction of [constr] and [guard] *)
   let initial_guard_polyh am constr guard =
@@ -756,15 +726,13 @@ end
 
 module PropertyBasedAbstraction
     (PM : ProgramTypes.ProgramModules)
-    (Adapter : Adapter
-                 with type update_element = PM.UpdateElement.t
-                  and type transition_label = PM.TransitionLabel.t) : sig
+    (Adapter : Adapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) : sig
   include Abstraction with type location = PM.Location.t
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
 end = struct
   open PM
-  open ApronUtils (PM)
+  open ApronUtils
   open OverApproximationUtils (Adapter)
   open Formulas
   open Constraints
@@ -1019,12 +987,11 @@ module Version (L : ProgramTypes.Location) (A : Abstraction) = struct
   module Inner = struct
     open Constraints
 
-    type location = L.t
     type t = L.t * A.t [@@deriving eq, ord]
 
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
     let to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:false a)
-    let to_string_pretty (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:true a)
+    let _to_string_pretty (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:true a)
     let hash l = Hashtbl.hash l
     let mk location abstracted = (location, abstracted)
     let mk_true location = (location, A.Constr Constraint.mk_true)
@@ -1070,115 +1037,21 @@ module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
     |> TransitionSet.of_sequence
 end
 
-module PEModules
-    (PM : ProgramTypes.ProgramModules)
-    (Adapter : Adapter with type location = PM.Location.t)
-    (A : Abstraction) =
-struct
-  module Version = Version (PM.Location) (A)
-  module VersionSet = Location.LocationSetOver (Version)
-  module Transition = Transition_.Make (PM.TransitionLabel) (Version)
-  module TransitionSet = Transition_.TransitionSetOver (Transition) (Version)
-
-  module TransitionGraph =
-    TransitionGraph_.Make_ (Transition) (Version)
-      (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Version) (PM.TransitionLabel))
-
-  let rename_versions (versions : TransitionGraph.location_set) =
-    (* There is no nice way of renaming locations.
-       1. We reuse the original name, if the location is unique in the pe_graph,
-          that happens when the location was not part of the scc.
-       2. We add a suffix _i if the location was multiplied (part of the scc), and l_i
-          is not already present
-       3. Increment i until a unique name is found.
-
-       There is certainly a better solution to this problem, but this will work
-       for now.
-
-       TODO: rewrite, and probably move to Location module.
-    *)
-    let num_versions = Set.length versions in
-    let num_of_location_occurences = Hashtbl.create ~size:num_versions (module PM.Location) in
-    Set.iter
-      ~f:(fun version ->
-        let location = Version.location version in
-        let num = Hashtbl.find num_of_location_occurences location |? 0 |> ( + ) 1 in
-        Hashtbl.update num_of_location_occurences location ~f:(fun _ -> num))
-      versions;
-
-    let suffix_counters = Hashtbl.create ~size:num_versions (module PM.Location)
-    and rename_map = Hashtbl.create ~size:num_versions (module Version) in
-    Set.iter
-      ~f:(fun version ->
-        let location = Version.location version in
-        let num_occ = Hashtbl.find_exn num_of_location_occurences location in
-        assert (num_occ >= 1);
-        if num_occ == 1 then
-          (* reuse location *)
-          Hashtbl.add_exn rename_map ~key:version ~data:location
-        else
-          (* generate a fresh suffix *)
-          let rec gen_new_location () =
-            let next_index = Hashtbl.find suffix_counters location |> Option.value ~default:0 in
-            Hashtbl.update suffix_counters location ~f:(fun _ -> next_index + 1);
-            let potential_new_location = Adapter.location_with_index next_index location in
-            if Hashtbl.mem num_of_location_occurences potential_new_location then
-              gen_new_location ()
-            else
-              potential_new_location
-          in
-
-          Hashtbl.add_exn rename_map ~key:version ~data:(gen_new_location ()))
-      versions;
-    rename_map
-
-
-  let remove_abstractions update_invariants pe_graph =
-    let rename_map = rename_versions (TransitionGraph.locations pe_graph) in
-    let renamed_graph =
-      TransitionGraph.transitions pe_graph |> Set.to_sequence
-      |> Sequence.map ~f:(fun (src_version, label, target_version) ->
-             (Hashtbl.find_exn rename_map src_version, label, Hashtbl.find_exn rename_map target_version))
-      |> PM.TransitionGraph.mk
-    in
-    if update_invariants then
-      TransitionGraph.locations pe_graph
-      |> Set.fold
-           ~f:(fun graph version ->
-             let renamed_loc = Hashtbl.find_exn rename_map version in
-             let inv = A.to_guard (Version.abstracted version) in
-             PM.TransitionGraph.add_invariant renamed_loc inv graph)
-           ~init:renamed_graph
-    else
-      renamed_graph
-end
-
 module PartialEvaluation
-    (PM : ProgramTypes.ProgramModules)
+    (PM : ProgramTypes.ProgramModules with type Location.t = Location.t)
     (Adapter : Adapter
                  with type update_element = PM.UpdateElement.t
-                  and type transition_label = PM.TransitionLabel.t
+                  and type transition = PM.Transition.t
                   and type program = PM.Program.t
-                  and type location = PM.Location.t
                   and type transition_graph = PM.TransitionGraph.t) =
 struct
-  module PM = PM
   module Abstraction = PropertyBasedAbstraction (PM) (Adapter)
-  module PEM = PEModules (PM) (Adapter) (Abstraction)
+  module Version = Version (PM.Location) (Abstraction)
+  module VersionSet = Location.LocationSetOver (Version)
   open PM
-
-  (* open Adapter *)
-  module Version = PEM.Version
-  module PEGraph = PEM.TransitionGraph
   open Unfolding (PM) (Adapter)
   open Loops (PM)
   open GraphUtils (PM)
-
-  exception UnsatEntryTransition
-  (** Unsat transitions must be removed before the partial evaluation, hence
-      unfolded entry transition to an scc <l, true> -> <l', v'> must always
-      have a satisfiable version v'
-      *)
 
   (** The call [generate_version_location_name program_locations index_table version] generates a new location name by appending the string [_vi] to the location of [version] where [i] acts as an index.
       The hashtable [index_table] maps locations to the last {i used} index.
@@ -1200,7 +1073,9 @@ struct
     let next_index =
       Hashtbl.update_and_return index_table location ~f:(Option.value_map ~default:1 ~f:(( + ) 1))
     in
-    let next_location = Adapter.location_with_index next_index location in
+    let next_location =
+      Printf.sprintf "%s_v%i" (Location.to_string location) next_index |> Location.of_string
+    in
     if Set.mem all_original_locations next_location then
       generate_version_location_name all_original_locations index_table version
     else
@@ -1230,7 +1105,7 @@ struct
           ~f:(fun entry_versions entry_transition ->
             let entry_location = Transition.target entry_transition in
             Set.add entry_versions (Version.mk_true entry_location))
-          entry_transitions ~init:PEM.VersionSet.empty
+          entry_transitions ~init:VersionSet.empty
       in
       if Set.mem (TransitionSet.locations component) program_start then
         Set.add from_entry_trans (Version.mk_true program_start)
@@ -1308,7 +1183,7 @@ struct
               (Set.union refined_grouped_transitions new_grouped_transitions)
               (Set.add already_evaluated_versions next_version)
       in
-      evaluate_ Adapter.empty_grouped_transition_set PEM.VersionSet.empty
+      evaluate_ Adapter.empty_grouped_transition_set VersionSet.empty
     in
     entry_versions |> Stack.of_list % Set.to_list |> evaluate_versions_till_fixedpoint
 
