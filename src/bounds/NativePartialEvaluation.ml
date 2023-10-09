@@ -6,6 +6,7 @@ let log ?(level = Logger.INFO) method_name data =
   Logger.log cfr_logger level (fun () -> (method_name, data ()))
 
 
+(* TODO: Is k_encounters used somewhere *)
 type config = { abstract : [ `FVS | `LoopHeads ]; k_encounters : int; update_invariants : bool }
 
 module Loops (PM : ProgramTypes.ProgramModules) = struct
@@ -342,13 +343,36 @@ module type Adapter = sig
   type update_element
   type transition_label
   type transition_graph
+  type grouped_transition
+  type grouped_transition_cmp_wit
   type program
   type location
   type approx = Polynomials.Polynomial.t * Guard.t
 
   val overapprox_indeterminates : update_element -> approx
   val location_with_index : int -> location -> location
-  val create_new_program : location -> transition_graph -> program
+  val outgoing_grouped_transitions : transition_graph -> location -> grouped_transition Sequence.t
+
+  (* val copy_grouped_transition : grouped_transition -> grouped_transition *)
+  val empty_grouped_transition_set : (grouped_transition, grouped_transition_cmp_wit) Set.t
+  val guard_of_grouped_transition : grouped_transition -> Guard.t
+
+  val all_grouped_transitions_of_graph :
+    transition_graph -> (grouped_transition, grouped_transition_cmp_wit) Set.t
+
+  val grouped_transition_of_transition : location * transition_label * location -> grouped_transition
+
+  val copy_and_modify_grouped_transition :
+    new_start:location ->
+    add_invariant:Guard.t ->
+    redirect:(location * transition_label * location -> location) ->
+    grouped_transition ->
+    grouped_transition
+
+  (* val copy_grouped_transition : grouped_transition -> grouped_transition *)
+  (** Copy the grouped transition and assign fresh ids *)
+
+  val create_new_program : location -> (grouped_transition, grouped_transition_cmp_wit) Set.t -> program
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
@@ -369,6 +393,8 @@ module ClassicAdapter :
   type location = Location.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
+  type grouped_transition = Transition.t
+  type grouped_transition_cmp_wit = Transition.comparator_witness
 
   (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
   let overapprox_indeterminates poly = (poly, Guard.mk_true)
@@ -377,7 +403,25 @@ module ClassicAdapter :
     Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
 
 
-  let create_new_program = Program.from_graph
+  let outgoing_grouped_transitions trans_graph location =
+    TransitionGraph.succ_e trans_graph location |> Sequence.of_list
+
+
+  let empty_grouped_transition_set = TransitionSet.empty
+  let guard_of_grouped_transition = TransitionLabel.guard % Transition.label
+  let all_grouped_transitions_of_graph = TransitionGraph.transitions
+  let grouped_transition_of_transition = identity
+
+  let copy_and_modify_grouped_transition ~(new_start : location) ~(add_invariant : Guard.t)
+      ~(redirect : location * transition_label * location -> location) ((l, label, l') as transition) :
+      grouped_transition =
+    let new_label = TransitionLabel.fresh_id label |> flip TransitionLabel.add_invariant add_invariant in
+    (new_start, new_label, redirect transition)
+
+
+  (* TODO let copy_new_ *)
+
+  let create_new_program location tset = Program.from_sequence location (Set.to_sequence tset)
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
@@ -398,6 +442,8 @@ module ProbabilisticAdapter :
   type location = Location.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
+  type grouped_transition = GeneralTransition.t
+  type grouped_transition_cmp_wit = GeneralTransition.comparator_witness
 
   module P = Polynomials.Polynomial
 
@@ -410,20 +456,39 @@ module ProbabilisticAdapter :
     Printf.sprintf "%s_%i" (Location.to_string location) index |> Location.of_string
 
 
-  let create_new_program start graph =
-    Set.to_sequence (TransitionGraph.transitions graph)
-    |> Sequence.map ~f:Transition.gt |> GeneralTransitionSet.of_sequence |> Program.from_gts start
+  let outgoing_grouped_transitions trans_graph location =
+    ProbabilisticProgramModules.TransitionGraph.outgoing_gts trans_graph location |> Set.to_sequence
+
+
+  let empty_grouped_transition_set = GeneralTransitionSet.empty
+  let guard_of_grouped_transition = GeneralTransition.guard
+  let all_grouped_transitions_of_graph = TransitionGraph.gts
+  let grouped_transition_of_transition = Transition.gt
+
+  let copy_and_modify_grouped_transition ~(new_start : location) ~(add_invariant : Guard.t)
+      ~(redirect : location * transition_label * location -> location) gt =
+    GeneralTransition.mk_from_labels_without_backlink ~start:new_start ~guard:(GeneralTransition.guard gt)
+      ~invariant:(Guard.mk_and (GeneralTransition.invariant gt) add_invariant)
+      ~cost:(GeneralTransition.cost gt)
+      ~rhss:
+        (GeneralTransition.transitions gt |> Set.to_sequence
+        |> Sequence.map ~f:(fun ((_, label, _) as transition) ->
+               let target_location = redirect transition in
+               (TransitionLabel.without_backlink label, target_location))
+        |> Sequence.to_list)
+
+
+  let create_new_program = Program.from_gts
 end
 
 module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
   open Constraints
   open Polynomials
   open PM
-  module VarMap = MakeMapCreators1 (Var)
 
   type polyhedron
   type guard = Constraint.t
-  type update = UpdateElement.t VarMap.t
+  type update = UpdateElement.t ProgramTypes.VarMap.t
 
   (* TODO: move to ApronInterface *)
 
@@ -457,7 +522,7 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
   (* TODO: move to ApronInterface *)
 
   (** converts an update map over polynomials to apron arrays *)
-  let update_to_apron env (update : Polynomials.Polynomial.t VarMap.t) =
+  let update_to_apron env (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
     Map.to_sequence update
     |> Sequence.map ~f:(fun (var, ue) ->
            let apron_var = ApronInterface.Koat2Apron.var_to_apron var
@@ -682,9 +747,8 @@ module type Abstraction = sig
 
   type t = Abstr of abstracted | Constr of guard [@@deriving eq, ord]
 
-  val abstract : context -> location -> guard -> t option
-  (** Abstract a constraint to the abstracted type. Can return None, when the
- constraint is not satisfiable *)
+  val abstract : context -> location -> guard -> t
+  (** Abstract a constraint to the abstracted type. *)
 
   val to_string : ?pretty:bool -> t -> string
   val to_guard : t -> guard
@@ -877,45 +941,46 @@ end = struct
   let abstract context location guard =
     (* Identifies all properties that are entailed by the constraint, implicit SAT check *)
     let abstract_guard_ properties constr =
-      SMT.IncrementalZ3Solver.(
-        let solver = create ~model:false () in
-        let f = Formula.mk constr in
-        add solver f;
+      let module Solver = SMT.IncrementalZ3Solver in
+      let solver = Solver.create ~model:false () in
+      let f = Formula.mk constr in
+      Solver.add solver f;
 
-        (* Fast entailment check which reuses the SMT solver *)
-        let entails_prop prop =
-          let neg_atom = Atom.neg prop |> Constraint.lift |> Formula.mk in
-          push solver;
-          add solver neg_atom;
-          let is_unsat = unsatisfiable solver in
-          pop solver;
-          is_unsat
+      (* Fast entailment check which reuses the SMT solver *)
+      let entails_prop prop =
+        let neg_atom = Atom.neg prop |> Constraint.lift |> Formula.mk in
+        Solver.push solver;
+        Solver.add solver neg_atom;
+        let is_unsat = Solver.unsatisfiable solver in
+        Solver.pop solver;
+        is_unsat
+      in
+
+      (* No need to check entailment, when constraint is already UNSAT *)
+      if SMT.IncrementalZ3Solver.unsatisfiable solver then
+        failwith "This should never be unsat as guard and src_constraint are sat"
+        (* TODO check and remove if *)
+        (* Check entailment for every propery it's negation *)
+      else
+        let entailed_props =
+          Set.to_sequence properties
+          |> Sequence.filter_map ~f:(fun prop ->
+                 if entails_prop prop then (
+                   log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS", Atom.to_string prop) ]);
+                   (* (Constraint.to_string constr) *)
+                   (* (Atom.to_string prop); *)
+                   Some prop)
+                 else if entails_prop (Atom.neg prop) then (
+                   log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS_NEG", Atom.to_string prop) ]);
+                   (* Printf.printf "%s entails %s\n" *)
+                   (* (Constraint.to_string constr) *)
+                   (* (Atom.to_string (Atom.neg prop)); *)
+                   Some (Atom.neg prop))
+                 else
+                   None)
+          |> AtomSet.of_sequence
         in
-
-        (* No need to check entailment, when constraint is already UNSAT *)
-        if unsatisfiable solver then
-          None
-          (* Check entailment for every propery it's negation *)
-        else
-          let entailed_props =
-            Set.to_sequence properties
-            |> Sequence.filter_map ~f:(fun prop ->
-                   if entails_prop prop then (
-                     log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS", Atom.to_string prop) ]);
-                     (* (Constraint.to_string constr) *)
-                     (* (Atom.to_string prop); *)
-                     Some prop)
-                   else if entails_prop (Atom.neg prop) then (
-                     log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS_NEG", Atom.to_string prop) ]);
-                     (* Printf.printf "%s entails %s\n" *)
-                     (* (Constraint.to_string constr) *)
-                     (* (Atom.to_string (Atom.neg prop)); *)
-                     Some (Atom.neg prop))
-                   else
-                     None)
-            |> AtomSet.of_sequence
-          in
-          Some entailed_props)
+        entailed_props
     in
 
     match Map.find context location with
@@ -925,14 +990,14 @@ end = struct
               ("LOCATION", Location.to_string location);
               ("PROPERTIES", AtomSet.to_string ~pretty:true properties);
             ]);
-        abstract_guard_ properties guard |> Option.map ~f:(fun a -> Abstr a)
+        Abstr (abstract_guard_ properties guard)
     | None ->
         log ~level:Logger.DEBUG "abstract" (fun () ->
             [ ("LOCATION", Location.to_string location); ("PROPERTIES", "NONE") ]);
         if Formula.mk guard |> SMT.Z3Solver.satisfiable then
-          Some (Constr guard)
+          Constr guard
         else
-          None
+          failwith "This should never be unsat as guard and_constraint are sat" (* TODO cehck and remove if *)
 
 
   let abstract_to_guard a = Set.to_list a |> Constraint.mk
@@ -1115,134 +1180,154 @@ struct
       have a satisfiable version v'
       *)
 
-  let am = Ppl.manager_alloc_loose ()
+  (** The call [generate_version_location_name program_locations index_table version] generates a new location name by appending the string [_vi] to the location of [version] where [i] acts as an index.
+      The hashtable [index_table] maps locations to the last {i used} index.
 
-  (* TODO: find a better name, component is wrong, it's just a set of transitions *)
-  let evaluate_component config component program_vars start_location graph =
+     Currently, there is no nice way of renaming locations.
+     1. We reuse the original name, if the location is unique in the pe_graph,
+        that happens when the location was not part of the scc.
+     2. We add a suffix _vi (where i acts as an index) if the location was multiplied (part of the scc), and l_i
+        is not already present
+     3. Increment i until a unique name is found.
+
+     There is certainly a better solution to this problem, but this will work
+     for now.
+
+     TODO: rewrite, and probably move to Location module.
+  *)
+  let rec generate_version_location_name all_original_locations index_table version =
+    let location = Version.location version in
+    let next_index =
+      Hashtbl.update_and_return index_table location ~f:(Option.value_map ~default:1 ~f:(( + ) 1))
+    in
+    let next_location = Adapter.location_with_index next_index location in
+    if Set.mem all_original_locations next_location then
+      generate_version_location_name all_original_locations index_table version
+    else
+      next_location
+
+
+  let evaluate_component config component program_vars program_start graph =
+    let am = Ppl.manager_alloc_loose () in
+    let generate_version_location_name =
+      let program_locations = TransitionGraph.locations graph in
+      let index_table = Hashtbl.create (module Location) in
+      fun version -> generate_version_location_name program_locations index_table version
+    in
+    let version_location_tbl =
+      (* add mappings for already existing (non refined locations) *)
+      Set.to_list (TransitionGraph.locations graph)
+      |> List.map ~f:(fun l -> (Version.mk_true l, l))
+      |> Hashtbl.of_alist_exn (module Version)
+    in
+
     let entry_transitions = entry_transitions graph component
     and exit_transitions = exit_transitions graph component in
 
-    log "pe" (fun () -> [ ("EVALUATING_SCC", TransitionSet.to_string component) ]);
-    log "pe" (fun () -> [ ("ENTRY_TS:", TransitionSet.to_string entry_transitions) ]);
-    log "pe" (fun () -> [ ("EXIT_TS:", TransitionSet.to_string exit_transitions) ]);
+    let entry_versions =
+      let from_entry_trans =
+        Set.fold
+          ~f:(fun entry_versions entry_transition ->
+            let entry_location = Transition.target entry_transition in
+            Set.add entry_versions (Version.mk_true entry_location))
+          entry_transitions ~init:PEM.VersionSet.empty
+      in
+      if Set.mem (TransitionSet.locations component) program_start then
+        Set.add from_entry_trans (Version.mk_true program_start)
+      else
+        from_entry_trans
+    in
 
     let abstr_ctx = Abstraction.mk_from_heuristic_scc config graph component program_vars in
-    let result_graph_without_sub =
-      TransitionGraph.transitions graph |> Set.to_sequence
-      |> Sequence.filter ~f:(fun transition -> not (Set.mem component transition))
-      (* Exit transitions will be readded by the evaluation *)
-      |> Sequence.filter ~f:(fun transition -> not (Set.mem exit_transitions transition))
-      |> Sequence.map ~f:(fun (src, label, target) ->
-             (PEM.Version.mk_true src, label, Version.mk_true target))
-      |> PEGraph.mk
-    in
 
-    let rec evaluate_version current_version (already_unfolded_versions, result_graph) =
-      let evaluate_transition src_version (already_unfolded_versions, result_graph) (transition, is_exit) =
-        assert (Transition.src transition == Version.location src_version);
-        (* Unwrap the transition *)
+    let evaluate_version current_version =
+      let evaluate_transition src_polyh transition =
         let src_loc, label, target_loc = transition in
-        let src_constr = current_version |> Version.abstracted |> Abstraction.to_guard in
-        let guard = TransitionLabel.guard label and update = TransitionLabel.update_map label in
-
-        (* stop early if guard is unsat *)
-        if SMT.Z3Solver.unsatisfiable (Formulas.Formula.lift [ src_constr; guard ]) then
-          (already_unfolded_versions, result_graph)
+        assert (Location.equal src_loc (Version.location current_version));
+        if Set.mem exit_transitions transition then
+          `ExitTransition (Version.mk_true target_loc)
         else
-          let next_guard = unfold am src_constr program_vars guard update in
-          log ~level:DEBUG "pe.transition" (fun () ->
-              [
-                ("PREV_GUARD", Guard.to_string ~pretty:true guard);
-                ("TRANSITION", Transition.to_string_pretty transition);
-                ("NEXT_GUARD", Guard.to_string ~pretty:true next_guard);
-              ]);
-          match Abstraction.abstract abstr_ctx target_loc next_guard with
-          (* Implicit SAT check, returns None if UNSAT *)
-          | Some a ->
-              log ~level:DEBUG "pe.transition" (fun () ->
-                  [ ("SAT", "true"); ("ABSTRACTED", Abstraction.to_string ~pretty:true a) ]);
-              (* checking for exti transitions must be done outside of evaluate_transition because
-                 the transition was renamed *)
-              if is_exit then
-                (* Leaving the scc is an abort condition, just transition to the trivial version *)
-                (* let outside_version = Version.mk_true target_loc in *)
-                (* assert (PEGraph.mem_vertex result_graph outside_version); *)
-                ( already_unfolded_versions,
-                  PEGraph.add_edge_e result_graph (src_version, label, Version.mk_true target_loc) )
-              else
-                let target_version = Version.mk target_loc a in
-                let new_transition = (src_version, label, target_version) in
-                log ~level:DEBUG "pe.transition" (fun () ->
-                    [ ("NEW_TRANSITION", PEM.Transition.to_string_pretty new_transition) ]);
-                let result_graph = PEGraph.add_edge_e result_graph new_transition in
-                evaluate_version target_version (already_unfolded_versions, result_graph)
-          | None ->
-              log ~level:DEBUG "pe.transition" (fun () -> [ ("VERSION_SAT", "false") ]);
-              (* Target version is unsat take, backtrack without adding a new transition *)
-              (already_unfolded_versions, result_graph)
+          let update = TransitionLabel.update_map label in
+          let unfolded_constr = unfold_update am src_polyh program_vars update in
+          let abstracted = Abstraction.abstract abstr_ctx target_loc unfolded_constr in
+          `EvaluatedTransition (Version.mk target_loc abstracted)
       in
-
-      if Set.mem already_unfolded_versions current_version then (
-        log ~level:DEBUG "pe.version" (fun () ->
-            [ ("VERSION", Version.to_string_pretty current_version); ("NEW", "false") ]);
-        (already_unfolded_versions, result_graph))
-      else (
-        log ~level:DEBUG "pe.version" (fun () ->
-            [ ("VERSION", Version.to_string_pretty current_version); ("NEW", "true") ]);
-        let already_unfolded_versions = Set.add already_unfolded_versions current_version in
-        let location = Version.location current_version in
-
-        let gt_id_map = Hashtbl.create ~size:10 (module Int) in
-        let outgoing_transitions =
-          TransitionGraph.succ_e graph location
-          |> Sequence.of_list
-          |> Sequence.map ~f:(fun transition -> (transition, Set.mem exit_transitions transition))
-          |> Sequence.map ~f:(fun ((src, label, target), is_exit) ->
-                 (* ((src, TransitionLabel.copy_rename gt_id_map label, target), is_exit)) *)
-                 ((src, TransitionLabel.copy_rename gt_id_map label, target), is_exit))
-          |> Sequence.map
-               ~f:
-                 (tap (fun (t, is_exit) ->
-                      log ~level:DEBUG "pe.version" (fun () ->
-                          [
-                            ("RENAMED_TRANSITION", Transition.to_string t); ("IS_EXIT", Bool.to_string is_exit);
-                          ])))
-          |> Sequence.to_list
-        in
-
-        (* Evaluate from every outgoing transition *)
-        List.fold
-          ~f:(evaluate_transition current_version)
-          ~init:(already_unfolded_versions, result_graph)
-          outgoing_transitions)
+      let evaluate_grouped_transition grouped_transition :
+          (Adapter.grouped_transition * Version.t List.t) Option.t =
+        let src_constr = current_version |> Version.abstracted |> Abstraction.to_guard in
+        let guard = Adapter.guard_of_grouped_transition grouped_transition in
+        let src_polyh = initial_guard_polyh am src_constr guard in
+        if Apron.Abstract1.is_bottom am src_polyh then
+          (* Version + Transition guard is UNSAT *)
+          None
+        else
+          let version_start_loc = Hashtbl.find_exn version_location_tbl current_version in
+          let next_versions = ref [] in
+          let evaluated_grouped_transition =
+            grouped_transition
+            |> Adapter.copy_and_modify_grouped_transition ~new_start:version_start_loc
+                 ~add_invariant:src_constr ~redirect:(fun trans ->
+                   match evaluate_transition src_polyh trans with
+                   | `ExitTransition target_version ->
+                       (* Here, we go to the already existing version *)
+                       Hashtbl.find_exn version_location_tbl target_version
+                   | `EvaluatedTransition next_version -> (
+                       match Hashtbl.find version_location_tbl next_version with
+                       | Some target_location ->
+                           (* We have already seen next_version *)
+                           target_location
+                       | None ->
+                           let target_location = generate_version_location_name next_version in
+                           Hashtbl.add_exn version_location_tbl ~key:next_version ~data:target_location;
+                           next_versions := next_version :: !next_versions;
+                           target_location))
+          in
+          Some (evaluated_grouped_transition, !next_versions)
+      in
+      let refined_outgoing_grouped_transitions, next_versionss =
+        Adapter.outgoing_grouped_transitions graph (Version.location current_version)
+        |> Sequence.map ~f:evaluate_grouped_transition
+        |> Sequence.filter_opt |> Sequence.to_list |> List.unzip
+      in
+      (refined_outgoing_grouped_transitions, List.concat next_versionss)
     in
 
-    let entry_versions =
-      Set.fold
-        ~f:(fun entry_versions entry_transition ->
-          let entry_location = Transition.target entry_transition in
-          let entry_version = Version.mk_true entry_location in
-          Set.add entry_versions entry_version)
-        entry_transitions ~init:PEM.VersionSet.empty
+    let evaluate_versions_till_fixedpoint remaining_versions =
+      let rec evaluate_ refined_grouped_transitions already_evaluated_versions =
+        match Stack.pop remaining_versions with
+        | None -> refined_grouped_transitions
+        | Some next_version when Set.mem already_evaluated_versions next_version ->
+            evaluate_ refined_grouped_transitions already_evaluated_versions
+        | Some next_version ->
+            let new_grouped_transitions, new_versions = evaluate_version next_version in
+            let new_grouped_transitions =
+              Set.of_list (Set.comparator_s Adapter.empty_grouped_transition_set) new_grouped_transitions
+            in
+            List.iter ~f:(fun version -> Stack.push remaining_versions version) new_versions;
+            evaluate_
+              (Set.union refined_grouped_transitions new_grouped_transitions)
+              (Set.add already_evaluated_versions next_version)
+      in
+      evaluate_ Adapter.empty_grouped_transition_set PEM.VersionSet.empty
     in
+    entry_versions |> Stack.of_list % Set.to_list |> evaluate_versions_till_fixedpoint
 
-    let entry_versions =
-      if Set.mem (TransitionSet.locations component) start_location then
-        Set.add entry_versions (Version.mk_true start_location)
-      else
-        entry_versions
+
+  let evaluate_component_in_program config component program_vars program_start graph =
+    let all_grouped_transitions_without_component =
+      let all_grouped_transitions = Adapter.all_grouped_transitions_of_graph graph in
+      let all_grouped_transitions_in_component =
+        Set.map
+          (Set.comparator_s Adapter.empty_grouped_transition_set)
+          ~f:Adapter.grouped_transition_of_transition component
+      in
+      Set.diff all_grouped_transitions all_grouped_transitions_in_component
     in
-
-    let _, pe_graph =
-      Set.fold
-        ~f:(fun (already_unfolded_versions, result_graph) entry_version ->
-          evaluate_version entry_version (already_unfolded_versions, result_graph))
-        entry_versions
-        ~init:(PEM.VersionSet.empty, result_graph_without_sub)
+    let all_refined_grouped_transitions =
+      evaluate_component config component program_vars program_start graph
     in
-
-    let pe_graph = PEM.remove_abstractions config.update_invariants pe_graph in
-    pe_graph
+    Set.union all_grouped_transitions_without_component all_refined_grouped_transitions
+    |> Adapter.create_new_program program_start
 
 
   let evaluate_program config program =
@@ -1250,30 +1335,23 @@ struct
       Program.input_vars program
       |> tap (fun x -> log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
-    let orig_graph = Program.graph program in
-    let pe_graph =
-      evaluate_component config
-        (TransitionGraph.transitions orig_graph)
-        program_vars (Program.start program) orig_graph
-    in
     let pe_prog =
-      (* Note: the start location cannot be part of an SCC and hence is
-         Also present in the result graph.
-      *)
-      Adapter.create_new_program (Program.start program) pe_graph
+      evaluate_component_in_program config (Program.transitions program) program_vars (Program.start program)
+        (Program.graph program)
     in
+
     assert (VarSet.equal (Program.input_vars program) (Program.input_vars pe_prog));
     pe_prog
 
 
-  let apply_sub_scc_cfr config (nonLinearTransitions : TransitionSet.t) program =
+  let apply_sub_scc_cfr config (non_linear_transitions : TransitionSet.t) program =
     let program_vars =
       Program.input_vars program
       |> tap (fun x -> log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
     let orig_graph = Program.graph program in
 
-    let pe_graph =
+    let pe_prog =
       let find_smallest_loop transition =
         let src, _, target = transition in
         let shortest_path, _length = Djikstra.shortest_path orig_graph target src in
@@ -1286,7 +1364,7 @@ struct
       in
 
       let component =
-        nonLinearTransitions
+        non_linear_transitions
         |> Set.fold
              ~f:(fun loops transition -> Set.union loops (find_smallest_loop transition))
              ~init:TransitionSet.empty
@@ -1294,9 +1372,9 @@ struct
              ~f:(fun parallel transition -> Set.union parallel (find_parallel_transitions transition))
              ~init:TransitionSet.empty
       in
-      evaluate_component config component program_vars (Program.start program) orig_graph
+      evaluate_component_in_program config component program_vars (Program.start program) orig_graph
     in
-    let pe_prog = Adapter.create_new_program (Program.start program) pe_graph in
+
     log ~level:INFO "pe" (fun () -> [ ("PE", Program.to_string pe_prog) ]);
     pe_prog
 end
