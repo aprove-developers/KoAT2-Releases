@@ -747,6 +747,31 @@ module GeneralTransition = struct
       gt
 
 
+    let mk_from_labels_without_backlink ~start ~guard ~invariant ~cost ~rhss : t =
+      let total_prob =
+        Sequence.of_list rhss |> Sequence.map ~f:(fun (r, _) -> r.probability) |> OurRational.sum
+      in
+      if not (OurRational.equal OurRational.one total_prob) then
+        raise ProbabilitiesDoNotSumToOne;
+
+      let gt =
+        {
+          gt_id = Unique.unique ();
+          guard;
+          invariant;
+          transitions =
+            Sequence.of_list rhss
+            |> Sequence.map ~f:(fun (rhs, l') ->
+                   let label = ProbabilisticTransitionLabel_.mk_2 rhs in
+                   (start, label, l'))
+            |> ProbabilisticTransitionSet.of_sequence;
+        }
+      in
+      (* Tying the knot *)
+      Set.iter ~f:(fun (l, t, l') -> t.gt := Some gt) gt.transitions;
+      gt
+
+
     let gt_id = ProbabilisticTransitionLabel.gt_id % get_arbitrary_label
     let transitions t = t.transitions
 

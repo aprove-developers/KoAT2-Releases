@@ -62,6 +62,16 @@ module GeneralTransition : sig
     rhss:(OurRational.t * UpdateElement_.t list * Location.t) list ->
     t
 
+  val mk_from_labels_without_backlink :
+    start:Location.t ->
+    guard:Guard.t ->
+    invariant:Guard.t ->
+    cost:Polynomials.Polynomial.t ->
+    rhss:(label_without_backlink * Location.t) List.t ->
+    t
+  (** Similar to [mk] but higher-level.
+      Note that we assume the provided updates to be {i complete}, i.e., we do not fill up the argument variables *)
+
   val src : t -> Location.t
   val targets : t -> Location.LocationSetOver(Location).t
   val guard : t -> Guard.t
