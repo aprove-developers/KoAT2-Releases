@@ -98,6 +98,8 @@ module Constraint = struct
 
 
   let simplify = List.dedup_and_sort ~compare:Atom.compare
+  let to_set = Set.of_list (module Atom)
+  let of_set = Set.to_list
 end
 
 module RationalConstraint = struct

@@ -34,6 +34,8 @@ module Constraint : sig
 
   val remove_strict : t -> t
   val simplify : t -> t
+  val to_set : t -> (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t
+  val of_set : (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t -> t
 
   (* Add operations specific to polynomial constraints here if needed *)
 end
