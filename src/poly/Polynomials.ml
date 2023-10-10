@@ -386,6 +386,16 @@ module Polynomial = struct
     fold ~const:OurInt.abs
       ~indeterminate:(fun _ -> OurInt.one)
       ~plus:OurInt.add ~times:OurInt.mul ~pow:OurInt.pow
+
+
+  let primitive_part_content_factorisation t =
+    let primitive_part =
+      match List.reduce ~f:OurInt.gcd (coeffs t) with
+      | Some gcd -> OurInt.abs gcd
+      | None -> OurInt.one
+    in
+    let content = Map.map ~f:(fun coeff -> OurInt.div coeff primitive_part) t in
+    (primitive_part, content)
 end
 
 module RationalPolynomial = struct

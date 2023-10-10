@@ -42,7 +42,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let check_update_invariant (loop : Loop.t) atom =
-    let poly = Atom.poly atom in
+    let poly = Atom.poly_lt atom in
     let poly_updated = Polynomial.substitute_f (Loop.update_var loop) poly in
     let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
     SMTSolver.tautology Formula.(implies (mk [ atom ]) (mk [ atom_updated ]))
@@ -70,12 +70,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                    PE.substitute varmap poly |> PE.remove_frac
                    |> List.map (RationalPolynomial.normalize % Tuple4.second)
                  in
-                 let formula_poly =
-                   if Atom.is_lt atom then
-                     sub_poly |> red_lt
-                   else
-                     sub_poly |> red_le
-                 in
+                 let formula_poly = red_le sub_poly in
                  Formula.mk_and formula formula_poly |> Formula.simplify)
                (constr |> List.unique ~eq:Atom.equal)
                Formula.mk_true)
