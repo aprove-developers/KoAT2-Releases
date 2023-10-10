@@ -633,7 +633,7 @@ module GeneralTransition = struct
     let get_arbitrary_label = ProbabilisticTransition.label % get_arbitrary_transition
     (* TODO conjunction with invariant! *)
 
-    let guard = ProbabilisticTransitionLabel.guard % get_arbitrary_label
+    let guard t = Guard.mk_and t.guard t.invariant
     let map_transitions f gt = { gt with transitions = ProbabilisticTransitionSet.map ~f gt.transitions }
 
     let map_gt f (gt : t) =
@@ -648,7 +648,15 @@ module GeneralTransition = struct
       gt
 
 
-    let add_invariant (gt : t) invariant : t = map_gt (fun gt -> { gt with invariant }) gt
+    let add_invariant (gt : t) invariant : t =
+      let invariant =
+        let guard_atoms = Guard.to_set gt.guard in
+        let invariant_atoms = Guard.mk_and gt.invariant invariant |> Guard.to_set in
+        Set.diff invariant_atoms guard_atoms |> Guard.of_set
+      in
+      map_gt (fun gt -> { gt with invariant }) gt
+
+
     let simplify_guard = map_gt (fun gt -> { gt with guard = Guard.simplify_guard gt.guard })
 
     let mk ~(start : Location.t) ~(fill_up_to_num_arg_vars : int) ~(patterns : Var.t list)
@@ -681,7 +689,7 @@ module GeneralTransition = struct
       (* rename program vars to arg vars *)
       let rename_map = RenameMap.of_sequence @@ Sequence.zip (Sequence.of_list patterns) Var.args in
       let rhss = List.map ~f:(Tuple2.map1 (ProbabilisticTransitionLabel_.rename rename_map)) rhss in
-      let guard = Guard.rename guard map_to_arg_vars in
+      let guard = Guard.remove_duplicate_atoms (Guard.rename guard map_to_arg_vars) in
       let gt =
         {
           gt_id;

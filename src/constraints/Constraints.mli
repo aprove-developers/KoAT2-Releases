@@ -33,7 +33,7 @@ module Constraint : sig
   (** TODO doc *)
 
   val remove_strict : t -> t
-  val simplify : t -> t
+  val remove_duplicate_atoms : t -> t
   val to_set : t -> (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t
   val of_set : (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t -> t
 

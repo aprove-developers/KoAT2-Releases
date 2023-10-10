@@ -94,7 +94,8 @@ module Formula = struct
     |> List.fold_left ~f:OurInt.add ~init:OurInt.one
 
 
-  let simplify = List.dedup_and_sort ~compare:Constraint.compare % List.map ~f:Constraint.simplify
+  let simplify =
+    List.dedup_and_sort ~compare:Constraint.compare % List.map ~f:Constraint.remove_duplicate_atoms
 end
 
 module ParameterFormula = struct

@@ -3,7 +3,9 @@ include Constraints.Constraint
 
 let simplify_guard guard =
   (* Only try to simplify the linear part *)
-  let lin_atoms, non_lin_atoms = List.partition_tf ~f:Atoms.Atom.is_linear @@ simplify @@ atom_list guard in
+  let lin_atoms, non_lin_atoms =
+    List.partition_tf ~f:Atoms.Atom.is_linear @@ remove_duplicate_atoms @@ atom_list guard
+  in
   let not_implied constrs =
     List.filter ~f:(fun c ->
         SMT.Z3Solver.satisfiable
