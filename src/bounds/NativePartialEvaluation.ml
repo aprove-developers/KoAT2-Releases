@@ -710,14 +710,12 @@ module type Abstraction = sig
   type guard = Constraints.Constraint.t
   (** Constraint type *)
 
-  type location
-
   type abstracted [@@derive eq, ord]
   (** The type to which the constraint is abstracted to *)
 
   type t = Abstr of abstracted | Constr of guard [@@deriving eq, ord]
 
-  val abstract : context -> location -> guard -> t
+  val abstract : context -> Location.t -> guard -> t
   (** Abstract a constraint to the abstracted type. *)
 
   val to_string : ?pretty:bool -> t -> string
@@ -727,7 +725,7 @@ end
 module PropertyBasedAbstraction
     (PM : ProgramTypes.ProgramModules)
     (Adapter : Adapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) : sig
-  include Abstraction with type location = PM.Location.t
+  include Abstraction
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
 end = struct
@@ -749,7 +747,7 @@ end = struct
     let equal s1 s2 = compare s1 s2 == 0
   end
 
-  module LocationMap = MakeMapCreators1 (PM.Location)
+  module LocationMap = MakeMapCreators1 (Location)
   module Loops = Loops (PM)
   module FVS = FVS (PM)
 
@@ -758,7 +756,6 @@ end = struct
       abstracted, every missing location shall not be abstracted *)
 
   type guard = Constraint.t [@@deriving eq, ord]
-  type location = Location.t
 
   type abstracted = AtomSet.t [@@deriving eq, ord]
   (** The abstracted type guard type *)
@@ -983,22 +980,22 @@ end
 
 (** A version is a location with an (possibly abstracted) constraint used
   in the partial evaluation graph *)
-module Version (L : ProgramTypes.Location) (A : Abstraction) = struct
+module Version (A : Abstraction) = struct
   module Inner = struct
     open Constraints
 
-    type t = L.t * A.t [@@deriving eq, ord]
+    type t = Location.t * A.t [@@deriving ord]
 
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-    let to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:false a)
-    let _to_string_pretty (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string ~pretty:true a)
+    let _to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (Location.to_string l) (A.to_string ~pretty:false a)
+
+    let _to_string_pretty (l, a) =
+      Printf.sprintf "⟨%s, %s⟩" (Location.to_string l) (A.to_string ~pretty:true a)
+
+
     let hash l = Hashtbl.hash l
     let mk location abstracted = (location, abstracted)
     let mk_true location = (location, A.Constr Constraint.mk_true)
-
-    (* TODO: this is broken, because it doesn't parse the guard, but this isn't used anyway and only
-       here for interface compatibility *)
-    let of_string s = mk_true (L.of_string s)
     let location (l, _) = l
     let abstracted (_, a) = a
   end
@@ -1038,7 +1035,7 @@ module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
 end
 
 module PartialEvaluation
-    (PM : ProgramTypes.ProgramModules with type Location.t = Location.t)
+    (PM : ProgramTypes.ProgramModules)
     (Adapter : Adapter
                  with type update_element = PM.UpdateElement.t
                   and type transition = PM.Transition.t
@@ -1046,8 +1043,8 @@ module PartialEvaluation
                   and type transition_graph = PM.TransitionGraph.t) =
 struct
   module Abstraction = PropertyBasedAbstraction (PM) (Adapter)
-  module Version = Version (PM.Location) (Abstraction)
-  module VersionSet = Location.LocationSetOver (Version)
+  module Version = Version (Abstraction)
+  module VersionSet = MakeSetCreators0 (Version)
   open PM
   open Unfolding (PM) (Adapter)
   open Loops (PM)

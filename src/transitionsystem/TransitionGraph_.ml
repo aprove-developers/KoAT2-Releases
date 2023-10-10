@@ -2,36 +2,29 @@ open! OurBase
 
 module Make_
     (T : ProgramTypes.Transition)
-    (L : ProgramTypes.Location
-           with type t = T.location
-            and type comparator_witness = T.location_comparator_witness)
     (G : Graph.Sig.P
-           with type V.t = L.t
-            and type V.label = L.t
-            and type E.t = L.t * T.transition_label * L.t
+           with type V.t = Location.t
+            and type V.label = Location.t
+            and type E.t = Location.t * T.transition_label * Location.t
             and type E.label = T.transition_label) =
 struct
-  type location = L.t
-  type location_comparator_witness = L.comparator_witness
-  type location_set = (location, location_comparator_witness) Set.t
   type transition_label = T.transition_label
   type transition_label_comparator_witness = T.transition_label_comparator_witness
   type transition = T.t
 
   type transition_comparator_witness =
-    (transition_label_comparator_witness, location_comparator_witness) TransitionComparator.comparator_witness
+    transition_label_comparator_witness TransitionComparator.comparator_witness
 
   type transition_set = (transition, transition_comparator_witness) Set.t
 
-  module TransitionSet = Transition_.TransitionSetOver (T) (L)
-  module Location = L
+  module TransitionSet = Transition_.TransitionSetOver (T)
   include G
 
   let add_invariant = ()
   let add_locations locations graph = Sequence.fold ~f:add_vertex ~init:graph locations
   let add_transitions transitions graph = Sequence.fold ~f:add_edge_e ~init:graph transitions
   let mk transitions = empty |> add_transitions transitions
-  let locations graph = fold_vertex (flip Set.add) graph (Set.empty (module L))
+  let locations graph = fold_vertex (flip Set.add) graph LocationSet.empty
   let transitions graph = fold_edges_e (flip Set.add) graph TransitionSet.empty
 
   let map_transitions f t =
@@ -86,11 +79,12 @@ struct
     sccs graph
 end
 
-module TransitionGraphOverLocation (L : ProgramTypes.Location) = struct
+module TransitionGraph = struct
   include
     Make_
-      (Transition_.Make (TransitionLabel_) (L)) (L)
-      (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (L) (TransitionLabel_))
+      (Transition_.Make
+         (TransitionLabel_))
+         (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Location) (TransitionLabel_))
 
   let add_invariant location invariant graph =
     location
@@ -101,4 +95,4 @@ module TransitionGraphOverLocation (L : ProgramTypes.Location) = struct
          ~init:graph
 end
 
-include TransitionGraphOverLocation (Location)
+include TransitionGraph

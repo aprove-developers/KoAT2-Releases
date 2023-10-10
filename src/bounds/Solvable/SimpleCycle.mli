@@ -18,8 +18,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
     ?transformation_type:[< `NoTransformation | `TWNTransform > `NoTransformation ] ->
     (Formula.t * Polynomial.t VarMap.t -> Transition.t -> bool) ->
     Program.t ->
-    (TransitionSet.location * TransitionLabel.t * TransitionSet.location, 'a) Base.Set.t ->
-    TransitionSet.location * TransitionLabel.t * TransitionSet.location ->
+    (Transition.t, 'a) Base.Set.t ->
+    Transition.t ->
     twn_loop ProofOutput.LocalProofOutput.with_proof list
   (** copies the proof output for all elements of the result list *)
 

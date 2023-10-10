@@ -8,16 +8,16 @@ module Make (M : ProgramTypes.ProgramModules) = struct
   let logger = Logging.(get Preprocessor)
 
   (** Returns a set of all locations which are reachable from the given start location. *)
-  let reachable_locations graph start : M.LocationSet.t =
+  let reachable_locations graph start : LocationSet.t =
     let module Traverse = Graph.Traverse.Bfs (M.TransitionGraph) in
-    Traverse.fold_component (flip Set.add) (Set.empty (module M.Location)) graph start
+    Traverse.fold_component (flip Set.add) LocationSet.empty graph start
 
 
   (** Returns a set of all locations which are unreachable from the given start location. *)
-  let unreachable_locations program start : M.LocationSet.t =
+  let unreachable_locations program start : LocationSet.t =
     let graph = M.Program.graph program in
     if Set.is_empty (M.Program.locations program) then
-      Set.empty (module M.Location)
+      LocationSet.empty
     else
       Set.diff (M.Program.locations program) (reachable_locations graph start)
 
@@ -30,12 +30,12 @@ module Make (M : ProgramTypes.ProgramModules) = struct
     else (
       ProofOutput.add_str_paragraph_to_proof (fun () ->
           "Cut unreachable locations "
-          ^ Util.sequence_to_string ~f:M.Location.to_string (Set.to_sequence unreachable_locations)
+          ^ Util.sequence_to_string ~f:Location.to_string (Set.to_sequence unreachable_locations)
           ^ " from the program graph");
       let remove program location =
         Logger.(
           log logger INFO (fun () ->
-              ("cut_unreachable_locations", [ ("location", M.Location.to_string location) ])));
+              ("cut_unreachable_locations", [ ("location", Location.to_string location) ])));
         M.Program.remove_location program location
       in
       MaybeChanged.changed (Set.fold ~f:remove unreachable_locations ~init:program))
