@@ -136,7 +136,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let bound, max_con =
       List.fold_right
         (fun atom (bound, const) ->
-          let poly = Atom.poly atom |> Polynomial.neg in
+          let poly =
+            (* Transform from p ≤ 0 to p < 0 *)
+            Atom.poly_lt atom |> Polynomial.neg
+          in
           let sub_poly =
             PE.substitute varmap poly
             |> PE.remove_frac (* TODO |> PE.monotonic_kernel inv (TWNLoop.guard t) *)
