@@ -30,6 +30,8 @@ module type Atom = sig
   type value
   type t
 
+  include Comparator.S with type t := t
+
   (** {1  {L Following methods are convenience methods for the creation of atoms.}} *)
 
   val mk_gt : polynomial -> polynomial -> t
