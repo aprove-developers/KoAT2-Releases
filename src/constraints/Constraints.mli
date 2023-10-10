@@ -1,21 +1,15 @@
 open! OurBase
-(** Provides default implementations of constraints. *)
 
-open Atoms
-
-(** Provides default implementations of constraints, i.e., a conjunction of atoms. *)
-
-(** Constructs a default constraint using a list of atoms each comparing two polynomials. *)
-module ConstraintOver (A : ConstraintTypes.Atom) :
-  ConstraintTypes.Constraint
-    with type polynomial = A.polynomial
-     and type value = A.value
-     and type atom = A.t
-     and type t = A.t list
+(** Provides implementations of constraints, i.e., conjunctions of atoms. *)
 
 (** Provides an implementation of constraints consisting of atoms over polynomials. *)
 module Constraint : sig
-  include module type of ConstraintOver (Atom)
+  include
+    ConstraintTypes.Constraint
+      with type polynomial = Polynomials.Polynomial.t
+       and type value = OurInt.t
+       and type atom = Atoms.Atom.t
+       and type t = Atoms.Atom.t List.t
 
   val drop_nonlinear : t -> t
   (** Drops all nonlinear atoms from the constraints. Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
@@ -39,13 +33,19 @@ module Constraint : sig
   (** TODO doc *)
 
   val remove_strict : t -> t
-  val simplify : t -> t
+  val remove_duplicate_atoms : t -> t
+  val to_set : t -> (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t
+  val of_set : (Atoms.Atom.t, Atoms.Atom.comparator_witness) Set.t -> t
 
   (* Add operations specific to polynomial constraints here if needed *)
 end
 
 module RationalConstraint : sig
-  include module type of ConstraintOver (RationalAtom)
+  include
+    ConstraintTypes.Constraint
+      with type polynomial = Polynomials.RationalPolynomial.t
+       and type value = OurRational.t
+       and type atom = Atoms.RationalAtom.t
 
   val max_of_occurring_constants : t -> OurRational.t
 
@@ -53,22 +53,20 @@ module RationalConstraint : sig
   val of_intconstraint : Constraint.t -> t
 end
 
-(** Provides an implementation of constraints consisting of atoms over parameter polynomials. *)
-module ParameterConstraintOver (Value : PolyTypes.Ring) : sig
-  include module type of ConstraintOver (ParameterAtomOver (Value))
-
-  type unparametrised_constraint = ConstraintOver(AtomOver(Polynomials.PolynomialOver(Value))).t
-
-  val of_constraint : unparametrised_constraint -> t
-
-  val farkas_transform : t -> atom -> unparametrised_constraint
-  (** Applies Farkas-Transformation on a Constraint and a ParameterAtom. *)
-end
-
-module ParameterConstraint : module type of ParameterConstraintOver (OurInt)
+module ParameterConstraint :
+  ConstraintTypes.ParameterConstraint
+    with type polynomial = Polynomials.ParameterPolynomial.t
+     and type value = Polynomials.Polynomial.t
+     and type atom = Atoms.ParameterAtom.t
+     and type unparametrised_constraint = Constraint.t
 
 module RationalParameterConstraint : sig
-  include module type of ParameterConstraintOver (OurRational)
+  include
+    ConstraintTypes.ParameterConstraint
+      with type polynomial = Polynomials.RationalParameterPolynomial.t
+       and type value = Polynomials.RationalPolynomial.t
+       and type atom = Atoms.RationalParameterAtom.t
+       and type unparametrised_constraint = RationalConstraint.t
 
   val of_intconstraint : Constraint.t -> t
 end

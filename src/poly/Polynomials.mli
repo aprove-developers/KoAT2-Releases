@@ -33,6 +33,9 @@ module Polynomial : sig
 
   include module type of PolynomialOver (OurInt)
 
+  val primitive_part_content_factorisation : t -> OurInt.t * t
+  (** The factorisation is such that the primitive part is never negative *)
+
   val separate_by_sign : t -> t * t
   (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficients and the other list with only scaled monomials with non-negative coefficients. *)
 

@@ -2,12 +2,12 @@ open! OurBase
 open Atoms
 open Polynomials
 
-module ConstraintOver (A : ConstraintTypes.Atom) = struct
+module ConstraintOver (P : ConstraintTypes.Atomizable) (A : ConstraintTypes.Atom with type polynomial = P.t) =
+struct
   module A = A
 
   type value = A.value
   type polynomial = A.polynomial
-  type compkind = A.compkind
   type atom = A.t
   type t = A.t list [@@deriving eq, ord]
 
@@ -79,30 +79,31 @@ module ConstraintOver (A : ConstraintTypes.Atom) = struct
   let get_matrix vars constr = List.map ~f:(fun var -> get_coefficient_vector var constr) vars
 
   (** returns a list of lists of the coefficients of the constraint*)
-  let dualise vars (matrix : A.polynomial list list) column =
+  let dualise vars (matrix : P.t list list) column =
     let dualised_left =
       List.map
-        ~f:(fun row ->
-          List.map2_exn ~f:(fun c -> A.P.mul c % A.P.of_var) row vars |> Sequence.of_list |> A.P.sum)
+        ~f:(fun row -> List.map2_exn ~f:(fun c -> P.mul c % P.of_var) row vars |> Sequence.of_list |> P.sum)
         matrix
     in
     let dualised_eq = List.join (List.map2_exn ~f:mk_eq dualised_left column) in
-    let ensure_positivity = List.map ~f:(fun v -> A.Infix.(A.P.of_var v >= A.P.zero)) vars in
+    let ensure_positivity = List.map ~f:(fun v -> A.Infix.(P.of_var v >= P.zero)) vars in
     mk (List.join [ dualised_eq; ensure_positivity ])
 end
 
 module Constraint = struct
-  include ConstraintOver (Atom)
+  include ConstraintOver (Polynomial) (Atom)
 
   let max_of_occurring_constants atoms =
     atoms |> List.map ~f:Atom.max_of_occurring_constants |> List.fold_left ~f:OurInt.mul ~init:OurInt.one
 
 
-  let simplify = List.dedup_and_sort ~compare:Atom.compare
+  let remove_duplicate_atoms = List.dedup_and_sort ~compare:Atom.compare
+  let to_set = Set.of_list (module Atom)
+  let of_set = Set.to_list
 end
 
 module RationalConstraint = struct
-  include ConstraintOver (RationalAtom)
+  include ConstraintOver (RationalPolynomial) (RationalAtom)
 
   let max_of_occurring_constants atoms =
     atoms
@@ -114,10 +115,19 @@ module RationalConstraint = struct
     mk (List.map ~f:(fun atom -> RationalAtom.of_intatom atom) intconstraint)
 end
 
-module ParameterConstraintOver (Value : PolyTypes.Ring) = struct
-  include ConstraintOver (ParameterAtomOver (Value))
+module ParameterConstraintOver
+    (Value : PolyTypes.Ring)
+    (Atom : ConstraintTypes.Atom with type value = Value.t and type polynomial = PolynomialOver(Value).t)
+    (ParamAtom : sig
+      include
+        ConstraintTypes.Atom
+          with type polynomial = ParameterPolynomialOver(Value).t
+           and type value = PolynomialOver(Value).t
+    end) =
+struct
+  include ConstraintOver (ParameterPolynomialOver (Value)) (ParamAtom)
   module ParaP = ParameterPolynomialOver (Value)
-  module C = ConstraintOver (AtomOver (Polynomials.PolynomialOver (Value)))
+  module C = ConstraintOver (PolynomialOver (Value)) (Atom)
 
   type unparametrised_constraint = C.t
 
@@ -147,10 +157,10 @@ module ParameterConstraintOver (Value : PolyTypes.Ring) = struct
     apply_farkas a_matrix b_right c_left d_right
 end
 
-module ParameterConstraint = ParameterConstraintOver (OurInt)
+module ParameterConstraint = ParameterConstraintOver (OurInt) (Atoms.Atom) (Atoms.ParameterAtom)
 
 module RationalParameterConstraint = struct
-  include ParameterConstraintOver (OurRational)
+  include ParameterConstraintOver (OurRational) (Atoms.RationalAtom) (Atoms.RationalParameterAtom)
 
   let of_intconstraint = of_constraint % RationalConstraint.of_intconstraint
 end

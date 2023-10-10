@@ -3,8 +3,6 @@ open! OurBase
 
 open PolyTypes
 
-exception StrictUnremovable of string
-
 (** A default atom module. *)
 module type Atomizable = sig
   type t
@@ -27,37 +25,14 @@ end
 (** An atom is a comparison between two polynomials. *)
 module type Atom = sig
   (** A comparator sets two values in a binary relation *)
-  module Comparator : sig
-    (** The different comparators.
-              GT -> a > b.
-              GE -> a >= b.
-              LT -> a < b.
-              LE -> a <= b. *)
-    type t = GT  (** a > b *) | GE  (** a >= b *) | LT  (** a < b*) | LE  (** a <= b *)
-
-    val values : t list
-    (** Returns a list of all possible comparators. *)
-
-    val str_values : string list
-    (** Returns a list of all possible comparators with their string representation. *)
-
-    val to_string : t -> string
-    (** Returns string representing comparator. *)
-  end
 
   type polynomial
   type value
-
-  (* TODO Shouldn't be exposed *)
-  module P : Atomizable with type t = polynomial and type value = value
-
   type t
-  type compkind = LE | LT
+
+  include Comparator.S with type t := t
 
   (** {1  {L Following methods are convenience methods for the creation of atoms.}} *)
-
-  val mk : Comparator.t -> polynomial -> polynomial -> t
-  (** Makes an atom out of two objects and a comparator. *)
 
   val mk_gt : polynomial -> polynomial -> t
   (** Makes an atom out of two objects using {b >} as the comparator. *)
@@ -104,9 +79,6 @@ module type Atom = sig
   (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
 
-  val normalised_lhs : t -> polynomial
-  (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form {i p <= 0}. *)
-
   (** {1  {L Following methods manipulate atoms and return the manipulated versions.}} *)
 
   val rename : t -> RenameMap.t -> t
@@ -122,20 +94,17 @@ module type Atom = sig
   (** Returns the coefficient of a variable which is normalised to the lhs. *)
 
   val get_constant : t -> value
-  (** Returns the single right hand side constant of the atom. *)
+  (** Returns the single right hand side constant of the atom.
+      I.e., results in 5 for atom x - 5 ≤ 0 *)
 
-  val poly : t -> polynomial
   val is_lt : t -> bool
   val is_le : t -> bool
-
-  include Base.Comparator.S with type t := t
 end
 
 (** A constraint is a conjunction of atoms, i.e., we store those atoms in a list. *)
 module type Constraint = sig
   type value
   type polynomial
-  type compkind
   type atom
   type t
 
@@ -245,6 +214,15 @@ module type Constraint = sig
 
   val dualise : Var.t list -> polynomial list list -> polynomial list -> t
   (** TODO doc *)
+end
+
+module type ParameterConstraint = sig
+  type unparametrised_constraint
+
+  include Constraint
+
+  val of_constraint : unparametrised_constraint -> t
+  val farkas_transform : t -> atom -> unparametrised_constraint
 end
 
 (** A formula is a propositional formula, a disjunction of constraints, i.e., a list of constraints or more precisely a list of atom lists. *)

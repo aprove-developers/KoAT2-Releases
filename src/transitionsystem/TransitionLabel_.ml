@@ -73,7 +73,7 @@ module Inner = struct
          else
            Option.value_exn id);
       update;
-      guard = Guard.rename guard map_to_arg_vars;
+      guard = Guard.rename guard map_to_arg_vars |> Guard.remove_duplicate_atoms;
       invariant = Guard.mk_true;
       cost = Polynomial.rename map_to_arg_vars cost;
     }
@@ -103,8 +103,8 @@ module Inner = struct
     {
       id = Unique.unique ();
       update = new_update;
-      guard = new_guard;
-      invariant = new_invariant;
+      guard = Guard.remove_duplicate_atoms new_guard;
+      invariant = Guard.remove_duplicate_atoms new_invariant;
       cost = Polynomial.(t1.cost + updated_cost);
     }
 
@@ -226,8 +226,21 @@ module Inner = struct
   let chain_guards t1 t2 = guard (append t1 t2)
   let guard_without_inv t = t.guard
   let invariant t = t.invariant
-  let add_invariant t invariant' = { t with invariant = Invariant.mk_and t.invariant invariant' }
-  let map_guard f label = { label with guard = f label.guard; invariant = f label.invariant }
+
+  let add_invariant t invariant' =
+    let invariant =
+      let atoms_in_new_invariant = Invariant.mk_and t.invariant invariant' |> Invariant.to_set in
+      let atoms_in_guard = Invariant.to_set t.guard in
+      Set.diff atoms_in_new_invariant atoms_in_guard |> Invariant.of_set
+    in
+    { t with invariant }
+
+
+  let map_guard f label =
+    let guard = Guard.remove_duplicate_atoms (f label.guard) in
+    { label with guard; invariant = f label.invariant } |> flip add_invariant (f label.invariant)
+
+
   let cost t = t.cost
 
   let negative_costs t =

@@ -300,7 +300,8 @@ module type Program = sig
   (** Returns transition graph of a program. *)
 
   val add_invariant : Location.t -> Constraint.t -> t -> t
-  (** Adds the invariant to a location of the program. *)
+  (** Adds the invariant to a location of the program.
+      The aim is to only store the atoms of the invariant that are not already contained in the guard *)
 
   val simplify_all_guards : t -> t
   (** Tries to simplify the guard of all transitions by invoking the SMT Solver *)
