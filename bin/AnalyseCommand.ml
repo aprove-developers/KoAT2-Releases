@@ -46,9 +46,9 @@ let print_termcomp (type b) (module B : BoundType.Bound with type t = b) (progra
 
 
 let print_result = function
-  | `print_overall_costbound -> print_overall_costbound
-  | `print_termcomp -> print_termcomp
-  | `print_all_bounds -> print_all_bounds
+  | `PrintOverallCostbound -> print_overall_costbound
+  | `PrintTermcomp -> print_termcomp
+  | `PrintAllBounds -> print_all_bounds
 
 
 type local = [ `MPRF | `TWN | `TWNTransform ]
@@ -89,10 +89,9 @@ type params = {
         |> List.map (fun level -> (Logger.name_of_level level, level))]
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
-  result : [ `print_termcomp | `print_all_bounds | `print_overall_costbound ];
-      [@enum
-        [ ("termcomp", `print_termcomp); ("all", `print_all_bounds); ("overall", `print_overall_costbound) ]]
-      [@default `print_overall_costbound]
+  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound ];
+      [@enum [ ("termcomp", `PrintTermcomp); ("all", `PrintAllBounds); ("overall", `PrintOverallCostbound) ]]
+      [@default `PrintOverallCostbound]
       [@aka [ "r" ]]
       (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
   preprocessors : Program.t Preprocessor.t list;
