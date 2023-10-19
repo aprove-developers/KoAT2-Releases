@@ -189,6 +189,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | `Time -> Approximation.is_time_bounded appr transition
     | `Cost -> Polynomial.is_const (Transition.cost transition)
 
+
   let rec knowledge_propagation (scc : TransitionSet.t) program appr =
     let execute () =
       scc |> Base.Set.to_sequence
@@ -216,6 +217,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Logger.with_log logger Logger.INFO
       (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
       execute
+
 
   let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
     let open! OurBase in
@@ -265,9 +267,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
       match (measure, conf.twn_configuration) with
-      | `Cost, _->
+      | `Cost, _ ->
           MaybeChanged.return appr (* TODO I'm confused by this. Why do we not use twn for cost bounds? *)
-      | `Time, None-> MaybeChanged.return appr
+      | `Time, None -> MaybeChanged.return appr
       | `Time, Some twn_conf -> improve_with_twn program scc twn_state appr)
 
 
