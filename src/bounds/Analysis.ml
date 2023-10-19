@@ -645,8 +645,5 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (program, trivial_appr, opt_rvg)
       |> Tuple3.get12
     in
-    ( program,
-      match conf.goal with
-      | Termination -> appr
-      | Complexity -> CostBounds.infer_from_timebounds program appr )
+    (program, CostBounds.infer_from_timebounds program appr)
 end
