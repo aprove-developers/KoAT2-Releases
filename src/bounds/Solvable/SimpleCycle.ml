@@ -2,12 +2,12 @@ open Batteries
 open Formulas
 open Polynomials
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Loop = Loop.Make (PM)
+  module Loop = Loop.Make (Bound) (PM)
   module TWN_Proofs = TWN_Proofs.Make (PM)
-  module Transformation = Transformation.Make (PM)
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
+  module Transformation = Transformation.Make (Bound) (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
   type path = (Location.t * TransitionLabel.t list * Location.t) list
   (** A simple cycle l0 ->_{t_11 || ... || t_1m} ... ->_{t_n1 || ... || t_nk} ln with
@@ -119,7 +119,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       entries
 
 
-  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.Automorphism.t Option.t)) list
+  type twn_loop =
+    Transition.t list * (Transition.t * (Loop.t * Automorphism.Automorphism(Bound).t Option.t)) list
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_all_loops twn_proofs ?(relevant_vars = None) ?(transformation_type = `NoTransformation)

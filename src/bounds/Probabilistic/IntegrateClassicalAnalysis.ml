@@ -2,8 +2,8 @@ open! OurBase
 open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
-module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (NonProbOverappr)
-module TWN = TWN.Make (NonProbOverappr)
+module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (NonProbOverappr)
+module TWN = TWN.Make (Bound) (NonProbOverappr)
 module UnliftedBound = UnliftedBounds.UnliftedTimeBound.Make (NonProbOverappr) (Bound)
 open OverapprDirections
 

@@ -11,10 +11,10 @@ let logger = Logging.(get Twn)
 
 module SMTSolver = SMT.Z3Solver
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Check_TWN = Check_TWN.Make (PM)
-  module Loop = Loop.Make (PM)
+  module Check_TWN = Check_TWN.Make (Bound) (PM)
+  module Loop = Loop.Make (Bound) (PM)
 
   let red_lt poly_list =
     let rec constraint_eq_zero i = function

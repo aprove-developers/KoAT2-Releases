@@ -14,7 +14,7 @@ let default_conf = Analysis.default_configuration
 let mprf5_conf = Analysis.{ default_configuration with run_mprf_depth = Some 5 }
 let twn_conf = Analysis.{ default_configuration with twn_configuration = Some `NoTransformation }
 
-module Analysis = Analysis.Make (ProgramModules)
+module Analysis = Analysis.Make (Bounds.Bound) (ProgramModules)
 
 (** Returns an overall costbound for the given program. *)
 let find_costbound ?(conf = default_conf) (program : Program.t) : Bound.t =

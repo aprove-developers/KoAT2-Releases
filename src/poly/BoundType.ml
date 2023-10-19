@@ -23,10 +23,16 @@ module type Bound = sig
   val of_poly : polynomial -> t
   (** Creates a bound from a polynomial *)
 
+  val of_intpoly : Polynomials.Polynomial.t -> t
+  (** Creates a bound from a polynomial *)
+
   val to_poly : t -> polynomial Option.t
   (** Tries to convert the bound to a polynomial if possible *)
 
   val of_constant : value -> t
+  (** Creates a constant bound from a constant value. *)
+
+  val of_OurInt : OurInt.t -> t
   (** Creates a constant bound from a constant value. *)
 
   val is_constant : t -> bool
@@ -45,6 +51,9 @@ module type Bound = sig
   (** Returns the infinity bound. *)
 
   val exp : value -> t -> t
+  (** Returns for a value i and a bound b the new bound i^b. *)
+
+  val exp_int : OurInt.t -> t -> t
   (** Returns for a positive integer value i and a bound b the new bound b^i. *)
 
   val max_of_occurring_constants : t -> value
@@ -114,8 +123,8 @@ module type Bound = sig
   val substitute_f : (Var.t -> t) -> t -> t
   (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
 
-  (** TODO doc *)
   type complexity
+  (** TODO doc *)
 
   val equal_complexity : complexity -> complexity -> bool
   (** TODO doc where is this method? Returns true iff. two bounds are equal. Or asym. equal?*)

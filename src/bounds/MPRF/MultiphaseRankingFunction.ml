@@ -3,7 +3,6 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open Bounds
 module Solver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make (OurInt)
 
@@ -12,7 +11,7 @@ type constraint_type = [ `Non_Increasing | `Decreasing ]
 
 let logger = Logging.(get MPRF)
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   type mprf = (Location.t -> Polynomial.t) list
@@ -185,7 +184,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       ~compute_proof:
         (Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> compute_proof t (Some bound) program)
       program
-      (fun (_, _, l') -> Bound.of_poly @@ evaluated_rank_for_entry_loc l')
+      (fun (_, _, l') -> Bound.of_intpoly @@ evaluated_rank_for_entry_loc l')
 
 
   (* We do not minimise the coefficients for now *)
@@ -563,7 +562,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       execute
 
 
-  module Loop = Loop.Make (PM)
+  module Loop = Loop.Make (Bound) (PM)
 
   type t_loop = { rank : Polynomial.t list; depth : int }
 
@@ -617,10 +616,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
     if Option.is_some rankfuncs then
       let rankfuncs = Option.get rankfuncs in
-      let bounds = rankfuncs.rank |> List.map Bound.of_poly in
-      Bound.(one + (of_constant (MPRF_Coefficient.coefficient rankfuncs.depth) * Bound.sum_list bounds))
+      let bounds = rankfuncs.rank |> List.map Bound.of_intpoly in
+      Bound.(one + (of_OurInt (MPRF_Coefficient.coefficient rankfuncs.depth) * Bound.sum_list bounds))
     else
       Bound.infinity
 end
 
-include Make (ProgramModules)
+include Make (Bounds.Bound) (ProgramModules)

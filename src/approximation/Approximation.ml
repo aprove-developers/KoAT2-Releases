@@ -93,11 +93,12 @@ struct
     FormattedString.render_string @@ to_formatted ~show_initial:true ~pretty ~termination_only program appr
 end
 
+(* TODO clean-up. *)
 module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
   Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
 
-module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) =
-  MakeWithDefaultTransition (Bounds.Bound) (PM)
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
+  MakeWithDefaultTransition (B) (PM)
 
 module Coerce
     (B : BoundType.Bound)
@@ -138,10 +139,12 @@ struct
       }
 end
 
-include MakeForClassicalAnalysis (ProgramModules)
+include MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
 module Probabilistic = struct
-  module NonProbOverapprApproximation = MakeForClassicalAnalysis (ProbabilisticProgramModules.NonProbOverappr)
+  module NonProbOverapprApproximation =
+    MakeForClassicalAnalysis (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr)
+
   module ClassicalApproximation = MakeWithDefaultTransition (Bounds.Bound) (ProbabilisticProgramModules)
 
   module ExpApproximation =

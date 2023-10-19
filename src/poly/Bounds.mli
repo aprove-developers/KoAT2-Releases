@@ -3,10 +3,11 @@ open! OurBase
 module Make (Num : PolyTypes.OurNumber) : sig
   type t
   type bound
+
   type complexity =
-  | Inf  (** Bound is infinite. *)
-  | Polynomial of int  (** Bound is in asymptotic class O(n^i) *)
-  | Exponential of int
+    | Inf  (** Bound is infinite. *)
+    | Polynomial of int  (** Bound is in asymptotic class O(n^i) *)
+    | Exponential of int
 
   val fold :
     const:(Num.t -> 'b) ->
@@ -30,17 +31,18 @@ module Make (Num : PolyTypes.OurNumber) : sig
   (** Replaces all arithmetical operations by new constructors in finite bounds. *)
 
   include
-    BoundType.Bound with type value = Num.t and type polynomial = Polynomials.PolynomialOver(Num).t and
-    type complexity := complexity and
-    type bound := bound and
-    type t := t
+    BoundType.Bound
+      with type value = Num.t
+       and type polynomial = Polynomials.PolynomialOver(Num).t
+       and type complexity := complexity
+       and type bound := bound
+       and type t := t
 end
 
-module Bound :
-  module type of Make(OurInt)
+module Bound : module type of Make (OurInt)
 
 module RationalBound : sig
-  include module type of Make(OurRational)
+  include module type of Make (OurRational)
 
   val of_intbound : Bound.t -> t
   val of_intpoly : Polynomials.Polynomial.t -> t
@@ -51,7 +53,6 @@ end
 
 module BinaryBound : sig
   type t = Finite | Infinite
-  include
-    BoundType.Bound
-      with type t := t
+
+  include BoundType.Bound with type t := t
 end

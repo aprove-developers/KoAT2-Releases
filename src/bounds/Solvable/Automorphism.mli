@@ -1,7 +1,6 @@
 open Batteries
-open Bounds
 
-module Automorphism : sig
+module Automorphism (Bound : BoundType.Bound) : sig
   type t
 
   val to_string : t -> string

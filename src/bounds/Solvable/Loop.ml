@@ -1,9 +1,8 @@
 open Batteries
-open Bounds
 open Formulas
 open Polynomials
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   type t = Formula.t * Polynomial.t ProgramTypes.var_map
@@ -59,7 +58,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       | 0 -> (loop, bound)
       | n ->
           let chained_loop = append loop loop_org in
-          f (chained_loop, Bound.(add bound (of_poly @@ update_var chained_loop var))) (n - 1)
+          f (chained_loop, Bound.(add bound (of_intpoly @@ update_var chained_loop var))) (n - 1)
     in
     Tuple2.second % f (id Formula.mk_true, Bound.zero)
 end

@@ -1,16 +1,15 @@
 open Atoms
 open Batteries
-open Bounds
 open Formulas
 open Polynomials
 open PolyExponential
 
 let logger = Logging.(get Twn)
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  module Check_TWN = Check_TWN.Make (PM)
-  module Loop = Loop.Make (PM)
-  module TWN_Termination = TWN_Termination.Make (PM)
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
+  module Check_TWN = Check_TWN.Make (Bound) (PM)
+  module Loop = Loop.Make (Bound) (PM)
+  module TWN_Termination = TWN_Termination.Make (Bound) (PM)
 
   (* COMPLEXITY: *)
 
@@ -111,10 +110,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f", [ ("N", OurInt.to_string n_) ]));
         let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f", [ ("M", OurInt.to_string m_) ]));
-        Bound.(
-          of_poly (Polynomial.add alphas_abs alphas_abs)
-          |> add (of_constant (OurInt.max m_ n_))
-          |> add (of_constant OurInt.one))
+        Bound.of_intpoly
+          Polynomial.(alphas_abs + alphas_abs + (of_constant @@ OurInt.max m_ n_) + Polynomial.one)
         |> tap (fun b ->
                Logger.log logger Logger.INFO (fun () ->
                    ("complexity.compute_f", [ ("2*alpha_abs+max(N,M)", Bound.to_string b) ]));
@@ -160,7 +157,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     (* TODO guard without inv *)
     Logger.log logger Logger.INFO (fun () ->
         ("complexity.get_bound", [ ("max constant in constant constraint", OurInt.to_string max_con) ]));
-    Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
+    Bound.(add bound (of_OurInt OurInt.(max_con + one)))
     |> tap (fun b ->
            Logger.log logger Logger.INFO (fun () ->
                ("complexity.get_bound", [ ("local bound", Bound.to_string b) ])))

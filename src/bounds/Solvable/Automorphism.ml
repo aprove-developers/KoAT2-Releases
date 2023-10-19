@@ -1,10 +1,9 @@
 open! OurBase
-open Bounds
 open Polynomials
 open! ProgramModules
 open ProgramTypes
 
-module Automorphism = struct
+module Automorphism (Bound : BoundType.Bound) = struct
   type t = { poly : RationalPolynomial.t var_map; inv_poly : RationalPolynomial.t var_map }
 
   let to_string t =
@@ -22,12 +21,5 @@ module Automorphism = struct
 
   let apply_to_bound bound = function
     | None -> bound
-    | Some t ->
-        List.fold_right
-          ~f:(fun var bound ->
-            let bound_of_inv_poly =
-              Bound.of_poly @@ RationalPolynomial.overapprox (Map.find_exn t.inv_poly var)
-            in
-            Bound.substitute var ~replacement:bound_of_inv_poly bound)
-          (Map.keys t.inv_poly) ~init:bound
+    | Some _ -> bound
 end

@@ -1,5 +1,4 @@
 open Batteries
-open Bounds
 open Polynomials
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
@@ -7,50 +6,53 @@ type !'prog_modules_t cfr_configuration =
   | NoCFR : 'a cfr_configuration
   | PerformCFR : [ `Chaining | `PartialEvaluation ] list -> ProgramModules.program_modules_t cfr_configuration
 
-type !'prog_modules_t closed_form_size_bounds =
-  | NoClosedFormSizeBounds : 'a closed_form_size_bounds
-  | ComputeClosedFormSizeBounds : ProgramModules.program_modules_t closed_form_size_bounds
+type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 
-type !'prog_modules_t analysis_configuration = {
+type (!'prog_modules_t, 'bound) closed_form_size_bounds =
+  | NoClosedFormSizeBounds : ('a, 'b) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds : (ProgramModules.program_modules_t, Bounds.Bound.t) closed_form_size_bounds
+
+type (!'prog_modules_t, 'bound) analysis_configuration = {
   run_mprf_depth : int option;
   twn_configuration : TWN.configuration option;
   cfr_configuration : 'prog_modules_t cfr_configuration;
-  closed_form_size_bounds : 'prog_modules_t closed_form_size_bounds;
-  analysis_type : [ `Termination | `Complexity ];
+  goal : 'bound goal;
+  closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
 }
 
-type classical_program_conf_type = ProgramModules.program_modules_t analysis_configuration
+type classical_program_conf_type = (ProgramModules.program_modules_t, Bounds.Bound.t) analysis_configuration
 type measure = [ `Cost | `Time ] [@@deriving show]
 
 let logger = Logging.(get Time)
 let logger_cfr = Logging.(get CFR)
 
-let default_configuration : 'a analysis_configuration =
+let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
   {
     run_mprf_depth = Some 1;
     twn_configuration = None;
     cfr_configuration = NoCFR;
+    goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
-    analysis_type = `Complexity;
   }
 
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Approximation_ = Approximation
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
-  module TrivialTimeBounds = TrivialTimeBounds.Make (PM)
-  module CostBounds = CostBounds.Make (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
+  module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (PM)
+  module CostBounds = CostBounds.Make (Bound) (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module LSB_Table = Hashtbl.Make (PM.RV)
-  module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (PM)
+  module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
-  module SizeBounds_ = SizeBounds
-  module TWN = TWN.Make (PM)
+  module TWN = TWN.Make (Bound) (PM)
+  module CFR = CFR.CFR (Bound)
+  module PartialEvaluation = PartialEvaluation.Make (Bound)
 
-  type allowed_conf_type = PM.program_modules_t analysis_configuration
+  type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
 
+  (* TODO Move this into program? *)
   let entry_transitions program tset =
     let all_possible_entry_trans =
       Base.Set.to_sequence tset
@@ -61,13 +63,14 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     Base.Set.diff all_possible_entry_trans tset
 
 
+  (* TODO Move to MPRF modul *)
   let bounded_mprf program (appr : Approximation.t) (rank : MultiphaseRankingFunction.t) : bool =
     let execute () =
       rank |> MultiphaseRankingFunction.non_increasing |> entry_transitions program
       |> Base.Set.for_all ~f:(fun (l, t, l') ->
              let timebound = Approximation.timebound appr (l, t, l') in
              let evaluated_ranking_funcs =
-               List.map (fun r -> Bound.of_poly @@ r l') (MultiphaseRankingFunction.rank rank)
+               List.map (fun r -> Bound.of_intpoly @@ r l') (MultiphaseRankingFunction.rank rank)
              in
              let depth = MultiphaseRankingFunction.depth rank in
              if depth = 1 then
@@ -90,7 +93,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         if b then
           "YES"
         else
-          "MAYBE")
+          "MAYBE") (* TODO cleanup *)
       (fun () -> terminates)
 
 
@@ -202,6 +205,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       (Base.Sequence.filter ~f:(Bound.is_infinity % Approximation.timebound appr) (Base.Set.to_sequence scc))
 
 
+  (* TODO remove this *)
+
   let improve_termination_rank_mprf measure program appr rank =
     let terminates = bounded_mprf program appr rank in
     let orginal_terminates = bounded measure appr (MultiphaseRankingFunction.decreasing rank) in
@@ -211,7 +216,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> (fun t -> add_bound measure Bound.one t appr)
       |> MaybeChanged.changed)
     else
-      MaybeChanged.same appr
+      MaybeChanged.same appr (* TODO remove this *)
 
 
   let rec complexity_knowledge_propagation (scc : TransitionSet.t) program appr =
@@ -266,21 +271,22 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
     Logger.with_log logger Logger.INFO
       (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
-      execute
+      execute (* TODO merge both methods *)
 
 
-  let knowledge_propagation ~conf =
-    match conf.analysis_type with
-    | `Termination -> termination_knowledge_propagation
-    | `Complexity -> complexity_knowledge_propagation
+  (* TODO remove this *)
+  let knowledge_propagation ~(conf : allowed_conf_type) =
+    match conf.goal with
+    | Termination -> termination_knowledge_propagation
+    | Complexity -> complexity_knowledge_propagation
 
 
-  let local_rank ~conf (scc : TransitionSet.t) measure program max_depth appr =
+  let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
     let open! OurBase in
     let get_unbounded_vars transition =
-      match conf.analysis_type with
-      | `Termination -> VarSet.empty
-      | `Complexity ->
+      match conf.goal with
+      | Termination -> VarSet.empty
+      | Complexity ->
           program |> Program.input_vars
           |> Base.Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
     in
@@ -313,45 +319,59 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |? Sequence.empty
     in
     let improvement_function =
-      match conf.analysis_type with
-      | `Termination -> improve_termination_rank_mprf
-      | `Complexity -> improve_with_rank_mprf
+      match conf.goal with
+      (* TODO remove this *)
+      | Termination -> improve_termination_rank_mprf
+      | Complexity -> improve_with_rank_mprf
     in
     rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improvement_function measure program)
 
 
-  let run_local ~conf (scc : TransitionSet.t) twn_state measure program appr =
+  let run_local ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
       | Some max_depth -> local_rank ~conf scc measure program max_depth appr
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
-      match (measure, conf.twn_configuration, conf.analysis_type) with
-      | `Cost, _, _ -> MaybeChanged.return appr
+      match (measure, conf.twn_configuration, conf.goal) with
+      | `Cost, _, _ ->
+          MaybeChanged.return appr (* TODO I'm confused by this. Why do we not use twn for cost bounds? *)
       | `Time, None, _ -> MaybeChanged.return appr
-      | `Time, Some twn_conf, `Termination -> improve_termination_twn program scc twn_conf appr
-      | `Time, Some twn_conf, `Complexity -> improve_with_twn program scc twn_state twn_conf appr)
+      | `Time, Some twn_conf, Termination ->
+          improve_termination_twn program scc twn_conf appr (* TODO remove this *)
+      | `Time, Some twn_conf, Complexity -> improve_with_twn program scc twn_state twn_conf appr)
 
 
-  let improve_timebound (scc : TransitionSet.t) twn_state measure program appr =
-    let execute () = run_local scc twn_state measure program appr in
+  let improve_timebound ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
+    let execute () = run_local ~conf scc twn_state measure program appr in
     Logger.with_log logger Logger.INFO
       (fun () ->
         ("improve_bounds", [ ("scc", TransitionSet.to_string scc); ("measure", show_measure measure) ]))
       execute
 
 
-  let twn_size_bounds ~(conf : allowed_conf_type) (scc : TransitionSet.t) (program : Program.t)
-      (appr : Approximation.t) =
-    match conf.closed_form_size_bounds with
-    | NoClosedFormSizeBounds -> appr
-    | ComputeClosedFormSizeBounds ->
-        TWNSizeBounds.improve program ~scc:(Option.some scc) appr
-        |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
+  let improve_size_bounds ~(conf : allowed_conf_type) program opt_rvg_with_sccs scc opt_lsb_table =
+    let twn_size_bounds ~(conf : allowed_conf_type) (scc : TransitionSet.t) (program : Program.t)
+        (appr : Approximation.t) =
+      match conf.closed_form_size_bounds with
+      | NoClosedFormSizeBounds -> appr
+      | ComputeClosedFormSizeBounds ->
+          TWNSizeBounds.improve program ~scc:(Option.some scc) appr
+          |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
+    in
+    match conf.goal with
+    | Termination -> identity
+    | Complexity ->
+        fun (appr : Approximation.t) ->
+          SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc)
+            (LSB_Table.find @@ Option.get opt_lsb_table)
+            appr
+          |> twn_size_bounds ~conf scc program
 
 
-  let improve_scc ~conf opt_rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table appr =
+  let improve_scc ~(conf : allowed_conf_type) opt_rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table
+      appr =
     let twn_state =
       match conf.twn_configuration with
       | Some twn_conf -> ref (initial_twn_state twn_conf program scc)
@@ -359,14 +379,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
     let improvement appr =
       knowledge_propagation ~conf scc program appr
-      |> (match conf.analysis_type with
-         | `Termination -> identity
-         | `Complexity ->
-             fun appr ->
-               SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc)
-                 (LSB_Table.find @@ Option.get opt_lsb_table)
-                 appr
-               |> twn_size_bounds ~conf scc program)
+      |> improve_size_bounds ~conf program opt_rvg_with_sccs scc opt_lsb_table
       |> improve_timebound ~conf scc twn_state `Time program
     in
     (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
@@ -420,14 +433,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     match conf.cfr_configuration with
     | NoCFR -> (program, appr, opt_rvg)
     | PerformCFR cfr ->
-        (let module Approximation = Approximation_ in
-        let module SizeBounds = SizeBounds_ in
+        (let module Approximation = Approximation in
         let lsbs = opt_lsbs |? LSB_Table.create 0 in
         let rvg = opt_rvg |? (RVG.empty, Lazy.from_fun (const [])) in
         let apply_cfr (method_name : string) (f_cfr : Program.t -> Program.t MaybeChanged.t)
             (f_proof : Program.t -> string -> unit) (rvg_with_sccs : RVG.t * RVG.scc list Lazy.t)
             (time : float) (non_linear_transitions : TransitionSet.t) ~(preprocess : Program.t -> Program.t)
-            (program : Program.t) (appr : Approximation_.MakeForClassicalAnalysis(ProgramModules).t) =
+            (program : Program.t) (appr : Approximation.t) =
           if Base.Set.is_empty non_linear_transitions then
             (program, appr, rvg_with_sccs)
           else
@@ -446,14 +458,16 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               ProofOutput.add_to_proof (fun () ->
                   FormattedString.mk_str_header_big "Analysing control-flow refined program");
               let program_cfr = mc |> MaybeChanged.unpack |> preprocess in
-              if conf.analysis_type == `Complexity then
-                add_missing_lsbs program_cfr lsbs;
+              (match conf.goal with
+              | Complexity -> add_missing_lsbs program_cfr lsbs
+              | _ -> ());
+              (* TODO Check this? And merge with the later on. *)
               Logger.log logger_cfr Logger.DEBUG (fun () -> ("apply_" ^ method_name, []));
               reset_all_caches;
               let rvg_with_sccs_cfr =
-                match conf.analysis_type with
-                | `Termination -> (RVG.empty, Lazy.from_fun (const []))
-                | `Complexity ->
+                match conf.goal with
+                | Termination -> (RVG.empty, Lazy.from_fun (const []))
+                | Complexity ->
                     RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr
               in
               (* The new sccs which do not occur in the original program. *)
@@ -466,20 +480,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                             (Program.sccs program)))
               in
               let update_appr appr scc =
-                match conf.analysis_type with
-                | _ when not @@ Base.Set.exists ~f:(Bound.is_infinity % Approximation.timebound appr) scc ->
-                    appr
-                | `Termination ->
-                    Logger.log logger Logger.INFO (fun () ->
-                        (method_name ^ "analysis", [ ("scc", TransitionSet.to_id_string scc) ]));
-                    improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs appr
-                | `Complexity ->
-                    Logger.log logger Logger.INFO (fun () ->
-                        (method_name ^ "analysis", [ ("scc", TransitionSet.to_id_string scc) ]));
-                    SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
-                      (LSB_Table.find lsbs) appr
-                    |> twn_size_bounds ~conf scc program_cfr
-                    |> improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs
+                if Base.Set.exists ~f:(Bound.is_infinity % Approximation.timebound appr) scc then (
+                  Logger.log logger Logger.INFO (fun () ->
+                      (method_name ^ "analysis", [ ("scc", TransitionSet.to_id_string scc) ]));
+                  improve_size_bounds ~conf program_cfr (Some rvg_with_sccs_cfr) scc opt_lsbs appr
+                  |> improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs)
+                else
+                  appr
               in
               let updated_appr_cfr =
                 cfr_sccs |> List.fold_left update_appr (CFR.merge_appr program program_cfr appr)
@@ -538,9 +545,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
                   (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr))
               in
-              match conf.analysis_type with
-              | `Termination -> handle_cfr_termination ()
-              | `Complexity -> handle_cfr_complexity ())
+              match conf.goal with
+              | Termination -> handle_cfr_termination () (* TODO merge this *)
+              | Complexity -> handle_cfr_complexity ())
         in
         let partial_evaluation (program, appr, rvg) =
           let non_linear_transitions =
@@ -590,20 +597,18 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> Tuple3.map3 Option.some
 
 
-  let improve ?(time_cfr = 180) ~conf ~preprocess program appr =
-    (* let appr = List.fold (fun appr (v,t) -> Approximation.add_sizebound (Bound.of_var v) t v appr) appr (List.cartesian_product (Program.input_vars program |> VarSet.to_list) (Program.transitions program |> TransitionSet.to_list)) in *)
-    (*TODO Remove and make unhacky (heuristic entry transition terminates instead of sizebounds)*)
+  let improve ?(time_cfr = 180) ~(conf : allowed_conf_type) ~preprocess program appr =
     PartialEvaluation.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
     let opt_lsbs =
-      match conf.analysis_type with
-      | `Termination -> None
-      | `Complexity -> Option.some @@ compute_lsbs program
+      match conf.goal with
+      | Termination -> None
+      | Complexity -> Option.some @@ compute_lsbs program
     in
     let opt_rvg =
-      match conf.analysis_type with
-      | `Termination -> None
-      | `Complexity ->
+      match conf.goal with
+      | Termination -> None
+      | Complexity ->
           Option.some
           @@ RVG.rvg_with_sccs
                (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find (Option.get opt_lsbs))
@@ -620,14 +625,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                       (const
                       @@ Logger.log logger Logger.INFO (fun () ->
                              ("continue analysis", [ ("scc", TransitionSet.to_id_string scc) ])))
-                 |> (match conf.analysis_type with
-                    | `Termination -> identity
-                    | `Complexity ->
-                        fun appr ->
-                          SizeBounds.improve program (Option.get opt_rvg) ~scc:(Option.some scc)
-                            (LSB_Table.find (Option.get opt_lsbs))
-                            appr
-                          |> twn_size_bounds ~conf scc program)
+                 |> improve_size_bounds ~conf program opt_rvg scc opt_lsbs
                  |> improve_scc ~conf opt_rvg scc program opt_lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                  |> handle_cfr ~conf ~preprocess scc program opt_rvg opt_lsbs
@@ -648,7 +646,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> Tuple3.get12
     in
     ( program,
-      match conf.analysis_type with
-      | `Termination -> appr
-      | `Complexity -> CostBounds.infer_from_timebounds program appr )
+      match conf.goal with
+      | Termination -> appr
+      | Complexity -> CostBounds.infer_from_timebounds program appr )
 end

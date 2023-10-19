@@ -1,8 +1,7 @@
-open Bounds
 open Formulas
 open Polynomials
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
   open PM
 
   type t = Formula.t * Polynomial.t ProgramTypes.var_map

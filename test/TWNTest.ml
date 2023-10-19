@@ -5,10 +5,10 @@ open Helper
 open ProgramModules
 open PolyExponential
 open Bounds
-module Check_TWN = Check_TWN.Make (ProgramModules)
-module TWN_Complexity = TWN_Complexity.Make (ProgramModules)
-module TWN_Termination = TWN_Termination.Make (ProgramModules)
-module Loop = Loop.Make (ProgramModules)
+module Check_TWN = Check_TWN.Make (Bounds.Bound) (ProgramModules)
+module TWN_Complexity = TWN_Complexity.Make (Bounds.Bound) (ProgramModules)
+module TWN_Termination = TWN_Termination.Make (Bounds.Bound) (ProgramModules)
+module Loop = Loop.Make (Bounds.Bound) (ProgramModules)
 
 let tests =
   "TWN"

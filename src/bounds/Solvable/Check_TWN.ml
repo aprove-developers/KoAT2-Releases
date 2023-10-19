@@ -1,9 +1,9 @@
 open Batteries
 open Polynomials
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open! PM
-  module Loop = Loop.Make (PM)
+  module Loop = Loop.Make (Bound) (PM)
 
   (* TOPOLOGICAL ORDERING: *)
   (* https://stackoverflow.com/questions/4653914/topological-sort-in-ocaml *)

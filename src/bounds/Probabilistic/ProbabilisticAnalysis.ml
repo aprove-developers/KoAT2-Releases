@@ -52,8 +52,8 @@ let lift_bounds program program_vars (class_appr, appr) : ExpApproximation.t =
 
 
 let improve_timebounds twn_state
-    ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf program scc
-    (class_appr, appr) =
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
+    ~conf program scc (class_appr, appr) =
   let open MaybeChanged.Monad in
   let* appr =
     PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
@@ -97,8 +97,9 @@ let improve_sizebounds program program_vars scc (rvts_scc, grvs_in) elcbs (class
 
 module ELCBMap = MakeMapCreators1 (GRV)
 
-let improve_scc ~(classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration) ~conf
-    program program_vars scc (class_appr, appr) : ExpApproximation.t =
+let improve_scc
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
+    ~conf program program_vars scc (class_appr, appr) : ExpApproximation.t =
   let rvts_scc = rvts_from_gts scc in
   let rvs_in =
     List.cartesian_product
@@ -158,7 +159,7 @@ let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = d
   |> lift_appr_to_exp_costbounds program class_appr
 
 
-module ClassicAnalysis = Analysis.Make (NonProbOverappr)
+module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
 
 let perform_classic_and_probabilistic_analysis ?(classic_conf = Analysis.default_configuration)
     ?(conf = default_configuration) (program : Program.t) =

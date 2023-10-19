@@ -1,12 +1,12 @@
-open Automorphism
 open Batteries
 module ScaledMonomial = ScaledMonomials.Make (OurInt)
 module Monomial = Monomials.Make (OurInt)
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open! PM
-  module Loop = Loop.Make (PM)
-  module Check_Solvable = Check_Solvable.Make (ProgramModules)
+  module Automorphism = Automorphism.Automorphism (Bound)
+  module Loop = Loop.Make (Bound) (PM)
+  module Check_Solvable = Check_Solvable.Make (Bound) (ProgramModules)
 
   exception NotTransformable
 

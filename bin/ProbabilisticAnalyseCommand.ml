@@ -3,7 +3,7 @@ open Koat2
 
 open! OurBase
 open ProbabilisticProgramModules
-module OverapprAnalysis = Analysis.Make (NonProbOverappr)
+module OverapprAnalysis = Analysis.Make (Bounds.Bound) (NonProbOverappr)
 open Approximation.Probabilistic
 
 let description = "Search for a probabilistic ranking function"

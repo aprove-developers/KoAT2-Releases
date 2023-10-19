@@ -2,9 +2,9 @@ open Batteries
 open ProgramModules
 open Polynomials
 open Bounds
-module Check_Solvable = Check_Solvable.Make (ProgramModules)
-module Loop = Loop.Make (ProgramModules)
-module SimpleCycle = SimpleCycle.Make (ProgramModules)
+module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (ProgramModules)
+module Loop = Loop.Make (Bounds.Bound) (ProgramModules)
+module SimpleCycle = SimpleCycle.Make (Bounds.Bound) (ProgramModules)
 
 let matrix_of_linear_assignments loop (block : Var.t list) =
   (* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
