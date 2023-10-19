@@ -218,8 +218,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     else
       MaybeChanged.same appr (* TODO remove this *)
 
-
-  let rec complexity_knowledge_propagation (scc : TransitionSet.t) program appr =
+  let rec knowledge_propagation (scc : TransitionSet.t) program appr =
     let execute () =
       scc |> Base.Set.to_sequence
       |> MaybeChanged.fold_sequence
@@ -240,46 +239,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
              else
                MaybeChanged.same appr)
            ~init:appr
-      |> MaybeChanged.if_changed (complexity_knowledge_propagation scc program)
+      |> MaybeChanged.if_changed (knowledge_propagation scc program)
       |> MaybeChanged.unpack
     in
     Logger.with_log logger Logger.INFO
       (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
       execute
-
-
-  let rec termination_knowledge_propagation (scc : TransitionSet.t) program appr =
-    let execute () =
-      scc |> Base.Set.to_sequence
-      |> MaybeChanged.fold_sequence
-           ~f:(fun appr transition ->
-             let terminates =
-               Program.pre program transition
-               |> Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr)
-             in
-             let original_bounded = bounded `Time appr transition in
-             if (not original_bounded) && terminates then (
-               ProofOutput.add_str_paragraph_to_proof (fun () ->
-                   "knowledge_propagation leads to time bound for transition "
-                   ^ Transition.to_string_pretty transition);
-               add_bound `Time Bound.one transition appr |> MaybeChanged.changed)
-             else
-               MaybeChanged.same appr)
-           ~init:appr
-      |> MaybeChanged.if_changed (termination_knowledge_propagation scc program)
-      |> MaybeChanged.unpack
-    in
-    Logger.with_log logger Logger.INFO
-      (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
-      execute (* TODO merge both methods *)
-
-
-  (* TODO remove this *)
-  let knowledge_propagation ~(conf : allowed_conf_type) =
-    match conf.goal with
-    | Termination -> termination_knowledge_propagation
-    | Complexity -> complexity_knowledge_propagation
-
 
   let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
     let open! OurBase in
@@ -378,12 +343,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | None -> ref empty_twn_state
     in
     let improvement appr =
-      knowledge_propagation ~conf scc program appr
+      knowledge_propagation scc program appr
       |> improve_size_bounds ~conf program opt_rvg_with_sccs scc opt_lsb_table
       |> improve_timebound ~conf scc twn_state `Time program
     in
     (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
-    knowledge_propagation ~conf scc program appr
+    knowledge_propagation scc program appr
     |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
     |> Util.find_fixpoint improvement
 
