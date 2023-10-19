@@ -146,7 +146,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let empty_twn_state = { remaining_twn_loops = [] }
 
-  let improve_with_twn program scc twn_state conf appr =
+  let improve_with_twn program scc twn_state appr =
     let open! OurBase in
     let not_all_trans_bounded twn_loop =
       TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
@@ -188,22 +188,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     match measure with
     | `Time -> Approximation.is_time_bounded appr transition
     | `Cost -> Polynomial.is_const (Transition.cost transition)
-
-
-  (* We can not compute a better bound in this case, so we consider this transition as bounded *)
-
-  let improve_termination_twn program scc conf appr =
-    let compute appr_ t =
-      let terminates = TWN.terminates conf t scc program appr_ in
-      let orginal_terminates = bounded `Time appr_ t in
-      if (not orginal_terminates) && terminates then
-        MaybeChanged.changed (add_bound `Time Bound.one t appr_)
-      else
-        MaybeChanged.same appr_
-    in
-    MaybeChanged.fold_sequence ~f:compute ~init:appr
-      (Base.Sequence.filter ~f:(Bound.is_infinity % Approximation.timebound appr) (Base.Set.to_sequence scc))
-
 
   (* TODO remove this *)
 
@@ -299,13 +283,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | Some max_depth -> local_rank ~conf scc measure program max_depth appr
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
-      match (measure, conf.twn_configuration, conf.goal) with
-      | `Cost, _, _ ->
+      match (measure, conf.twn_configuration) with
+      | `Cost, _->
           MaybeChanged.return appr (* TODO I'm confused by this. Why do we not use twn for cost bounds? *)
-      | `Time, None, _ -> MaybeChanged.return appr
-      | `Time, Some twn_conf, Termination ->
-          improve_termination_twn program scc twn_conf appr (* TODO remove this *)
-      | `Time, Some twn_conf, Complexity -> improve_with_twn program scc twn_state twn_conf appr)
+      | `Time, None-> MaybeChanged.return appr
+      | `Time, Some twn_conf -> improve_with_twn program scc twn_state appr)
 
 
   let improve_timebound ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
