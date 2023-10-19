@@ -61,6 +61,40 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | `Time -> Approximation.timebound
     | `Cost -> Approximation.costbound
 
+    (** Checks if a transition is bounded *)
+      let bounded measure appr transition =
+        match measure with
+        | `Time -> Approximation.is_time_bounded appr transition
+        | `Cost -> Polynomial.is_const (Transition.cost transition)
+
+
+      let rec knowledge_propagation (scc : TransitionSet.t) program appr =
+        let execute () =
+          scc |> Base.Set.to_sequence
+          |> MaybeChanged.fold_sequence
+               ~f:(fun appr transition ->
+                 let new_bound =
+                   Program.pre program transition |> Base.Set.to_sequence
+                   |> Base.Sequence.map ~f:(Approximation.timebound appr)
+                   |> Bound.sum
+                 in
+                 let original_bound = get_bound `Time appr transition in
+                 if Bound.compare_asy original_bound new_bound = 1 then (
+                   ProofOutput.add_str_paragraph_to_proof (fun () ->
+                       "knowledge_propagation leads to new time bound "
+                       ^ Bound.to_string ~pretty:true new_bound
+                       ^ " for transition "
+                       ^ Transition.to_string_pretty transition);
+                   add_bound `Time new_bound transition appr |> MaybeChanged.changed)
+                 else
+                   MaybeChanged.same appr)
+               ~init:appr
+          |> MaybeChanged.if_changed (knowledge_propagation scc program)
+          |> MaybeChanged.unpack
+        in
+        Logger.with_log logger Logger.INFO
+          (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
+          execute
 
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
 
@@ -99,80 +133,47 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     { remaining_twn_loops = all_loops }
 
 
-  let empty_twn_state = { remaining_twn_loops = [] }
+    let empty_twn_state = { remaining_twn_loops = [] }
 
-  let improve_with_twn program scc twn_state appr =
-    let open! OurBase in
-    let not_all_trans_bounded twn_loop =
-      TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
-      |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
-    in
-    let remaining_twn_loops, appr_mc =
-      List.fold_left !twn_state.remaining_twn_loops
-        ~init:([], MaybeChanged.same appr)
-        ~f:(fun (remaining_twn_loops, appr_mc) twn_loop ->
-          let appr = MaybeChanged.unpack appr_mc in
-          let twn_loop_res = ProofOutput.LocalProofOutput.result twn_loop in
-          if not_all_trans_bounded twn_loop then
-            if
-              TWN.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
-                ~get_sizebound:(Approximation.sizebound appr) twn_loop_res
-            then
-              (* compute a new global time bound *)
-              let unlifted_bound = TWN.to_unlifted_bounds twn_loop in
-              let new_appr_mc =
-                MaybeChanged.flat_map
-                  (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
-                  appr_mc
-              in
-              (remaining_twn_loops, new_appr_mc)
+    let improve_with_twn ~(conf : allowed_conf_type) program scc twn_state appr =
+      let open! OurBase in
+      let not_all_trans_bounded twn_loop =
+        TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
+        |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
+      in
+      let remaining_twn_loops, appr_mc =
+        List.fold_left !twn_state.remaining_twn_loops
+          ~init:([], MaybeChanged.same appr)
+          ~f:(fun (remaining_twn_loops, appr_mc) twn_loop ->
+            let appr = MaybeChanged.unpack appr_mc in
+            let twn_loop_res = ProofOutput.LocalProofOutput.result twn_loop in
+            if not_all_trans_bounded twn_loop then
+              if
+                let heuristic_size_bounds (goal: Bound.t goal) = match goal with
+                | Complexity -> Approximation.sizebound
+                | Termination -> (fun _ _ _ -> Bound.one)
+                in
+                TWN.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
+                  ~get_sizebound:(heuristic_size_bounds conf.goal appr) twn_loop_res
+              then
+                (* compute a new global time bound *)
+                let unlifted_bound = TWN.to_unlifted_bounds twn_loop in
+                let new_appr_mc =
+                  MaybeChanged.flat_map
+                    (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
+                    appr_mc
+                in
+                (remaining_twn_loops, new_appr_mc)
+              else
+                (* We wouldn't be able to compute a finite global time bound from this TWN Loop for now. So keep loop for later *)
+                (twn_loop :: remaining_twn_loops, appr_mc)
             else
-              (* We wouldn't be able to compute a finite global time bound from this TWN Loop for now. So keep loop for later *)
-              (twn_loop :: remaining_twn_loops, appr_mc)
-          else
-            (* all transitions handled by this TWN are already terminating. Get rid of it *)
-            (remaining_twn_loops, appr_mc))
-    in
-    (* update twn_state to updated list of remaining loops *)
-    twn_state := { remaining_twn_loops };
-    appr_mc
-
-
-  (** Checks if a transition is bounded *)
-  let bounded measure appr transition =
-    match measure with
-    | `Time -> Approximation.is_time_bounded appr transition
-    | `Cost -> Polynomial.is_const (Transition.cost transition)
-
-
-  let rec knowledge_propagation (scc : TransitionSet.t) program appr =
-    let execute () =
-      scc |> Base.Set.to_sequence
-      |> MaybeChanged.fold_sequence
-           ~f:(fun appr transition ->
-             let new_bound =
-               Program.pre program transition |> Base.Set.to_sequence
-               |> Base.Sequence.map ~f:(Approximation.timebound appr)
-               |> Bound.sum
-             in
-             let original_bound = get_bound `Time appr transition in
-             if Bound.compare_asy original_bound new_bound = 1 then (
-               ProofOutput.add_str_paragraph_to_proof (fun () ->
-                   "knowledge_propagation leads to new time bound "
-                   ^ Bound.to_string ~pretty:true new_bound
-                   ^ " for transition "
-                   ^ Transition.to_string_pretty transition);
-               add_bound `Time new_bound transition appr |> MaybeChanged.changed)
-             else
-               MaybeChanged.same appr)
-           ~init:appr
-      |> MaybeChanged.if_changed (knowledge_propagation scc program)
-      |> MaybeChanged.unpack
-    in
-    Logger.with_log logger Logger.INFO
-      (fun () -> ("knowledge prop. ", [ ("scc", TransitionSet.to_string scc) ]))
-      execute
-
+              (* all transitions handled by this TWN are already terminating. Get rid of it *)
+              (remaining_twn_loops, appr_mc))
+      in
+      (* update twn_state to updated list of remaining loops *)
+      twn_state := { remaining_twn_loops };
+      appr_mc
 
   let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
     let open! OurBase in
@@ -224,7 +225,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       match (measure, conf.twn_configuration) with
       | `Cost, _ -> MaybeChanged.return appr
       | `Time, None -> MaybeChanged.return appr
-      | `Time, Some twn_conf -> improve_with_twn program scc twn_state appr)
+      | `Time, Some twn_conf -> improve_with_twn ~conf program scc twn_state appr)
 
 
   let improve_timebound ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
