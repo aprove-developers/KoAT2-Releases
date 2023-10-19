@@ -189,19 +189,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | `Time -> Approximation.is_time_bounded appr transition
     | `Cost -> Polynomial.is_const (Transition.cost transition)
 
-  (* TODO remove this *)
-
-  let improve_termination_rank_mprf measure program appr rank =
-    let terminates = bounded_mprf program appr rank in
-    let orginal_terminates = bounded measure appr (MultiphaseRankingFunction.decreasing rank) in
-    if (not orginal_terminates) && terminates then (
-      MultiphaseRankingFunction.add_to_proof rank None program;
-      rank |> MultiphaseRankingFunction.decreasing
-      |> (fun t -> add_bound measure Bound.one t appr)
-      |> MaybeChanged.changed)
-    else
-      MaybeChanged.same appr (* TODO remove this *)
-
   let rec knowledge_propagation (scc : TransitionSet.t) program appr =
     let execute () =
       scc |> Base.Set.to_sequence
@@ -267,13 +254,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> Sequence.hd % Sequence.filter ~f:(not % Sequence.is_empty)
       |? Sequence.empty
     in
-    let improvement_function =
-      match conf.goal with
-      (* TODO remove this *)
-      | Termination -> improve_termination_rank_mprf
-      | Complexity -> improve_with_rank_mprf
-    in
-    rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improvement_function measure program)
+    rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improve_with_rank_mprf measure program)
 
 
   let run_local ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
@@ -408,7 +389,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               (match conf.goal with
               | Complexity -> add_missing_lsbs program_cfr lsbs
               | _ -> ());
-              (* TODO Check this? And merge with the later on. *)
               Logger.log logger_cfr Logger.DEBUG (fun () -> ("apply_" ^ method_name, []));
               reset_all_caches;
               let rvg_with_sccs_cfr =
@@ -446,31 +426,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                     ("NOT_IMPROVED", [ ("original bound", org_bound); (method_name ^ " bound", cfr_bound) ]));
                 (program, appr, rvg_with_sccs)
               in
-              let handle_cfr_termination () =
-                let org_terminates =
-                  Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr) scc
-                in
-                let cfr_terminates =
-                  List.for_all
-                    (fun scc ->
-                      Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound updated_appr_cfr) scc)
-                    cfr_sccs
-                in
-                let show b =
-                  if b then
-                    "Finite"
-                  else
-                    "Infinite"
-                in
-                (* For Debugging and Proofs *)
-                if org_terminates || not cfr_terminates then
-                  handle_no_improvement (show org_terminates) (show cfr_terminates)
-                else (
-                  f_proof program_cfr @@ show org_terminates;
-                  (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr))
-              in
               (*Calculates concrete bounds*)
-              let handle_cfr_complexity () =
+              let handle_cfr () =
                 let org_bound =
                   Bound.sum (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))
                 in
@@ -492,9 +449,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                   f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
                   (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr))
               in
-              match conf.goal with
-              | Termination -> handle_cfr_termination () (* TODO merge this *)
-              | Complexity -> handle_cfr_complexity ())
+              handle_cfr ())
         in
         let partial_evaluation (program, appr, rvg) =
           let non_linear_transitions =
