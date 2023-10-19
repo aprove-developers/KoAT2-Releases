@@ -52,51 +52,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
 
-  (* TODO Move this into program? *)
-  let entry_transitions program tset =
-    let all_possible_entry_trans =
-      Base.Set.to_sequence tset
-      |> Base.Sequence.fold
-           ~f:(fun tset -> Base.Set.union tset % Program.pre program)
-           ~init:TransitionSet.empty
-    in
-    Base.Set.diff all_possible_entry_trans tset
-
-
-  (* TODO Move to MPRF modul *)
-  let bounded_mprf program (appr : Approximation.t) (rank : MultiphaseRankingFunction.t) : bool =
-    let execute () =
-      rank |> MultiphaseRankingFunction.non_increasing |> entry_transitions program
-      |> Base.Set.for_all ~f:(fun (l, t, l') ->
-             let timebound = Approximation.timebound appr (l, t, l') in
-             let evaluated_ranking_funcs =
-               List.map (fun r -> Bound.of_intpoly @@ r l') (MultiphaseRankingFunction.rank rank)
-             in
-             let depth = MultiphaseRankingFunction.depth rank in
-             if depth = 1 then
-               Bound.is_finite timebound || (Bound.equal Bound.zero @@ List.first evaluated_ranking_funcs)
-             else
-               Bound.is_finite timebound && List.for_all Bound.is_finite evaluated_ranking_funcs)
-    in
-    let terminates = execute () in
-    Logger.with_log logger Logger.DEBUG
-      (fun () ->
-        ( "compute_bound",
-          [
-            ("decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank));
-            ( "non_increasing",
-              Util.sequence_to_string ~f:Transition.to_id_string
-                (Base.Set.to_sequence (MultiphaseRankingFunction.non_increasing rank)) );
-            ("rank", MultiphaseRankingFunction.only_rank_to_string rank);
-          ] ))
-      ~result:(fun b ->
-        if b then
-          "YES"
-        else
-          "MAYBE") (* TODO cleanup *)
-      (fun () -> terminates)
-
-
   let add_bound = function
     | `Time -> Approximation.add_timebound
     | `Cost -> Approximation.add_costbound
