@@ -222,8 +222,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
       match (measure, conf.twn_configuration) with
-      | `Cost, _ ->
-          MaybeChanged.return appr (* TODO I'm confused by this. Why do we not use twn for cost bounds? *)
+      | `Cost, _ -> MaybeChanged.return appr
       | `Time, None -> MaybeChanged.return appr
       | `Time, Some twn_conf -> improve_with_twn program scc twn_state appr)
 
