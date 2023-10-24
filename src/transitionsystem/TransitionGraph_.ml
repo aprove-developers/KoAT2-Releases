@@ -20,6 +20,7 @@ struct
   module TransitionSet = Transition_.TransitionSetOver (T)
   include G
 
+  let add_invariant = ()
   let add_locations locations graph = Sequence.fold ~f:add_vertex ~init:graph locations
   let add_transitions transitions graph = Sequence.fold ~f:add_edge_e ~init:graph transitions
   let mk transitions = empty |> add_transitions transitions
@@ -78,10 +79,20 @@ struct
     sccs graph
 end
 
-module TransitionGraph =
-  Make_
-    (Transition_.Make
-       (TransitionLabel_))
-       (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Location) (TransitionLabel_))
+module TransitionGraph = struct
+  include
+    Make_
+      (Transition_.Make
+         (TransitionLabel_))
+         (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled (Location) (TransitionLabel_))
+
+  let add_invariant location invariant graph =
+    location
+    |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
+    |> List.fold_left
+         ~f:(fun result (l, label, l') ->
+           replace_edge_e (l, label, l') (l, TransitionLabel_.add_invariant label invariant, l') result)
+         ~init:graph
+end
 
 include TransitionGraph

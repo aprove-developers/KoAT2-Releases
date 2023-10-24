@@ -4,7 +4,7 @@ open Constraints
 open Polynomials
 (** Provides commonly used module types in programs *)
 
-type 'a var_map = (Var.t, 'a, Var.comparator_witness) Map.t
+module VarMap = MakeMapCreators1 (Var)
 
 module type TransitionSet = sig
   (** A set of transitions. *)
@@ -40,7 +40,7 @@ module type TransitionLabel = sig
   val default : t
   (** Returns a default label with id 0, [true] as the guard,no update function and the default cost function. *)
 
-  val update_map : t -> update_element var_map
+  val update_map : t -> update_element VarMap.t
   (** Returns the update map of the transitionlabel *)
 
   val update : t -> Var.t -> update_element Option.t
@@ -142,6 +142,11 @@ module type ClassicalTransitionLabel = sig
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
+
+  (** Create an equivalent label with new id's, takes gt_id from the provided table and
+      if not available creates and adds a new id_for the general transition to the table.
+      *)
+  (* val copy_rename: (int, int) Hashtbl.t -> t -> t *)
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -247,6 +252,9 @@ module type TransitionGraph = sig
 
   val loc_transitions : t -> Location.t list -> transition_set
   (** Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list. *)
+
+  val add_invariant : Location.t -> Constraint.t -> t -> t
+  (** Adds the invariant to a location of the program. *)
 
   val equivalent : t -> t -> bool
   (** Checks fore equivalence TODO: lies everywhere...*)

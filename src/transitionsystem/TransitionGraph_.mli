@@ -15,6 +15,8 @@ module Make_
        and type transition_label_comparator_witness = T.transition_label_comparator_witness
        and type transition = T.t
        and type t = G.t
+
+  val add_invariant : unit
 end
 
 (** Creates a TransitionGraph over given transition label and location modules *)

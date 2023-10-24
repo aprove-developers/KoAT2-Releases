@@ -16,7 +16,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
     ?transformation_type:[< `NoTransformation | `TWNTransform > `NoTransformation ] ->
-    (Formula.t * Polynomial.t var_map -> Transition.t -> bool) ->
+    (Formula.t * Polynomial.t VarMap.t -> Transition.t -> bool) ->
     Program.t ->
     (Transition.t, 'a) Base.Set.t ->
     Transition.t ->
@@ -26,10 +26,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   val find_loop :
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
-    (Approximation.t -> Program.t -> Formula.t * Polynomial.t var_map -> bool) ->
+    (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    (Loop.t * (Transition.t * Polynomial.t var_map) list) option
+    (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
 end

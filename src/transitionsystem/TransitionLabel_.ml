@@ -10,7 +10,7 @@ module Inner = struct
 
   type t = {
     id : int;
-    update : Polynomial.t ProgramTypes.var_map;
+    update : Polynomial.t ProgramTypes.VarMap.t;
     guard : Guard.t;
     invariant : Invariant.t;
     cost : Polynomial.t;
@@ -21,6 +21,8 @@ module Inner = struct
   let fresh_id t =
     { id = Unique.unique (); update = t.update; guard = t.guard; invariant = t.invariant; cost = t.cost }
 
+
+  let copy_rename _gt_rename_map t = fresh_id t
 
   let equivalent lbl1 lbl2 =
     Map.equal Polynomial.equal lbl1.update lbl2.update

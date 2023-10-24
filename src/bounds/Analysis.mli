@@ -1,10 +1,12 @@
 (** Performs improvement steps for the whole program to find better time-bounds. *)
 
+type cfr_method = Chaining | PartialEvaluationIRankFinder | PartialEvaluationNative of bool * int * bool
+
 (** These types are used to limit certain analyses methods to the specified underlying types.
     Together with the GADTs they are used to prove type equalities *)
 type !'prog_modules_t cfr_configuration =
   | NoCFR : 'a cfr_configuration
-  | PerformCFR : [ `Chaining | `PartialEvaluation ] list -> ProgramModules.program_modules_t cfr_configuration
+  | PerformCFR : cfr_method list -> ProgramModules.program_modules_t cfr_configuration
 
 type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 

@@ -1,9 +1,18 @@
 open! OurBase
 
+type label_without_backlink = {
+  probability : OurRational.t;
+  overappr_guard : Guard.t;
+  update : UpdateElement_.t ProgramTypes.VarMap.t;
+  overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
+  cost : Polynomials.Polynomial.t;
+}
+
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
   val probability : t -> OurRational.t
+  val without_backlink : t -> label_without_backlink
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
@@ -12,6 +21,7 @@ end
 
 type general_transition
 
+(** Note that General Transitions are cyclic with Probabilistictransitions! So do not modify Probabilistictransitions directly! *)
 module ProbabilisticTransition : sig
   include
     ProgramTypes.Transition
@@ -20,6 +30,8 @@ module ProbabilisticTransition : sig
 
   val same_gt : t -> t -> bool
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
+
+  val without_backlink : t -> Location.t * label_without_backlink * Location.t
 
   val gt : t -> general_transition
   (** Obtain the general transition from the program that contains this transition *)
@@ -33,6 +45,7 @@ module ProbabilisticTransitionNonProbOverappr : sig
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness
 end
 
+(** Note that General Transitions are cyclic with Probabilistictransitions! So do not modify Probabilistictransitions directly! *)
 module GeneralTransition : sig
   type t = general_transition
 
@@ -44,6 +57,16 @@ module GeneralTransition : sig
     guard:Guard.t ->
     rhss:(OurRational.t * UpdateElement_.t list * Location.t) list ->
     t
+
+  val mk_from_labels_without_backlink :
+    start:Location.t ->
+    guard:Guard.t ->
+    invariant:Guard.t ->
+    cost:Polynomials.Polynomial.t ->
+    rhss:(label_without_backlink * Location.t) List.t ->
+    t
+  (** Similar to [mk] but higher-level.
+      Note that we assume the provided updates to be {i complete}, i.e., we do not fill up the argument variables *)
 
   val src : t -> Location.t
   val targets : t -> LocationSet.t
@@ -62,6 +85,7 @@ module GeneralTransition : sig
   val add_invariant : t -> Guard.t -> t
   val to_string : t -> string
   val to_string_pretty : t -> string
+  val to_file_string : t -> string
 
   val ids_to_string : ?pretty:bool -> t -> string
   (** Obtain a string only containing the transition's id, e.g., [ "g3" ] *)
@@ -100,12 +124,18 @@ module GeneralTransitionSet : sig
 
   val locations : t -> LocationSet.t
   val all_transitions : t -> Transition_.TransitionSetOver(ProbabilisticTransition).t
+  val of_tset : (ProbabilisticTransition.t, 'a) Set.t -> t
 end
 
-module ProbabilisticTransitionGraph :
-  ProgramTypes.TransitionGraph
-    with type transition_label = ProbabilisticTransitionLabel.t
-     and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
+module ProbabilisticTransitionGraph : sig
+  include
+    ProgramTypes.TransitionGraph
+      with type transition_label = ProbabilisticTransitionLabel.t
+       and type transition_label_comparator_witness = ProbabilisticTransitionLabel.comparator_witness
+
+  val outgoing_gts : t -> Location.t -> GeneralTransitionSet.t
+  val gts : t -> GeneralTransitionSet.t
+end
 
 module ProbabilisticProgram : sig
   include

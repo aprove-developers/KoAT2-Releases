@@ -237,17 +237,7 @@ module ClassicalProgram = struct
   module Transition = Transition_.MakeClassical (TransitionLabel_)
   module TransitionGraph = TransitionGraph_
 
-  let add_invariant location invariant =
-    map_graph @@ fun graph ->
-    location
-    |> TransitionGraph.succ_e graph (* An invariant holds before the execution of the successor transitions *)
-    |> List.fold_left
-         ~f:(fun result (l, label, l') ->
-           TransitionGraph.replace_edge_e (l, label, l')
-             (l, TransitionLabel_.add_invariant label invariant, l')
-             result)
-         ~init:graph
-
+  let add_invariant location invariant = map_graph (TransitionGraph.add_invariant location invariant)
 
   let simplify_all_guards : t -> t =
     map_transitions (Transition.map_label (TransitionLabel_.map_guard Guard.simplify_guard))

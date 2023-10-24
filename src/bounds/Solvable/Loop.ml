@@ -5,7 +5,7 @@ open Polynomials
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  type t = Formula.t * Polynomial.t ProgramTypes.var_map
+  type t = Formula.t * Polynomial.t ProgramTypes.VarMap.t
   (** A loop is a 2-tuple (guard,update) *)
 
   let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.update_map t)

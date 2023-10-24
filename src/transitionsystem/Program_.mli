@@ -38,6 +38,7 @@ module ClassicalProgram : sig
 
   val map_graph : (transition_graph -> transition_graph) -> t -> t
   val from_sequence : Location.t -> transition Sequence.t -> t
+  val from_graph : Location.t -> transition_graph -> t
   val remove_transition : t -> transition -> t
 end
 

@@ -17,6 +17,7 @@ let subcommands =
     ProbabilisticAnalyseCommand.(subcommand run params_cmdliner_term description command);
     SizeCommand.(subcommand run params_cmdliner_term description command);
     SMTCommand.(subcommand run params_cmdliner_term description command);
+    CfrCommand.(subcommand run params_cmdliner_term description command);
   ]
 
 

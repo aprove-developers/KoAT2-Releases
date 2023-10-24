@@ -23,7 +23,7 @@ val append : t -> t -> t
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 
-val update_map : t -> Polynomials.Polynomial.t ProgramTypes.var_map
+val update_map : t -> Polynomials.Polynomial.t ProgramTypes.VarMap.t
 (** Returns the update map of the transitionlabel *)
 
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t
@@ -56,3 +56,8 @@ val rename : RenameMap.t -> t -> t
 
 val rename_temp_vars : t -> Var.t Sequence.t -> t
 (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)
+
+val copy_rename : (int, int) Hashtbl.t -> t -> t
+(** Create an equivalent label with new id's, takes gt_id from the provided table and
+      if not available creates and adds a new id_for the general transition to the table.
+      *)
