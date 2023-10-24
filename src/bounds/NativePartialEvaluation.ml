@@ -989,7 +989,7 @@ module Version (A : Abstraction) = struct
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
     let _to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (Location.to_string l) (A.to_string ~pretty:false a)
 
-    let _to_string_pretty (l, a) =
+    let to_string_pretty (l, a) =
       Printf.sprintf "⟨%s, %s⟩" (Location.to_string l) (A.to_string ~pretty:true a)
 
 
@@ -1164,14 +1164,31 @@ struct
       (refined_outgoing_grouped_transitions, List.concat next_versionss)
     in
 
+    let version_stack_to_string =
+      Util.sequence_to_string ~f:Version.to_string_pretty % Sequence.of_list % Stack.to_list
+    in
+
     let evaluate_versions_till_fixedpoint remaining_versions =
       let rec evaluate_ refined_grouped_transitions already_evaluated_versions =
         match Stack.pop remaining_versions with
         | None -> refined_grouped_transitions
         | Some next_version when Set.mem already_evaluated_versions next_version ->
+            log "evaluate_versions_till_fixedpoint.already_evaluated" (fun () ->
+                [
+                  ("version", Version.to_string_pretty next_version);
+                  ("remaining:", version_stack_to_string remaining_versions);
+                ]);
             evaluate_ refined_grouped_transitions already_evaluated_versions
         | Some next_version ->
             let new_grouped_transitions, new_versions = evaluate_version next_version in
+            log "evaluate_versions_till_fixedpoint" (fun () ->
+                [
+                  ("version", Version.to_string_pretty next_version);
+                  ( "new_versions",
+                    Util.sequence_to_string ~f:Version.to_string_pretty (Sequence.of_list new_versions) );
+                  ("remaining:", version_stack_to_string remaining_versions);
+                ]);
+
             let new_grouped_transitions =
               Set.of_list (Set.comparator_s Adapter.empty_grouped_transition_set) new_grouped_transitions
             in
@@ -1182,24 +1199,46 @@ struct
       in
       evaluate_ Adapter.empty_grouped_transition_set VersionSet.empty
     in
-    entry_versions |> Stack.of_list % Set.to_list |> evaluate_versions_till_fixedpoint
+    Stack.of_list (Set.to_list entry_versions)
+    |> evaluate_versions_till_fixedpoint
+    |> tap (fun _ ->
+           log "evaluate_component" (fun () ->
+               [
+                 ( "version_location_tbl",
+                   Hashtbl.to_alist version_location_tbl
+                   |> List.map ~f:(fun (ver, loc) -> (loc, ver))
+                   |> List.sort ~compare:(fun (loc1, _) (loc2, _) -> Location.compare loc1 loc2)
+                   |> Sequence.of_list
+                   |> Util.sequence_to_string ~f:(fun (loc, ver) ->
+                          Location.to_string loc ^ ": " ^ Version.to_string_pretty ver) );
+               ]))
 
 
   let evaluate_component_in_program config component program_vars program_start graph =
-    let all_grouped_transitions_without_component =
-      let all_grouped_transitions = Adapter.all_grouped_transitions_of_graph graph in
-      let all_grouped_transitions_in_component =
-        Set.map
-          (Set.comparator_s Adapter.empty_grouped_transition_set)
-          ~f:Adapter.grouped_transition_of_transition component
+    let exec () =
+      let all_grouped_transitions_without_component =
+        let all_grouped_transitions = Adapter.all_grouped_transitions_of_graph graph in
+        let all_grouped_transitions_in_component =
+          Set.map
+            (Set.comparator_s Adapter.empty_grouped_transition_set)
+            ~f:Adapter.grouped_transition_of_transition component
+        in
+        Set.diff all_grouped_transitions all_grouped_transitions_in_component
       in
-      Set.diff all_grouped_transitions all_grouped_transitions_in_component
+      let all_refined_grouped_transitions =
+        evaluate_component config component program_vars program_start graph
+      in
+      Set.union all_grouped_transitions_without_component all_refined_grouped_transitions
+      |> Adapter.create_new_program program_start
     in
-    let all_refined_grouped_transitions =
-      evaluate_component config component program_vars program_start graph
-    in
-    Set.union all_grouped_transitions_without_component all_refined_grouped_transitions
-    |> Adapter.create_new_program program_start
+    Logger.with_log cfr_logger Logger.INFO
+      (fun () ->
+        ( "evaluate_component_in_program",
+          [
+            ("component", TransitionSet.to_id_string_pretty component);
+            ("program_vars", VarSet.to_string ~pretty:true program_vars);
+          ] ))
+      exec
 
 
   let evaluate_program config program =
