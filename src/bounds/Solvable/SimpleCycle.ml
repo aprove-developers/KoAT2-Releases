@@ -119,8 +119,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       entries
 
 
-  type twn_loop =
-    Transition.t list * (Transition.t * (Loop.t * Automorphism.Automorphism(Bound).t Option.t)) list
+  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.t Option.t)) list
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_all_loops twn_proofs ?(relevant_vars = None) ?(transformation_type = `NoTransformation)

@@ -1,4 +1,3 @@
-open Automorphism
 open Batteries
 open Formulas
 open Polynomials
@@ -10,7 +9,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
   open PM
 
-  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism(Bound).t Option.t)) list
+  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.t Option.t)) list
 
   val find_all_loops :
     ProofOutput.LocalProofOutput.t ->

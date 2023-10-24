@@ -4,7 +4,7 @@ module Monomial = Monomials.Make (OurInt)
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open! PM
-  module Automorphism = Automorphism.Automorphism (Bound)
+  module Automorphism = Automorphism
   module Loop = Loop.Make (Bound) (PM)
   module Check_Solvable = Check_Solvable.Make (Bound) (ProgramModules)
 
