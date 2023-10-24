@@ -1,5 +1,5 @@
-module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (PM)
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
+  module Loop : module type of Loop.Make (Bound) (PM)
 
   type blocks = Var.t list list
 

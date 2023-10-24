@@ -4,13 +4,13 @@ open Formulas
 open Polynomials
 open ProgramTypes
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (PM)
-  module Transformation : module type of Transformation.Make (PM)
-  module Approximation : module type of Approximation.MakeForClassicalAnalysis (PM)
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
+  module Loop : module type of Loop.Make (Bound) (PM)
+  module Transformation : module type of Transformation.Make (Bound) (PM)
+  module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
   open PM
 
-  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.t Option.t)) list
+  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism(Bound).t Option.t)) list
 
   val find_all_loops :
     ProofOutput.LocalProofOutput.t ->

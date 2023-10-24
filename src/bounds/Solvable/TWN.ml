@@ -1,21 +1,19 @@
-open Automorphism
 open Batteries
-open Bounds
 open FormattedString
 
 let logger = Logging.(get Twn)
 
 type configuration = [ `NoTransformation | `Transformation ]
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
-  module Check_TWN = Check_TWN.Make (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
+  module Check_TWN = Check_TWN.Make (Bound) (PM)
   module EliminateNonContributors = EliminateNonContributors.Make (PM)
-  module TWN_Complexity = TWN_Complexity.Make (PM)
-  module TWN_Termination = TWN_Termination.Make (PM)
-  module SimpleCycle = SimpleCycle.Make (PM)
-  module Check_Solvable = Check_Solvable.Make (PM)
+  module TWN_Complexity = TWN_Complexity.Make (Bound) (PM)
+  module TWN_Termination = TWN_Termination.Make (Bound) (PM)
+  module SimpleCycle = SimpleCycle.Make (Bound) (PM)
+  module Check_Solvable = Check_Solvable.Make (Bound) (PM)
   module TimeBoundTable = Hashtbl.Make (Transition)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
 
@@ -119,10 +117,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let local_bounds =
       List.map
         (fun (entry, (loop, aut)) ->
-          ( entry,
-            Automorphism.apply_to_bound
-              (TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop)
-              aut ))
+          (entry, TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop))
         loops
     in
     let complete_proofs = complete_proofs twn_proofs cycle_set in

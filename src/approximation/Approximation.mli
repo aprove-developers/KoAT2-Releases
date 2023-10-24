@@ -73,14 +73,14 @@ end
 module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
     module type of Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
 
-module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) :
-    module type of MakeWithDefaultTransition (Bounds.Bound) (PM)
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
+    module type of MakeWithDefaultTransition (B) (PM)
 
-include module type of MakeForClassicalAnalysis (ProgramModules)
+include module type of MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
 module Probabilistic : sig
   module NonProbOverapprApproximation :
-      module type of MakeForClassicalAnalysis (ProbabilisticProgramModules.NonProbOverappr)
+      module type of MakeForClassicalAnalysis (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr)
 
   module ClassicalApproximation :
       module type of MakeWithDefaultTransition (Bounds.Bound) (ProbabilisticProgramModules)

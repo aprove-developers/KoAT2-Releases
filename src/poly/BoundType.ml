@@ -23,10 +23,16 @@ module type Bound = sig
   val of_poly : polynomial -> t
   (** Creates a bound from a polynomial *)
 
+  val of_intpoly : Polynomials.Polynomial.t -> t
+  (** Creates a bound from a polynomial *)
+
   val to_poly : t -> polynomial Option.t
   (** Tries to convert the bound to a polynomial if possible *)
 
   val of_constant : value -> t
+  (** Creates a constant bound from a constant value. *)
+
+  val of_OurInt : OurInt.t -> t
   (** Creates a constant bound from a constant value. *)
 
   val is_constant : t -> bool
@@ -34,9 +40,6 @@ module type Bound = sig
 
   val of_int : int -> t
   (** Creates a constant bound from an integer. *)
-
-  val to_int : t -> int
-  (** Transforms a bound into an integer. *)
 
   val of_var : Var.t -> t
   (** Creates a bound from a Variable. *)
@@ -48,6 +51,9 @@ module type Bound = sig
   (** Returns the infinity bound. *)
 
   val exp : value -> t -> t
+  (** Returns for a value i and a bound b the new bound i^b. *)
+
+  val exp_int : OurInt.t -> t -> t
   (** Returns for a positive integer value i and a bound b the new bound b^i. *)
 
   val max_of_occurring_constants : t -> value
@@ -117,33 +123,8 @@ module type Bound = sig
   val substitute_f : (Var.t -> t) -> t -> t
   (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
 
-  val fold :
-    const:(value -> 'b) ->
-    var:(Var.t -> 'b) ->
-    plus:('b -> 'b -> 'b) ->
-    times:('b -> 'b -> 'b) ->
-    exp:(value -> 'b -> 'b) ->
-    inf:'b ->
-    t ->
-    'b
-  (** Replaces all arithmetical operations by new constructors. *)
-
-  val fold_bound :
-    const:(value -> 'b) ->
-    var:(Var.t -> 'b) ->
-    plus:('b -> 'b -> 'b) ->
-    times:('b -> 'b -> 'b) ->
-    exp:(value -> 'b -> 'b) ->
-    bound ->
-    'b
-  (** Replaces all arithmetical operations by new constructors in finite bounds. *)
-
+  type complexity
   (** TODO doc *)
-  type complexity =
-    | Inf  (** Bound is infinite. *)
-    | Polynomial of int  (** Bound is in asymptotic class O(n^i) *)
-    | Exponential of int
-        (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
 
   val equal_complexity : complexity -> complexity -> bool
   (** TODO doc where is this method? Returns true iff. two bounds are equal. Or asym. equal?*)
@@ -174,9 +155,6 @@ module type Bound = sig
 
   val of_coeff_list : value list -> Var.t list -> t
   (** Needed for Atomizable but not yet implemented. *)
-
-  val get_constant : t -> value
-  (** Returns the constant of a bound *)
 
   (* Uses a heuristic to keep the 'better' of both bounds.
      * It first compares the asymptotic complexity,

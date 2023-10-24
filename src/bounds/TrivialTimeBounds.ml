@@ -1,14 +1,12 @@
 open Batteries
 (** Modules used to infer time-bounds for transitions which are not part of a scc. *)
 
-open Bounds
-
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.
     Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
 
-module Make (PM : ProgramTypes.ProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ProgramModules) = struct
   open PM
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
   module SCC = Graph.Components.Make (TransitionGraph)
   (** Transition graph represents scc. *)
@@ -25,4 +23,4 @@ module Make (PM : ProgramTypes.ProgramModules) = struct
     Base.Set.fold ~f:(flip @@ Approximation.add_timebound Bound.one) one_bounded_transitions ~init:appr
 end
 
-include Make (ProgramModules)
+include Make (Bounds.Bound) (ProgramModules)

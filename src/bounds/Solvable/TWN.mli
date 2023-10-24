@@ -1,12 +1,10 @@
-open Bounds
-
 type configuration = [ `NoTransformation | `Transformation ]
 
-module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
   open PM
-  module Approximation : module type of Approximation.MakeForClassicalAnalysis (PM)
+  module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
-  type twn_loop = SimpleCycle.Make(PM).twn_loop
+  type twn_loop = SimpleCycle.Make(Bound)(PM).twn_loop
 
   val handled_transitions : twn_loop -> TransitionSet.t
 

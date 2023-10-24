@@ -5,19 +5,19 @@ open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
 
-let classic_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+let classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
   Analysis.default_configuration
 
 
-let mprf5_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+let mprf5_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
   { classic_conf with run_mprf_depth = Some 5 }
 
 
-let twn_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+let twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
   { classic_conf with twn_configuration = Some `NoTransformation }
 
 
-let mprf5_twn_conf : NonProbOverappr.program_modules_t Analysis.analysis_configuration =
+let mprf5_twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
   {
     classic_conf with
     run_mprf_depth = mprf5_conf.run_mprf_depth;

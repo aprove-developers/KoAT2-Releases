@@ -1,11 +1,9 @@
 open! OurBase
 (** Implementation of cost-bounds.*)
 
-open Bounds
-
-module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
   (** Returns true iff bound is not finite. *)
   let unbounded appr transition = Bound.is_infinity (Approximation.costbound appr transition)
@@ -16,7 +14,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       if unbounded appr transition then
         if Polynomials.Polynomial.is_const (Transition.cost transition) then
           Approximation.add_costbound
-            Bound.(of_poly (Transition.cost transition) * Approximation.timebound appr transition)
+            Bound.(of_intpoly (Transition.cost transition) * Approximation.timebound appr transition)
             transition appr
         else
           let overappr_cost =
@@ -25,7 +23,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
             if Program.is_initial program transition then
               (* We can not look at the size bounds for predecessor transitions if transition is initial *)
-              Bound.of_poly (Transition.cost transition)
+              Bound.of_intpoly (Transition.cost transition)
               |> Bound.substitute_f (fun v ->
                      if Set.mem temp_vars v then
                        Bound.infinity
@@ -37,7 +35,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               let inc_size v =
                 Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans |> Bound.sum
               in
-              Bound.of_poly (Transition.cost transition) |> Bound.substitute_f inc_size
+              Bound.of_intpoly (Transition.cost transition) |> Bound.substitute_f inc_size
           in
           Approximation.add_costbound
             Bound.(overappr_cost * Approximation.timebound appr transition)

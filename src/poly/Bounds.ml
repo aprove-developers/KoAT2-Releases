@@ -29,6 +29,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let of_var = OptionMonad.return % bound_of_var
   let bound_of_constant c = Const (Num.abs c)
   let of_constant = OptionMonad.return % bound_of_constant
+  let of_OurInt = OptionMonad.return % bound_of_constant % Num.of_ourint
 
   let is_constant =
     let rec is_constant = function
@@ -39,20 +40,6 @@ module Make (Num : PolyTypes.OurNumber) = struct
       | Product (b1, b2) -> is_constant b1 && is_constant b2
     in
     Option.value ~default:false % Option.map ~f:is_constant
-
-
-  let get_constant t =
-    let rec get_constant_of_bound b =
-      match b with
-      | Const c -> c
-      | Var var -> Num.zero
-      | Pow (n, b) -> Num.pow (get_constant_of_bound b) (Num.to_int n)
-      | Sum (b1, b2) -> Num.add (get_constant_of_bound b1) (get_constant_of_bound b2)
-      | Product (b1, b2) -> Num.mul (get_constant_of_bound b1) (get_constant_of_bound b2)
-    in
-    match t with
-    | Some b -> get_constant_of_bound b
-    | None -> Num.zero
 
 
   let rec fold_bound ~const ~var ~plus ~times ~exp p =
@@ -159,12 +146,6 @@ module Make (Num : PolyTypes.OurNumber) = struct
     else
       b2
 
-
-  (* let is_linear bound =
-     let cplx = asymptotic_complexity bound in
-       match cplx with
-       | (Polynomial n) -> (n == 1)
-       | _ -> false *)
 
   let max_of_occurring_constants bound =
     fold ~const:identity
@@ -460,6 +441,10 @@ module Make (Num : PolyTypes.OurNumber) = struct
   (** Raises an element to the power of an integer value. *)
   let ( ** ) = pow
 
+  let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
+  let exp value b = Option.map ~f:(exp_bound value) b
+  let exp_int value b = Option.map ~f:((exp_bound % Num.of_ourint) value) b
+  let infinity = None
   let sum bounds = Sequence.reduce ~f:add bounds |> Option.map ~f:simplify |? zero
   let sum_list = sum % Sequence.of_list
   let product bounds = Sequence.reduce ~f:mul bounds |> Option.map ~f:simplify |? one
@@ -470,16 +455,18 @@ module Make (Num : PolyTypes.OurNumber) = struct
         ~pow:pow_bound
 
 
+  let of_intpoly =
+    OptionMonad.return
+    % Polynomial.fold ~const:(bound_of_constant % Num.of_ourint) ~indeterminate:bound_of_var ~plus:add_bound
+        ~times:mul_bound ~pow:pow_bound
+
+
   let bound_of_int i = Const (Num.of_int @@ Int.abs i)
   let of_int = OptionMonad.return % bound_of_int
-  let to_int poly = raise (Failure "TODO: Not possible")
   let bound_of_var_string str = Var (Var.of_string str)
   let of_var_string = OptionMonad.return % bound_of_var_string
-  let infinity = None
   let is_infinity = Option.is_none
   let is_finite = Option.is_some
-  let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
-  let exp value b = Option.map ~f:(exp_bound value) b
 
   let substitute_f (substitution : Var.t -> t) (bound : t) : t =
     OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp)
@@ -549,12 +536,163 @@ module RationalBound = struct
       ~inf:infinity
 
 
-  let of_intpoly = of_poly % RationalPolynomial.of_intpoly
-
   let to_intbound =
+    (* TODO Move this to Make *)
     fold
       ~const:(Bound.of_constant % OurRational.ceil)
       ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul
       ~exp:(fun value -> Bound.exp (OurRational.ceil value))
       ~inf:infinity
+end
+
+module BinaryBound = struct
+  type t = Finite | Infinite [@@deriving eq, ord]
+  type bound = Bound
+  type value
+  type polynomial
+  type valuation
+  type indeterminate
+
+  let prove_finiteness = function
+    | Finite -> Some Bound
+    | Infinite -> None
+
+
+  let of_poly _ = Finite
+  let of_intpoly _ = Finite
+  let to_poly _ = None
+  let of_constant _ = Finite
+  let of_OurInt _ = Finite
+
+  let is_constant = function
+    | Finite -> true
+    | Infinite -> false
+
+
+  let of_int _ = Finite
+  let of_var _ = Finite
+  let of_var_string _ = Finite
+  let infinity = Infinite
+  let exp _ = identity
+  let exp_int _ = identity
+  let max_of_occurring_constants _ = raise Not_found (* TODO *)
+
+  let is_infinity = function
+    | Finite -> false
+    | Infinite -> true
+
+
+  let is_finite = not % is_infinity
+
+  let to_string ?(pretty = false) ?(termination_only = false) = function
+    | Finite -> "Finite"
+    | Infinite -> "Infinite"
+
+
+  let show_finiteness = to_string ~pretty:false ~termination_only:true
+
+  let show ?(pretty = false) ?(complexity = true) ?(termination_only = false) = function
+    | Finite -> "YES"
+    | Infinite -> "MAYBE"
+
+
+  let zero = Finite
+  let one = Finite
+
+  let max t1 t2 =
+    match (t1, t2) with
+    | Finite, Finite -> Finite
+    | _ -> Infinite
+
+
+  let add = max
+  let mul = max
+
+  let pow t exp =
+    if exp = 0 then
+      Finite
+    else
+      t
+
+
+  let sum b =
+    if Sequence.for_all ~f:is_finite b then
+      Finite
+    else
+      Infinite
+
+
+  let sum_list = sum % Sequence.of_list
+
+  let product b =
+    if Sequence.for_all ~f:is_finite b then
+      Finite
+    else
+      Infinite
+
+
+  let ( + ) = max
+  let ( * ) = max
+  let ( ** ) = pow
+  let substitute var ~replacement = identity
+  let substitute_all map = identity
+  let substitute_f f = identity
+  let indeterminates b = []
+  let vars _ = VarSet.empty
+
+  type complexity = t [@@deriving eq]
+
+  let show_complexity = to_string ~pretty:false ~termination_only:true
+  let show_complexity_termcomp = show ~pretty:false ~termination_only:false ~complexity:false
+  let asymptotic_complexity = identity
+
+  let compare_asy b1 b2 =
+    match (b1, b2) with
+    | Infinite, Infinite -> 0
+    | Infinite, _ -> 1
+    | _, Infinite -> -1
+    | Finite, Finite -> 0
+
+
+  let min_asy b1 b2 =
+    if compare_asy b1 b2 <= 0 then
+      b1
+    else
+      b2
+
+
+  let ( > ) b1 b2 =
+    match (b1, b2) with
+    | Infinite, Finite -> Some true
+    | _ -> Some false
+
+
+  let ( < ) = flip ( > )
+
+  let ( >= ) b1 b2 =
+    match (b1, b2) with
+    | Finite, Infinite -> Some false
+    | _ -> Some true
+
+
+  let ( <= ) = flip ( >= )
+  let ( =~= ) = equal
+
+  let is_linear = function
+    | Finite -> true
+    | Infinite -> false
+
+
+  let is_polynomial = function
+    | Finite -> true
+    | Infinite -> false
+
+
+  let keep_simpler_bound = min_asy
+  let eval p valuation = raise (Failure "eval for BinaryBounds not yet implemented")
+  let eval_f p valuation = raise (Failure "eval_f for BinaryBounds not yet implemented")
+  let degree n = raise (Failure "degree for BinaryBounds not yet implemented")
+  let rename map p = raise (Failure "rename for BinaryBounds not yet implemented")
+  let coeff_of_var p = raise (Failure "coeff_of_var for BinaryBounds not yet implemented")
+  let of_coeff_list p = raise (Failure "of_coeff_list for BinaryBounds not yet implemented")
 end

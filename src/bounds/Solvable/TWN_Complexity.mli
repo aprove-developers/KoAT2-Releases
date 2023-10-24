@@ -1,7 +1,5 @@
-open Bounds
-
-module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (PM)
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
+  module Loop : module type of Loop.Make (Bound) (PM)
 
   val monotonicity_th_int : int -> int * int -> int * int -> OurInt.t
   (** Computes the monotonicity threshold for k and two tuples (b1,a1) and (b2,a2). *)

@@ -5,7 +5,7 @@ let logger = Logging.(get Size)
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open! PM
   module RVG = RVGTypes.MakeRVG (PM)
-  module Approximation = Approximation.MakeForClassicalAnalysis (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bounds.Bound) (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module NontrivialSizeBounds = NontrivialSizeBounds.Make (PM)
   module TrivialSizeBounds = TrivialSizeBounds.Make (PM)

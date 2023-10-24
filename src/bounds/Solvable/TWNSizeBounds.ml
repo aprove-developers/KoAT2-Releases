@@ -3,9 +3,9 @@ open Bounds
 open Polynomials
 open PolyExponential
 open ProgramModules
-module Check_TWN = Check_TWN.Make (ProgramModules)
-module Loop = Loop.Make (ProgramModules)
-module SimpleCycle = SimpleCycle.Make (ProgramModules)
+module Check_TWN = Check_TWN.Make (Bounds.Bound) (ProgramModules)
+module Loop = Loop.Make (Bounds.Bound) (ProgramModules)
+module SimpleCycle = SimpleCycle.Make (Bounds.Bound) (ProgramModules)
 
 let heuristic_for_cycle appr program loop = Check_TWN.check_twn loop
 
@@ -41,7 +41,7 @@ let lift twn_proofs appr t var = function
                    ^ " and " ^ Var.to_string ~pretty:true var ^ ": " ^ Bound.to_string ~pretty:true b))
 
 
-module TWN_Complexity = TWN_Complexity.Make (ProgramModules)
+module TWN_Complexity = TWN_Complexity.Make (Bounds.Bound) (ProgramModules)
 
 let compute_time_bound twn_proofs loop =
   let mprf_bound = MultiphaseRankingFunction.time_bound loop 5 in
