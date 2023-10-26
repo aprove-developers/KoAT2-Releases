@@ -209,10 +209,10 @@ let empty_twn_state =
   }
 
 
-let initial_twn_state twn_conf program scc =
+let initial_twn_state program scc =
   let class_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
   let scc_nonprob = gts_to_nonprob_transs scc in
-  let all_loops = TWN.find_all_possible_loops_for_scc twn_conf scc_nonprob class_program in
+  let all_loops = TWN.find_all_possible_loops_for_scc scc_nonprob class_program in
   {
     bounds_from_twn_loops = Map.empty (module Transition);
     remaining_twn_loops = Set.of_list (module TWNLoopWithProof) all_loops;
@@ -410,7 +410,7 @@ let improve_with_twn twn_state scc (class_appr, appr) =
   Util.find_fixpoint_mc improve_step appr
 
 
-let improve ~twn:(twn_state, twn_conf) ~mprf_depth program scc (class_appr, appr) =
+let improve ~twn:(twn_state, twn) ~mprf_depth program scc (class_appr, appr) =
   let open MaybeChanged.Monad in
   (* improve with multiphase ranking functions if requested *)
   let appr =
@@ -420,10 +420,10 @@ let improve ~twn:(twn_state, twn_conf) ~mprf_depth program scc (class_appr, appr
   in
   (* improve with twn if requested *)
   let appr =
-    match twn_conf with
-    | Some twn_conf ->
-        let* appr = appr in
-        improve_with_twn twn_state scc (class_appr, appr)
-    | None -> appr
+    if twn then
+      let* appr = appr in
+      improve_with_twn twn_state scc (class_appr, appr)
+    else
+      appr
   in
   appr

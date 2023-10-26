@@ -1,20 +1,17 @@
-open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
   module Loop : module type of Loop.Make (Bound) (PM)
-  module Transformation : module type of Transformation.Make (Bound) (PM)
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
   open PM
 
-  type twn_loop = Transition.t list * (Transition.t * (Loop.t * Automorphism.t Option.t)) list
+  type twn_loop = Transition.t list * (Transition.t * Loop.t) list
 
   val find_all_loops :
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
-    ?transformation_type:[< `NoTransformation | `TWNTransform > `NoTransformation ] ->
     (Formula.t * Polynomial.t VarMap.t -> Transition.t -> bool) ->
     Program.t ->
     (Transition.t, 'a) Base.Set.t ->

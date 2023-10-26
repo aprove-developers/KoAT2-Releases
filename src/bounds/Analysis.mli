@@ -16,7 +16,7 @@ type (!'prog_modules_t, 'bound) closed_form_size_bounds =
 
 type (!'prog_modules_t, 'bound) analysis_configuration = {
   run_mprf_depth : int option;
-  twn_configuration : TWN.configuration option;
+  twn : bool;
   cfr_configuration : 'prog_modules_t cfr_configuration;
   goal : 'bound goal;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;

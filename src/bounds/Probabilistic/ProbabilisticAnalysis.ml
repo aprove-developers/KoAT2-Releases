@@ -59,9 +59,8 @@ let improve_timebounds twn_state
     PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
       (class_appr, appr)
   in
-  IntegrateClassicalAnalysis.improve
-    ~twn:(twn_state, classic_conf.twn_configuration)
-    ~mprf_depth:classic_conf.run_mprf_depth program scc (class_appr, appr)
+  IntegrateClassicalAnalysis.improve ~twn:twn_state ~mprf_depth:classic_conf.run_mprf_depth program scc
+    (class_appr, appr)
 
 
 (** Propagate time bounds of incoming general transitions *)
@@ -113,12 +112,7 @@ let improve_scc
        % Sequence.of_list
     |> ELCBMap.of_sequence_exn
   in
-  let twn_state =
-    Option.value_map
-      Analysis.(classic_conf.twn_configuration)
-      ~default:(ref IntegrateClassicalAnalysis.empty_twn_state)
-      ~f:(fun twn_conf -> ref @@ IntegrateClassicalAnalysis.initial_twn_state twn_conf program scc)
-  in
+  let twn_state = (ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc, classic_conf.twn) in
   let improve_scc_ appr =
     let open MaybeChanged.Monad in
     let appr = improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) in

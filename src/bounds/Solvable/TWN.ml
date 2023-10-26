@@ -3,8 +3,6 @@ open FormattedString
 
 let logger = Logging.(get Twn)
 
-type configuration = [ `NoTransformation | `Transformation ]
-
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
@@ -13,7 +11,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module TWN_Complexity = TWN_Complexity.Make (Bound) (PM)
   module TWN_Termination = TWN_Termination.Make (Bound) (PM)
   module SimpleCycle = SimpleCycle.Make (Bound) (PM)
-  module Check_Solvable = Check_Solvable.Make (Bound) (PM)
   module TimeBoundTable = Hashtbl.Make (Transition)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
 
@@ -64,12 +61,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   type twn_loop = SimpleCycle.twn_loop
 
   let handled_transitions ((cycle, _) : twn_loop) = TransitionSet.of_list cycle
-
-  let requirement_for_cycle conf loop =
-    match conf with
-    | `NoTransformation -> Check_TWN.check_twn loop
-    | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop
-
+  let requirement_for_cycle loop = Check_TWN.check_twn loop
 
   let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds (loop : twn_loop) =
     let loop_transitions, entries = loop in
@@ -86,7 +78,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       loop
 
 
-  let find_all_possible_loops_for_scc conf scc program :
+  let find_all_possible_loops_for_scc scc program :
       SimpleCycle.twn_loop ProofOutput.LocalProofOutput.with_proof List.t =
     let open! OurBase in
     let create_proof trans =
@@ -102,7 +94,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | Some trans ->
           let all_cycles =
             SimpleCycle.find_all_loops (create_proof trans)
-              (fun loop _entry_trans -> requirement_for_cycle conf loop)
+              (fun loop _entry_trans -> requirement_for_cycle loop)
               program scc trans
           in
           let scc' = Set.remove scc trans in
@@ -116,8 +108,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let cycle_set = TransitionSet.of_list cycle in
     let local_bounds =
       List.map
-        (fun (entry, (loop, aut)) ->
-          (entry, TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop))
+        (fun (entry, loop) -> (entry, TWN_Complexity.complexity twn_proofs ~entry:(Option.some entry) loop))
         loops
     in
     let complete_proofs = complete_proofs twn_proofs cycle_set in
@@ -129,7 +120,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (OurBase.Map.of_alist_exn (module Transition) local_bounds)
 
 
-  let terminates conf (l, t, l') scc program appr =
+  let terminates (l, t, l') scc program appr =
     let twn_proofs = ref (ProofOutput.LocalProofOutput.create ()) in
     ProofOutput.LocalProofOutput.add_to_proof !twn_proofs (fun () ->
         mk_str_header_big @@ "TWN: " ^ Transition.to_id_string_pretty (l, t, l'));
@@ -141,7 +132,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               let is_bounded entry loop =
                 TWN_Termination.termination !twn_proofs ~entry:(Option.some entry) loop
               in
-              let local_bounds = List.map (fun (entry, (loop, _)) -> (entry, is_bounded entry loop)) loops in
+              let local_bounds = List.map (fun (entry, loop) -> (entry, is_bounded entry loop)) loops in
               List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
               List.for_all Tuple2.second local_bounds
             in
@@ -152,7 +143,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             SimpleCycle.find_all_loops !twn_proofs
               (fun loop entry_trans ->
                 (* We should really use UnliftedBounds here to provide the lifting instead of manually checking whether all incoming time bounds are finite *)
-                requirement_for_cycle conf loop && Approximation.is_time_bounded appr entry_trans)
+                requirement_for_cycle loop && Approximation.is_time_bounded appr entry_trans)
               program scc (l, t, l')
             |> Base.List.hd
             |> Option.map (fun with_proof ->

@@ -51,9 +51,7 @@ let print_result = function
   | `PrintAllBounds -> print_all_bounds
 
 
-type local = [ `MPRF | `TWN | `TWNTransform ]
-(** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
-
+type local = [ `MPRF | `TWN ]
 type cfr = [ `PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining ]
 
 type params = {
@@ -110,10 +108,7 @@ type params = {
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
       [@default Preprocessor.process_till_fixpoint]
       (** The strategy which should be used to apply the preprocessors. *)
-  local : local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform) ]]
-      [@default [ `MPRF ]]
-      [@sep ',']
+  local : local list; [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
   closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
@@ -251,30 +246,13 @@ let run (params : params) =
   let run_analysis =
     let build_complete_conf goal closed_form_size_bounds =
       let open Analysis in
-      let check_twn_already_set c =
-        if Option.is_some c then
-          raise
-            (Invalid_argument
-               "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
-      in
       {
         run_mprf_depth =
           (if List.mem ~equal:Poly.( = ) params.local `MPRF then
              Some params.depth
            else
              None);
-        twn_configuration =
-          List.fold_left
-            ~f:
-              (fun twn_conf -> function
-                | `TWN ->
-                    check_twn_already_set twn_conf;
-                    Some `NoTransformation
-                | `TWNTransform ->
-                    check_twn_already_set twn_conf;
-                    Some `Transformation
-                | _ -> twn_conf)
-            ~init:None params.local;
+        twn = List.exists ~f:(( == ) `TWN) params.local;
         closed_form_size_bounds;
         goal;
         cfr_configuration =

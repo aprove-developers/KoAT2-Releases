@@ -16,7 +16,7 @@ type (!'prog_modules_t, 'bound) closed_form_size_bounds =
 
 type (!'prog_modules_t, 'bound) analysis_configuration = {
   run_mprf_depth : int option;
-  twn_configuration : TWN.configuration option;
+  twn : bool;
   cfr_configuration : 'prog_modules_t cfr_configuration;
   goal : 'bound goal;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
@@ -31,7 +31,7 @@ let logger_cfr = Logging.(get CFR)
 let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
   {
     run_mprf_depth = Some 1;
-    twn_configuration = None;
+    twn = false;
     cfr_configuration = NoCFR;
     goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
@@ -133,8 +133,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
      Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
   type twn_state = { remaining_twn_loops : TWN.twn_loop ProofOutput.LocalProofOutput.with_proof List.t }
 
-  let initial_twn_state twn_conf program scc =
-    let all_loops = TWN.find_all_possible_loops_for_scc twn_conf scc program in
+  let initial_twn_state program scc =
+    let all_loops = TWN.find_all_possible_loops_for_scc scc program in
     { remaining_twn_loops = all_loops }
 
 
@@ -230,10 +230,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | Some max_depth -> local_rank ~conf scc measure program max_depth appr
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
-      match (measure, conf.twn_configuration) with
+      match (measure, conf.twn) with
       | `Cost, _ -> MaybeChanged.return appr
-      | `Time, None -> MaybeChanged.return appr
-      | `Time, Some twn_conf -> improve_with_twn ~conf program scc twn_state appr)
+      | `Time, false -> MaybeChanged.return appr
+      | `Time, true -> improve_with_twn ~conf program scc twn_state appr)
 
 
   let improve_timebound ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
@@ -266,9 +266,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let improve_scc ~(conf : allowed_conf_type) opt_rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table
       appr =
     let twn_state =
-      match conf.twn_configuration with
-      | Some twn_conf -> ref (initial_twn_state twn_conf program scc)
-      | None -> ref empty_twn_state
+      if conf.twn then
+        ref (initial_twn_state program scc)
+      else
+        ref empty_twn_state
     in
     let improvement appr =
       knowledge_propagation scc program appr

@@ -14,15 +14,11 @@ let mprf5_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.an
 
 
 let twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
-  { classic_conf with twn_configuration = Some `NoTransformation }
+  { classic_conf with twn = true }
 
 
 let mprf5_twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration =
-  {
-    classic_conf with
-    run_mprf_depth = mprf5_conf.run_mprf_depth;
-    twn_configuration = twn_conf.twn_configuration;
-  }
+  { classic_conf with run_mprf_depth = mprf5_conf.run_mprf_depth; twn = true }
 
 
 let conf = ProbabilisticAnalysis.default_configuration

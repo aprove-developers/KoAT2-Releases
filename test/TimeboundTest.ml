@@ -12,7 +12,7 @@ let preprocess =
 
 let default_conf = Analysis.default_configuration
 let mprf5_conf = Analysis.{ default_configuration with run_mprf_depth = Some 5 }
-let twn_conf = Analysis.{ default_configuration with twn_configuration = Some `NoTransformation }
+let twn_conf = Analysis.{ default_configuration with twn = true }
 
 module Analysis = Analysis.Make (Bounds.Bound) (ProgramModules)
 

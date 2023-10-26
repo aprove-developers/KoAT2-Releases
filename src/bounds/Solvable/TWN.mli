@@ -1,5 +1,3 @@
-type configuration = [ `NoTransformation | `Transformation ]
-
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
   open PM
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
@@ -9,7 +7,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   val handled_transitions : twn_loop -> TransitionSet.t
 
   val find_all_possible_loops_for_scc :
-    configuration -> TransitionSet.t -> Program.t -> twn_loop ProofOutput.LocalProofOutput.with_proof list
+    TransitionSet.t -> Program.t -> twn_loop ProofOutput.LocalProofOutput.with_proof list
 
   val finite_bound_possible_if_terminating :
     get_timebound:(Transition.t -> Bound.t) ->
@@ -29,6 +27,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Transition.comparator_witness )
     UnliftedBounds.UnliftedTimeBound.unlifted_time_bound
 
-  val terminates : configuration -> Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> bool
+  val terminates : Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> bool
   val reset_cfr : unit -> unit
 end

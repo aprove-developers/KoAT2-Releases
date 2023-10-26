@@ -9,7 +9,7 @@ open Approximation.Probabilistic
 let description = "Search for a probabilistic ranking function"
 let command = "prob-analyse"
 
-type classic_local = [ `MPRF | `TWN | `TWNTransform ]
+type classic_local = [ `MPRF | `TWN ]
 
 type params = {
   input : string; [@aka [ "i" ]]
@@ -21,9 +21,7 @@ type params = {
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   classic_local : classic_local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform) ]]
-      [@default [ `MPRF ]]
-      [@sep ',']
+      [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
   preprocessing_strategy : Preprocessor.strategy;
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
@@ -66,8 +64,7 @@ let run (params : params) =
       ~f:
         (fun conf -> function
           | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
-          | `TWN -> { conf with twn_configuration = Some `NoTransformation }
-          | `TWNTransform -> { conf with twn_configuration = Some `Transformation })
+          | `TWN -> { conf with twn = true })
       ~init:Analysis.default_configuration params.classic_local
   in
 
