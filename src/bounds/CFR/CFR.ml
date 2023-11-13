@@ -5,7 +5,8 @@ module CFR (Bound : BoundType.Bound) = struct
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (ProgramModules)
   module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (ProgramModules)
 
-  (** Generates the approximation for the new program_cfr from the one of the original program. *)
+  type approximation = Approximation.t
+
   let merge_appr (program : Program.t) (program_cfr : Program.t) appr =
     let unchanged_trans = Base.Set.inter (Program.transitions program) (Program.transitions program_cfr) in
     let appr_cfr = Approximation.empty |> TrivialTimeBounds.compute program_cfr in
