@@ -1,4 +1,4 @@
-open Batteries
+open! OurBase
 
 module CFR (Bound : BoundType.Bound) = struct
   open ProgramModules
@@ -8,10 +8,10 @@ module CFR (Bound : BoundType.Bound) = struct
   type approximation = Approximation.t
 
   let merge_appr (program : Program.t) (program_cfr : Program.t) appr =
-    let unchanged_trans = Base.Set.inter (Program.transitions program) (Program.transitions program_cfr) in
+    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
     let appr_cfr = Approximation.empty |> TrivialTimeBounds.compute program_cfr in
     unchanged_trans
-    |> Base.Set.fold
+    |> Set.fold
          ~f:(fun appr_cfr trans ->
            let timebound = Approximation.timebound appr trans
            and costbound = Approximation.costbound appr trans in
