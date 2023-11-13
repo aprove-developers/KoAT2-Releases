@@ -5,13 +5,13 @@ type cfr_method = Chaining | PartialEvaluationIRankFinder | PartialEvaluationNat
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
 type !'prog_modules_t cfr_configuration =
-  | NoCFR : 'a cfr_configuration
+  | NoCFR : 'prog_modules_t cfr_configuration
   | PerformCFR : cfr_method list -> ProgramModules.program_modules_t cfr_configuration
 
 type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 
 type (!'prog_modules_t, 'bound) closed_form_size_bounds =
-  | NoClosedFormSizeBounds : ('a, 'b) closed_form_size_bounds
+  | NoClosedFormSizeBounds : ('prog_modules_t, 'bound) closed_form_size_bounds
   | ComputeClosedFormSizeBounds : (ProgramModules.program_modules_t, Bounds.Bound.t) closed_form_size_bounds
 
 type (!'prog_modules_t, 'bound) analysis_configuration = {
