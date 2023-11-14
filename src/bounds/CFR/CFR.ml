@@ -39,9 +39,4 @@ module CFR (Bound : BoundType.Bound) = struct
            |> Approximation.add_timebound timebound trans
            |> Approximation.add_costbound costbound trans)
          ~init:appr_cfr
-
-
-  let lift_to_program transform program =
-    MaybeChanged.(
-      transform (Program.graph program) >>= fun graph -> same (Program.map_graph (fun _ -> graph) program))
 end

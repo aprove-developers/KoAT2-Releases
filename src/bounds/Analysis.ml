@@ -501,7 +501,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
             (fun () ->
               apply_cfr "chaining"
-                (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc)))
+                (Preprocessor.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc)))
                 (fun _ _ -> ())
                 rvg 10. non_linear_transitions ~preprocess program appr)
           |> Option.map_default Tuple2.first (program, appr, rvg)
