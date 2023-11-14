@@ -22,9 +22,12 @@ module LocalProofOutput : sig
   val get_proof : t -> Formatter.format -> FormattedString.t
 end
 
-val get_global_proof_as_local_proof : unit -> LocalProofOutput.t
-(** Get a copy of the global proof as LocalProof *)
+val add_local_proof_to_proof : LocalProofOutput.t -> unit
+(** Appends a local proof to the global one *)
 
-val set_global_proof_from_local_proof : LocalProofOutput.t -> unit
-(** Set the proof generating function as copy of the local proof.
-    Useful in conjunction with [get_as_local_proof_output] to switch between global proofs as used in CFR. *)
+val start_new_subproof : unit -> unit
+(** Starts a new (empty) subproof.
+    The current global proof is pushed on a stack and can hence be retrieved later on *)
+
+val get_subproof : unit -> LocalProofOutput.t
+(** Returns the current (sub) proof and restores the global proof to its previous state (before the start of this subproof) *)

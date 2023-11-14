@@ -1,12 +1,7 @@
 (** Performs improvement steps for the whole program to find better time-bounds. *)
 
-type cfr_method = Chaining | PartialEvaluationIRankFinder | PartialEvaluationNative of bool * int * bool
-
 (** These types are used to limit certain analyses methods to the specified underlying types.
     Together with the GADTs they are used to prove type equalities *)
-type !'prog_modules_t cfr_configuration =
-  | NoCFR : 'a cfr_configuration
-  | PerformCFR : cfr_method list -> ProgramModules.program_modules_t cfr_configuration
 
 type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 
@@ -17,7 +12,7 @@ type (!'prog_modules_t, 'bound) closed_form_size_bounds =
 type (!'prog_modules_t, 'bound) analysis_configuration = {
   run_mprf_depth : int option;
   twn : bool;
-  cfr_configuration : 'prog_modules_t cfr_configuration;
+  cfrs : 'prog_modules_t CFR.cfr_ list;
   goal : 'bound goal;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
 }

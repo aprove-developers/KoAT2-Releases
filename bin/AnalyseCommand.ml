@@ -121,7 +121,7 @@ type params = {
         ]]
       [@default []]
       [@sep ',']
-      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
+      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation with IRankFinder), pe_native (Native Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
@@ -255,17 +255,26 @@ let run (params : params) =
         twn = List.exists ~f:(( == ) `TWN) params.local;
         closed_form_size_bounds;
         goal;
-        cfr_configuration =
-          (match params.cfr with
-          | [] -> NoCFR
-          | l ->
-              l
-              |> List.map ~f:(function
-                   | `Chaining -> Chaining
-                   | `PartialEvaluationNative ->
-                       PartialEvaluationNative (not params.no_pe_fvs, params.pe_k, params.pe_update_invariants)
-                   | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder)
-              |> fun l -> PerformCFR l);
+        cfrs =
+          List.map
+            ~f:(function
+              | `PartialEvaluationIRankFinder -> CFR.pe_with_IRankFinder
+              | `Chaining -> CFR.chaining
+              | `PartialEvaluationNative ->
+                  let pe_config =
+                    NativePartialEvaluation.
+                      {
+                        abstract =
+                          (if params.no_pe_fvs then
+                             `LoopHeads
+                           else
+                             `FVS);
+                        k_encounters = params.pe_k;
+                        update_invariants = params.pe_update_invariants;
+                      }
+                  in
+                  CFR.pe_native pe_config)
+            params.cfr;
       }
     in
     if params.termination then

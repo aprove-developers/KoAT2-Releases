@@ -1,12 +1,7 @@
 open Batteries
 open Polynomials
 
-type cfr_method = Chaining | PartialEvaluationIRankFinder | PartialEvaluationNative of bool * int * bool
-
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
-type !'prog_modules_t cfr_configuration =
-  | NoCFR : 'prog_modules_t cfr_configuration
-  | PerformCFR : cfr_method list -> ProgramModules.program_modules_t cfr_configuration
 
 type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 
@@ -17,7 +12,7 @@ type (!'prog_modules_t, 'bound) closed_form_size_bounds =
 type (!'prog_modules_t, 'bound) analysis_configuration = {
   run_mprf_depth : int option;
   twn : bool;
-  cfr_configuration : 'prog_modules_t cfr_configuration;
+  cfrs : 'prog_modules_t CFR.cfr_ list;
   goal : 'bound goal;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
 }
@@ -32,7 +27,7 @@ let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
   {
     run_mprf_depth = Some 1;
     twn = false;
-    cfr_configuration = NoCFR;
+    cfrs = [];
     goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
   }
@@ -46,7 +41,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module LSB_Table = Hashtbl.Make (PM.RV)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
-  module PENative = NativePartialEvaluation.ClassicPartialEvaluation
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module TWN = TWN.Make (Bound) (PM)
@@ -321,205 +315,165 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     |> LSB_Table.of_enum
 
 
-  let handle_cfr ~(conf : allowed_conf_type) ~(preprocess : Program.t -> Program.t) (scc : TransitionSet.t)
-      program opt_rvg opt_lsbs appr : Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) option =
-    match conf.cfr_configuration with
-    | NoCFR -> (program, appr, opt_rvg)
-    | PerformCFR cfr ->
-        (let module Approximation = Approximation in
-        let lsbs = opt_lsbs |? LSB_Table.create 0 in
-        let rvg = opt_rvg |? (RVG.empty, Lazy.from_fun (const [])) in
-        let apply_cfr (method_name : string) (f_cfr : Program.t -> Program.t MaybeChanged.t)
-            (f_proof : Program.t -> string -> unit) (rvg_with_sccs : RVG.t * RVG.scc list Lazy.t)
-            (time : float) (non_linear_transitions : TransitionSet.t) ~(preprocess : Program.t -> Program.t)
-            (program : Program.t) (appr : Approximation.t) =
-          if Base.Set.is_empty non_linear_transitions then
-            (program, appr, rvg_with_sccs)
-          else
-            let mc =
-              Logger.log logger_cfr Logger.INFO (fun () ->
-                  ( "Analysis_apply_" ^ method_name,
-                    [
-                      ("non-linear trans", TransitionSet.to_string non_linear_transitions);
-                      ("time", string_of_float time);
-                    ] ));
-              f_cfr program
-            in
-            if not @@ MaybeChanged.has_changed mc then
-              (program, appr, rvg_with_sccs)
-            else (
-              ProofOutput.add_to_proof (fun () ->
-                  FormattedString.mk_str_header_big "Analysing control-flow refined program");
-              let program_cfr = mc |> MaybeChanged.unpack |> preprocess in
-              (match conf.goal with
-              | Complexity -> add_missing_lsbs program_cfr lsbs
-              | _ -> ());
-              Logger.log logger_cfr Logger.DEBUG (fun () -> ("apply_" ^ method_name, []));
-              reset_all_caches ();
-              let rvg_with_sccs_cfr =
-                match conf.goal with
-                | Termination -> (RVG.empty, Lazy.from_fun (const []))
-                | Complexity ->
-                    RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr
-              in
-              (* The new sccs which do not occur in the original program. *)
-              let cfr_sccs =
-                Program.sccs program_cfr
-                |> List.filter (fun cfr_scc ->
-                       not
-                         (Base.List.exists
-                            ~f:(fun scc_ -> Base.Set.equal cfr_scc scc_)
-                            (Program.sccs program)))
-              in
-              let update_appr appr scc =
-                if Base.Set.exists ~f:(Bound.is_infinity % Approximation.timebound appr) scc then (
-                  Logger.log logger Logger.INFO (fun () ->
-                      (method_name ^ "analysis", [ ("scc", TransitionSet.to_id_string scc) ]));
-                  improve_size_bounds ~conf program_cfr (Some rvg_with_sccs_cfr) scc opt_lsbs appr
-                  |> improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs)
-                else
-                  appr
-              in
-              let updated_appr_cfr =
-                cfr_sccs |> List.fold_left update_appr (CFR.merge_appr program program_cfr appr)
-              in
-              let handle_no_improvement org_bound cfr_bound =
-                ProofOutput.add_to_proof (fun () ->
-                    FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
-                reset_all_caches ();
-                Logger.log logger_cfr Logger.INFO (fun () ->
-                    ("NOT_IMPROVED", [ ("original bound", org_bound); (method_name ^ " bound", cfr_bound) ]));
-                (program, appr, rvg_with_sccs)
-              in
-              (*Calculates concrete bounds*)
-              let handle_cfr () =
-                let org_bound =
-                  Bound.sum (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))
-                in
-                let cfr_bound =
-                  Bound.sum
-                    (OurBase.Sequence.map
-                       ~f:(fun scc ->
-                         Bound.sum
-                           (Base.Sequence.map
-                              ~f:(Approximation.timebound updated_appr_cfr)
-                              (Base.Set.to_sequence scc)))
-                       (OurBase.Sequence.of_list cfr_sccs))
-                in
-                if Bound.compare_asy org_bound cfr_bound < 1 then
-                  handle_no_improvement
-                    (Bound.to_string ~pretty:true org_bound)
-                    (Bound.show_complexity @@ Bound.asymptotic_complexity cfr_bound)
-                else (
-                  f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
-                  (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr))
-              in
-              handle_cfr ())
-        in
-        let compute_non_linear_transitions program appr =
-          Base.Set.filter
-            ~f:(not % Bound.is_linear % Approximation.timebound appr)
-            (Base.Set.inter scc (Program.transitions program))
-        in
-        let partial_evaluation (program, appr, rvg) =
-          let program, appr, rvg =
-            if List.mem PartialEvaluationIRankFinder cfr then
-              let non_linear_transitions =
-                (* TODO: why? *)
-                compute_non_linear_transitions program appr
-              in
-              if !CFR.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) then
-                let time = CFR.compute_timeout_time program appr scc in
-                let opt =
-                  Timeout.timed_run time
-                    ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                    (fun () ->
-                      apply_cfr "partial_evaluation"
-                        (PartialEvaluation.apply_cfr non_linear_transitions)
-                        PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
-                        appr)
-                in
-                match opt with
-                | Some (res, time_used) ->
-                    CFR.time_cfr := !CFR.time_cfr -. time_used;
-                    res
-                | None -> (program, appr, rvg)
-              else
-                (program, appr, rvg)
-            else
-              (program, appr, rvg)
-          in
+  let cfr_handle_no_improvement method_name ~org_bound ~cfr_bound =
+    reset_all_caches ();
+    Logger.log logger_cfr Logger.INFO (fun () ->
+        ( "NOT_IMPROVED",
+          [
+            ("original bound", Bound.to_string ~pretty:true org_bound);
+            (method_name ^ " bound", Bound.to_string ~pretty:true cfr_bound);
+          ] ))
 
-          let program, appr, rvg =
-            match
-              List.find_opt
-                (function
-                  | PartialEvaluationNative _ -> true
-                  | Chaining -> false
-                  | PartialEvaluationIRankFinder -> false)
-                cfr
-            with
-            | Some (PartialEvaluationNative (fvs, k_encounters, update_invariants)) -> (
-                let non_linear_transitions = compute_non_linear_transitions program appr in
-                if Base.Set.is_empty non_linear_transitions then
-                  (program, appr, rvg)
-                else
-                  let time = CFR.compute_timeout_time program appr scc in
-                  let pe_config =
-                    NativePartialEvaluation.
-                      {
-                        abstract =
-                          (if fvs then
-                             `FVS
-                           else
-                             `LoopHeads);
-                        k_encounters;
-                        update_invariants;
-                      }
-                  in
-                  let opt =
-                    Timeout.timed_run time
-                      ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                      (fun () ->
-                        apply_cfr "partial_evaluation_native"
-                          (MaybeChanged.changed % PENative.apply_sub_scc_cfr pe_config non_linear_transitions)
-                          PartialEvaluation.add_to_proof rvg time non_linear_transitions ~preprocess program
-                          appr)
-                  in
-                  match opt with
-                  | Some (res, time_used) ->
-                      CFR.time_cfr := !CFR.time_cfr -. time_used;
-                      res
-                  | None -> (program, appr, rvg))
-            | _ -> (program, appr, rvg)
+
+  type 'a refinement_result =
+    | DontKeepRefinedProgram
+    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
+
+  (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
+  let iter_cfrs program ~scc_orig ~non_linear_transitions ~compute_timelimit keep_refinement_with_results cfrs
+      =
+    let open! OurBase in
+    (* TODO: Can we ensure that CFR alters just one SCC? *)
+    (* TODO move cfr stuff to dedicated module? *)
+    let apply_single_cfr cfr =
+      let timelimit = compute_timelimit () in
+      let execute () =
+        let opt =
+          Timeout.timed_run timelimit
+            ~action:(fun () -> handle_timeout_cfr (CFR.method_name cfr) scc_orig)
+            (fun () -> CFR.perform_cfr cfr program ~critical_transitions:non_linear_transitions)
+        in
+        match opt with
+        | None -> None
+        | Some (res_mc, time_used) ->
+            CFR.time_cfr := !CFR.time_cfr -. time_used;
+            Option.some_if (MaybeChanged.has_changed res_mc) (MaybeChanged.unpack res_mc)
+      in
+      Logger.with_log logger_cfr Logger.INFO
+        (fun () ->
+          ( "CFR.iter_cfrs.apply_single_cfr",
+            [
+              ("method", CFR.method_name cfr);
+              ("non_linear_transitions", TransitionSet.to_id_string non_linear_transitions);
+              ("timelimit", string_of_float timelimit);
+            ] ))
+        execute
+        ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
+    in
+    let rec apply_cfrs = function
+      | [] -> None
+      | cfr :: cfrs -> (
+          if !CFR.time_cfr <= 0. then
+            None
+          else
+            match apply_single_cfr cfr with
+            | None -> apply_cfrs cfrs
+            | Some program_cfr -> (
+                let keep_refinement_result =
+                  let execute () = keep_refinement_with_results cfr program_cfr in
+                  Logger.with_log logger_cfr Logger.INFO
+                    (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
+                    ~result:(function
+                      | DontKeepRefinedProgram -> "Don't keep refined program"
+                      | KeepRefinedProgram _ -> "Keep refined program")
+                    execute
+                in
+                match keep_refinement_result with
+                | DontKeepRefinedProgram -> apply_cfrs cfrs
+                | KeepRefinedProgram res -> Some res))
+    in
+    apply_cfrs cfrs
+
+
+  let analyse_refined_scc ~(conf : allowed_conf_type) appr_orig opt_lsbs program_orig scc_orig cfr program_cfr
+      =
+    let open! OurBase in
+    (* The new sccs which do not occur in the original program. *)
+    let cfr_sccs =
+      let orig_sccs = Program.sccs program_orig in
+      Program.sccs program_cfr
+      |> List.filter ~f:(fun cfr_scc -> not (List.exists ~f:(Set.equal cfr_scc) orig_sccs))
+    in
+    Option.iter ~f:(add_missing_lsbs program_cfr) opt_lsbs;
+    let rvg_with_sccs_cfr =
+      match conf.goal with
+      | Termination -> None
+      | Complexity ->
+          let rvg =
+            RVG.rvg_with_sccs
+              OptionMonad.(fun rv -> opt_lsbs >>= flip LSB_Table.find rv >>= pure % LSB.vars % Tuple2.first)
+              program_cfr
           in
-          (program, appr, rvg)
+          Some rvg
+    in
+
+    (* reset all caches, start new proof and store previous proof *)
+    reset_all_caches ();
+    ProofOutput.start_new_subproof ();
+
+    (* analyse refined program *)
+    ProofOutput.add_to_proof (fun () ->
+        FormattedString.mk_str_header_big "Analysing control-flow refined program");
+    let updated_appr_cfr =
+      let update appr scc =
+        let execute () =
+          improve_size_bounds ~conf program_cfr rvg_with_sccs_cfr scc opt_lsbs appr
+          |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr opt_lsbs
         in
-        let non_linear_transitions = compute_non_linear_transitions program appr in
-        let chaining () =
-          Timeout.timed_run 10.
-            ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-            (fun () ->
-              apply_cfr "chaining"
-                (Preprocessor.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc)))
-                (fun _ _ -> ())
-                rvg 10. non_linear_transitions ~preprocess program appr)
-          |> Option.map_default Tuple2.first (program, appr, rvg)
-        in
-        (if (not (Base.Set.is_empty non_linear_transitions)) && List.mem Chaining cfr then
-           chaining ()
-         else
-           (program, appr, rvg))
-        |>
-        if
-          !CFR.time_cfr > 0.
-          && (not (Base.Set.is_empty non_linear_transitions))
-          && List.mem PartialEvaluationIRankFinder cfr
-        then
-          partial_evaluation
-        else
-          identity)
-        |> Tuple3.map3 Option.some
+        Logger.with_log logger_cfr Logger.INFO
+          (fun () -> ("CFR.apply_single_cfr.improve_scc", [ ("scc", TransitionSet.to_id_string scc) ]))
+          execute
+      in
+      List.fold_left cfr_sccs ~init:(CFR.merge_appr program_orig program_cfr appr_orig) ~f:update
+    in
+
+    (* Check if CFR obtained improvement *)
+    let org_bound =
+      Bound.sum (Sequence.map ~f:(Approximation.timebound appr_orig) (Set.to_sequence scc_orig))
+    in
+    let cfr_bound =
+      cfr_sccs
+      |> Sequence.map ~f:Set.to_sequence % Sequence.of_list
+      |> Sequence.map ~f:(fun scc -> Sequence.map ~f:(Approximation.timebound updated_appr_cfr) scc)
+      |> Bound.sum % Sequence.join
+    in
+    CFR.add_proof_to_global_proof cfr ~refined_program:program_cfr
+      ~refined_bound_str:(Bound.to_string ~pretty:true cfr_bound);
+
+    (* Get CFR proof & restore original proof *)
+    let cfr_subproof = ProofOutput.get_subproof () in
+
+    if Bound.compare_asy org_bound cfr_bound < 1 then (
+      (* restores previous caches *)
+      cfr_handle_no_improvement (CFR.method_name cfr) ~org_bound ~cfr_bound;
+      DontKeepRefinedProgram)
+    else
+      (* Restore original global proof *)
+      KeepRefinedProgram
+        ProofOutput.LocalProofOutput.
+          { result = (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr); proof = cfr_subproof }
+
+
+  let handle_cfrs ~(conf : allowed_conf_type) (scc : TransitionSet.t) program opt_rvg opt_lsbs appr =
+    let open! OurBase in
+    let non_linear_transitions =
+      (* TODO: think about how sccs might get altered during analysis *)
+      Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc
+    in
+    if Set.is_empty non_linear_transitions then
+      (program, appr, opt_rvg)
+    else
+      let refinement_result =
+        iter_cfrs program ~scc_orig:scc ~non_linear_transitions
+          ~compute_timelimit:(fun () -> CFR.compute_timeout_time program appr scc)
+          (analyse_refined_scc ~conf appr opt_lsbs program scc)
+          conf.cfrs
+      in
+      match refinement_result with
+      | None -> (program, appr, opt_rvg)
+      | Some { result; proof } ->
+          ProofOutput.add_local_proof_to_proof proof;
+          result
 
 
   let improve ?(time_cfr = 180) ~(conf : allowed_conf_type) ~preprocess program appr =
@@ -553,15 +507,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                  |> improve_size_bounds ~conf program opt_rvg scc opt_lsbs
                  |> improve_scc ~conf opt_rvg scc program opt_lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-                 |> handle_cfr ~conf ~preprocess scc program opt_rvg opt_lsbs
+                 |> handle_cfrs ~conf scc program opt_rvg opt_lsbs
                  |> fun (program, appr, opt_rvg) -> (program, scc_cost_bounds ~conf program scc appr, opt_rvg)
                else
                  (program, appr, opt_rvg)
              in
              (* Check if SCC still exists and keep only existing transitions (Preprocessing in cfr might otherwise cut them ) *)
-             match conf.cfr_configuration with
-             | NoCFR -> improve_scc scc_orig
-             | PerformCFR _ ->
+             match conf.cfrs with
+             | [] -> improve_scc scc_orig
+             | _ ->
                  let scc = Base.Set.inter scc_orig (Program.transitions program) in
                  if Base.Set.is_empty scc then
                    (program, appr, opt_rvg)

@@ -43,5 +43,17 @@ let print_proof format =
   print_string @@ Formatter.render_default ~format (write_format (!proof format) >> title "KoAT2 Proof Output")
 
 
-let get_global_proof_as_local_proof () = ref !proof
-let set_global_proof_from_local_proof local_proof = proof := !local_proof
+let add_local_proof_to_proof local_proof = add_to_proof_with_format (LocalProofOutput.get_proof local_proof)
+
+(* Global Subproofs *)
+let subproof_stack = Stack.create ()
+
+let start_new_subproof () =
+  Stack.push subproof_stack !proof;
+  proof := fun _ -> Empty
+
+
+let get_subproof () =
+  let subproof = !proof in
+  proof := Stack.pop_exn subproof_stack;
+  ref subproof
