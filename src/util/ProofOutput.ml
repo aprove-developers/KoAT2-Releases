@@ -41,3 +41,7 @@ let add_str_paragraph_to_proof = add_str_paragraph_to_proof proof
 
 let print_proof format =
   print_string @@ Formatter.render_default ~format (write_format (!proof format) >> title "KoAT2 Proof Output")
+
+
+let get_global_proof_as_local_proof () = ref !proof
+let set_global_proof_from_local_proof local_proof = proof := !local_proof

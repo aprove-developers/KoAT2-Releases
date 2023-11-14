@@ -21,3 +21,10 @@ module LocalProofOutput : sig
   val add_str_paragraph_to_proof : t -> (unit -> string) -> unit
   val get_proof : t -> Formatter.format -> FormattedString.t
 end
+
+val get_global_proof_as_local_proof : unit -> LocalProofOutput.t
+(** Get a copy of the global proof as LocalProof *)
+
+val set_global_proof_from_local_proof : LocalProofOutput.t -> unit
+(** Set the proof generating function as copy of the local proof.
+    Useful in conjunction with [get_as_local_proof_output] to switch between global proofs as used in CFR. *)
