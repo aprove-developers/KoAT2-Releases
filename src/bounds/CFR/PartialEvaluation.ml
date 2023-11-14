@@ -29,7 +29,7 @@ module SCCSetCompare = struct
 end
 
 module SCCSet = Set.Make (SCCSetCompare)
-module GraphPrint = GraphPrint.MakeFromClassical (ProgramModules)
+module GraphPrint = GraphPrint.MakeForClassicalAnalysis (ProgramModules)
 
 (* TODO *)
 let logger = Logging.(get CFR)

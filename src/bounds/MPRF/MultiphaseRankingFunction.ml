@@ -132,7 +132,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let compute_proof { rank; decreasing; non_increasing; depth } bound program format =
-    let module GraphPrint = GraphPrint.MakeFromClassical (PM) in
+    let module GraphPrint = GraphPrint.MakeForClassicalAnalysis (PM) in
     let color_map =
       Base.Set.fold
         ~f:(fun colourmap t -> OurBase.Map.set ~key:t ~data:GraphPrint.Blue colourmap)

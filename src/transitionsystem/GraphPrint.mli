@@ -1,6 +1,6 @@
 open! OurBase
 
-module MakeFromClassical (PM : ProgramTypes.ClassicalProgramModules) :
+module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) :
   GraphPrintType.GraphPrint
     with type transition_label = PM.TransitionLabel.t
      and type transition_comparator_witness = PM.Transition.comparator_witness
@@ -22,5 +22,5 @@ module ProbabilisticGraphPrint :
      and type transition_comparator_witness = ProbabilisticProgramModules.Transition.comparator_witness
      and type program = ProbabilisticProgramModules.Program.t
 
-include module type of MakeFromClassical (ProgramModules)
+include module type of MakeForClassicalAnalysis (ProgramModules)
 include module type of MakeForRVGFromClassical (ProgramModules)

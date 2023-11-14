@@ -83,7 +83,7 @@ let run (params : params) =
              ProofOutput.add_to_proof_with_format
                FormattedString.(
                  fun format ->
-                   let module GP = GraphPrint.MakeFromClassical (NonProbOverappr) in
+                   let module GP = GraphPrint.MakeForClassicalAnalysis (NonProbOverappr) in
                    NonProbOverappr.Program.to_formatted_string ~pretty:true program
                    <>
                    match format with

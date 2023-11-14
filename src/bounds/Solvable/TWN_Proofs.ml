@@ -3,7 +3,7 @@ open FormattedString
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module GraphPrint = GraphPrint.MakeFromClassical (PM)
+  module GraphPrint = GraphPrint.MakeForClassicalAnalysis (PM)
 
   let add_to_proof_graph (t : ProofOutput.LocalProofOutput.t) program cycle entries =
     let color_map =
