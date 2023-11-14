@@ -51,7 +51,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module SizeBounds = SizeBounds.Make (PM)
   module TWN = TWN.Make (Bound) (PM)
   module CFR = CFR.CFR (Bound)
-  module PartialEvaluation = PartialEvaluation.Make (Bound)
 
   type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
 
