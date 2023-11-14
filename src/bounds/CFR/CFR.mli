@@ -1,10 +1,10 @@
 open! OurBase
 
 (** CFR meta-module *)
-module CFR (Bound : BoundType.Bound) : sig
-  open ProgramModules
+module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) : sig
+  open PM
 
-  type approximation = Approximation.MakeForClassicalAnalysis(Bound)(ProgramModules).t
+  type approximation = Approximation.MakeForClassicalAnalysis(Bound)(PM).t
 
   val time_cfr : float ref
   (** Global time used for CFR. *)

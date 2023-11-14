@@ -50,7 +50,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module TWN = TWN.Make (Bound) (PM)
-  module CFR = CFR.CFR (Bound)
+  module CFR = CFR.CFR (PM) (Bound)
 
   type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
 

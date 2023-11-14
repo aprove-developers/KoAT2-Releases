@@ -4,10 +4,10 @@ open! OurBase
 (* Measures the time spend on CFR. *)
 let time_cfr = ref 180.
 
-module CFR (Bound : BoundType.Bound) = struct
-  open ProgramModules
-  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (ProgramModules)
-  module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (ProgramModules)
+module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
+  open PM
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
+  module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (PM)
 
   type approximation = Approximation.t
 
