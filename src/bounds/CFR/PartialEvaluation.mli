@@ -10,11 +10,6 @@ module Make (Bound : BoundType.Bound) : sig
 
   val add_to_proof : Program.t -> string -> unit
 
-  val time_cfr : float ref
-  (** Global time used for CFR. *)
-
-  val compute_timeout_time : Program.t -> Approximation.t -> TransitionSet.t -> float
-
   val apply_cfr : TransitionSet.t -> Program.t -> Program.t MaybeChanged.t
   (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
 

@@ -7,10 +7,6 @@ let counter = ref 0
 (* To allow several parallel executions of KoAT, we create cfr-output folders with unique names. *)
 let uid = ref ""
 
-(* Timeouts *)
-(* Measures the time spend on CFR. *)
-let time_cfr = ref 180.
-
 module Make (Bound : BoundType.Bound) = struct
   open ProgramModules
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (ProgramModules)
@@ -55,22 +51,6 @@ module Make (Bound : BoundType.Bound) = struct
            match format with
            | Formatter.Html -> mk_raw_str GraphPrint.(print_system_pretty_html program)
            | _ -> FormattedString.Empty)
-
-
-  let time_cfr = time_cfr
-
-  (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-  let compute_timeout_time program appr scc =
-    if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
-      0.
-    else
-      let toplogic_later_trans =
-        program |> Program.transitions |> flip Base.Set.diff scc
-        |> Base.Set.filter ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t))
-      in
-      !time_cfr
-      *. float_of_int (Base.Set.length scc)
-      /. float_of_int (Base.Set.length toplogic_later_trans + Base.Set.length scc)
 
 
   (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)

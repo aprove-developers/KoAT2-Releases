@@ -429,8 +429,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 (* TODO: why? *)
                 compute_non_linear_transitions program appr
               in
-              if !PartialEvaluation.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) then
-                let time = PartialEvaluation.compute_timeout_time program appr scc in
+              if !CFR.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) then
+                let time = CFR.compute_timeout_time program appr scc in
                 let opt =
                   Timeout.timed_run time
                     ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
@@ -442,7 +442,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 in
                 match opt with
                 | Some (res, time_used) ->
-                    PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
+                    CFR.time_cfr := !CFR.time_cfr -. time_used;
                     res
                 | None -> (program, appr, rvg)
               else
@@ -465,7 +465,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 if Base.Set.is_empty non_linear_transitions then
                   (program, appr, rvg)
                 else
-                  let time = PartialEvaluation.compute_timeout_time program appr scc in
+                  let time = CFR.compute_timeout_time program appr scc in
                   let pe_config =
                     NativePartialEvaluation.
                       {
@@ -489,7 +489,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                   in
                   match opt with
                   | Some (res, time_used) ->
-                      PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
+                      CFR.time_cfr := !CFR.time_cfr -. time_used;
                       res
                   | None -> (program, appr, rvg))
             | _ -> (program, appr, rvg)
@@ -513,7 +513,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (program, appr, rvg))
         |>
         if
-          !PartialEvaluation.time_cfr > 0.
+          !CFR.time_cfr > 0.
           && (not (Base.Set.is_empty non_linear_transitions))
           && List.mem PartialEvaluationIRankFinder cfr
         then
@@ -524,7 +524,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let improve ?(time_cfr = 180) ~(conf : allowed_conf_type) ~preprocess program appr =
-    PartialEvaluation.time_cfr := float_of_int time_cfr;
+    CFR.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
     let opt_lsbs =
       match conf.goal with
