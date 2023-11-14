@@ -289,14 +289,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       appr
 
 
-  let reset_all_caches =
+  let reset_all_caches () =
     TWN.reset_cfr ();
     TWNSizeBounds.reset_cfr ();
     SolvableSizeBounds.reset_cfr ()
 
 
   let handle_timeout_cfr method_name non_linear_transitions =
-    reset_all_caches;
+    reset_all_caches ();
     Logger.log logger_cfr Logger.INFO (fun () ->
         ("TIMEOUT_CFR_" ^ method_name, [ ("scc", TransitionSet.to_string non_linear_transitions) ]))
 
@@ -356,7 +356,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               | Complexity -> add_missing_lsbs program_cfr lsbs
               | _ -> ());
               Logger.log logger_cfr Logger.DEBUG (fun () -> ("apply_" ^ method_name, []));
-              reset_all_caches;
+              reset_all_caches ();
               let rvg_with_sccs_cfr =
                 match conf.goal with
                 | Termination -> (RVG.empty, Lazy.from_fun (const []))
@@ -387,7 +387,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               let handle_no_improvement org_bound cfr_bound =
                 ProofOutput.add_to_proof (fun () ->
                     FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
-                reset_all_caches;
+                reset_all_caches ();
                 Logger.log logger_cfr Logger.INFO (fun () ->
                     ("NOT_IMPROVED", [ ("original bound", org_bound); (method_name ^ " bound", cfr_bound) ]));
                 (program, appr, rvg_with_sccs)
