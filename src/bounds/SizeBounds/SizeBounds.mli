@@ -10,7 +10,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) : sig
   val improve :
     PM.Program.t ->
     RVGTypes.MakeRVG(PM).t * RVGTypes.MakeRVG(PM).scc list Lazy.t ->
-    ?scc:PM.TransitionSet.t option ->
     (PM.Transition.t * Var.t -> (LSB.t * bool Lazy.t) Option.t) ->
     Approximation.MakeForClassicalAnalysis(Bounds.Bound)(PM).t ->
     Approximation.MakeForClassicalAnalysis(Bounds.Bound)(PM).t

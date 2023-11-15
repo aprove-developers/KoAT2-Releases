@@ -249,47 +249,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | Termination -> identity
     | Complexity ->
         fun (appr : Approximation.t) ->
-          SizeBounds.improve program (Lazy.force rvg_with_sccs) ~scc:(Option.some scc)
-            (Base.Map.find @@ Lazy.force lsb_table)
-            appr
+          SizeBounds.improve program (Lazy.force rvg_with_sccs) (Base.Map.find @@ Lazy.force lsb_table) appr
           |> twn_size_bounds ~conf scc program
-
-
-  let improve_scc ~(conf : allowed_conf_type) rvg_with_sccs (scc : TransitionSet.t) program lsb_table appr =
-    let twn_state =
-      if conf.twn then
-        ref (initial_twn_state program scc)
-      else
-        ref empty_twn_state
-    in
-    let improvement appr =
-      knowledge_propagation scc program appr
-      |> improve_size_bounds ~conf program rvg_with_sccs scc lsb_table
-      |> improve_timebound ~conf scc twn_state `Time program
-    in
-    (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
-    knowledge_propagation scc program appr
-    |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
-    |> Util.find_fixpoint improvement
-
-
-  let scc_cost_bounds ~conf program scc appr =
-    if Base.Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
-      MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_twn_state) `Cost program appr)
-    else
-      appr
-
-
-  let reset_all_caches () =
-    TWN.reset_cfr ();
-    TWNSizeBounds.reset_cfr ();
-    SolvableSizeBounds.reset_cfr ()
-
-
-  let handle_timeout_cfr method_name non_linear_transitions =
-    reset_all_caches ();
-    Logger.log logger_cfr Logger.INFO (fun () ->
-        ("TIMEOUT_CFR_" ^ method_name, [ ("scc", TransitionSet.to_string non_linear_transitions) ]))
 
 
   let compute_lsbs program scc_locs =
@@ -319,6 +280,47 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         RVG.rvg_from_transitionset_with_sccs
           (Option.map (LSB.vars % Tuple2.first) % Base.Map.find (Lazy.force opt_lsbs))
           program scc_transitions_with_out)
+
+
+  let improve_scc ~(conf : allowed_conf_type) scc_locs program appr =
+    let lsbs = compute_lsbs program scc_locs in
+    let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
+    let scc = Program.scc_transitions_from_locs program scc_locs in
+    let twn_state =
+      if conf.twn then
+        ref (initial_twn_state program scc)
+      else
+        ref empty_twn_state
+    in
+    let improvement appr =
+      knowledge_propagation scc program appr
+      |> improve_size_bounds ~conf program rvg_with_sccs scc lsbs
+      |> improve_timebound ~conf scc twn_state `Time program
+    in
+    (* First compute initial size bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
+    improve_size_bounds ~conf program rvg_with_sccs scc lsbs appr
+    |> knowledge_propagation scc program
+    |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
+    |> Util.find_fixpoint improvement
+
+
+  let scc_cost_bounds ~conf program scc appr =
+    if Base.Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
+      MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_twn_state) `Cost program appr)
+    else
+      appr
+
+
+  let reset_all_caches () =
+    TWN.reset_cfr ();
+    TWNSizeBounds.reset_cfr ();
+    SolvableSizeBounds.reset_cfr ()
+
+
+  let handle_timeout_cfr method_name non_linear_transitions =
+    reset_all_caches ();
+    Logger.log logger_cfr Logger.INFO (fun () ->
+        ("TIMEOUT_CFR_" ^ method_name, [ ("scc", TransitionSet.to_string non_linear_transitions) ]))
 
 
   let cfr_handle_no_improvement method_name ~org_bound ~cfr_bound =
@@ -409,13 +411,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         FormattedString.mk_str_header_big "Analysing control-flow refined program");
     let updated_appr_cfr =
       let update appr scc_locs =
-        let execute () =
-          let lsbs = compute_lsbs program_cfr scc_locs in
-          let rvg_with_sccs_cfr = compute_rvg_with_sccs ~conf lsbs program_cfr scc_locs in
-          let scc = Program.scc_transitions_from_locs program_cfr scc_locs in
-          improve_size_bounds ~conf program_cfr rvg_with_sccs_cfr scc lsbs appr
-          |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
-        in
+        let execute () = improve_scc ~conf scc_locs program_cfr appr in
         Logger.with_log logger_cfr Logger.INFO
           (fun () -> ("CFR.apply_single_cfr.improve_scc", [ ("scc_locs", LocationSet.to_string scc_locs) ]))
           execute
@@ -468,6 +464,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           result
 
 
+  let improve_scc_with_cfr ~(conf : allowed_conf_type) program appr scc_locs =
+    let scc = Program.scc_transitions_from_locs program scc_locs in
+    improve_scc ~conf scc_locs program appr
+    (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
+    |> handle_cfrs ~conf scc program
+    |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
+
+
   let improve ?(time_cfr = 180) ~(conf : allowed_conf_type) ~preprocess program appr =
     CFR.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
@@ -475,22 +479,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       program |> Program.sccs_locs
       |> List.fold_left
            (fun (program, appr) scc_locs ->
-             let scc = Program.scc_transitions_from_locs program scc_locs in
-             let lsbs = compute_lsbs program scc_locs in
-             let rvg = compute_rvg_with_sccs ~conf lsbs program scc_locs in
-             if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
-               appr
-               |> tap
-                    (const
-                    @@ Logger.log logger Logger.INFO (fun () ->
-                           ("continue analysis", [ ("scc", TransitionSet.to_id_string scc) ])))
-               |> improve_size_bounds ~conf program rvg scc lsbs
-               |> improve_scc ~conf rvg scc program lsbs
-               (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-               |> handle_cfrs ~conf scc program
-               |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
-             else
-               (program, improve_size_bounds ~conf program rvg scc lsbs appr))
+             Logger.log logger Logger.INFO (fun () ->
+                 ("continue analysis", [ ("scc", LocationSet.to_string scc_locs) ]));
+             improve_scc_with_cfr ~conf program appr scc_locs)
            (program, trivial_appr)
     in
     (program, CostBounds.infer_from_timebounds program appr)
