@@ -148,6 +148,22 @@ struct
     |> TransitionSet.of_sequence
 
 
+  let sccs_locs program = G.sccs_locs program.graph |> List.rev
+  let scc_transitions_from_locs program scc_locs = G.loc_transitions program.graph (Set.to_list scc_locs)
+
+  let scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs =
+    let scc_transitions = scc_transitions_from_locs program scc_locs in
+    let in_and_out =
+      Set.to_list scc_locs
+      |> List.map ~f:(fun loc ->
+             let outgoing = G.succ_e program.graph loc in
+             let incoming = G.pred_e program.graph loc in
+             Set.union (TransitionSet.of_list outgoing) (TransitionSet.of_list incoming))
+      |> TransitionSet.union_list
+    in
+    Set.union scc_transitions in_and_out
+
+
   let sccs program = G.sccs program.graph |> List.rev (* scc_list is in reverse topological order *)
 
   let parallel_transitions graph (l, _, l') =

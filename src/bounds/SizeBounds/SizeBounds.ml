@@ -14,7 +14,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | [ ((l, t, l'), v) ] when not (RVG.mem_edge rvg ((l, t, l'), v) ((l, t, l'), v)) ->
         let lsb_as_bound = get_lsb ((l, t, l'), v) |> Option.map (LSB.as_bound % Tuple2.first) in
         let new_bound =
-          TrivialSizeBounds.compute program rvg (Approximation.sizebound appr) ((l, t, l'), v) lsb_as_bound
+          TrivialSizeBounds.compute program (Approximation.sizebound appr) ((l, t, l'), v) lsb_as_bound
         in
         Approximation.add_sizebound new_bound (l, t, l') v appr
     | scc ->
