@@ -237,7 +237,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       execute
 
 
-  let improve_size_bounds ~(conf : allowed_conf_type) program opt_rvg_with_sccs scc opt_lsb_table =
+  let improve_size_bounds ~(conf : allowed_conf_type) program rvg_with_sccs scc opt_lsb_table =
     let twn_size_bounds ~(conf : allowed_conf_type) (scc : TransitionSet.t) (program : Program.t)
         (appr : Approximation.t) =
       match conf.closed_form_size_bounds with
@@ -250,14 +250,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | Termination -> identity
     | Complexity ->
         fun (appr : Approximation.t) ->
-          SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc)
+          SizeBounds.improve program (Lazy.force rvg_with_sccs) ~scc:(Option.some scc)
             (LSB_Table.find @@ Option.get opt_lsb_table)
             appr
           |> twn_size_bounds ~conf scc program
 
 
-  let improve_scc ~(conf : allowed_conf_type) opt_rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table
-      appr =
+  let improve_scc ~(conf : allowed_conf_type) rvg_with_sccs (scc : TransitionSet.t) program opt_lsb_table appr
+      =
     let twn_state =
       if conf.twn then
         ref (initial_twn_state program scc)
@@ -266,7 +266,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     in
     let improvement appr =
       knowledge_propagation scc program appr
-      |> improve_size_bounds ~conf program opt_rvg_with_sccs scc opt_lsb_table
+      |> improve_size_bounds ~conf program rvg_with_sccs scc opt_lsb_table
       |> improve_timebound ~conf scc twn_state `Time program
     in
     (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
@@ -315,18 +315,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     |> LSB_Table.of_enum
 
 
-  (** Also considers transitions entering & leaving the SCC *)
-  let compute_opt_rvg_with_sccs ~(conf : allowed_conf_type) opt_lsbs program scc_locs =
-    match conf.goal with
-    | Termination -> None
-    | Complexity ->
+  let compute_rvg_with_sccs ~(conf : allowed_conf_type) opt_lsbs program scc_locs =
+    Lazy.from_fun (fun () ->
         let scc_transitions_with_out =
           Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
         in
         RVG.rvg_from_transitionset_with_sccs
           (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find (Option.get opt_lsbs))
-          program scc_transitions_with_out
-        |> Option.some
+          program scc_transitions_with_out)
 
 
   let cfr_handle_no_improvement method_name ~org_bound ~cfr_bound =
@@ -420,7 +416,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let updated_appr_cfr =
       let update appr scc_locs =
         let execute () =
-          let rvg_with_sccs_cfr = compute_opt_rvg_with_sccs ~conf opt_lsbs program_cfr scc_locs in
+          let rvg_with_sccs_cfr = compute_rvg_with_sccs ~conf opt_lsbs program_cfr scc_locs in
           let scc = Program.scc_transitions_from_locs program_cfr scc_locs in
           improve_size_bounds ~conf program_cfr rvg_with_sccs_cfr scc opt_lsbs appr
           |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr opt_lsbs
@@ -494,20 +490,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (fun (program, appr) scc_orig_locs ->
              let improve_scc scc_locs =
                let scc = Program.scc_transitions_from_locs program scc_locs in
-               let opt_rvg = compute_opt_rvg_with_sccs ~conf opt_lsbs program scc_locs in
+               let rvg = compute_rvg_with_sccs ~conf opt_lsbs program scc_locs in
                if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap
                       (const
                       @@ Logger.log logger Logger.INFO (fun () ->
                              ("continue analysis", [ ("scc", TransitionSet.to_id_string scc) ])))
-                 |> improve_size_bounds ~conf program opt_rvg scc opt_lsbs
-                 |> improve_scc ~conf opt_rvg scc program opt_lsbs
+                 |> improve_size_bounds ~conf program rvg scc opt_lsbs
+                 |> improve_scc ~conf rvg scc program opt_lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                  |> handle_cfrs ~conf scc program opt_lsbs
                  |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
                else
-                 (program, improve_size_bounds ~conf program opt_rvg scc opt_lsbs appr)
+                 (program, improve_size_bounds ~conf program rvg scc opt_lsbs appr)
              in
              (* Check if SCC still exists and keep only existing transitions (Preprocessing in cfr might otherwise cut them ) *)
              match conf.cfrs with
