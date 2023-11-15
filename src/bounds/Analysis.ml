@@ -451,10 +451,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let handle_cfrs ~(conf : allowed_conf_type) (scc : TransitionSet.t) program appr =
     let open! OurBase in
-    let non_linear_transitions =
-      (* TODO: think about how sccs might get altered during analysis *)
-      Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc
-    in
+    let non_linear_transitions = Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc in
     if Set.is_empty non_linear_transitions then
       (program, appr)
     else
@@ -477,34 +474,23 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let program, appr =
       program |> Program.sccs_locs
       |> List.fold_left
-           (fun (program, appr) scc_orig_locs ->
-             let improve_scc scc_locs =
-               let scc = Program.scc_transitions_from_locs program scc_locs in
-               let lsbs = compute_lsbs program scc_locs in
-               let rvg = compute_rvg_with_sccs ~conf lsbs program scc_locs in
-               if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
-                 appr
-                 |> tap
-                      (const
-                      @@ Logger.log logger Logger.INFO (fun () ->
-                             ("continue analysis", [ ("scc", TransitionSet.to_id_string scc) ])))
-                 |> improve_size_bounds ~conf program rvg scc lsbs
-                 |> improve_scc ~conf rvg scc program lsbs
-                 (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-                 |> handle_cfrs ~conf scc program
-                 |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
-               else
-                 (program, improve_size_bounds ~conf program rvg scc lsbs appr)
-             in
-             (* Check if SCC still exists and keep only existing transitions (Preprocessing in cfr might otherwise cut them ) *)
-             match conf.cfrs with
-             | [] -> improve_scc scc_orig_locs
-             | _ ->
-                 let scc = Base.Set.inter scc_orig_locs (Program.locations program) in
-                 if Base.Set.is_empty scc then
-                   (program, appr)
-                 else
-                   improve_scc scc)
+           (fun (program, appr) scc_locs ->
+             let scc = Program.scc_transitions_from_locs program scc_locs in
+             let lsbs = compute_lsbs program scc_locs in
+             let rvg = compute_rvg_with_sccs ~conf lsbs program scc_locs in
+             if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+               appr
+               |> tap
+                    (const
+                    @@ Logger.log logger Logger.INFO (fun () ->
+                           ("continue analysis", [ ("scc", TransitionSet.to_id_string scc) ])))
+               |> improve_size_bounds ~conf program rvg scc lsbs
+               |> improve_scc ~conf rvg scc program lsbs
+               (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
+               |> handle_cfrs ~conf scc program
+               |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
+             else
+               (program, improve_size_bounds ~conf program rvg scc lsbs appr))
            (program, trivial_appr)
     in
     (program, CostBounds.infer_from_timebounds program appr)
