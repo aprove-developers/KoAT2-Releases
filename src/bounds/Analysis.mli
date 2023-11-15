@@ -31,12 +31,29 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
   (** The type of the configuration for the program *)
 
+  type appr = Approximation.MakeForClassicalAnalysis(Bound)(PM).t
+
+  val improve_scc : conf:allowed_conf_type -> LocationSet.t -> PM.Program.t -> appr -> appr
+
+  type 'a refinement_result =
+    | DontKeepRefinedProgram
+    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
+
+  val iter_cfrs :
+    PM.Program.t ->
+    scc_orig:PM.TransitionSet.t ->
+    non_linear_transitions:PM.TransitionSet.t ->
+    compute_timelimit:(unit -> float) ->
+    (PM.program_modules_t CFR.cfr_ -> PM.Program.t -> 'a refinement_result) ->
+    PM.program_modules_t CFR.cfr_ list ->
+    'a ProofOutput.LocalProofOutput.with_proof option
+
   val improve :
     ?time_cfr:int ->
     conf:allowed_conf_type ->
     preprocess:(PM.Program.t -> PM.Program.t) ->
     PM.Program.t ->
-    Approximation.MakeForClassicalAnalysis(Bound)(PM).t ->
-    PM.Program.t * Approximation.MakeForClassicalAnalysis(Bound)(PM).t
+    appr ->
+    PM.Program.t * appr
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
 end

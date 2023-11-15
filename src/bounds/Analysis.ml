@@ -46,6 +46,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module CFR = CFR.CFR (PM) (Bound)
 
   type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
+  type appr = Approximation.t
 
   let add_bound = function
     | `Time -> Approximation.add_timebound
@@ -457,7 +458,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           result
 
 
-  let improve_scc_with_cfr ~(conf : allowed_conf_type) program appr scc_locs =
+  let improve_scc_and_try_cfr ~(conf : allowed_conf_type) program appr scc_locs =
     let scc = Program.scc_transitions_from_locs program scc_locs in
     improve_scc ~conf scc_locs program appr
     (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
@@ -474,7 +475,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            ~f:(fun (program, appr) scc_locs ->
              Logger.log logger Logger.INFO (fun () ->
                  ("continue analysis", [ ("scc", LocationSet.to_string scc_locs) ]));
-             improve_scc_with_cfr ~conf program appr scc_locs)
+             improve_scc_and_try_cfr ~conf program appr scc_locs)
            ~init:(program, trivial_appr)
     in
     (program, CostBounds.infer_from_timebounds program appr)
