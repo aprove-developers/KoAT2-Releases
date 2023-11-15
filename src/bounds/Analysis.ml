@@ -1,4 +1,4 @@
-open Batteries
+open! OurBase
 open Polynomials
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
@@ -66,12 +66,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let rec knowledge_propagation (scc : TransitionSet.t) program appr =
     let execute () =
-      scc |> Base.Set.to_sequence
+      scc |> Set.to_sequence
       |> MaybeChanged.fold_sequence
            ~f:(fun appr transition ->
              let new_bound =
-               Program.pre program transition |> Base.Set.to_sequence
-               |> Base.Sequence.map ~f:(Approximation.timebound appr)
+               Program.pre program transition |> Set.to_sequence
+               |> Sequence.map ~f:(Approximation.timebound appr)
                |> Bound.sum
              in
              let original_bound = get_bound `Time appr transition in
@@ -102,7 +102,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     in
     let decr_transitions = UnliftedTimeBound.measure_decr_transitions unlifted_bound in
     let result_appr_mc =
-      OurBase.Set.fold decr_transitions
+      Set.fold decr_transitions
         ~f:(fun appr_mc t ->
           (* check if bound has improved *)
           if Bound.compare_asy (get_bound measure appr t) new_bound = 1 then
@@ -133,7 +133,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let empty_twn_state = { remaining_twn_loops = [] }
 
   let improve_with_twn ~(conf : allowed_conf_type) program scc twn_state appr =
-    let open! OurBase in
     let not_all_trans_bounded twn_loop =
       TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
       |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
@@ -176,13 +175,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
-    let open! OurBase in
     let get_unbounded_vars transition =
       match conf.goal with
       | Termination -> VarSet.empty
       | Complexity ->
           program |> Program.input_vars
-          |> Base.Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
+          |> Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
     let unbounded_transitions =
@@ -190,7 +188,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> tap (fun scc ->
              Logger.log logger Logger.INFO (fun () ->
                  ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
-      |> Base.Set.filter ~f:(not % bounded measure appr)
+      |> Set.filter ~f:(not % bounded measure appr)
     in
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
@@ -198,10 +196,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars
           scc_overapprox_nonlinear depth
         @@ Option.value_exn
-        @@ Base.Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
+        @@ Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
       in
-      Base.Set.to_array unbounded_transitions
-      |> Parmap.array_parmap compute_function |> Array.to_sequence |> Sequence.filter_opt
+      Set.to_array unbounded_transitions |> Parmap.array_parmap compute_function |> Array.to_sequence
+      |> Sequence.filter_opt
     in
     (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
        * or the depth is max_depth *)
@@ -249,7 +247,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | Termination -> identity
     | Complexity ->
         fun (appr : Approximation.t) ->
-          SizeBounds.improve program (Lazy.force rvg_with_sccs) (Base.Map.find @@ Lazy.force lsb_table) appr
+          SizeBounds.improve program (Lazy.force rvg_with_sccs) (Map.find @@ Lazy.force lsb_table) appr
           |> twn_size_bounds ~conf scc program
 
 
@@ -260,16 +258,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           let scc_with_in_and_out =
             Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
           in
-          Base.Sequence.cartesian_product
-            (Base.Set.to_sequence scc_with_in_and_out)
-            (Base.Set.to_sequence input_vars)
+          Sequence.cartesian_product (Set.to_sequence scc_with_in_and_out) (Set.to_sequence input_vars)
         in
         all_rvs_of_scc_and_out
-        |> Base.Sequence.filter_map ~f:(fun ((t, v) as rv) ->
+        |> Sequence.filter_map ~f:(fun ((t, v) as rv) ->
                let open OptionMonad in
                let+ lsb = LSB.compute_bound input_vars t v in
                (rv, lsb))
-        |> Base.Map.of_sequence_exn (module RV))
+        |> Map.of_sequence_exn (module RV))
 
 
   let compute_rvg_with_sccs ~(conf : allowed_conf_type) opt_lsbs program scc_locs =
@@ -278,7 +274,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
         in
         RVG.rvg_from_transitionset_with_sccs
-          (Option.map (LSB.vars % Tuple2.first) % Base.Map.find (Lazy.force opt_lsbs))
+          (Option.map ~f:(LSB.vars % Tuple2.first) % Map.find (Lazy.force opt_lsbs))
           program scc_transitions_with_out)
 
 
@@ -305,7 +301,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let scc_cost_bounds ~conf program scc appr =
-    if Base.Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
+    if Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
       MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_twn_state) `Cost program appr)
     else
       appr
@@ -340,7 +336,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
   let iter_cfrs program ~scc_orig ~non_linear_transitions ~compute_timelimit keep_refinement_with_results cfrs
       =
-    let open! OurBase in
     (* TODO: Can we ensure that CFR alters just one SCC? *)
     (* TODO move cfr stuff to dedicated module? *)
     let apply_single_cfr cfr =
@@ -394,7 +389,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let analyse_refined_scc ~(conf : allowed_conf_type) appr_orig program_orig scc_orig cfr program_cfr =
-    let open! OurBase in
     (* The new sccs which do not occur in the original program. *)
     let cfr_sccs_locs =
       let orig_sccs = Program.sccs_locs program_orig in
@@ -446,7 +440,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let handle_cfrs ~(conf : allowed_conf_type) (scc : TransitionSet.t) program appr =
-    let open! OurBase in
     let non_linear_transitions = Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc in
     if Set.is_empty non_linear_transitions then
       (program, appr)
@@ -478,11 +471,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let program, appr =
       program |> Program.sccs_locs
       |> List.fold_left
-           (fun (program, appr) scc_locs ->
+           ~f:(fun (program, appr) scc_locs ->
              Logger.log logger Logger.INFO (fun () ->
                  ("continue analysis", [ ("scc", LocationSet.to_string scc_locs) ]));
              improve_scc_with_cfr ~conf program appr scc_locs)
-           (program, trivial_appr)
+           ~init:(program, trivial_appr)
     in
     (program, CostBounds.infer_from_timebounds program appr)
 end
