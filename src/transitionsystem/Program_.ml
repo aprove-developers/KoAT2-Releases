@@ -143,7 +143,9 @@ struct
 
 
   let succ program (l, t, l') =
-    G.succ_e (graph program) l' |> List.filter ~f:(fun t' -> Set.mem (pre program t') (l, t, l'))
+    Sequence.of_list (G.succ_e (graph program) l')
+    |> Sequence.filter ~f:(fun t' -> Set.mem (pre program t') (l, t, l'))
+    |> TransitionSet.of_sequence
 
 
   let sccs program = G.sccs program.graph |> List.rev (* scc_list is in reverse topological order *)
@@ -213,11 +215,9 @@ struct
   (** All outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately after one of the transitions, but are not themselves part of the given transitions. *)
   let outgoing_transitions logger (program : t) (rank_transitions : T.t list) : T.t List.t =
-    rank_transitions |> Sequence.of_list
-    |> Sequence.map ~f:(Sequence.of_list % succ program)
-    |> Sequence.join
-    |> Sequence.filter ~f:(fun r -> rank_transitions |> List.for_all ~f:(not % T.equal r))
-    |> TransitionSet.stable_dedup_list % Sequence.to_list
+    let all_succ = rank_transitions |> List.map ~f:(succ program) |> TransitionSet.union_list in
+    Set.diff all_succ (TransitionSet.of_list rank_transitions)
+    |> Set.to_list
     |> tap (fun transitions ->
            Logger.log logger Logger.DEBUG (fun () ->
                ( "outgoing_transitions",

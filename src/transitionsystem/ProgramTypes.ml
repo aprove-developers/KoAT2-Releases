@@ -320,6 +320,9 @@ module type Program = sig
       If however the pre-transitions haven't been computed yet then they are lazily computed when inspecting the returned sequence. These values are *not* added to the cached!
       This is for instance useful when cutting unsatisfiable transitions since during preprocessing the cache is invalidated many times and it suffices to check whether one pre-transition exists. *)
 
+  val succ : t -> transition -> transition_set
+  (** Similar to [pre]. Uses [pre] internally, so heavy computation should be memoized. *)
+
   val is_initial : t -> transition -> bool
   (** Returns true if the given transition is an initial transition. *)
 
