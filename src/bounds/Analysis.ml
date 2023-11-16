@@ -279,6 +279,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           program scc_transitions_with_out)
 
 
+  let reset_all_caches () =
+    (* TODO: Get rid of implicit caching in the following modules. Write a record to group all explicit caches *)
+    TWN.reset_cfr ();
+    TWNSizeBounds.reset_cfr ();
+    SolvableSizeBounds.reset_cfr ()
+
+
   let improve_scc ~(conf : allowed_conf_type) scc_locs program appr =
     let lsbs = compute_lsbs program scc_locs in
     let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
@@ -294,6 +301,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> improve_size_bounds ~conf program rvg_with_sccs scc lsbs
       |> improve_timebound ~conf scc twn_state `Time program
     in
+
+    (* reset all caches, since we might prior have analysed a different version of the same SCC (i.e., due to CFR) *)
+    reset_all_caches ();
+
     (* First compute initial size bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
     improve_size_bounds ~conf program rvg_with_sccs scc lsbs appr
     |> knowledge_propagation scc program
@@ -308,26 +319,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       appr
 
 
-  let reset_all_caches () =
-    TWN.reset_cfr ();
-    TWNSizeBounds.reset_cfr ();
-    SolvableSizeBounds.reset_cfr ()
-
-
   let handle_timeout_cfr method_name non_linear_transitions =
-    reset_all_caches ();
     Logger.log logger_cfr Logger.INFO (fun () ->
         ("TIMEOUT_CFR_" ^ method_name, [ ("scc", TransitionSet.to_string non_linear_transitions) ]))
-
-
-  let cfr_handle_no_improvement method_name ~org_bound ~cfr_bound =
-    reset_all_caches ();
-    Logger.log logger_cfr Logger.INFO (fun () ->
-        ( "NOT_IMPROVED",
-          [
-            ("original bound", Bound.to_string ~pretty:true org_bound);
-            (method_name ^ " bound", Bound.to_string ~pretty:true cfr_bound);
-          ] ))
 
 
   type 'a refinement_result =
@@ -397,8 +391,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> List.filter ~f:(fun cfr_scc -> not (List.exists ~f:(Set.equal cfr_scc) orig_sccs))
     in
 
-    (* reset all caches, start new proof and store previous proof *)
-    reset_all_caches ();
+    (* Start a new (global) subproof *)
     ProofOutput.start_new_subproof ();
 
     (* analyse refined program *)
@@ -431,11 +424,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let cfr_subproof = ProofOutput.get_subproof () in
 
     if Bound.compare_asy org_bound cfr_bound < 1 then (
-      (* restores previous caches *)
-      cfr_handle_no_improvement (CFR.method_name cfr) ~org_bound ~cfr_bound;
+      Logger.log logger_cfr Logger.INFO (fun () ->
+          ( "NOT_IMPROVED",
+            [
+              ("original bound", Bound.to_string ~pretty:true org_bound);
+              (CFR.method_name cfr ^ " bound", Bound.to_string ~pretty:true cfr_bound);
+            ] ));
       DontKeepRefinedProgram)
     else
-      (* Restore original global proof *)
       KeepRefinedProgram
         ProofOutput.LocalProofOutput.{ result = (program_cfr, updated_appr_cfr); proof = cfr_subproof }
 
