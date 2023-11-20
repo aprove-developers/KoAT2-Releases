@@ -145,6 +145,7 @@ module ProbabilisticProgram : sig
        and type transition_graph = ProbabilisticTransitionGraph.t
 
   val from_gts : Location.t -> GeneralTransitionSet.t -> t
+  val succ_gts : t -> Location.t -> GeneralTransitionSet.t
 
   val gts : t -> GeneralTransitionSet.t
   (** The general transitions of the program *)

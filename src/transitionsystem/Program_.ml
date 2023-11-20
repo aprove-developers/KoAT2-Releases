@@ -27,6 +27,7 @@ struct
 
   let start program = program.start
   let graph g = g.graph
+  let transitions_from_location program loc = G.succ_e program.graph loc |> TransitionSet.of_list
 
   let equal equal_graph (program1 : t) (program2 : t) =
     equal_graph program1.graph program2.graph && Location.equal program1.start program2.start

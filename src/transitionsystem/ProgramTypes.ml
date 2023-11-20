@@ -283,6 +283,8 @@ module type Program = sig
   type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
   (** Type of a program consisting of a program graph and a start location. *)
 
+  val transitions_from_location : t -> Location.t -> transition_set
+
   val remove_location : t -> Location.t -> t
   (** Removes the location from the program and all edges to it. *)
 

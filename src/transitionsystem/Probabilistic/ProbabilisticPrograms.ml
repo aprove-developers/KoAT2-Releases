@@ -1011,6 +1011,10 @@ module ProbabilisticProgram = struct
     GeneralTransitionSet.map pre_t ~f:ProbabilisticTransition.gt
 
 
+  let succ_gts program loc =
+    transitions_from_location program loc |> GeneralTransitionSet.map ~f:ProbabilisticTransition.gt
+
+
   let from_gts (start : Location.t) gts =
     Set.to_sequence (GeneralTransitionSet.all_transitions gts) |> from_sequence start
 
