@@ -155,6 +155,12 @@ module ProbabilisticProgram : sig
       the general transition itself is also viewed as part of the SCC.
       The resulting enum is in topological order *)
 
+  val scc_gts_from_locs : t -> LocationSet.t -> GeneralTransitionSet.t
+  (** The general transitions that make up the SCC given by the [LocationSet] *)
+
+  val scc_gts_from_locs_with_incoming_and_outgoing : t -> LocationSet.t -> GeneralTransitionSet.t
+  (** Similar to [scc_gts_from_locs] but includes incoming and outgoing general transitions of the SCC *)
+
   val pre_gt : t -> GeneralTransition.t -> GeneralTransitionSet.t
   val remove_zero_prob_transitions : (transition, transition_comparator_witness) Set.t -> t -> t
 
