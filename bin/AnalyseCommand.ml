@@ -183,7 +183,7 @@ let local_to_string = function
 
 module MakeAnalysis (Bound : BoundType.Bound) = struct
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (ProgramModules)
-  module Analysis = Analysis.Make (Bound) (ProgramModules)
+  module Analysis = Analysis.Classical (Bound)
   open ProgramModules
 
   let run_analysis (analysis_conf : Analysis.allowed_conf_type) program params input_filename output_dir =
@@ -247,14 +247,17 @@ let run (params : params) =
     let build_complete_conf goal closed_form_size_bounds =
       let open Analysis in
       {
-        run_mprf_depth =
-          (if List.mem ~equal:Poly.( = ) params.local `MPRF then
-             Some params.depth
-           else
-             None);
-        twn = List.exists ~f:(( == ) `TWN) params.local;
-        closed_form_size_bounds;
-        goal;
+        local_configuration =
+          {
+            run_mprf_depth =
+              (if List.mem ~equal:Poly.( = ) params.local `MPRF then
+                 Some params.depth
+               else
+                 None);
+            twn = List.exists ~f:(( == ) `TWN) params.local;
+            closed_form_size_bounds;
+            goal;
+          };
         cfrs =
           List.map
             ~f:(function

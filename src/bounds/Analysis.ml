@@ -5,16 +5,20 @@ open Polynomials
 
 type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.BinaryBound.t goal
 
-type (!'prog_modules_t, 'bound) closed_form_size_bounds =
+type (!'prog_modules_t, !'bound) closed_form_size_bounds =
   | NoClosedFormSizeBounds : ('prog_modules_t, 'bound) closed_form_size_bounds
   | ComputeClosedFormSizeBounds : (ProgramModules.program_modules_t, Bounds.Bound.t) closed_form_size_bounds
 
-type (!'prog_modules_t, 'bound) analysis_configuration = {
+type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
   twn : bool;
-  cfrs : 'prog_modules_t CFR.cfr_ list;
-  goal : 'bound goal;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
+  goal : 'bound goal;
+}
+
+type (!'prog_modules_t, !'bound) analysis_configuration = {
+  local_configuration : ('prog_modules_t, 'bound) local_configuration;
+  cfrs : 'prog_modules_t CFR.cfr_ list;
 }
 
 type classical_program_conf_type = (ProgramModules.program_modules_t, Bounds.Bound.t) analysis_configuration
@@ -23,14 +27,17 @@ type measure = [ `Cost | `Time ] [@@deriving show]
 let logger = Logging.(get Time)
 let logger_cfr = Logging.(get CFR)
 
-let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
+let default_local_configuration : ('a, Bounds.Bound.t) local_configuration =
   {
     run_mprf_depth = Some 1;
     twn = false;
-    cfrs = [];
     goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
   }
+
+
+let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
+  { cfrs = []; local_configuration = default_local_configuration }
 
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
@@ -45,7 +52,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module TWN = TWN.Make (Bound) (PM)
   module CFR = CFR.CFR (PM) (Bound)
 
-  type allowed_conf_type = (PM.program_modules_t, Bound.t) analysis_configuration
+  type allowed_local_conf_type = (PM.program_modules_t, Bound.t) local_configuration
   type appr = Approximation.t
 
   let add_bound = function
@@ -133,7 +140,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let empty_twn_state = { remaining_twn_loops = [] }
 
-  let improve_with_twn ~(conf : allowed_conf_type) program scc twn_state appr =
+  let improve_with_twn ~(conf : allowed_local_conf_type) program scc twn_state appr =
     let not_all_trans_bounded twn_loop =
       TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
       |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
@@ -175,7 +182,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     appr_mc
 
 
-  let local_rank ~(conf : allowed_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
+  let local_rank ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
       match conf.goal with
       | Termination -> VarSet.empty
@@ -214,7 +221,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improve_with_rank_mprf measure program)
 
 
-  let run_local ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
+  let run_local ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
@@ -227,7 +234,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | `Time, true -> improve_with_twn ~conf program scc twn_state appr)
 
 
-  let improve_timebound ~(conf : allowed_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
+  let improve_timebound ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) twn_state measure program
+      appr =
     let execute () = run_local ~conf scc twn_state measure program appr in
     Logger.with_log logger Logger.INFO
       (fun () ->
@@ -235,8 +243,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       execute
 
 
-  let improve_size_bounds ~(conf : allowed_conf_type) program rvg_with_sccs scc lsb_table =
-    let twn_size_bounds ~(conf : allowed_conf_type) (scc : TransitionSet.t) (program : Program.t)
+  let improve_size_bounds ~(conf : allowed_local_conf_type) program rvg_with_sccs scc lsb_table =
+    let twn_size_bounds ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) (program : Program.t)
         (appr : Approximation.t) =
       match conf.closed_form_size_bounds with
       | NoClosedFormSizeBounds -> appr
@@ -269,7 +277,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         |> Map.of_sequence_exn (module RV))
 
 
-  let compute_rvg_with_sccs ~(conf : allowed_conf_type) opt_lsbs program scc_locs =
+  let compute_rvg_with_sccs ~(conf : allowed_local_conf_type) opt_lsbs program scc_locs =
     Lazy.from_fun (fun () ->
         let scc_transitions_with_out =
           Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
@@ -286,7 +294,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     SolvableSizeBounds.reset_cfr ()
 
 
-  let improve_scc ~(conf : allowed_conf_type) scc_locs program appr =
+  let improve_scc ~(conf : allowed_local_conf_type) scc_locs program appr =
     let lsbs = compute_lsbs program scc_locs in
     let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
     let scc = Program.scc_transitions_from_locs program scc_locs in
@@ -296,7 +304,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       else
         ref empty_twn_state
     in
-    let improvement appr =
+    let improvement_step appr =
       knowledge_propagation scc program appr
       |> improve_size_bounds ~conf program rvg_with_sccs scc lsbs
       |> improve_timebound ~conf scc twn_state `Time program
@@ -309,8 +317,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     improve_size_bounds ~conf program rvg_with_sccs scc lsbs appr
     |> knowledge_propagation scc program
     |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
-    |> Util.find_fixpoint improvement
+    |> Util.find_fixpoint improvement_step
+end
 
+module Classical (Bound : BoundType.Bound) = struct
+  include Make (Bound) (ProgramModules)
+  open ProgramModules
+
+  type allowed_conf_type = (program_modules_t, Bound.t) analysis_configuration
 
   let scc_cost_bounds ~conf program scc appr =
     if Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
@@ -319,7 +333,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       appr
 
 
-  let analyse_refined_scc ~(conf : allowed_conf_type) appr_orig program_orig scc_orig cfr ~refined_program =
+  let analyse_refined_scc ~(conf : allowed_local_conf_type) appr_orig program_orig scc_orig cfr
+      ~refined_program =
     (* The new sccs which do not occur in the original program. *)
     let cfr_sccs_locs =
       let orig_sccs = Program.sccs_locs program_orig in
@@ -374,7 +389,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ProofOutput.LocalProofOutput.{ result = (refined_program, updated_appr_cfr); proof = cfr_subproof }
 
 
-  let handle_cfrs ~(conf : allowed_conf_type) (scc : TransitionSet.t) program appr =
+  let handle_cfrs ~(conf : (ProgramModules.program_modules_t, Bound.t) analysis_configuration)
+      (scc : TransitionSet.t) program appr =
     let non_linear_transitions = Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc in
     if Set.is_empty non_linear_transitions then
       (program, appr)
@@ -383,7 +399,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         CFR.iter_cfrs program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
           ~compute_timelimit:(fun () ->
             CFR.compute_timeout_time program ~get_timebound:(Approximation.timebound appr) scc)
-          (analyse_refined_scc ~conf appr program scc)
+          (analyse_refined_scc ~conf:conf.local_configuration appr program scc)
           conf.cfrs
       in
       match refinement_result with
@@ -393,15 +409,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           result
 
 
-  let improve_scc_and_try_cfr ~(conf : allowed_conf_type) program appr scc_locs =
+  let improve_scc_and_try_cfr ~conf program appr scc_locs =
     let scc = Program.scc_transitions_from_locs program scc_locs in
-    improve_scc ~conf scc_locs program appr
+    improve_scc ~conf:conf.local_configuration scc_locs program appr
     (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
     |> handle_cfrs ~conf scc program
-    |> fun (program, appr) -> (program, scc_cost_bounds ~conf program scc appr)
+    |> fun (program, appr) -> (program, scc_cost_bounds ~conf:conf.local_configuration program scc appr)
 
 
-  let improve ?(time_cfr = 180) ~(conf : allowed_conf_type) ~preprocess program appr =
+  let improve ?(time_cfr = 180) ~(conf : (program_modules_t, Bound.t) analysis_configuration) ~preprocess
+      program (appr : Approximation.t) =
     CFR.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
     let program, appr =

@@ -65,7 +65,7 @@ let run (params : params) =
         (fun conf -> function
           | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
           | `TWN -> { conf with twn = true })
-      ~init:Analysis.default_configuration params.classic_local
+      ~init:Analysis.default_local_configuration params.classic_local
   in
 
   let program =

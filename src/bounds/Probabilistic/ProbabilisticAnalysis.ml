@@ -60,8 +60,8 @@ let lift_bounds program program_vars gts apprs : ExpApproximation.t =
 
 
 let improve_timebounds twn_state
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
-    ~conf program scc apprs =
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) ~conf
+    program scc apprs =
   let open MaybeChanged.Monad in
   let* appr =
     PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
@@ -106,8 +106,8 @@ module ELCBMap = MakeMapCreators1 (GRV)
 module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
 
 let improve_scc_classically
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
-    program program_vars scc_locs apprs =
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) program
+    program_vars scc_locs apprs =
   ProofOutput.start_new_subproof ();
 
   let scc_with_in_and_out = Program.scc_gts_from_locs_with_incoming_and_outgoing program scc_locs in
@@ -131,8 +131,8 @@ let improve_scc_classically
 
 
 let improve_scc_probabilistically
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
-    ~conf program program_vars scc_locs apprs : ExpApproximation.t =
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) ~conf
+    program program_vars scc_locs apprs : ExpApproximation.t =
   ProofOutput.start_new_subproof ();
 
   let scc = Program.scc_gts_from_locs program scc_locs in
@@ -196,8 +196,8 @@ let lift_appr_to_exp_costbounds program apprs =
       { apprs with appr = ExpApproximation.add_costbound new_bound gt apprs.appr })
 
 
-let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = default_configuration) program
-    =
+let perform_analysis ?(classic_conf = Analysis.default_local_configuration) ?(conf = default_configuration)
+    program =
   let program_vars = Program.input_vars program in
   let sccs = Program.sccs_locs program in
 
