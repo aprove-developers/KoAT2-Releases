@@ -18,49 +18,57 @@ let grvs_from_gts_and_vars gts vars =
   rvts_from_gts gts |> fun rvts -> List.cartesian_product rvts (Set.to_list vars)
 
 
-let lift_bounds program program_vars (class_appr, appr) : ExpApproximation.t =
-  let program_gts = Program.gts program in
+module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (NonProbOverappr)
+
+let trivial_time_bounds program class_appr =
+  let overappr_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
+  coerce_from_classical_approximation class_appr
+  |> TrivialTimeBounds.compute overappr_program
+  |> coerce_from_nonprob_overappr_approximation
+
+
+let lift_bounds program program_vars gts apprs : ExpApproximation.t =
   let lift_time_bounds appr =
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
-      |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
+      |> Sequence.map ~f:(ClassicalApproximation.timebound apprs.class_appr)
       |> RationalBound.of_intbound % Bound.sum
     in
-    Set.to_sequence program_gts
+    Set.to_sequence gts
     |> Sequence.fold ~f:(fun appr gt -> ExpApproximation.add_timebound (gt_timebound gt) gt appr) ~init:appr
   in
 
   let lift_size_bounds appr =
     let rv_sizebound ((gt, l), v) =
       Set.to_sequence (GeneralTransition.transitions gt)
-      |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v)
+      |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound apprs.class_appr t v)
       |> RationalBound.of_intbound % Bound.sum
     in
-    grvs_from_gts_and_vars program_gts program_vars
+    grvs_from_gts_and_vars gts program_vars
     |> List.fold
          ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt, v)) rvt v appr)
          ~init:appr
   in
-  lift_size_bounds (lift_time_bounds appr)
+  lift_size_bounds (lift_time_bounds apprs.appr)
   |> tap (fun appr ->
          ProofOutput.add_to_proof
            FormattedString.(
              fun () ->
-               mk_str_header_small "Results obtained by lifting Classical Analysis"
+               mk_str_header_small "Classical Approximation after Lifting Classical Results"
                <> reduce_header_sizes ~levels_to_reduce:2
                     (ExpApproximation.to_formatted ~pretty:true program appr)))
 
 
 let improve_timebounds twn_state
     ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
-    ~conf program scc (class_appr, appr) =
+    ~conf program scc apprs =
   let open MaybeChanged.Monad in
   let* appr =
     PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
-      (class_appr, appr)
+      (apprs.class_appr, apprs.appr)
   in
   IntegrateClassicalAnalysis.improve ~twn:twn_state ~mprf_depth:classic_conf.run_mprf_depth program scc
-    (class_appr, appr)
+    (apprs.class_appr, appr)
 
 
 (** Propagate time bounds of incoming general transitions *)
@@ -88,26 +96,54 @@ let knowledge_propagation program scc appr : ExpApproximation.t MaybeChanged.t =
   Util.find_fixpoint_mc iter appr
 
 
-let improve_sizebounds program program_vars scc (rvts_scc, grvs_in) elcbs (class_appr, appr) =
-  ProbabilisticSizeBounds.trivial_sizebounds program ~grvs_in elcbs class_appr appr
-  |> ProbabilisticSizeBounds.nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs class_appr
-  |> ProbabilisticSizeBounds.propagate_sizes program ~program_vars ~rvts_scc class_appr
+let improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs apprs =
+  ProbabilisticSizeBounds.trivial_sizebounds program ~grvs_in_and_out elcbs apprs.class_appr apprs.appr
+  |> ProbabilisticSizeBounds.nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs apprs.class_appr
+  |> ProbabilisticSizeBounds.propagate_sizes program ~program_vars ~rvts_scc apprs.class_appr
 
 
 module ELCBMap = MakeMapCreators1 (GRV)
+module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
 
-let improve_scc
+let improve_scc_classically
     ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
-    ~conf program program_vars scc (class_appr, appr) : ExpApproximation.t =
-  let rvts_scc = rvts_from_gts scc in
-  let rvs_in =
-    List.cartesian_product
-      (Sequence.to_list @@ BoundsHelper.entry_gts_with_locs program scc)
-      (Set.to_list program_vars)
+    program program_vars scc_locs apprs =
+  ProofOutput.start_new_subproof ();
+
+  let scc_with_in_and_out = Program.scc_gts_from_locs_with_incoming_and_outgoing program scc_locs in
+  let overappr_classical_program =
+    Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
   in
+  let class_appr =
+    coerce_from_classical_approximation apprs.class_appr
+    |> ClassicAnalysis.improve_scc ~conf:classic_conf scc_locs overappr_classical_program
+    |> coerce_from_nonprob_overappr_approximation
+  in
+  let appr = lift_bounds program program_vars scc_with_in_and_out { apprs with class_appr } in
+  let subproof = ProofOutput.get_subproof () in
+
+  ProofOutput.add_to_proof_with_format
+    FormattedString.(
+      fun fmt ->
+        mk_str_header_big ("Run classical analysis on SCC: " ^ LocationSet.to_string scc_locs)
+        <> ProofOutput.LocalProofOutput.get_proof subproof fmt);
+  { class_appr; appr }
+
+
+let improve_scc_probabilistically
+    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.analysis_configuration)
+    ~conf program program_vars scc_locs apprs : ExpApproximation.t =
+  ProofOutput.start_new_subproof ();
+
+  let scc = Program.scc_gts_from_locs program scc_locs in
+  let rvts_in_and_out =
+    Set.diff (Program.scc_gts_from_locs_with_incoming_and_outgoing program scc_locs) scc |> rvts_from_gts
+  in
+  let rvts_scc = rvts_from_gts scc in
+  let grvs_in_and_out = List.cartesian_product rvts_in_and_out (Set.to_list program_vars) in
   let elcbs =
     List.cartesian_product rvts_scc (Set.to_list program_vars)
-    |> List.append rvs_in
+    |> List.append grvs_in_and_out
     |> Sequence.map ~f:(fun rv -> (rv, ExpectedLocalChangeBound.compute_elcb program_vars rv))
        % Sequence.of_list
     |> ELCBMap.of_sequence_exn
@@ -115,61 +151,63 @@ let improve_scc
   let twn_state = (ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc, classic_conf.twn) in
   let improve_scc_ appr =
     let open MaybeChanged.Monad in
-    let appr = improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) in
-    let* appr = improve_timebounds twn_state ~classic_conf ~conf program scc (class_appr, appr) in
+    let appr =
+      improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs { apprs with appr }
+    in
+    let* appr = improve_timebounds twn_state ~classic_conf ~conf program scc { apprs with appr } in
     let+ appr = knowledge_propagation program scc appr in
-    let appr = improve_sizebounds program program_vars scc (rvts_scc, rvs_in) elcbs (class_appr, appr) in
+    let appr =
+      improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs { apprs with appr }
+    in
     appr
   in
-  Util.find_fixpoint improve_scc_ appr
+  let appr = Util.find_fixpoint improve_scc_ apprs.appr in
+
+  let subproof = ProofOutput.get_subproof () in
+  ProofOutput.add_to_proof_with_format
+    FormattedString.(
+      fun fmt ->
+        FormattedString.mk_str_header_big
+          ("Run probabilistic analysis on SCC: " ^ LocationSet.to_string scc_locs)
+        <> ProofOutput.LocalProofOutput.get_proof subproof fmt);
+  appr
 
 
-let lift_appr_to_exp_costbounds program class_appr appr =
+let improve_scc ~classic_conf ~conf program program_vars scc_locs apprs =
+  (* Compute trivial time bounds *)
+  let apprs = improve_scc_classically ~classic_conf program program_vars scc_locs apprs in
+  let appr = improve_scc_probabilistically ~classic_conf ~conf program program_vars scc_locs apprs in
+  { apprs with appr }
+
+
+let lift_appr_to_exp_costbounds program apprs =
   let gts = Program.gts program in
-  Set.fold gts ~init:appr ~f:(fun appr gt ->
+  Set.fold gts ~init:apprs ~f:(fun apprs gt ->
       let gtcost =
         Set.to_sequence (GeneralTransition.transitions gt)
         |> Sequence.map ~f:(fun (_, label, _) ->
                let cbound = RationalBound.of_intpoly (TransitionLabel.cost label) in
                RationalBound.substitute_f
-                 (ProbabilisticSizeBounds.get_pre_size_classical program class_appr gt)
+                 (ProbabilisticSizeBounds.get_pre_size_classical program apprs.class_appr gt)
                  cbound)
         |> RationalBound.sum
       in
-      let new_bound = RationalBound.mul gtcost (ExpApproximation.timebound appr gt) in
-      ExpApproximation.add_costbound new_bound gt appr)
+      let new_bound = RationalBound.mul gtcost (ExpApproximation.timebound apprs.appr gt) in
+      { apprs with appr = ExpApproximation.add_costbound new_bound gt apprs.appr })
 
 
 let perform_analysis ?(classic_conf = Analysis.default_configuration) ?(conf = default_configuration) program
-    class_appr : ExpApproximation.t =
+    =
   let program_vars = Program.input_vars program in
-  let sccs = Program.sccs_gts program in
+  let sccs = Program.sccs_locs program in
 
-  let appr = lift_bounds program program_vars (class_appr, ExpApproximation.empty) in
-  List.fold
-    ~f:(fun appr scc_with_locs ->
-      improve_scc ~classic_conf ~conf program program_vars scc_with_locs (class_appr, appr))
-    ~init:appr sccs
-  |> lift_appr_to_exp_costbounds program class_appr
-
-
-module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
-
-let perform_classic_and_probabilistic_analysis ?(classic_conf = Analysis.default_configuration)
-    ?(conf = default_configuration) (program : Program.t) =
-  let overappr_classical_program =
-    Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
+  let apprs =
+    { appr = ExpApproximation.empty; class_appr = trivial_time_bounds program ClassicalApproximation.empty }
   in
-
-  let program, class_appr =
-    ClassicAnalysis.improve ~preprocess:identity ~conf:classic_conf overappr_classical_program
-      NonProbOverapprApproximation.empty
-    (* preprocess is only needed for CFR currently *)
-    |> Tuple2.map
-         Type_equal.(conv (sym ProbabilisticPrograms.Equalities.program_equalities))
-         coerce_from_nonprob_overappr_approximation
+  let apprs =
+    List.fold
+      ~f:(fun apprs scc_locs -> improve_scc ~classic_conf ~conf program program_vars scc_locs apprs)
+      ~init:apprs sccs
+    |> lift_appr_to_exp_costbounds program
   in
-
-  let prob_appr = perform_analysis ~classic_conf program class_appr in
-
-  (program, (class_appr, prob_appr))
+  (program, apprs)

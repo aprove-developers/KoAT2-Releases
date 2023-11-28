@@ -38,11 +38,9 @@ let tests =
                 ~f:(fun (name, complexity_exp, prog_dir, classic_conf) ->
                   (fun f -> name >: test_case ~length:test_len f) @@ fun _ ->
                   let prog = Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat") |> preprocess in
-                  let prog, (_, appr) =
-                    ProbabilisticAnalysis.perform_classic_and_probabilistic_analysis ~classic_conf ~conf prog
-                  in
+                  let prog, apprs = ProbabilisticAnalysis.perform_analysis ~classic_conf ~conf prog in
 
-                  let bound = ExpApproximation.program_timebound appr prog in
+                  let bound = ExpApproximation.program_timebound apprs.appr prog in
                   let complexity = RationalBound.asymptotic_complexity bound in
 
                   let error_msg =

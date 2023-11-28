@@ -73,37 +73,6 @@ let run (params : params) =
     preprocess program
   in
 
-  let program, class_appr =
-    ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_big "Classical Analysis");
-    let overappr =
-      ProofOutput.add_to_proof
-        FormattedString.(fun () -> mk_str_header_small "Classical Program after Preprocessing");
-      Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
-      |> tap (fun program ->
-             ProofOutput.add_to_proof_with_format
-               FormattedString.(
-                 fun format ->
-                   let module GP = GraphPrint.MakeForClassicalAnalysis (NonProbOverappr) in
-                   NonProbOverappr.Program.to_formatted_string ~pretty:true program
-                   <>
-                   match format with
-                   | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
-                   | _ -> Empty))
-    in
-    OverapprAnalysis.improve ~preprocess:identity ~conf:classical_analysis_conf overappr
-      NonProbOverapprApproximation.empty
-    |> Tuple2.map
-         Type_equal.(conv (sym ProbabilisticPrograms.Equalities.program_equalities))
-         coerce_from_nonprob_overappr_approximation
-  in
-
-  ProofOutput.add_to_proof
-    FormattedString.(
-      fun () ->
-        mk_str_header_big "Results of Classical Analysis"
-        <> FormattedString.reduce_header_sizes
-             (ClassicalApproximation.to_formatted ~pretty:true program class_appr));
-
   ProofOutput.add_to_proof FormattedString.(fun () -> mk_str_header_big "Probabilistic Analysis");
   ProofOutput.add_to_proof_with_format
     FormattedString.(
@@ -116,17 +85,15 @@ let run (params : params) =
         | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
         | _ -> Empty);
 
-  let prob_appr =
-    ProbabilisticAnalysis.perform_analysis ~classic_conf:classical_analysis_conf program class_appr
-  in
+  let program, apprs = ProbabilisticAnalysis.perform_analysis ~classic_conf:classical_analysis_conf program in
 
   ProofOutput.add_to_proof
     FormattedString.(
       fun () ->
         mk_str_header_big "Results of Probabilistic Analysis"
         <> FormattedString.reduce_header_sizes ~levels_to_reduce:1
-             (ExpApproximation.to_formatted ~pretty:true program prob_appr));
+             (ExpApproximation.to_formatted ~pretty:true program apprs.appr));
   Printf.printf "Overall expected time bound: %s\n"
-    (Bounds.RationalBound.to_string @@ ExpApproximation.program_timebound prob_appr program);
+    (Bounds.RationalBound.to_string @@ ExpApproximation.program_timebound apprs.appr program);
   if params.show_proof then
     ProofOutput.print_proof params.proof_format

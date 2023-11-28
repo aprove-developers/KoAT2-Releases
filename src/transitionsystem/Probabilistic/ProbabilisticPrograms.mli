@@ -206,9 +206,9 @@ module GRV : sig
 end
 
 module Equalities : sig
-  val trans_eq : (ProbabilisticTransitionNonProbOverappr.t, ProbabilisticTransition.t) Type_equal.t
   (** Some Equalities *)
 
+  val trans_eq : (ProbabilisticTransitionNonProbOverappr.t, ProbabilisticTransition.t) Type_equal.t
   val rvtuple__eq : (ProbabilisticRVNonProbOverappr.t, ProbabilisticRV.t) Type_equal.t
 
   val trans_cmp_wit_eq :

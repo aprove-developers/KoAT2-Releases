@@ -33,6 +33,7 @@ module Make (B : BoundType.Bound) (T : ApproximableTransition) = struct
   (** TODO improve type safety by making a hash table over transitions *)
 
   let empty name = (name, Map.empty (module T))
+  let to_sequence (_, map) = Map.to_sequence map
 
   let get (name, map) t =
     let execute () = Map.find map t |? B.infinity in

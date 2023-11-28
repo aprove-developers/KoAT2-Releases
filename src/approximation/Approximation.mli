@@ -29,6 +29,9 @@ module Make
   val timebound : t -> T.t -> B.t
   (** Returns a timebound for the transition. *)
 
+  val all_finite_timebounds : t -> (T.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite time bounds *)
+
   val program_timebound : t -> PM.Program.t -> B.t
   (** Returns a timebound for the program. *)
 
@@ -47,6 +50,9 @@ module Make
   val costbound : t -> T.t -> B.t
   (** Returns a costbound for the transition. *)
 
+  val all_finite_costbounds : t -> (T.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite cost bounds *)
+
   val program_costbound : t -> PM.Program.t -> B.t
   (** Returns a costbound for the program. *)
 
@@ -58,6 +64,9 @@ module Make
   val sizebound : t -> PM.RV.transition -> Var.t -> B.t
   (** Returns a sizebound for the var of the transition.
           A sizebound is expressed in relation to the input variable values of the program. *)
+
+  val all_finite_sizebounds : t -> (PM.RV.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite cost bounds *)
 
   val add_sizebound : B.t -> PM.RV.transition -> Var.t -> t -> t
   (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
@@ -105,4 +114,7 @@ module Probabilistic : sig
           end)
 
   val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
+  val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t
+
+  type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
 end

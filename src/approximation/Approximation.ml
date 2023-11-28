@@ -32,9 +32,17 @@ struct
   let size appr = appr.size
   let cost appr = appr.cost
 
+  (** Helper methods*)
+  let filter_aseq_finite = Sequence.filter ~f:(fun (_, b) -> B.is_finite b)
+
   (** Sizebound related methods *)
 
   let sizebound appr t v = SizeApproximation.get (size appr) (t, v)
+
+  let all_finite_sizebounds : t -> (RV.t * B.t) Sequence.t =
+    filter_aseq_finite % SizeApproximation.to_sequence % size
+
+
   let add_sizebound bound transition var = Lens.size ^%= SizeApproximation.add bound (transition, var)
   let add_sizebounds bound scc = Lens.size ^%= SizeApproximation.add_all bound scc
 
@@ -45,6 +53,11 @@ struct
   (** Timebound related methods *)
 
   let timebound : t -> T.t -> B.t = TransitionApproximation.get % time
+
+  let all_finite_timebounds : t -> (T.t * B.t) Sequence.t =
+    filter_aseq_finite % TransitionApproximation.to_sequence % time
+
+
   let program_timebound = TransitionApproximation.sum % time
   let add_timebound bound transition = Lens.time ^%= TransitionApproximation.add bound transition
   let all_times_bounded : t -> T.t Sequence.t -> bool = TransitionApproximation.all_bounded % time
@@ -53,6 +66,11 @@ struct
   (** Costbound related methods *)
 
   let costbound : t -> T.t -> B.t = TransitionApproximation.get % cost
+
+  let all_finite_costbounds : t -> (T.t * B.t) Sequence.t =
+    filter_aseq_finite % TransitionApproximation.to_sequence % cost
+
+
   let program_costbound = TransitionApproximation.sum % cost
   let add_costbound bound transition = Lens.cost ^%= TransitionApproximation.add bound transition
 
@@ -165,11 +183,29 @@ module Probabilistic = struct
         let all_from_program = Set.to_sequence % Program.gts
       end)
 
+  type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
+
   let coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
       =
     let module M =
       Coerce (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr) (ProbabilisticProgramModules)
         (ProbabilisticPrograms.Equalities)
+    in
+    M.coerce
+
+
+  let coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t =
+    let module M =
+      Coerce (Bounds.Bound) (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
+        (struct
+          open Type_equal
+          module E = ProbabilisticPrograms.Equalities
+
+          let trans_eq = sym E.trans_eq
+          let rvtuple__eq = sym E.rvtuple__eq
+          let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
+          let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
+        end)
     in
     M.coerce
 end

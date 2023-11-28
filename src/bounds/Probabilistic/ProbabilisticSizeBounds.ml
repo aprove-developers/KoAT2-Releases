@@ -43,7 +43,7 @@ let get_pre_size_classical program class_appr gt =
 
 type elcb_map = (GRV.t, RationalBound.t, GRV.comparator_witness) Map.t
 
-let trivial_sizebounds program ~grvs_in elcbs class_appr appr =
+let trivial_sizebounds program ~grvs_in_and_out elcbs class_appr appr =
   let trivial_sizebound_for_grv ((gt, l), v) =
     let get_pre_size_exp = get_pre_size_exp program appr gt in
     let get_pre_size_classical = get_pre_size_classical program class_appr gt in
@@ -87,7 +87,7 @@ let trivial_sizebounds program ~grvs_in elcbs class_appr appr =
   in
   List.fold
     ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (trivial_sizebound_for_grv (rvt, v)) rvt v appr)
-    ~init:appr grvs_in
+    ~init:appr grvs_in_and_out
 
 
 let nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs class_appr appr =

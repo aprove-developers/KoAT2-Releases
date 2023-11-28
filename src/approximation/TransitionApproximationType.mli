@@ -38,4 +38,5 @@ module Make (B : BoundType.Bound) (T : ApproximableTransition) : sig
   val all_bounded : t -> T.t Sequence.t -> bool
   val to_formatted : ?pretty:bool -> ?termination_only:bool -> T.t list -> t -> FormattedString.t
   val to_string : ?termination_only:bool -> T.t list -> t -> string
+  val to_sequence : t -> (T.t * B.t) Sequence.t
 end
