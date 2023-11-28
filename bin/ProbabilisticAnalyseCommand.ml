@@ -44,6 +44,10 @@ type params = {
         |> List.map (fun level -> (Logger.name_of_level level, level))]
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
+  pe : bool;  (** Enable (native) partial evaluation *)
+  no_pe_fvs : bool; [@default false]
+  pe_k : int; [@default 0]
+  pe_update_invariants : bool; [@default true]
 }
 [@@deriving cmdliner]
 
@@ -59,13 +63,35 @@ let run (params : params) =
     Preprocessor.ProbabilisticWithOverappr.process params.preprocessing_strategy params.preprocessors
   in
 
-  let classical_analysis_conf =
+  let classical_local_conf =
     List.fold_left
       ~f:
         (fun conf -> function
           | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
           | `TWN -> { conf with twn = true })
       ~init:Analysis.default_local_configuration params.classic_local
+  in
+
+  let conf =
+    let cfrs =
+      if params.pe then
+        [
+          CFR.pe_native_probabilistic
+            NativePartialEvaluation.
+              {
+                abstract =
+                  (if params.no_pe_fvs then
+                     `LoopHeads
+                   else
+                     `FVS);
+                k_encounters = params.pe_k;
+                update_invariants = params.pe_update_invariants;
+              };
+        ]
+      else
+        []
+    in
+    ProbabilisticAnalysis.{ classical_local = classical_local_conf; cfrs; compute_refined_plrfs = false }
   in
 
   let program =
@@ -85,7 +111,7 @@ let run (params : params) =
         | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
         | _ -> Empty);
 
-  let program, apprs = ProbabilisticAnalysis.perform_analysis ~classic_conf:classical_analysis_conf program in
+  let program, apprs = ProbabilisticAnalysis.perform_analysis ~conf program in
 
   ProofOutput.add_to_proof
     FormattedString.(

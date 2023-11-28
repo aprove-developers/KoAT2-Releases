@@ -5,20 +5,31 @@ open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
 
-let classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
+let classical_local_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
   Analysis.default_local_configuration
 
 
-let mprf5_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
-  { classic_conf with run_mprf_depth = Some 5 }
+let default_conf = ProbabilisticAnalysis.default_configuration
+
+let mprf5_conf =
+  {
+    ProbabilisticAnalysis.default_configuration with
+    classical_local = { classical_local_conf with run_mprf_depth = Some 5 };
+  }
 
 
-let twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
-  { classic_conf with twn = true }
+let twn_conf =
+  {
+    ProbabilisticAnalysis.default_configuration with
+    classical_local = { classical_local_conf with twn = true };
+  }
 
 
-let mprf5_twn_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
-  { classic_conf with run_mprf_depth = mprf5_conf.run_mprf_depth; twn = true }
+let mprf5_twn_conf =
+  {
+    ProbabilisticAnalysis.default_configuration with
+    classical_local = { classical_local_conf with run_mprf_depth = Some 5; twn = true };
+  }
 
 
 let conf = ProbabilisticAnalysis.default_configuration
@@ -35,10 +46,10 @@ let tests =
   >::: [
          "asymptotic"
          >::: List.map
-                ~f:(fun (name, complexity_exp, prog_dir, classic_conf) ->
+                ~f:(fun (name, complexity_exp, prog_dir, conf) ->
                   (fun f -> name >: test_case ~length:test_len f) @@ fun _ ->
                   let prog = Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat") |> preprocess in
-                  let prog, apprs = ProbabilisticAnalysis.perform_analysis ~classic_conf ~conf prog in
+                  let prog, apprs = ProbabilisticAnalysis.perform_analysis ~conf prog in
 
                   let bound = ExpApproximation.program_timebound apprs.appr prog in
                   let complexity = RationalBound.asymptotic_complexity bound in
@@ -53,22 +64,22 @@ let tests =
                   assert_bool error_msg (RationalBound.equal_complexity complexity complexity_exp))
                 RationalBound.
                   [
-                    ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
-                    ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", classic_conf);
-                    ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", classic_conf);
+                    ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", default_conf);
+                    ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", default_conf);
+                    ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", default_conf);
                     ( "simple_multdist_advanced",
                       Polynomial 1,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ( "probabilistic_nested_bounded",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ("probabilistic_nested_unbounded", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                     ( "nested_mprf_inner_loop_exptime_classsize",
                       Inf,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ( "nested_mprf_inner_loop_exptime_classsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
@@ -76,7 +87,7 @@ let tests =
                     ( "nested_mprf_inner_loop_classtime_expsize",
                       Inf,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ( "nested_mprf_inner_loop_classtime_expsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
@@ -84,7 +95,7 @@ let tests =
                     ( "nested_twn_inner_loop_exptime_classsize",
                       Inf,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ( "nested_twn_inner_loop_exptime_classsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
@@ -92,7 +103,7 @@ let tests =
                     ( "nested_twn_inner_loop_classtime_expsize",
                       Inf,
                       "../../../examples/probabilistic/",
-                      classic_conf );
+                      default_conf );
                     ( "nested_twn_inner_loop_classtime_expsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
@@ -116,11 +127,11 @@ let tests =
                     ( "prob_loop",
                       Polynomial 1,
                       "../../../examples/probabilistic/tacas21_paper/koat/",
-                      classic_conf );
+                      default_conf );
                     ( "simple_nested",
                       Polynomial 2,
                       "../../../examples/probabilistic/tacas21_paper/koat/",
-                      classic_conf );
+                      default_conf );
                     ("non_past_rwalk", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                     ("non_past_size", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
                   ];

@@ -3,9 +3,15 @@ open ProbabilisticProgramModules
 open Bounds
 open Approximation.Probabilistic
 
-type configuration = { compute_refined_plrfs : bool }
+type configuration = {
+  compute_refined_plrfs : bool;
+  classical_local : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration;
+  cfrs : CFR.Probabilistic.cfr List.t;
+}
 
-let default_configuration = { compute_refined_plrfs = false }
+let default_configuration =
+  { compute_refined_plrfs = false; cfrs = []; classical_local = Analysis.default_local_configuration }
+
 
 let rvts_from_gts gts =
   Set.to_sequence gts
@@ -52,16 +58,14 @@ let lift_bounds program program_vars gts apprs : ExpApproximation.t =
                     (ExpApproximation.to_formatted ~pretty:true program appr)))
 
 
-let improve_timebounds twn_state
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) ~conf
-    program scc apprs =
+let improve_timebounds twn_state ~conf program scc apprs =
   let open MaybeChanged.Monad in
   let* appr =
     PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
       (apprs.class_appr, apprs.appr)
   in
-  IntegrateClassicalAnalysis.improve ~twn:twn_state ~mprf_depth:classic_conf.run_mprf_depth program scc
-    (apprs.class_appr, appr)
+  IntegrateClassicalAnalysis.improve ~twn:twn_state ~mprf_depth:conf.classical_local.run_mprf_depth program
+    scc (apprs.class_appr, appr)
 
 
 (** Propagate time bounds of incoming general transitions *)
@@ -98,9 +102,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcb
 module ELCBMap = MakeMapCreators1 (GRV)
 module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
 
-let improve_scc_classically
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) program
-    program_vars scc_locs apprs =
+let improve_scc_classically ~classical_local_conf program program_vars scc_locs apprs =
   ProofOutput.start_new_subproof ();
 
   let scc_with_in_and_out = Program.scc_gts_from_locs_with_incoming_and_outgoing program scc_locs in
@@ -109,7 +111,7 @@ let improve_scc_classically
   in
   let class_appr =
     coerce_from_classical_approximation apprs.class_appr
-    |> ClassicAnalysis.improve_scc ~conf:classic_conf scc_locs overappr_classical_program
+    |> ClassicAnalysis.improve_scc ~conf:classical_local_conf scc_locs overappr_classical_program
     |> coerce_from_nonprob_overappr_approximation
   in
   let appr = lift_bounds program program_vars scc_with_in_and_out { apprs with class_appr } in
@@ -123,9 +125,7 @@ let improve_scc_classically
   { class_appr; appr }
 
 
-let improve_scc_probabilistically
-    ~(classic_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration) ~conf
-    program program_vars scc_locs apprs : ExpApproximation.t =
+let improve_scc_probabilistically ~conf program program_vars scc_locs apprs : ExpApproximation.t =
   ProofOutput.start_new_subproof ();
 
   let scc = Program.scc_gts_from_locs program scc_locs in
@@ -141,13 +141,15 @@ let improve_scc_probabilistically
        % Sequence.of_list
     |> ELCBMap.of_sequence_exn
   in
-  let twn_state = (ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc, classic_conf.twn) in
+  let twn_state =
+    (ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc, conf.classical_local.twn)
+  in
   let improve_scc_ appr =
     let open MaybeChanged.Monad in
     let appr =
       improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs { apprs with appr }
     in
-    let* appr = improve_timebounds twn_state ~classic_conf ~conf program scc { apprs with appr } in
+    let* appr = improve_timebounds twn_state ~conf program scc { apprs with appr } in
     let+ appr = knowledge_propagation program scc appr in
     let appr =
       improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs { apprs with appr }
@@ -166,11 +168,107 @@ let improve_scc_probabilistically
   appr
 
 
-let improve_scc ~classic_conf ~conf program program_vars scc_locs apprs =
+let improve_scc ~conf program program_vars scc_locs apprs =
   (* Compute trivial time bounds *)
-  let apprs = improve_scc_classically ~classic_conf program program_vars scc_locs apprs in
-  let appr = improve_scc_probabilistically ~classic_conf ~conf program program_vars scc_locs apprs in
+  let apprs =
+    improve_scc_classically ~classical_local_conf:conf.classical_local program program_vars scc_locs apprs
+  in
+  let appr = improve_scc_probabilistically ~conf program program_vars scc_locs apprs in
   { apprs with appr }
+
+
+let logger_cfr = Logging.(get CFR)
+
+let analyse_refined_scc ~conf apprs_orig program_orig scc_orig program_vars cfr ~refined_program =
+  (* The new sccs which do not occur in the original program. *)
+  let cfr_sccs_locs =
+    let orig_sccs = Program.sccs_locs program_orig in
+    Program.sccs_locs refined_program
+    |> List.filter ~f:(fun cfr_scc -> not (List.exists ~f:(Set.equal cfr_scc) orig_sccs))
+  in
+
+  (* Start a new (global) subproof *)
+  ProofOutput.start_new_subproof ();
+
+  (* analyse refined program *)
+  ProofOutput.add_to_proof (fun () ->
+      FormattedString.mk_str_header_big "Analysing control-flow refined program");
+  let updated_apprs_cfr =
+    let update apprs scc_locs =
+      let execute () = improve_scc ~conf refined_program program_vars scc_locs apprs in
+      Logger.with_log logger_cfr Logger.INFO
+        (fun () -> ("CFR.apply_single_cfr.improve_scc", [ ("scc_locs", LocationSet.to_string scc_locs) ]))
+        execute
+    in
+    List.fold_left cfr_sccs_locs
+      ~init:(CFR.Probabilistic.create_new_apprs program_orig refined_program apprs_orig)
+      ~f:update
+  in
+
+  (* Check if CFR obtained improvement *)
+  let org_bound =
+    RationalBound.sum
+      (Sequence.map ~f:(ExpApproximation.timebound apprs_orig.appr) (Set.to_sequence scc_orig))
+  in
+  let cfr_bound =
+    let cfr_transitions = Set.diff (Program.gts refined_program) (Program.gts program_orig) in
+    Set.to_sequence cfr_transitions
+    |> Sequence.map ~f:(ExpApproximation.timebound updated_apprs_cfr.appr)
+    |> RationalBound.sum
+  in
+  CFR.Probabilistic.add_proof_to_global_proof cfr ~refined_program
+    ~refined_bound_str:(RationalBound.show_complexity @@ RationalBound.asymptotic_complexity cfr_bound);
+
+  (* Get CFR proof & restore original proof *)
+  let cfr_subproof = ProofOutput.get_subproof () in
+
+  if RationalBound.compare_asy org_bound cfr_bound < 1 then (
+    Logger.log logger_cfr Logger.INFO (fun () ->
+        ( "NOT_IMPROVED",
+          [
+            ("original bound", RationalBound.to_string ~pretty:true org_bound);
+            ("cfr bound", RationalBound.to_string ~pretty:true cfr_bound);
+            (CFR.Probabilistic.method_name cfr ^ " bound", RationalBound.to_string ~pretty:true cfr_bound);
+          ] ));
+    CFRTypes.DontKeepRefinedProgram)
+  else
+    CFRTypes.KeepRefinedProgram
+      ProofOutput.LocalProofOutput.{ result = (refined_program, updated_apprs_cfr); proof = cfr_subproof }
+
+
+let handle_cfrs ~conf scc_locs program program_vars apprs =
+  let scc_gts = Program.scc_gts_from_locs program scc_locs in
+  let scc_transitions = Program.scc_transitions_from_locs program scc_locs in
+  let non_linear_transitions =
+    Set.filter
+      ~f:(not % RationalBound.is_linear % ExpApproximation.timebound apprs.appr % Transition.gt)
+      scc_transitions
+  in
+  if Set.is_empty non_linear_transitions then
+    (program, apprs)
+  else
+    let refinement_result =
+      CFR.Probabilistic.iter_cfrs program ~scc_orig:scc_transitions
+        ~transitions_to_refine:non_linear_transitions
+        ~compute_timelimit:(fun () ->
+          CFR.Probabilistic.compute_timeout_time program
+            ~infinite_timebound:
+              (RationalBound.is_infinity % ExpApproximation.timebound apprs.appr % Transition.gt)
+            scc_transitions)
+        (analyse_refined_scc ~conf apprs program scc_gts program_vars)
+        conf.cfrs
+    in
+    match refinement_result with
+    | None -> (program, apprs)
+    | Some { result; proof } ->
+        ProofOutput.add_local_proof_to_proof proof;
+        result
+
+
+let improve_scc_and_try_cfrs ~conf program program_vars scc_locs apprs =
+  improve_scc ~conf program program_vars scc_locs apprs
+  (* Apply cfrs if requested *)
+  |> handle_cfrs ~conf scc_locs program program_vars
 
 
 let lift_appr_to_exp_costbounds program apprs =
@@ -189,8 +287,7 @@ let lift_appr_to_exp_costbounds program apprs =
       { apprs with appr = ExpApproximation.add_costbound new_bound gt apprs.appr })
 
 
-let perform_analysis ?(classic_conf = Analysis.default_local_configuration) ?(conf = default_configuration)
-    program =
+let perform_analysis ?(conf = default_configuration) program =
   let program_vars = Program.input_vars program in
   let sccs = Program.sccs_locs program in
 
@@ -198,10 +295,10 @@ let perform_analysis ?(classic_conf = Analysis.default_local_configuration) ?(co
     { appr = ExpApproximation.empty; class_appr = ClassicalApproximation.empty }
     |> TrivialTimeBounds.compute program
   in
-  let apprs =
-    List.fold
-      ~f:(fun apprs scc_locs -> improve_scc ~classic_conf ~conf program program_vars scc_locs apprs)
-      ~init:apprs sccs
-    |> lift_appr_to_exp_costbounds program
+  let program, apprs =
+    List.fold sccs ~init:(program, apprs) ~f:(fun (program, apprs) scc_locs ->
+        improve_scc_and_try_cfrs ~conf program program_vars scc_locs apprs)
   in
+  let apprs = lift_appr_to_exp_costbounds program apprs in
+
   (program, apprs)
