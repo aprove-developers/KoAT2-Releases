@@ -9,7 +9,7 @@ let size_logger = Logging.(get ExpSize)
 let get_pre_size_exp program appr gt =
   if Program.is_initial_gt program gt then
     fun v ->
-      if Set.mem (Program.vars program) v then
+      if Set.mem (Program.input_vars program) v then
         RationalBound.of_var v
       else
         RationalBound.infinity
@@ -26,7 +26,7 @@ let get_pre_size_exp program appr gt =
 let get_pre_size_classical program class_appr gt =
   if Program.is_initial_gt program gt then
     fun v ->
-      if Set.mem (Program.vars program) v then
+      if Set.mem (Program.input_vars program) v then
         RationalBound.of_var v
       else
         RationalBound.infinity
@@ -74,7 +74,7 @@ let trivial_sizebounds program ~grvs_in elcbs class_appr appr =
     RationalBound.keep_simpler_bound elcb_overapprox_plus_var propagated_bound
     |> tap (fun r ->
            Logger.log size_logger Logger.DEBUG (fun () ->
-               ( "trivial_sizebound_for_rv",
+               ( "trivial_sizebound_for_grv",
                  [
                    ("grv", GRV.to_id_string ((gt, l), v));
                    ("var_overapprox", RationalBound.to_string var_overapprox);
