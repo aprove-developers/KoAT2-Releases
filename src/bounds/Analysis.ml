@@ -43,14 +43,13 @@ let default_configuration : ('a, Bounds.Bound.t) analysis_configuration =
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
-  module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (PM)
+  module TrivialTimeBounds = TrivialTimeBounds.Classical (Bound)
   module CostBounds = CostBounds.Make (Bound) (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module TWN = TWN.Make (Bound) (PM)
-  module CFR = CFR.CFR (PM) (Bound)
 
   type allowed_local_conf_type = (PM.program_modules_t, Bound.t) local_configuration
   type appr = Approximation.t
@@ -322,6 +321,7 @@ end
 
 module Classical (Bound : BoundType.Bound) = struct
   include Make (Bound) (ProgramModules)
+  module CFR = CFR.Classical (Bound)
   open ProgramModules
 
   type allowed_conf_type = (program_modules_t, Bound.t) analysis_configuration
@@ -355,7 +355,9 @@ module Classical (Bound : BoundType.Bound) = struct
           (fun () -> ("CFR.apply_single_cfr.improve_scc", [ ("scc_locs", LocationSet.to_string scc_locs) ]))
           execute
       in
-      List.fold_left cfr_sccs_locs ~init:(CFR.merge_appr program_orig refined_program appr_orig) ~f:update
+      List.fold_left cfr_sccs_locs
+        ~init:(CFR.create_new_appr program_orig refined_program appr_orig)
+        ~f:update
     in
 
     (* Check if CFR obtained improvement *)
@@ -383,9 +385,9 @@ module Classical (Bound : BoundType.Bound) = struct
               ("original bound", Bound.to_string ~pretty:true org_bound);
               (CFR.method_name cfr ^ " bound", Bound.to_string ~pretty:true cfr_bound);
             ] ));
-      CFR.DontKeepRefinedProgram)
+      CFRTypes.DontKeepRefinedProgram)
     else
-      CFR.KeepRefinedProgram
+      CFRTypes.KeepRefinedProgram
         ProofOutput.LocalProofOutput.{ result = (refined_program, updated_appr_cfr); proof = cfr_subproof }
 
 
@@ -398,7 +400,9 @@ module Classical (Bound : BoundType.Bound) = struct
       let refinement_result =
         CFR.iter_cfrs program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
           ~compute_timelimit:(fun () ->
-            CFR.compute_timeout_time program ~get_timebound:(Approximation.timebound appr) scc)
+            CFR.compute_timeout_time program
+              ~infinite_timebound:(Bound.is_infinity % Approximation.timebound appr)
+              scc)
           (analyse_refined_scc ~conf:conf.local_configuration appr program scc)
           conf.cfrs
       in

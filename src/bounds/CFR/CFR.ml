@@ -29,12 +29,13 @@ let logger_cfr = Logging.(get CFR)
 (* Measures the time spend on CFR. *)
 let time_cfr = ref 180.
 
-module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
+module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
-  module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (PM)
 
-  type approximation = Approximation.t
+  type program = Program.t
+  type transition = Transition.t
+  type transition_set = TransitionSet.t
   type cfr = PM.program_modules_t cfr_
 
   let mk_cfr = mk_cfr
@@ -47,10 +48,6 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
         ( "TIMEOUT_CFR_" ^ method_name,
           [ ("transitions_to_refine", TransitionSet.to_string transitions_to_refine) ] ))
 
-
-  type 'a refinement_result =
-    | DontKeepRefinedProgram
-    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
 
   (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
   let iter_cfrs program ~scc_orig ~transitions_to_refine ~compute_timelimit keep_refinement_with_results cfrs
@@ -95,43 +92,29 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
                   Logger.with_log logger_cfr Logger.INFO
                     (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
                     ~result:(function
-                      | DontKeepRefinedProgram -> "Don't keep refined program"
+                      | CFRTypes.DontKeepRefinedProgram -> "Don't keep refined program"
                       | KeepRefinedProgram _ -> "Keep refined program")
                     execute
                 in
                 match keep_refinement_result with
-                | DontKeepRefinedProgram -> apply_cfrs cfrs
+                | CFRTypes.DontKeepRefinedProgram -> apply_cfrs cfrs
                 | KeepRefinedProgram res -> Some res))
     in
     apply_cfrs cfrs
 
 
   (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-  let compute_timeout_time program ~get_timebound scc =
-    if Base.Set.exists ~f:(fun t -> Bound.is_infinity (get_timebound t)) scc then
+  let compute_timeout_time program ~infinite_timebound scc =
+    if Base.Set.exists ~f:(fun t -> infinite_timebound t) scc then
       0.
     else
       let toplogic_later_trans =
         program |> Program.transitions |> flip Base.Set.diff scc
-        |> Base.Set.filter ~f:(fun t -> Bound.is_infinity (get_timebound t))
+        |> Base.Set.filter ~f:(fun t -> infinite_timebound t)
       in
       !time_cfr
       *. float_of_int (Base.Set.length scc)
       /. float_of_int (Base.Set.length toplogic_later_trans + Base.Set.length scc)
-
-
-  let merge_appr (program : Program.t) (program_cfr : Program.t) appr =
-    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
-    let appr_cfr = Approximation.empty |> TrivialTimeBounds.compute program_cfr in
-    unchanged_trans
-    |> Set.fold
-         ~f:(fun appr_cfr trans ->
-           let timebound = Approximation.timebound appr trans
-           and costbound = Approximation.costbound appr trans in
-           appr_cfr
-           |> Approximation.add_timebound timebound trans
-           |> Approximation.add_costbound costbound trans)
-         ~init:appr_cfr
 
 
   let add_proof_to_global_proof cfr ~refined_program ~refined_bound_str =
@@ -151,6 +134,69 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
                let module GP = GraphPrint.MakeForClassicalAnalysis (PM) in
                mk_raw_str GP.(print_system_pretty_html refined_program)
            | _ -> FormattedString.Empty)
+end
+
+module Classical (Bound : BoundType.Bound) = struct
+  open ProgramModules
+  include Make (ProgramModules) (Bound)
+  module TrivialTimeBounds = TrivialTimeBounds.Classical (Bound)
+
+  type appr = Approximation.t
+
+  let create_new_appr program program_cfr appr =
+    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
+    let appr_cfr = Approximation.empty |> TrivialTimeBounds.compute program_cfr in
+    unchanged_trans
+    |> Set.fold
+         ~f:(fun appr_cfr trans ->
+           let timebound = Approximation.timebound appr trans
+           and costbound = Approximation.costbound appr trans in
+           appr_cfr
+           |> Approximation.add_timebound timebound trans
+           |> Approximation.add_costbound costbound trans)
+         ~init:appr_cfr
+end
+
+module Probabilistic = struct
+  open ProbabilisticProgramModules
+  open Approximation.Probabilistic
+
+  let create_new_appr_classical program program_cfr class_appr =
+    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
+    unchanged_trans
+    |> Set.fold
+         ~f:(fun class_appr_cfr trans ->
+           let timebound = ClassicalApproximation.timebound class_appr trans
+           and costbound = ClassicalApproximation.costbound class_appr trans in
+           class_appr_cfr
+           |> ClassicalApproximation.add_timebound timebound trans
+           |> ClassicalApproximation.add_costbound costbound trans)
+         ~init:ClassicalApproximation.empty
+
+
+  let create_new_appr program program_cfr appr =
+    let unchanged_gts = Set.inter (Program.gts program) (Program.gts program_cfr) in
+
+    unchanged_gts
+    |> Set.fold
+         ~f:(fun appr_cfr gt ->
+           let timebound = ExpApproximation.timebound appr gt
+           and costbound = ExpApproximation.costbound appr gt in
+           appr_cfr
+           |> ExpApproximation.add_timebound timebound gt
+           |> ExpApproximation.add_costbound costbound gt)
+         ~init:ExpApproximation.empty
+
+
+  let create_new_apprs program program_cfr apprs =
+    TrivialTimeBounds.Probabilistic.compute program_cfr
+      {
+        class_appr = create_new_appr_classical program program_cfr apprs.class_appr;
+        appr = create_new_appr program program_cfr apprs.appr;
+      }
+
+
+  include Make (ProbabilisticProgramModules) (Bounds.RationalBound)
 end
 
 let pe_with_IRankFinder =

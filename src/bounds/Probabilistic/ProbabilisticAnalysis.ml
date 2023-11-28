@@ -18,14 +18,7 @@ let grvs_from_gts_and_vars gts vars =
   rvts_from_gts gts |> fun rvts -> List.cartesian_product rvts (Set.to_list vars)
 
 
-module TrivialTimeBounds = TrivialTimeBounds.Make (Bound) (NonProbOverappr)
-
-let trivial_time_bounds program class_appr =
-  let overappr_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
-  coerce_from_classical_approximation class_appr
-  |> TrivialTimeBounds.compute overappr_program
-  |> coerce_from_nonprob_overappr_approximation
-
+module TrivialTimeBounds = TrivialTimeBounds.Probabilistic
 
 let lift_bounds program program_vars gts apprs : ExpApproximation.t =
   let lift_time_bounds appr =
@@ -202,7 +195,8 @@ let perform_analysis ?(classic_conf = Analysis.default_local_configuration) ?(co
   let sccs = Program.sccs_locs program in
 
   let apprs =
-    { appr = ExpApproximation.empty; class_appr = trivial_time_bounds program ClassicalApproximation.empty }
+    { appr = ExpApproximation.empty; class_appr = ClassicalApproximation.empty }
+    |> TrivialTimeBounds.compute program
   in
   let apprs =
     List.fold

@@ -2,46 +2,33 @@ open! OurBase
 
 type 'prog_modules_t cfr_
 
-(** CFR meta-module *)
-module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) : sig
-  open PM
+module Classical (Bound : BoundType.Bound) : sig
+  include
+    CFRTypes.CFR
+      with type program = ProgramModules.Program.t
+       and type transition = ProgramModules.Transition.t
+       and type transition_set = ProgramModules.TransitionSet.t
+       and type cfr = ProgramModules.program_modules_t cfr_
 
-  type approximation = Approximation.MakeForClassicalAnalysis(Bound)(PM).t
-  type cfr = PM.program_modules_t cfr_
+  type appr = Approximation.MakeForClassicalAnalysis(Bound)(ProgramModules).t
 
-  val time_cfr : float ref
-  (** Global time used for CFR. *)
+  val create_new_appr : program -> program -> appr -> appr
+  (** The call [create_new_appr program program_cfr appr] generates the approximation for the new program_cfr from the one of the original program ([appr]).
+      Also computes trivial time bounds *)
+end
 
-  val compute_timeout_time :
-    Program.t -> get_timebound:(PM.Transition.t -> Bound.t) -> TransitionSet.t -> float
+module Probabilistic : sig
+  include
+    CFRTypes.CFR
+      with type program = ProbabilisticProgramModules.Program.t
+       and type transition = ProbabilisticProgramModules.Transition.t
+       and type transition_set = ProbabilisticProgramModules.TransitionSet.t
+       and type cfr = ProbabilisticProgramModules.program_modules_t cfr_
 
-  val mk_cfr :
-    method_name:String.t ->
-    (Program.t -> transitions_to_refine:TransitionSet.t -> Program.t MaybeChanged.t) ->
-    cfr
-
-  val method_name : cfr -> String.t
-  val perform_cfr : cfr -> Program.t -> transitions_to_refine:TransitionSet.t -> Program.t MaybeChanged.t
-
-  type 'a refinement_result =
-    | DontKeepRefinedProgram
-    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
-
-  val iter_cfrs :
-    PM.Program.t ->
-    scc_orig:PM.TransitionSet.t ->
-    transitions_to_refine:PM.TransitionSet.t ->
-    compute_timelimit:(unit -> float) ->
-    (cfr -> refined_program:PM.Program.t -> 'a refinement_result) ->
-    cfr list ->
-    'a ProofOutput.LocalProofOutput.with_proof option
-  (** Try to apply multiple CFRs until we decide to keep the refined program *)
-
-  val merge_appr : Program.t -> Program.t -> approximation -> approximation
-  (** The call [merge_appr program program_cfr appr] generates the approximation for the new program_cfr from the one of the original program ([appr]). *)
-
-  val add_proof_to_global_proof : cfr -> refined_program:Program.t -> refined_bound_str:String.t -> unit
-  (** Adds an explanation of the CFR to the global proof *)
+  val create_new_apprs :
+    program -> program -> Approximation.Probabilistic.apprs -> Approximation.Probabilistic.apprs
+  (** The call [create_new_appr program program_cfr apprs] generates the approximations for the new program_cfr from the those of the original program ([apprs]).
+      Also computes trivial time bounds *)
 end
 
 val pe_with_IRankFinder : ProgramModules.program_modules_t cfr_
