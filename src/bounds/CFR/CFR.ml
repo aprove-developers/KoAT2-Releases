@@ -8,7 +8,7 @@ type 'prog_modules_t cfr_ =
       method_name : String.t;
       perform_cfr :
         ('trans_lbl, 'trans_lbl_cmp_wit, 'trans_graph) GenericProgram_.t ->
-        critical_transitions:('trans_lbl, 'trans_lbl_cmp_wit) _trans_set ->
+        transitions_to_refine:('trans_lbl, 'trans_lbl_cmp_wit) _trans_set ->
         ('trans_lbl, 'trans_lbl_cmp_wit, 'trans_graph) GenericProgram_.t MaybeChanged.t;
     }
       -> ('trans_lbl * 'trans_lbl_cmp_wit * 'trans_graph) ProgramTypes.program_modules_meta cfr_
@@ -22,6 +22,8 @@ let method_name = function
 let perform_cfr = function
   | Cfr cfr -> cfr.perform_cfr
 
+
+let logger_cfr = Logging.(get CFR)
 
 (* Timeouts *)
 (* Measures the time spend on CFR. *)
@@ -40,14 +42,78 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
   let perform_cfr = perform_cfr
   let time_cfr = time_cfr
 
+  let handle_timeout_cfr method_name transitions_to_refine =
+    Logger.log logger_cfr Logger.INFO (fun () ->
+        ( "TIMEOUT_CFR_" ^ method_name,
+          [ ("transitions_to_refine", TransitionSet.to_string transitions_to_refine) ] ))
+
+
+  type 'a refinement_result =
+    | DontKeepRefinedProgram
+    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
+
+  (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
+  let iter_cfrs program ~scc_orig ~transitions_to_refine ~compute_timelimit keep_refinement_with_results cfrs
+      =
+    (* TODO: Can we ensure that CFR alters just one SCC? *)
+    let apply_single_cfr cfr =
+      let timelimit = compute_timelimit () in
+      let execute () =
+        let opt =
+          Timeout.timed_run timelimit
+            ~action:(fun () -> handle_timeout_cfr (method_name cfr) scc_orig)
+            (fun () -> perform_cfr cfr program ~transitions_to_refine)
+        in
+        match opt with
+        | None -> None
+        | Some (res_mc, time_used) ->
+            time_cfr := !time_cfr -. time_used;
+            Option.some_if (MaybeChanged.has_changed res_mc) (MaybeChanged.unpack res_mc)
+      in
+      Logger.with_log logger_cfr Logger.INFO
+        (fun () ->
+          ( "CFR.iter_cfrs.apply_single_cfr",
+            [
+              ("method", method_name cfr);
+              ("transition_to_refine", TransitionSet.to_id_string transitions_to_refine);
+              ("timelimit", string_of_float timelimit);
+            ] ))
+        execute
+        ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
+    in
+    let rec apply_cfrs = function
+      | [] -> None
+      | cfr :: cfrs -> (
+          if !time_cfr <= 0. then
+            None
+          else
+            match apply_single_cfr cfr with
+            | None -> apply_cfrs cfrs
+            | Some refined_program -> (
+                let keep_refinement_result =
+                  let execute () = keep_refinement_with_results cfr ~refined_program in
+                  Logger.with_log logger_cfr Logger.INFO
+                    (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
+                    ~result:(function
+                      | DontKeepRefinedProgram -> "Don't keep refined program"
+                      | KeepRefinedProgram _ -> "Keep refined program")
+                    execute
+                in
+                match keep_refinement_result with
+                | DontKeepRefinedProgram -> apply_cfrs cfrs
+                | KeepRefinedProgram res -> Some res))
+    in
+    apply_cfrs cfrs
+
+
   (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-  let compute_timeout_time program appr scc =
-    if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+  let compute_timeout_time program ~get_timebound scc =
+    if Base.Set.exists ~f:(fun t -> Bound.is_infinity (get_timebound t)) scc then
       0.
     else
       let toplogic_later_trans =
         program |> Program.transitions |> flip Base.Set.diff scc
-        |> Base.Set.filter ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t))
+        |> Base.Set.filter ~f:(fun t -> Bound.is_infinity (get_timebound t))
       in
       !time_cfr
       *. float_of_int (Base.Set.length scc)
@@ -88,28 +154,30 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
 end
 
 let pe_with_IRankFinder =
-  let perform_cfr program ~critical_transitions = PartialEvaluation.apply_cfr critical_transitions program in
+  let perform_cfr program ~transitions_to_refine =
+    PartialEvaluation.apply_cfr transitions_to_refine program
+  in
   mk_cfr ~method_name:"PartialEvaluationIRankFinder" perform_cfr
 
 
 let chaining =
-  let perform_chaining program ~critical_transitions =
-    Preprocessor.lift_to_program (Chaining.transform_graph ~scc:(Option.some critical_transitions)) program
+  let perform_chaining program ~transitions_to_refine =
+    Preprocessor.lift_to_program (Chaining.transform_graph ~scc:(Option.some transitions_to_refine)) program
   in
   mk_cfr ~method_name:"Chaining" perform_chaining
 
 
 let pe_native pe_config =
-  let perform_cfr program ~critical_transitions =
-    NativePartialEvaluation.ClassicPartialEvaluation.apply_sub_scc_cfr pe_config critical_transitions program
+  let perform_cfr program ~transitions_to_refine =
+    NativePartialEvaluation.ClassicPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine program
     |> MaybeChanged.changed (* TODO: better solution? *)
   in
   mk_cfr ~method_name:"PartialEvaluationNative" perform_cfr
 
 
 let pe_native_probabilistic pe_config =
-  let perform_cfr program ~critical_transitions =
-    NativePartialEvaluation.ProbabilisticPartialEvaluation.apply_sub_scc_cfr pe_config critical_transitions
+  let perform_cfr program ~transitions_to_refine =
+    NativePartialEvaluation.ProbabilisticPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine
       program
     |> MaybeChanged.changed (* TODO: better solution? *)
   in

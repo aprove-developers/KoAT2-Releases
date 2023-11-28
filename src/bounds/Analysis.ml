@@ -319,75 +319,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       appr
 
 
-  let handle_timeout_cfr method_name non_linear_transitions =
-    Logger.log logger_cfr Logger.INFO (fun () ->
-        ("TIMEOUT_CFR_" ^ method_name, [ ("scc", TransitionSet.to_string non_linear_transitions) ]))
-
-
-  type 'a refinement_result =
-    | DontKeepRefinedProgram
-    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
-
-  (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
-  let iter_cfrs program ~scc_orig ~non_linear_transitions ~compute_timelimit keep_refinement_with_results cfrs
-      =
-    (* TODO: Can we ensure that CFR alters just one SCC? *)
-    (* TODO move cfr stuff to dedicated module? *)
-    let apply_single_cfr cfr =
-      let timelimit = compute_timelimit () in
-      let execute () =
-        let opt =
-          Timeout.timed_run timelimit
-            ~action:(fun () -> handle_timeout_cfr (CFR.method_name cfr) scc_orig)
-            (fun () -> CFR.perform_cfr cfr program ~critical_transitions:non_linear_transitions)
-        in
-        match opt with
-        | None -> None
-        | Some (res_mc, time_used) ->
-            CFR.time_cfr := !CFR.time_cfr -. time_used;
-            Option.some_if (MaybeChanged.has_changed res_mc) (MaybeChanged.unpack res_mc)
-      in
-      Logger.with_log logger_cfr Logger.INFO
-        (fun () ->
-          ( "CFR.iter_cfrs.apply_single_cfr",
-            [
-              ("method", CFR.method_name cfr);
-              ("non_linear_transitions", TransitionSet.to_id_string non_linear_transitions);
-              ("timelimit", string_of_float timelimit);
-            ] ))
-        execute
-        ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
-    in
-    let rec apply_cfrs = function
-      | [] -> None
-      | cfr :: cfrs -> (
-          if !CFR.time_cfr <= 0. then
-            None
-          else
-            match apply_single_cfr cfr with
-            | None -> apply_cfrs cfrs
-            | Some program_cfr -> (
-                let keep_refinement_result =
-                  let execute () = keep_refinement_with_results cfr program_cfr in
-                  Logger.with_log logger_cfr Logger.INFO
-                    (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
-                    ~result:(function
-                      | DontKeepRefinedProgram -> "Don't keep refined program"
-                      | KeepRefinedProgram _ -> "Keep refined program")
-                    execute
-                in
-                match keep_refinement_result with
-                | DontKeepRefinedProgram -> apply_cfrs cfrs
-                | KeepRefinedProgram res -> Some res))
-    in
-    apply_cfrs cfrs
-
-
-  let analyse_refined_scc ~(conf : allowed_conf_type) appr_orig program_orig scc_orig cfr program_cfr =
+  let analyse_refined_scc ~(conf : allowed_conf_type) appr_orig program_orig scc_orig cfr ~refined_program =
     (* The new sccs which do not occur in the original program. *)
     let cfr_sccs_locs =
       let orig_sccs = Program.sccs_locs program_orig in
-      Program.sccs_locs program_cfr
+      Program.sccs_locs refined_program
       |> List.filter ~f:(fun cfr_scc -> not (List.exists ~f:(Set.equal cfr_scc) orig_sccs))
     in
 
@@ -399,12 +335,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         FormattedString.mk_str_header_big "Analysing control-flow refined program");
     let updated_appr_cfr =
       let update appr scc_locs =
-        let execute () = improve_scc ~conf scc_locs program_cfr appr in
+        let execute () = improve_scc ~conf scc_locs refined_program appr in
         Logger.with_log logger_cfr Logger.INFO
           (fun () -> ("CFR.apply_single_cfr.improve_scc", [ ("scc_locs", LocationSet.to_string scc_locs) ]))
           execute
       in
-      List.fold_left cfr_sccs_locs ~init:(CFR.merge_appr program_orig program_cfr appr_orig) ~f:update
+      List.fold_left cfr_sccs_locs ~init:(CFR.merge_appr program_orig refined_program appr_orig) ~f:update
     in
 
     (* Check if CFR obtained improvement *)
@@ -412,12 +348,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Bound.sum (Sequence.map ~f:(Approximation.timebound appr_orig) (Set.to_sequence scc_orig))
     in
     let cfr_bound =
-      let cfr_transitions = Set.diff (Program.transitions program_cfr) (Program.transitions program_orig) in
+      let cfr_transitions =
+        Set.diff (Program.transitions refined_program) (Program.transitions program_orig)
+      in
       Set.to_sequence cfr_transitions
       |> Sequence.map ~f:(Approximation.timebound updated_appr_cfr)
       |> Bound.sum
     in
-    CFR.add_proof_to_global_proof cfr ~refined_program:program_cfr
+    CFR.add_proof_to_global_proof cfr ~refined_program
       ~refined_bound_str:(Bound.show_complexity @@ Bound.asymptotic_complexity cfr_bound);
 
     (* Get CFR proof & restore original proof *)
@@ -430,10 +368,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               ("original bound", Bound.to_string ~pretty:true org_bound);
               (CFR.method_name cfr ^ " bound", Bound.to_string ~pretty:true cfr_bound);
             ] ));
-      DontKeepRefinedProgram)
+      CFR.DontKeepRefinedProgram)
     else
-      KeepRefinedProgram
-        ProofOutput.LocalProofOutput.{ result = (program_cfr, updated_appr_cfr); proof = cfr_subproof }
+      CFR.KeepRefinedProgram
+        ProofOutput.LocalProofOutput.{ result = (refined_program, updated_appr_cfr); proof = cfr_subproof }
 
 
   let handle_cfrs ~(conf : allowed_conf_type) (scc : TransitionSet.t) program appr =
@@ -442,8 +380,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (program, appr)
     else
       let refinement_result =
-        iter_cfrs program ~scc_orig:scc ~non_linear_transitions
-          ~compute_timelimit:(fun () -> CFR.compute_timeout_time program appr scc)
+        CFR.iter_cfrs program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
+          ~compute_timelimit:(fun () ->
+            CFR.compute_timeout_time program ~get_timebound:(Approximation.timebound appr) scc)
           (analyse_refined_scc ~conf appr program scc)
           conf.cfrs
       in

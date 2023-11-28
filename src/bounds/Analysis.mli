@@ -35,19 +35,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val improve_scc : conf:allowed_conf_type -> LocationSet.t -> PM.Program.t -> appr -> appr
 
-  type 'a refinement_result =
-    | DontKeepRefinedProgram
-    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
-
-  val iter_cfrs :
-    PM.Program.t ->
-    scc_orig:PM.TransitionSet.t ->
-    non_linear_transitions:PM.TransitionSet.t ->
-    compute_timelimit:(unit -> float) ->
-    (PM.program_modules_t CFR.cfr_ -> PM.Program.t -> 'a refinement_result) ->
-    PM.program_modules_t CFR.cfr_ list ->
-    'a ProofOutput.LocalProofOutput.with_proof option
-
   val improve :
     ?time_cfr:int ->
     conf:allowed_conf_type ->

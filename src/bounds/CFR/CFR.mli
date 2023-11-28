@@ -12,15 +12,30 @@ module CFR (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) : sig
   val time_cfr : float ref
   (** Global time used for CFR. *)
 
-  val compute_timeout_time : Program.t -> approximation -> TransitionSet.t -> float
+  val compute_timeout_time :
+    Program.t -> get_timebound:(PM.Transition.t -> Bound.t) -> TransitionSet.t -> float
 
   val mk_cfr :
     method_name:String.t ->
-    (Program.t -> critical_transitions:TransitionSet.t -> Program.t MaybeChanged.t) ->
+    (Program.t -> transitions_to_refine:TransitionSet.t -> Program.t MaybeChanged.t) ->
     cfr
 
   val method_name : cfr -> String.t
-  val perform_cfr : cfr -> Program.t -> critical_transitions:TransitionSet.t -> Program.t MaybeChanged.t
+  val perform_cfr : cfr -> Program.t -> transitions_to_refine:TransitionSet.t -> Program.t MaybeChanged.t
+
+  type 'a refinement_result =
+    | DontKeepRefinedProgram
+    | KeepRefinedProgram of 'a ProofOutput.LocalProofOutput.with_proof
+
+  val iter_cfrs :
+    PM.Program.t ->
+    scc_orig:PM.TransitionSet.t ->
+    transitions_to_refine:PM.TransitionSet.t ->
+    compute_timelimit:(unit -> float) ->
+    (cfr -> refined_program:PM.Program.t -> 'a refinement_result) ->
+    cfr list ->
+    'a ProofOutput.LocalProofOutput.with_proof option
+  (** Try to apply multiple CFRs until we decide to keep the refined program *)
 
   val merge_appr : Program.t -> Program.t -> approximation -> approximation
   (** The call [merge_appr program program_cfr appr] generates the approximation for the new program_cfr from the one of the original program ([appr]). *)
