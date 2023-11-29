@@ -444,7 +444,8 @@ module ProbabilisticAdapter :
   let grouped_transition_of_transition = Transition.gt
 
   let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect gt =
-    GeneralTransition.mk_from_labels_without_backlink ~start:new_start ~guard:(GeneralTransition.guard gt)
+    GeneralTransition.mk_from_labels_without_backlink ~start:new_start
+      ~guard_without_invariant:(GeneralTransition.guard_without_inv gt)
       ~invariant:(Guard.mk_and (GeneralTransition.invariant gt) add_invariant)
       ~cost:(GeneralTransition.cost gt)
       ~rhss:

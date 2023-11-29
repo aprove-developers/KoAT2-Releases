@@ -59,7 +59,7 @@ module GeneralTransition : sig
 
   val mk_from_labels_without_backlink :
     start:Location.t ->
-    guard:Guard.t ->
+    guard_without_invariant:Guard.t ->
     invariant:Guard.t ->
     cost:Polynomials.Polynomial.t ->
     rhss:(label_without_backlink * Location.t) List.t ->

@@ -742,7 +742,7 @@ module GeneralTransition = struct
       gt
 
 
-    let mk_from_labels_without_backlink ~start ~guard ~invariant ~cost ~rhss : t =
+    let mk_from_labels_without_backlink ~start ~guard_without_invariant ~invariant ~cost ~rhss : t =
       let total_prob =
         Sequence.of_list rhss |> Sequence.map ~f:(fun (r, _) -> r.probability) |> OurRational.sum
       in
@@ -752,8 +752,8 @@ module GeneralTransition = struct
       let gt =
         {
           gt_id = Unique.unique ();
-          guard = Guard.remove_duplicate_atoms guard;
           cost;
+          guard = Guard.remove_duplicate_atoms guard_without_invariant;
           invariant = Guard.mk_true;
           transitions =
             Sequence.of_list rhss
