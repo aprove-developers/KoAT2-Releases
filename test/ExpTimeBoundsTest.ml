@@ -2,34 +2,16 @@ open OUnit2
 open Koat2
 open! OurBase
 open Bounds
-open ProbabilisticProgramModules
 open Approximation.Probabilistic
-
-let classical_local_conf : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration =
-  Analysis.default_local_configuration
-
 
 let default_conf = ProbabilisticAnalysis.default_configuration
 
-let mprf5_conf =
-  {
-    ProbabilisticAnalysis.default_configuration with
-    classical_local = { classical_local_conf with run_mprf_depth = Some 5 };
-  }
+let enable_mprf5 conf =
+  ProbabilisticAnalysis.{ conf with classical_local = { conf.classical_local with run_mprf_depth = Some 5 } }
 
 
-let twn_conf =
-  {
-    ProbabilisticAnalysis.default_configuration with
-    classical_local = { classical_local_conf with twn = true };
-  }
-
-
-let mprf5_twn_conf =
-  {
-    ProbabilisticAnalysis.default_configuration with
-    classical_local = { classical_local_conf with run_mprf_depth = Some 5; twn = true };
-  }
+let enable_twn conf =
+  ProbabilisticAnalysis.{ conf with classical_local = { conf.classical_local with twn = true } }
 
 
 let conf = ProbabilisticAnalysis.default_configuration
@@ -75,7 +57,10 @@ let tests =
                       Polynomial 2,
                       "../../../examples/probabilistic/",
                       default_conf );
-                    ("probabilistic_nested_unbounded", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
+                    ( "probabilistic_nested_unbounded",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      default_conf |> enable_twn |> enable_mprf5 );
                     ( "nested_mprf_inner_loop_exptime_classsize",
                       Inf,
                       "../../../examples/probabilistic/",
@@ -83,7 +68,7 @@ let tests =
                     ( "nested_mprf_inner_loop_exptime_classsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
-                      mprf5_conf );
+                      default_conf |> enable_mprf5 );
                     ( "nested_mprf_inner_loop_classtime_expsize",
                       Inf,
                       "../../../examples/probabilistic/",
@@ -91,7 +76,7 @@ let tests =
                     ( "nested_mprf_inner_loop_classtime_expsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
-                      mprf5_conf );
+                      default_conf |> enable_mprf5 );
                     ( "nested_twn_inner_loop_exptime_classsize",
                       Inf,
                       "../../../examples/probabilistic/",
@@ -99,7 +84,7 @@ let tests =
                     ( "nested_twn_inner_loop_exptime_classsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "nested_twn_inner_loop_classtime_expsize",
                       Inf,
                       "../../../examples/probabilistic/",
@@ -107,23 +92,23 @@ let tests =
                     ( "nested_twn_inner_loop_classtime_expsize",
                       Polynomial 2,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_exptime_classsize",
                       Polynomial 3,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_expsize",
                       Inf,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_mixedsize",
                       Polynomial 3,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_mixedsize_exponential",
                       Exponential 1,
                       "../../../examples/probabilistic/",
-                      twn_conf );
+                      default_conf |> enable_twn );
                     ( "prob_loop",
                       Polynomial 1,
                       "../../../examples/probabilistic/tacas21_paper/koat/",
@@ -132,7 +117,13 @@ let tests =
                       Polynomial 2,
                       "../../../examples/probabilistic/tacas21_paper/koat/",
                       default_conf );
-                    ("non_past_rwalk", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
-                    ("non_past_size", Inf, "../../../examples/probabilistic/", mprf5_twn_conf);
+                    ( "non_past_rwalk",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      default_conf |> enable_twn |> enable_mprf5 );
+                    ( "non_past_size",
+                      Inf,
+                      "../../../examples/probabilistic/",
+                      default_conf |> enable_twn |> enable_mprf5 );
                   ];
        ]
