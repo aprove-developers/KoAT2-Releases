@@ -41,11 +41,7 @@ module Make (B : BoundType.Bound) (T : ApproximableTransition) = struct
       ~result:B.to_string execute
 
 
-  let sum appr program =
-    Sequence.fold
-      ~f:(fun result trans -> B.(get appr trans + result))
-      ~init:B.zero (T.all_from_program program)
-
+  let sum appr program = T.all_from_program program |> Sequence.map ~f:(get appr) |> B.sum
 
   let add ?(simplifyfunc = identity) bound transition (name, map) =
     let map =
