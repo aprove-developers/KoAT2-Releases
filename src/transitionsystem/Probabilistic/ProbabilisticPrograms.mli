@@ -5,7 +5,6 @@ type label_without_backlink = {
   overappr_guard : Guard.t;
   update : UpdateElement_.t ProgramTypes.VarMap.t;
   overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
-  cost : Polynomials.Polynomial.t;
 }
 
 module ProbabilisticTransitionLabel : sig

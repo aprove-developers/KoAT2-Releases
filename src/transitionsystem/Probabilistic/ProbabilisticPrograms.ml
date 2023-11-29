@@ -12,7 +12,6 @@ type label_without_backlink = {
   update : UpdateElement_.t ProgramTypes.VarMap.t;
   overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
       (** Non-determinstically Overapproximated non-probabilistic versions for classic analysis *)
-  cost : Polynomials.Polynomial.t;
 }
 
 type 'a ptr = 'a Option.t ref
@@ -30,6 +29,7 @@ and 'trans_label_cmp general_transition_ = {
   gt_id : int;
   guard : Guard.t;
   invariant : Invariant.t;
+  cost : Polynomial.t;
   transitions : ('trans_label_cmp transition_, 'trans_label_cmp trans_comparator_) Set.t;
 }
 
@@ -58,7 +58,6 @@ module ProbabilisticTransitionLabel_ = struct
       (* This guard goes along with overappr_nonprob_update *)
       update = Map.empty (module Var);
       overappr_nonprob_update = Map.empty (module Var);
-      cost = Polynomial.one;
     }
 
 
@@ -114,7 +113,7 @@ module ProbabilisticTransitionLabel_ = struct
 
 
   (** Creates a new probabilistic transition. Sets its general transition to undefined, i.e., [None]*)
-  let mk ~patterns ~map_to_arg_vars ~probability ~assignments ~cost ~guard =
+  let mk ~patterns ~map_to_arg_vars ~probability ~assignments ~guard =
     let update =
       Sequence.of_list assignments
       |> Sequence.map ~f:(UpdateElement_.rename map_to_arg_vars)
@@ -129,14 +128,7 @@ module ProbabilisticTransitionLabel_ = struct
     {
       id = Unique.unique ();
       gt = ref None;
-      properties =
-        {
-          probability;
-          overappr_guard;
-          update;
-          overappr_nonprob_update;
-          cost = Polynomial.rename map_to_arg_vars cost;
-        };
+      properties = { probability; overappr_guard; update; overappr_nonprob_update };
     }
 
 
@@ -161,7 +153,7 @@ module ProbabilisticTransitionLabel_ = struct
   let update_map t = t.properties.update
   let overappr_nonprob_update t = t.properties.overappr_nonprob_update
   let invariant t = (gt t).invariant
-  let cost t = t.properties.cost
+  let cost t = (gt t).cost
   let without_backlink t = t.properties
 
   (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
@@ -295,7 +287,6 @@ module ProbabilisticTransitionLabel_ = struct
           update = rename_update UpdateElement_.rename (update_map t) rename_map;
           overappr_nonprob_update = rename_update Polynomial.rename (overappr_nonprob_update t) rename_map;
           overappr_guard = Guard.rename (overappr_guard t) rename_map;
-          cost = Polynomial.rename rename_map (cost t);
         };
     }
 
@@ -719,7 +710,7 @@ module GeneralTransition = struct
           ~f:(fun (p, ues, l) ->
             ( ProbabilisticTransitionLabel.fill_up_arg_vars_up_to_num fill_up_to_num_arg_vars
               @@ ProbabilisticTransitionLabel_.mk ~map_to_arg_vars ~patterns ~probability:p ~assignments:ues
-                   ~cost ~guard,
+                   ~guard,
               l ))
           rhss
       in
@@ -739,6 +730,7 @@ module GeneralTransition = struct
         {
           gt_id;
           guard;
+          cost;
           invariant = update_admissibility;
           transitions =
             ProbabilisticTransitionSet.of_list
@@ -761,6 +753,7 @@ module GeneralTransition = struct
         {
           gt_id = Unique.unique ();
           guard = Guard.remove_duplicate_atoms guard;
+          cost;
           invariant = Guard.mk_true;
           transitions =
             Sequence.of_list rhss
@@ -783,7 +776,7 @@ module GeneralTransition = struct
       Set.filter t.transitions ~f:(Location.equal target % ProbabilisticTransition.target)
 
 
-    let cost = ProbabilisticTransitionLabel.cost % get_arbitrary_label
+    let cost (gt : t) = gt.cost
     let src = ProbabilisticTransition.src % get_arbitrary_transition
     let invariant gt = gt.invariant
     let guard_without_inv gt = gt.guard
