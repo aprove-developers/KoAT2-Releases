@@ -14,6 +14,18 @@ let enable_twn conf =
   ProbabilisticAnalysis.{ conf with classical_local = { conf.classical_local with twn = true } }
 
 
+let enable_cfr_default conf =
+  ProbabilisticAnalysis.
+    {
+      conf with
+      cfrs =
+        [
+          CFR.pe_native_probabilistic
+            NativePartialEvaluation.{ abstract = `FVS; k_encounters = 0; update_invariants = true };
+        ];
+    }
+
+
 let conf = ProbabilisticAnalysis.default_configuration
 
 let preprocess =
@@ -125,5 +137,13 @@ let tests =
                       Inf,
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn |> enable_mprf5 );
+                    ( "simple_control_on_input_nonprob",
+                      Inf,
+                      "../../../examples/probabilistic/cfr/",
+                      default_conf );
+                    ( "simple_control_on_input_nonprob",
+                      Polynomial 0,
+                      "../../../examples/probabilistic/cfr/",
+                      default_conf |> enable_cfr_default );
                   ];
        ]
