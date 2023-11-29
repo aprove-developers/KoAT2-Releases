@@ -355,8 +355,8 @@ module ProbabilisticTransitionLabel = struct
 
   let update_map t = t.properties.update
   let update t v = Map.find (update_map t) v
-  let guard t = Guard.mk_and (invariant t) (guard t)
   let guard_without_inv t = guard t
+  let guard t = Guard.mk_and (invariant t) (guard t)
 
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
@@ -423,8 +423,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let map_guard f t = { t with properties = { t.properties with overappr_guard = f (overappr_guard t) } }
   let update_map t = overappr_nonprob_update t
   let update t v = Map.find (overappr_nonprob_update t) v
-  let guard t = Guard.mk_and (invariant t) (overappr_guard t)
   let guard_without_inv t = overappr_guard t
+  let guard t = Guard.mk_and (invariant t) (overappr_guard t)
 
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
@@ -785,8 +785,8 @@ module GeneralTransition = struct
 
     let cost = ProbabilisticTransitionLabel.cost % get_arbitrary_label
     let src = ProbabilisticTransition.src % get_arbitrary_transition
-    let invariant = ProbabilisticTransitionLabel.invariant % get_arbitrary_label
-    let guard_without_inv = ProbabilisticTransitionLabel.guard_without_inv % get_arbitrary_label
+    let invariant gt = gt.invariant
+    let guard_without_inv gt = gt.guard
 
     let targets t =
       Set.of_sequence (module Location)
