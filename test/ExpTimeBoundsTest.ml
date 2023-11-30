@@ -145,5 +145,9 @@ let tests =
                       Polynomial 0,
                       "../../../examples/probabilistic/cfr/",
                       default_conf |> enable_cfr_default );
+                    ( "cfr_leading",
+                      Polynomial 1,
+                      "../../../examples/probabilistic/cfr/",
+                      default_conf |> enable_cfr_default );
                   ];
        ]
