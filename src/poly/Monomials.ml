@@ -84,7 +84,10 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
 
 
     let pow t e = Map.map ~f:(fun i -> i * e) t
-    let eval_f mon f = Map.fold ~f:(fun ~key ~data result -> Value.mul result (f key)) mon ~init:Value.one
+
+    let eval_f mon f =
+      Map.fold ~f:(fun ~key ~data:exp result -> Value.mul result (Value.pow (f key) exp)) mon ~init:Value.one
+
 
     (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
     let eval mon valuation =
