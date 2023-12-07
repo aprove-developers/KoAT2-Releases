@@ -922,31 +922,20 @@ end = struct
         is_unsat
       in
 
-      (* No need to check entailment, when constraint is already UNSAT *)
-      if SMT.IncrementalZ3Solver.unsatisfiable solver then
-        failwith "This should never be unsat as guard and src_constraint are sat"
-        (* TODO check and remove if *)
-        (* Check entailment for every propery it's negation *)
-      else
-        let entailed_props =
-          Set.to_sequence properties
-          |> Sequence.filter_map ~f:(fun prop ->
-                 if entails_prop prop then (
-                   log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS", Atom.to_string prop) ]);
-                   (* (Constraint.to_string constr) *)
-                   (* (Atom.to_string prop); *)
-                   Some prop)
-                 else if entails_prop (Atom.neg prop) then (
-                   log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS_NEG", Atom.to_string prop) ]);
-                   (* Printf.printf "%s entails %s\n" *)
-                   (* (Constraint.to_string constr) *)
-                   (* (Atom.to_string (Atom.neg prop)); *)
-                   Some (Atom.neg prop))
-                 else
-                   None)
-          |> AtomSet.of_sequence
-        in
-        entailed_props
+      let entailed_props =
+        Set.to_sequence properties
+        |> Sequence.filter_map ~f:(fun prop ->
+               if entails_prop prop then (
+                 log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS", Atom.to_string prop) ]);
+                 Some prop)
+               else if entails_prop (Atom.neg prop) then (
+                 log ~level:Logger.DEBUG "abstract" (fun () -> [ ("ENTAILS_NEG", Atom.to_string prop) ]);
+                 Some (Atom.neg prop))
+               else
+                 None)
+        |> AtomSet.of_sequence
+      in
+      entailed_props
     in
 
     match Map.find context location with
@@ -960,10 +949,7 @@ end = struct
     | None ->
         log ~level:Logger.DEBUG "abstract" (fun () ->
             [ ("LOCATION", Location.to_string location); ("PROPERTIES", "NONE") ]);
-        if Formula.mk guard |> SMT.Z3Solver.satisfiable then
-          Constr guard
-        else
-          failwith "This should never be unsat as guard and_constraint are sat" (* TODO cehck and remove if *)
+        Constr guard
 
 
   let abstract_to_guard a = Set.to_list a |> Constraint.mk
