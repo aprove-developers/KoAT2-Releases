@@ -909,7 +909,7 @@ end = struct
     let abstract_guard_ properties constr =
       let module Solver = SMT.IncrementalZ3Solver in
       let solver = Solver.create ~model:false () in
-      let f = Formula.mk constr in
+      let f = (* TODO linearize constraints? *) Formula.mk constr in
       Solver.add solver f;
 
       (* Fast entailment check which reuses the SMT solver *)
