@@ -32,6 +32,14 @@ struct
   let size appr = appr.size
   let cost appr = appr.cost
 
+  let filter_transitions_and_rvs filter_transitions filter_rvs t =
+    {
+      time = TransitionApproximation.filter_transitions filter_transitions t.time;
+      size = SizeApproximation.filter_rvs filter_rvs t.size;
+      cost = TransitionApproximation.filter_transitions filter_transitions t.cost;
+    }
+
+
   (** Helper methods*)
   let filter_aseq_finite = Sequence.filter ~f:(fun (_, b) -> B.is_finite b)
 

@@ -144,17 +144,11 @@ module Classical (Bound : BoundType.Bound) = struct
   type appr = Approximation.t
 
   let create_new_appr program program_cfr appr =
-    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
-    let appr_cfr = Approximation.empty |> TrivialTimeBounds.compute program_cfr in
-    unchanged_trans
-    |> Set.fold
-         ~f:(fun appr_cfr trans ->
-           let timebound = Approximation.timebound appr trans
-           and costbound = Approximation.costbound appr trans in
-           appr_cfr
-           |> Approximation.add_timebound timebound trans
-           |> Approximation.add_costbound costbound trans)
-         ~init:appr_cfr
+    let common_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
+    Approximation.filter_transitions_and_rvs (Set.mem common_trans)
+      (Set.mem common_trans % RV.transition)
+      appr
+    |> TrivialTimeBounds.compute program_cfr
 end
 
 module Probabilistic = struct
@@ -162,30 +156,15 @@ module Probabilistic = struct
   open Approximation.Probabilistic
 
   let create_new_appr_classical program program_cfr class_appr =
-    let unchanged_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
-    unchanged_trans
-    |> Set.fold
-         ~f:(fun class_appr_cfr trans ->
-           let timebound = ClassicalApproximation.timebound class_appr trans
-           and costbound = ClassicalApproximation.costbound class_appr trans in
-           class_appr_cfr
-           |> ClassicalApproximation.add_timebound timebound trans
-           |> ClassicalApproximation.add_costbound costbound trans)
-         ~init:ClassicalApproximation.empty
+    let common_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
+    ClassicalApproximation.filter_transitions_and_rvs (Set.mem common_trans)
+      (Set.mem common_trans % RV.transition)
+      class_appr
 
 
   let create_new_appr program program_cfr appr =
-    let unchanged_gts = Set.inter (Program.gts program) (Program.gts program_cfr) in
-
-    unchanged_gts
-    |> Set.fold
-         ~f:(fun appr_cfr gt ->
-           let timebound = ExpApproximation.timebound appr gt
-           and costbound = ExpApproximation.costbound appr gt in
-           appr_cfr
-           |> ExpApproximation.add_timebound timebound gt
-           |> ExpApproximation.add_costbound costbound gt)
-         ~init:ExpApproximation.empty
+    let common_trans = Set.inter (Program.gts program) (Program.gts program_cfr) in
+    ExpApproximation.filter_transitions_and_rvs (Set.mem common_trans) (Set.mem common_trans % GRV.gt) appr
 
 
   let create_new_apprs program program_cfr apprs =

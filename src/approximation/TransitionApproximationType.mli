@@ -34,6 +34,7 @@ module Make (B : BoundType.Bound) (T : ApproximableTransition) : sig
   val sum : t -> T.program -> B.t
   (** Returns a timebound for the execution of all given transitions *)
 
+  val filter_transitions : (T.t -> Bool.t) -> t -> t
   val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> T.t -> t -> t
   val all_bounded : t -> T.t Sequence.t -> bool
   val to_formatted : ?pretty:bool -> ?termination_only:bool -> T.t list -> t -> FormattedString.t

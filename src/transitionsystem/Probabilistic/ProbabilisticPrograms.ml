@@ -1142,6 +1142,7 @@ module GRV = struct
   let hash ((gt, l), v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
   let variable (_, v) = v
   let transition (t, _) = t
+  let gt ((gt, _), _) = gt
 
   let to_id_string ((gt, l), v) =
     "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"

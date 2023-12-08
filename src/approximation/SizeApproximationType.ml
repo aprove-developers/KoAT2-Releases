@@ -8,6 +8,7 @@ module Make (B : BoundType.Bound) (RV : ProgramTypes.RV) = struct
 
   type t = (RV.t, B.t, RV.comparator_witness) size_approximation_t
 
+  let filter_rvs f = Map.filter_keys ~f
   let empty = Map.empty (module RV)
 
   let get map rv =

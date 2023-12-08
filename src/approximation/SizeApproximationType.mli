@@ -7,6 +7,7 @@ module Make (B : BoundType.Bound) (RV : ProgramTypes.RV) : sig
 
   val empty : t
   val get : t -> RV.t -> B.t
+  val filter_rvs : (RV.t -> bool) -> t -> t
   val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t -> t -> t
   val add_all : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t list -> t -> t
   val to_formatted : ?pretty:bool -> t -> FormattedString.t

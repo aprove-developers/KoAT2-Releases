@@ -202,6 +202,7 @@ module ProbabilisticRVNonProbOverappr :
 module GRV : sig
   include ProgramTypes.RV with type transition = GeneralTransition.t * Location.t
 
+  val gt : t -> GeneralTransition.t
   val to_probabilistic_rvs : t -> ProbabilisticRV.t Sequence.t
 end
 

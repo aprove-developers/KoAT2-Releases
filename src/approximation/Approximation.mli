@@ -17,6 +17,8 @@ module Make
       The first parameter should be the count of transitions in the program.
       The second parameter should be the count of program variables. *)
 
+  val filter_transitions_and_rvs : (T.t -> bool) -> (PM.RV.t -> bool) -> t -> t
+
   val to_formatted :
     ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> FormattedString.t
   (**  Creates a formatted string containing time,size and cost-bounds. *)
