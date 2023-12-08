@@ -6,7 +6,7 @@ open ProbabilisticProgramModules
 module OverapprAnalysis = Analysis.Make (Bounds.Bound) (NonProbOverappr)
 open Approximation.Probabilistic
 
-let description = "Search for a probabilistic ranking function"
+let description = "Perform a probabilistic analysis on a given PIP"
 let command = "prob-analyse"
 
 type classic_local = [ `MPRF | `TWN ]
