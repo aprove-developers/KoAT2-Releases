@@ -140,8 +140,8 @@ struct
     let num_of_fresh = List.length b_right in
     let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
     let dual_constr = C.dualise fresh_vars a_matrix c_left in
-    let (cost_constr : ParaP.t) = ParaP.of_coeff_list b_right fresh_vars in
-    C.Infix.(dual_constr && ParaP.flatten cost_constr <= d_right)
+    let (const_constr : ParaP.t) = ParaP.of_coeff_list b_right fresh_vars in
+    C.Infix.(dual_constr && ParaP.flatten const_constr <= d_right)
 
 
   (** Invokes farkas quantifier elimination. Uses apply_farkas*)
