@@ -387,14 +387,14 @@ module Classical (Bound : BoundType.Bound) = struct
         ProofOutput.LocalProofOutput.{ result = (refined_program, updated_appr_cfr); proof = cfr_subproof }
 
 
-  let handle_cfrs ~(conf : (ProgramModules.program_modules_t, Bound.t) analysis_configuration)
+  let handle_cfrs ~preprocess ~(conf : (ProgramModules.program_modules_t, Bound.t) analysis_configuration)
       (scc : TransitionSet.t) program appr =
     let non_linear_transitions = Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc in
     if Set.is_empty non_linear_transitions then
       (program, appr)
     else
       let refinement_result =
-        CFR.iter_cfrs program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
+        CFR.iter_cfrs ~preprocess program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
           ~compute_timelimit:(fun () ->
             CFR.compute_timeout_time program
               ~infinite_timebound:(Bound.is_infinity % Approximation.timebound appr)
@@ -409,11 +409,17 @@ module Classical (Bound : BoundType.Bound) = struct
           result
 
 
-  let improve_scc_and_try_cfr ~conf program appr scc_locs =
+  let improve_scc_and_try_cfr ~preprocess ~conf program appr scc_locs =
+    (* Keep only existing locations from SCC as non-local preprocessing in cfr might in general cut locations them *)
+    let scc_locs =
+      match conf.cfrs with
+      | [] -> scc_locs
+      | _ -> Set.inter scc_locs (Program.locations program)
+    in
     let scc = Program.scc_transitions_from_locs program scc_locs in
     improve_scc ~conf:conf.local_configuration scc_locs program appr
     (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-    |> handle_cfrs ~conf scc program
+    |> handle_cfrs ~preprocess ~conf scc program
     |> fun (program, appr) -> (program, scc_cost_bounds ~conf:conf.local_configuration program scc appr)
 
 
@@ -427,7 +433,7 @@ module Classical (Bound : BoundType.Bound) = struct
            ~f:(fun (program, appr) scc_locs ->
              Logger.log logger Logger.INFO (fun () ->
                  ("continue analysis", [ ("scc", LocationSet.to_string scc_locs) ]));
-             improve_scc_and_try_cfr ~conf program appr scc_locs)
+             improve_scc_and_try_cfr ~preprocess ~conf program appr scc_locs)
            ~init:(program, trivial_appr)
     in
     (program, CostBounds.infer_from_timebounds program appr)

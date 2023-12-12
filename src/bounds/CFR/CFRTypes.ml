@@ -20,6 +20,7 @@ module type CFR = sig
   val perform_cfr : cfr -> program -> transitions_to_refine:transition_set -> program MaybeChanged.t
 
   val iter_cfrs :
+    ?preprocess:(program -> program) ->
     program ->
     scc_orig:transition_set ->
     transitions_to_refine:transition_set ->
