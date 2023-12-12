@@ -312,11 +312,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     (* reset all caches, since we might prior have analysed a different version of the same SCC (i.e., due to CFR) *)
     reset_all_caches ();
 
-    (* First compute initial size bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
-    improve_size_bounds ~conf program rvg_with_sccs scc lsbs appr
-    |> knowledge_propagation scc program
-    |> MaybeChanged.unpack % improve_timebound ~conf scc twn_state `Time program
-    |> Util.find_fixpoint improvement_step
+    Util.find_fixpoint improvement_step appr
 end
 
 module Classical (Bound : BoundType.Bound) = struct
