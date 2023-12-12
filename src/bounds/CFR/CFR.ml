@@ -49,6 +49,18 @@ module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struc
           [ ("transitions_to_refine", TransitionSet.to_string transitions_to_refine) ] ))
 
 
+  let refine_and_analyse cfr program ~transitions_to_refine keep_refinement_with_results =
+    let open MaybeChanged.Monad in
+    let+ refined_program = perform_cfr cfr program ~transitions_to_refine in
+    let execute () = keep_refinement_with_results cfr ~refined_program in
+    Logger.with_log logger_cfr Logger.INFO
+      (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
+      ~result:(function
+        | CFRTypes.DontKeepRefinedProgram -> "Don't keep refined program"
+        | KeepRefinedProgram _ -> "Keep refined program")
+      execute
+
+
   (** Iterate over all CFRs and keep the first result for which the given function returns [KeepRefinedProgram]*)
   let iter_cfrs program ~scc_orig ~transitions_to_refine ~compute_timelimit keep_refinement_with_results cfrs
       =
@@ -59,7 +71,7 @@ module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struc
         let opt =
           Timeout.timed_run timelimit
             ~action:(fun () -> handle_timeout_cfr (method_name cfr) scc_orig)
-            (fun () -> perform_cfr cfr program ~transitions_to_refine)
+            (fun () -> refine_and_analyse cfr program ~transitions_to_refine keep_refinement_with_results)
         in
         match opt with
         | None -> None
@@ -79,26 +91,12 @@ module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struc
         ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
     in
     let rec apply_cfrs = function
-      | [] -> None
-      | cfr :: cfrs -> (
-          if !time_cfr <= 0. then
-            None
-          else
-            match apply_single_cfr cfr with
-            | None -> apply_cfrs cfrs
-            | Some refined_program -> (
-                let keep_refinement_result =
-                  let execute () = keep_refinement_with_results cfr ~refined_program in
-                  Logger.with_log logger_cfr Logger.INFO
-                    (fun () -> ("CFR.iter_cfrs.apply_cfrs.keep_refinement_with_results", []))
-                    ~result:(function
-                      | CFRTypes.DontKeepRefinedProgram -> "Don't keep refined program"
-                      | KeepRefinedProgram _ -> "Keep refined program")
-                    execute
-                in
-                match keep_refinement_result with
-                | CFRTypes.DontKeepRefinedProgram -> apply_cfrs cfrs
-                | KeepRefinedProgram res -> Some res))
+      | cfr :: cfrs when !time_cfr > 0. -> (
+          match apply_single_cfr cfr with
+          | None -> apply_cfrs cfrs
+          | Some CFRTypes.DontKeepRefinedProgram -> apply_cfrs cfrs
+          | Some (KeepRefinedProgram res) -> Some res)
+      | _ -> None
     in
     apply_cfrs cfrs
 
