@@ -222,8 +222,13 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
 
 
   (** Returns the first locations of the loops *)
-  let loop_heads loops =
-    List.fold ~f:(fun loop_heads loop -> Set.add loop_heads (List.hd_exn loop)) ~init:LocationSet.empty loops
+  let loop_heads graph loops =
+    let loop_head_from_loop loop =
+      let num_of_pre_trans = List.length % TransitionGraph.pred graph in
+      List.max_elt ~compare:(fun a b -> Int.compare (num_of_pre_trans a) (num_of_pre_trans b)) loop
+      |> Option.value_exn
+    in
+    List.map ~f:loop_head_from_loop loops |> LocationSet.of_list
 end
 
 module FVS (PM : ProgramTypes.ProgramModules) = struct
@@ -874,7 +879,7 @@ end = struct
     let heads =
       match config.abstract with
       | `FVS -> FVS.fvs ~loops:(Some loops) graph
-      | `LoopHeads -> Loops.loop_heads loops
+      | `LoopHeads -> Loops.loop_heads graph loops
     in
 
     Set.fold
