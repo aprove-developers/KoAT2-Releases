@@ -3,7 +3,7 @@ open! OurBase
 
 open PolyTypes
 
-(** Provides default implementations of polynomials. *)
+(** Provides default implementations of (laurent) polynomials. *)
 module PolynomialOverIndeterminate (I : Indeterminate) (Value : Ring) :
   Polynomial
     with type value = Value.t
@@ -12,7 +12,7 @@ module PolynomialOverIndeterminate (I : Indeterminate) (Value : Ring) :
      and type scaled_monomial = ScaledMonomials.MakeOverIndeterminate(I)(Value).t
      and type indeterminate = I.t
 
-(** Constructs a default polynomial using a list of monomials and their coefficients *)
+(** Constructs a default (laurent) polynomial using a list of monomials and their coefficients *)
 module PolynomialOver (Value : Ring) : sig
   include
     Polynomial
@@ -43,6 +43,7 @@ module Polynomial : sig
   (** TODO doc *)
 end
 
+(** Provides default implementation of polynomials ranged over [OurRational]. *)
 module RationalPolynomial : sig
   include module type of PolynomialOver (OurRational)
 
@@ -53,16 +54,19 @@ module RationalPolynomial : sig
   val degree_coeff_list : t -> value list
 
   val normalize : t -> Polynomial.t
-  (** Multiply with lcm *)
+  (** Multiply with lcm. *)
 
   val normalize_return_factor : t -> Polynomial.t * OurRational.t
-  (** Multiply with lcm and return lcm*)
+  (** Multiply with lcm and return lcm. *)
 
   val overapprox : t -> Polynomial.t
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
 
   val is_integral : t -> bool
 end
+
+module RationalLaurentPolynomial : module type of PolynomialOver (OurRational)
+(** Provides default implementation of laurent polynomials ranged over [OurRational]. *)
 
 (** Provides polynomials where the coefficients are polynomials over {i Value}. *)
 module ParameterPolynomialOver (Value : PolyTypes.Ring) : sig
