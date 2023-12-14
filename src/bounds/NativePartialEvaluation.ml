@@ -716,6 +716,8 @@ module type Abstraction = sig
 
   type t = Abstr of abstracted | Constr of guard [@@deriving eq, ord]
 
+  val is_true : t -> bool
+
   val abstract : context -> Location.t -> guard -> t
   (** Abstract a constraint to the abstracted type. *)
 
@@ -763,6 +765,11 @@ end = struct
 
   (** Marks if the guard was abstracted or not *)
   type t = Abstr of abstracted | Constr of guard [@@deriving eq, ord]
+
+  let is_true = function
+    | Constr guard -> Guard.is_true guard
+    | Abstr a -> Set.is_empty a
+
 
   (** Properties are a set of constraints. If φ is in the properties, then it's
       negation ¬φ should not, because it is already checked as well. Adding it
@@ -985,6 +992,7 @@ module Version (A : Abstraction) = struct
     let mk_true location = (location, A.Constr Constraint.mk_true)
     let location (l, _) = l
     let abstracted (_, a) = a
+    let is_true (_, a) = A.is_true a
   end
 
   include Inner
@@ -1052,37 +1060,32 @@ struct
 
      TODO: rewrite, and probably move to Location module.
   *)
-  let rec generate_version_location_name all_original_locations index_table version =
+  let generate_version_location_name all_original_locations index_table version =
     let location = Version.location version in
-    let next_index =
-      Hashtbl.update_and_return index_table location ~f:(Option.value_map ~default:1 ~f:(( + ) 1))
+    let rec get_next_location () =
+      let next_index =
+        Hashtbl.update_and_return index_table location ~f:(Option.value_map ~default:1 ~f:(( + ) 1))
+      in
+      let next_location =
+        Printf.sprintf "%s_v%i" (Location.to_string location) next_index |> Location.of_string
+      in
+      if Set.mem all_original_locations next_location then
+        get_next_location ()
+      else
+        next_location
     in
-    let next_location =
-      Printf.sprintf "%s_v%i" (Location.to_string location) next_index |> Location.of_string
-    in
-    if Set.mem all_original_locations next_location then
-      generate_version_location_name all_original_locations index_table version
+
+    if Version.is_true version then
+      location
     else
-      next_location
+      get_next_location ()
 
 
   let evaluate_component config component program_vars program_start graph =
     let am = Ppl.manager_alloc_loose () in
-    let generate_version_location_name =
-      let program_locations = TransitionGraph.locations graph in
-      let index_table = Hashtbl.create (module Location) in
-      fun version -> generate_version_location_name program_locations index_table version
-    in
-    let version_location_tbl =
-      (* add mappings for already existing (non refined locations) *)
-      Set.to_list (TransitionGraph.locations graph)
-      |> List.map ~f:(fun l -> (Version.mk_true l, l))
-      |> Hashtbl.of_alist_exn (module Version)
-    in
 
     let entry_transitions = entry_transitions graph component
     and exit_transitions = exit_transitions graph component in
-
     let entry_versions =
       let from_entry_trans =
         Set.fold
@@ -1096,6 +1099,13 @@ struct
       else
         from_entry_trans
     in
+
+    let generate_version_location_name =
+      let program_locations = TransitionGraph.locations graph in
+      let index_table = Hashtbl.create (module Location) in
+      fun version -> generate_version_location_name program_locations index_table version
+    in
+    let version_location_tbl = Hashtbl.create (module Version) in
 
     let abstr_ctx = Abstraction.mk_from_heuristic_scc config graph component program_vars in
 
@@ -1120,7 +1130,10 @@ struct
           (* Version + Transition guard is UNSAT *)
           None
         else
-          let version_start_loc = Hashtbl.find_exn version_location_tbl current_version in
+          let version_start_loc =
+            Hashtbl.find_or_add version_location_tbl current_version ~default:(fun () ->
+                generate_version_location_name current_version)
+          in
           let next_versions = ref [] in
           let evaluated_grouped_transition =
             grouped_transition
@@ -1128,8 +1141,8 @@ struct
                  ~add_invariant:src_constr ~redirect:(fun trans ->
                    match evaluate_transition src_polyh trans with
                    | `ExitTransition target_version ->
-                       (* Here, we go to the already existing version *)
-                       Hashtbl.find_exn version_location_tbl target_version
+                       (* Here, we exit the component hence we go to the original location *)
+                       Version.location target_version
                    | `EvaluatedTransition next_version -> (
                        match Hashtbl.find version_location_tbl next_version with
                        | Some target_location ->
