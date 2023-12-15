@@ -122,9 +122,12 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
                 Hashtbl.update transition_steps (l, t, l') ~f:(( + ) 1 % Option.value_exn);
                 Apron.Abstract1.join manager old_abstract transfered_l_abstract)
               else
-                Apron.Abstract1.meet manager
-                  (Apron.Abstract1.widening manager old_abstract transfered_l_abstract)
-                  (Hashtbl.find_exn narrowing_abstract l'));
+                let widened_abstract =
+                  Apron.Abstract1.widening manager old_abstract
+                    (Apron.Abstract1.join manager old_abstract transfered_l_abstract)
+                in
+
+                Apron.Abstract1.meet manager widened_abstract (Hashtbl.find_exn narrowing_abstract l'));
 
           (* add succesor transitons to worklist *)
           TransitionGraph.succ_e (Program.graph program_) l'
