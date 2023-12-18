@@ -389,13 +389,13 @@ module Polynomial = struct
 
 
   let primitive_part_content_factorisation t =
-    let primitive_part =
+    let content =
       match List.reduce ~f:OurInt.gcd (coeffs t) with
       | Some gcd -> OurInt.abs gcd
       | None -> OurInt.one
     in
-    let content = Map.map ~f:(fun coeff -> OurInt.div coeff primitive_part) t in
-    (primitive_part, content)
+    let primitive_part = Map.map ~f:(fun coeff -> OurInt.div coeff content) t in
+    (content, primitive_part)
 end
 
 module RationalPolynomial = struct

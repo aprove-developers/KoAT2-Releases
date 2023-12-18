@@ -88,15 +88,15 @@ module Atom = struct
     type value = Polynomial.value
 
     type t = Polynomial.t [@@deriving eq, ord]
-    (** Invariant: Always in cannonical form p ≤ 0, where the primitive part of p is 1 *)
+    (** Invariant: Always in cannonical form p ≤ 0, where the content of p is 1 *)
 
     let poly = identity
     let poly_lt t = Polynomial.(t - one)
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
     let cannonical poly =
-      let primitive_part, content = Polynomial.primitive_part_content_factorisation poly in
-      content
+      let content, primitive_part = Polynomial.primitive_part_content_factorisation poly in
+      primitive_part
 
 
     let mk_gt poly1 poly2 = cannonical Polynomial.(poly2 - poly1 + one)
