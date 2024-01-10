@@ -28,3 +28,4 @@ val read_probabilistic_prog_goal_file :
   string -> ProbabilisticPrograms.ProbabilisticProgram.t * Goal.probabilistic Goal.goal
 
 val read_probabilistic_program : string -> ProbabilisticPrograms.ProbabilisticProgram.t
+val read_prob : string -> Polynomials.RationalLaurentPolynomial.t

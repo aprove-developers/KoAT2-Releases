@@ -61,7 +61,13 @@ let trivial_sizebounds program ~grvs_in_and_out elcbs class_appr appr =
                let open OptionMonad in
                let+ update = TransitionLabel.update label v in
                RationalBound.mul
-                 (RationalBound.of_constant @@ TransitionLabel.probability label)
+                 (if label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.is_const
+                  then
+                    label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.get_constant
+                    |> RationalBound.of_constant
+                  else
+                    (* TODO *)
+                    RationalBound.infinity)
                  (UpdateElement.exp_value_abs_bound update))
         |> OptionMonad.sequence |> Option.map ~f:RationalBound.sum_list
       in

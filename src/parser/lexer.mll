@@ -25,7 +25,7 @@ let comment = '#'[^ '\n' '\r']*newline
 let id = ['a'-'z' 'A'-'Z' '_' '!'] ['a'-'z' 'A'-'Z' '0'-'9' '.' '_' '\'' '!']* '\''?
 
 let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
-let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'* | '[' fraction ']'
+let float = ['0'-'9']*['.']['0'-'9']+ | ['0'-'9']+['.'] | '[' fraction ']'
 
 rule read =
   parse
@@ -48,7 +48,7 @@ rule read =
   | "VAR"             { P.VAR }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (Lexing.lexeme lexbuf) }
-  | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
+  | float             { P.UFLOAT (Lexing.lexeme lexbuf) }
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }

@@ -37,6 +37,7 @@ let read_update_element = read Parser.onlyUpdateElement
 let read_atom = read Parser.onlyAtom
 let read_polynomial str = read Parser.onlyPolynomial str
 let read_bound = read Parser.onlyBound
+let read_prob str = read Parser.onlyProb str
 
 let read_input ?(termination = false) ?(rename = false) simple program_str =
   if simple then

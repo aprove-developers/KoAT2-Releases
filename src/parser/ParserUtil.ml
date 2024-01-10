@@ -132,7 +132,7 @@ let mk_general_transitions
     (gts :
       ((string * string list)
       * Polynomial.t
-      * (int * (OurRational.t * UpdateElement.t list * string) list) list
+      * (int * (RationalLaurentPolynomial.t * UpdateElement.t list * string) list) list
       * Formula.t)
       list) =
   let lhs_locations = Set.of_list (module String) @@ List.map ~f:(fun ((loc, _), _, _, _) -> loc) gts in
@@ -155,7 +155,10 @@ let mk_general_transitions
     |> List.max_elt ~compare:Int.compare |> Option.value ~default:0
   in
   let mk_general_transition
-      ((start_loc, patterns), cost, (rhss : (OurRational.t * UpdateElement.t list * string) list), formula) =
+      ( (start_loc, patterns),
+        cost,
+        (rhss : (RationalLaurentPolynomial.t * UpdateElement.t list * string) list),
+        formula ) =
     Sequence.of_list (Formula.constraints formula)
     |> Sequence.map ~f:(fun guard ->
            GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns
