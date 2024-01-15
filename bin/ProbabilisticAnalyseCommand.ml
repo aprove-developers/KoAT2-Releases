@@ -46,6 +46,7 @@ type params = {
   classic_local : classic_local list;
       [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
+  closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   preprocessing_strategy : Preprocessor.strategy;
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
       [@default Preprocessor.process_till_fixpoint]
@@ -90,14 +91,19 @@ let run (params : params) =
   let preprocess =
     Preprocessor.ProbabilisticWithOverappr.process params.preprocessing_strategy params.preprocessors
   in
-
+  let open Analysis in
   let classical_local_conf =
-    List.fold_left
-      ~f:
-        (fun conf -> function
-          | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
-          | `TWN -> { conf with twn = true })
-      ~init:Analysis.default_local_configuration params.classic_local
+    {
+      run_mprf_depth =
+        (if List.mem ~equal:Poly.( = ) params.classic_local `MPRF then
+           Some params.mprf_depth
+         else
+           None);
+      twn = List.exists ~f:(( == ) `TWN) params.classic_local;
+      closed_form_size_bounds = Analysis.NoClosedFormSizeBounds;
+      (* TODO *)
+      goal = Analysis.Complexity;
+    }
   in
 
   let conf =
