@@ -2,20 +2,20 @@ open! OurBase
 
 let cfr_logger = Logging.(get CFR)
 
-module Loops (PM : ProgramTypes.ProgramModules) = struct
+module Cycles (PM : ProgramTypes.ProgramModules) = struct
   open PM
 
-  let loop_to_string loop = Sequence.of_list loop |> Util.sequence_to_string ~f:Location.to_string
-  let loops_to_string loops = Sequence.of_list loops |> Util.sequence_to_string ~f:loop_to_string
+  let cycle_to_string cycle = Sequence.of_list cycle |> Util.sequence_to_string ~f:Location.to_string
+  let cycles_to_string cycles = Sequence.of_list cycles |> Util.sequence_to_string ~f:cycle_to_string
 
   (* mutable state *)
   type state = { blocked : (Location.t, bool) Hashtbl.t; b_lists : (Location.t, Location.t list) Hashtbl.t }
 
-  (** Finds all loops in a graph, using the algorithm from Donald B. Johnson (1975)
-  By itself this function is probably not very useful. Use transition_loops_for in
-  order to get the loops with transitions.
+  (** Finds all cycles in a graph, using the algorithm from Donald B. Johnson (1975)
+  By itself this function is probably not very useful. Use transition_cycles_for in
+  order to get the cycles with transitions.
   *)
-  let find_loops graph =
+  let find_cycles graph =
     let all_locations = TransitionGraph.locations graph in
 
     (* initialize hashtables to the number of locations in the graph *)
@@ -67,7 +67,7 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     in
 
     (* Transform the path into a list of locations, without mutating the path *)
-    let loop_of = Stack.to_list in
+    let cycle_of = Stack.to_list in
 
     (* We start with an empty path *)
     let path = Stack.create () in
@@ -89,18 +89,18 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
       in
       let closed, new_results =
         Set.fold
-          ~f:(fun (closed_acc, loops_acc) next_location ->
+          ~f:(fun (closed_acc, cycles_acc) next_location ->
             if Location.equal next_location start_location then (
-              let loop = loop_of path in
+              let cycle = cycle_of path in
               Logging.log cfr_logger ~level:Logger.DEBUG "johnson" (fun () ->
-                  [ ("FOUND_LOOP", loop_to_string loop) ]);
-              (* Found a loop, add to results *)
-              (true, loop :: loops_acc))
+                  [ ("FOUND_CYCLE", cycle_to_string cycle) ]);
+              (* Found a cycle, add to results *)
+              (true, cycle :: cycles_acc))
             else if not (is_blocked s next_location) then
-              let inner_closed, inner_loops_acc = circuit graph s loops_acc start_location next_location in
-              (closed_acc || inner_closed, inner_loops_acc)
+              let inner_closed, inner_cycles_acc = circuit graph s cycles_acc start_location next_location in
+              (closed_acc || inner_closed, inner_cycles_acc)
             else
-              (closed_acc, loops_acc))
+              (closed_acc, cycles_acc))
           successors ~init:(false, prev_results)
       in
 
@@ -141,18 +141,18 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
           (TransitionGraph.remove_vertex current_graph location, new_results))
         (TransitionGraph.locations graph) ~init:(graph, [])
     in
-    Logging.log cfr_logger ~level:Logger.INFO "loops" (fun () -> [ ("LOOPS", loops_to_string results) ]);
+    Logging.log cfr_logger ~level:Logger.INFO "cycles" (fun () -> [ ("CYCLES", cycles_to_string results) ]);
     results
 
 
-  (** Find all loops in a given scc using the algorithm from Donald B. Johnson (1975) **)
-  let find_loops_scc graph scc =
+  (** Find all cycles in a given scc using the algorithm from Donald B. Johnson (1975) **)
+  let find_cycles_scc graph scc =
     let scc_graph = Set.to_sequence scc |> TransitionGraph.mk in
-    find_loops scc_graph
+    find_cycles scc_graph
 
 
-  (** For a list of location loops, this function creates the list of all transition loops
-      containing a loop from the location loops.
+  (** For a list of location cycles, this function creates the list of all transition cycles
+      containing a cycle from the location cycles.
 
       Example:
       The graph G contains transitions
@@ -161,12 +161,12 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
       (l1, t2, l2)
       (l2, t3, l1)
 
-      The loop detection `find_loops` would only find the loop [l1, l2].
-      This function expands the (location) loop [l1,l2] the the transition loops
+      The cycle detection `find_cycles` would only find the cycle [l1, l2].
+      This function expands the (location) cycle [l1,l2] the the transition cycles
       [t1,t3], [t2,t3].
 
       *)
-  let transition_loops_from graph (loc_loops : Location.t list list) =
+  let transition_cycles_from graph (loc_cycles : Location.t list list) =
     let transitions_betwen_locations src target =
       TransitionGraph.fold_succ_e
         (fun t ts ->
@@ -185,26 +185,26 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
         ~init:[] suffixes
     in
 
-    (* computes for every step in the loop the walkable transitions *)
-    let rec transition_loops (lh : Location.t) (loc_loop : Location.t list) =
-      match loc_loop with
-      | l1 :: l2 :: ls -> combine (transitions_betwen_locations l1 l2) (transition_loops lh (l2 :: ls))
+    (* computes for every step in the cycle the walkable transitions *)
+    let rec transition_cycles (lh : Location.t) (loc_cycle : Location.t list) =
+      match loc_cycle with
+      | l1 :: l2 :: ls -> combine (transitions_betwen_locations l1 l2) (transition_cycles lh (l2 :: ls))
       | l1 :: [] ->
-          (* start loops with transitions from last location to head *)
+          (* start cycles with transitions from last location to head *)
           combine (transitions_betwen_locations l1 lh) [ [] ]
       | [] -> [ [] ]
     in
 
     List.fold
-      ~f:(fun results loc_loop -> List.append (transition_loops (List.hd_exn loc_loop) loc_loop) results)
-      ~init:[] loc_loops
+      ~f:(fun results loc_cycle -> List.append (transition_cycles (List.hd_exn loc_cycle) loc_cycle) results)
+      ~init:[] loc_cycles
 
 
-  (** Rotate a loop, so that its head is the first location *)
-  let rotate head loop =
+  (** Rotate a cycle, so that its head is the first location *)
+  let rotate head cycle =
     let rec rotate_ prefix suffix =
       Logging.log cfr_logger ~level:Logger.DEBUG "rotate" (fun () ->
-          [ ("PREFIX", loop_to_string prefix); ("SUFFIX", loop_to_string suffix) ]);
+          [ ("PREFIX", cycle_to_string prefix); ("SUFFIX", cycle_to_string suffix) ]);
       match suffix with
       | location :: suffix ->
           if location == head then
@@ -215,15 +215,16 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
             rotate_ (location :: prefix) suffix
       | [] -> List.rev prefix
     in
-    rotate_ [] loop
+    rotate_ [] cycle
 
 
-  (** Returns the first locations of the loops *)
-  let loop_heads graph loops =
-    let loop_head_from_loop loop =
+  (** Returns the first locations of the cycles *)
+  let cycle_heads graph cycles =
+    let cycle_head_from_cycle cycle =
       let num_of_pre_trans = List.length % TransitionGraph.pred graph in
-      List.max_elt ~compare:(fun a b -> Int.compare (num_of_pre_trans a) (num_of_pre_trans b)) loop
+      List.max_elt ~compare:(fun a b -> Int.compare (num_of_pre_trans a) (num_of_pre_trans b)) cycle
       |> Option.value_exn
     in
-    List.map ~f:loop_head_from_loop loops |> LocationSet.of_list
+    List.map ~f:cycle_head_from_cycle cycles |> LocationSet.of_list
+  (* List.fold ~f:(fun cycle_heads cycle -> Set.add cycle_heads (List.hd_exn cycle)) ~init:LocationSet.empty cycles *)
 end

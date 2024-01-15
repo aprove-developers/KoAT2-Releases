@@ -10,18 +10,18 @@ let log ?(level = Logger.INFO) method_name data =
 type config = { abstract : [ `FVS | `LoopHeads ]; k_encounters : int; update_invariants : bool }
 
 module FVS (PM : ProgramTypes.ProgramModules) = struct
-  open Loops
-  module Loops = Loops (PM)
+  open Cycles
+  module Cycles = Cycles (PM)
   (* TODO: move this module to SMT module *)
 
   open PM
 
   exception FVSFailed
 
-  (** Compute the Feedback-vertex Set for a given graph. If loops have already
+  (** Compute the Feedback-vertex Set for a given graph. If cycles have already
       been computed you can give them to this function to avoid recomputation.
       *)
-  let fvs ?(loops = None) graph =
+  let fvs ?(cycles = None) graph =
     let cfg =
       [
         ("model", "true");
@@ -33,10 +33,10 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
 
     let ctx = Z3.mk_context cfg in
 
-    let loops =
-      match loops with
+    let cycles =
+      match cycles with
       | Some lps -> lps
-      | None -> Loops.find_loops graph
+      | None -> Cycles.find_cycles graph
     in
 
     let locations = TransitionGraph.locations graph in
@@ -69,17 +69,17 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
          ~init:[]
     |> Z3.Optimize.add o;
 
-    (* require every loop to contain one marked/hit location *)
+    (* require every cycle to contain one marked/hit location *)
     List.fold
-      ~f:(fun constraints loop ->
-        let loop_constraint =
-          List.fold ~f:(fun expressions location -> var_for location :: expressions) ~init:[] loop
+      ~f:(fun constraints cycle ->
+        let cycle_constraint =
+          List.fold ~f:(fun expressions location -> var_for location :: expressions) ~init:[] cycle
           |> Z3.Arithmetic.mk_add ctx
           (* |> tap (fun e -> Z3.Expr.to_string e |> String.println stdout ) *)
           |> Z3.Arithmetic.mk_le ctx one
         in
-        loop_constraint :: constraints)
-      ~init:[] loops
+        cycle_constraint :: constraints)
+      ~init:[] cycles
     |> Z3.Optimize.add o;
 
     (* Solve ILP, minimizing the number of marked locations *)
@@ -535,8 +535,8 @@ end = struct
   end
 
   module LocationMap = MakeMapCreators1 (Location)
-  open Loops
-  module Loops = Loops (PM)
+  open Cycles
+  module Cycles = Cycles (PM)
   module FVS = FVS (PM)
 
   type context = AtomSet.t LocationMap.t
@@ -598,8 +598,8 @@ end = struct
       |> AtomSet.of_list
     in
 
-    let pr_d (loop : Transition.t list) =
-      (* Backward propagation captures the properties needed for a full loop *)
+    let pr_d (cycle : Transition.t list) =
+      (* Backward propagation captures the properties needed for a full cycle *)
       List.fold_right
         ~f:(fun transition combined ->
           log ~level:Logger.DEBUG "heuristic.backprop" (fun () ->
@@ -614,7 +614,7 @@ end = struct
             constr && update_guard
             && Constraint.map_polynomial (Polynomials.Polynomial.substitute_all update_approx) combined)
           |> project_guard am program_variables)
-        loop ~init:Constraint.mk_true
+        cycle ~init:Constraint.mk_true
       |> AtomSet.of_list
     in
 
@@ -643,8 +643,8 @@ end = struct
       List.fold ~f:(fun props t -> f t |> Set.union props) ~init:AtomSet.empty transitions
     in
 
-    let for_loops f loops =
-      List.fold ~f:(fun props loop -> f loop |> Set.union props) ~init:AtomSet.empty loops
+    let for_cycles f cycles =
+      List.fold ~f:(fun props cycle -> f cycle |> Set.union props) ~init:AtomSet.empty cycles
     in
 
     let log_props location name props =
@@ -653,28 +653,29 @@ end = struct
       props
     in
 
-    let loops = Loops.find_loops_scc graph scc in
+    let cycles = Cycles.find_cycles_scc graph scc in
 
     (* The locations to abstract *)
     let heads =
       match config.abstract with
-      | `FVS -> FVS.fvs ~loops:(Some loops) graph
-      | `LoopHeads -> Loops.loop_heads graph loops
+      | `FVS -> FVS.fvs ~cycles:(Some cycles) graph
+      | `LoopHeads -> Cycles.cycle_heads graph cycles
     in
 
     Set.fold
       ~f:(fun properties head ->
         let outgoing_transitions = TransitionGraph.succ_e graph head in
         let incoming_transitions = TransitionGraph.pred_e graph head in
-        (* Find loops containing the head, and rotate *)
-        let loops_with_head =
-          loops
+        (* Find cycles containing the head, and rotate *)
+        let cycles_with_head =
+          cycles
           |> List.filter ~f:(fun l -> List.mem ~equal:Location.equal l head)
-          |> List.map ~f:(Loops.rotate head)
+          |> List.map ~f:(Cycles.rotate head)
         in
         log ~level:Logger.DEBUG "heuristic" (fun () ->
             [
-              ("LOCATION", Location.to_string head); ("ROTATED_LOOPS", Loops.loops_to_string loops_with_head);
+              ("LOCATION", Location.to_string head);
+              ("ROTATED_CYCLES", Cycles.cycles_to_string cycles_with_head);
             ]);
         let properties_for_head =
           AtomSet.empty
@@ -683,7 +684,8 @@ end = struct
           |> Set.union (for_transitions pr_c incoming_transitions |> log_props head "PR_c")
           |> Set.union (for_transitions pr_cv incoming_transitions |> log_props head "PR_cv")
           |> Set.union
-               (Loops.transition_loops_from graph loops_with_head |> for_loops pr_d |> log_props head "PR_d")
+               (Cycles.transition_cycles_from graph cycles_with_head
+               |> for_cycles pr_d |> log_props head "PR_d")
           |> deduplicate_props
           |> tap (fun props ->
                  log "heuristic" (fun () ->
@@ -827,8 +829,8 @@ struct
   module VersionSet = MakeSetCreators0 (Version)
   open PM
   open Unfolding (PM) (Adapter)
-  open Loops
-  open Loops (PM)
+  open Cycles
+  open Cycles (PM)
   open GraphUtils (PM)
 
   (** The call [generate_version_location_name program_locations index_table version] generates a new location name by appending the string [_vi] to the location of [version] where [i] acts as an index.
@@ -1049,7 +1051,7 @@ struct
     let orig_graph = Program.graph program in
 
     let pe_prog =
-      let find_smallest_loop transition =
+      let find_smallest_cycle transition =
         let src, _, target = transition in
         let shortest_path, _length = Djikstra.shortest_path orig_graph target src in
         transition :: shortest_path |> TransitionSet.of_list
@@ -1063,7 +1065,7 @@ struct
       let component =
         non_linear_transitions
         |> Set.fold
-             ~f:(fun loops transition -> Set.union loops (find_smallest_loop transition))
+             ~f:(fun cycles transition -> Set.union cycles (find_smallest_cycle transition))
              ~init:TransitionSet.empty
         |> Set.fold
              ~f:(fun parallel transition -> Set.union parallel (find_parallel_transitions transition))
