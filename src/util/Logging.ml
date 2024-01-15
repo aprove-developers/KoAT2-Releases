@@ -66,3 +66,7 @@ let with_disabled_loggers (logs : (logger * Logger.level) list) =
 
 let use_loggers (logs : (logger * Logger.level) list) =
   Logger.init (with_disabled_loggers logs) (Logger.make_dbg_formatter IO.stdout)
+
+
+let log ?(level = Logger.INFO) logger method_name data =
+  Logger.log logger level (fun () -> (method_name, data ()))
