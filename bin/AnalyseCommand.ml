@@ -112,7 +112,7 @@ type params = {
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
   closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
-  depth : int; [@default 1] [@aka [ "d" ]]
+  mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   cfr : cfr list;
       [@enum
@@ -251,7 +251,7 @@ let run (params : params) =
           {
             run_mprf_depth =
               (if List.mem ~equal:Poly.( = ) params.local `MPRF then
-                 Some params.depth
+                 Some params.mprf_depth
                else
                  None);
             twn = List.exists ~f:(( == ) `TWN) params.local;
