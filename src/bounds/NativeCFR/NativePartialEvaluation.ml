@@ -659,7 +659,7 @@ end = struct
     let heads =
       match config.abstract with
       | `FVS -> FVS.fvs ~cycles:(Some cycles) graph
-      | `LoopHeads -> Cycles.cycle_heads graph cycles
+      | `LoopHeads -> Cycles.loop_heads graph cycles
     in
 
     Set.fold

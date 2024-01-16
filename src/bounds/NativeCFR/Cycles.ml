@@ -1,7 +1,8 @@
 open! OurBase
 
-let cfr_logger = Logging.(get CFR)
+let cfr_logger = Logging.(get Program)
 
+(** This module computes all cycles in a graph. *)
 module Cycles (PM : ProgramTypes.ProgramModules) = struct
   open PM
 
@@ -11,14 +12,12 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
   (* mutable state *)
   type state = { blocked : (Location.t, bool) Hashtbl.t; b_lists : (Location.t, Location.t list) Hashtbl.t }
 
-  (** Finds all cycles in a graph, using the algorithm from Donald B. Johnson (1975)
-  By itself this function is probably not very useful. Use transition_cycles_for in
-  order to get the cycles with transitions.
-  *)
+  (* Finds all cycles in a graph, using the algorithm from Donald B. Johnson (1975).
+     Use transition_cycles_for in order to get the cycles with transitions. *)
   let find_cycles graph =
     let all_locations = TransitionGraph.locations graph in
 
-    (* initialize hashtables to the number of locations in the graph *)
+    (* Initialize hashtables to the number of locations in the graph *)
     let hashtbl_size = Set.length all_locations in
 
     (* Initial state for circuit, based on a set of locations *)
@@ -66,10 +65,10 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
         Hashtbl.update s.b_lists location ~f:(fun _ -> []))
     in
 
-    (* Transform the path into a list of locations, without mutating the path *)
+    (* Transform the path into a list of locations without mutating the path. *)
     let cycle_of = Stack.to_list in
 
-    (* We start with an empty path *)
+    (* Initialize the empty path.  *)
     let path = Stack.create () in
 
     let rec circuit graph s prev_results start_location current_location =
@@ -145,13 +144,13 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
     results
 
 
-  (** Find all cycles in a given scc using the algorithm from Donald B. Johnson (1975) **)
+  (* Find all cycles in a given scc using the algorithm from Donald B. Johnson (1975) **)
   let find_cycles_scc graph scc =
     let scc_graph = Set.to_sequence scc |> TransitionGraph.mk in
     find_cycles scc_graph
 
 
-  (** For a list of location cycles, this function creates the list of all transition cycles
+  (* For a list of location cycles, this function creates the list of all transition cycles
       containing a cycle from the location cycles.
 
       Example:
@@ -164,8 +163,7 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
       The cycle detection `find_cycles` would only find the cycle [l1, l2].
       This function expands the (location) cycle [l1,l2] the the transition cycles
       [t1,t3], [t2,t3].
-
-      *)
+  *)
   let transition_cycles_from graph (loc_cycles : Location.t list list) =
     let transitions_betwen_locations src target =
       TransitionGraph.fold_succ_e
@@ -185,7 +183,7 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
         ~init:[] suffixes
     in
 
-    (* computes for every step in the cycle the walkable transitions *)
+    (* Computes for every step in the cycle the walkable transitions *)
     let rec transition_cycles (lh : Location.t) (loc_cycle : Location.t list) =
       match loc_cycle with
       | l1 :: l2 :: ls -> combine (transitions_betwen_locations l1 l2) (transition_cycles lh (l2 :: ls))
@@ -200,7 +198,7 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
       ~init:[] loc_cycles
 
 
-  (** Rotate a cycle, so that its head is the first location *)
+  (** Rotate a cycle so that its head is the first location *)
   let rotate head cycle =
     let rec rotate_ prefix suffix =
       Logging.log cfr_logger ~level:Logger.DEBUG "rotate" (fun () ->
@@ -218,13 +216,12 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
     rotate_ [] cycle
 
 
-  (** Returns the first locations of the cycles *)
-  let cycle_heads graph cycles =
+  (** Returns the first location of each cycle. *)
+  let loop_heads graph cycles =
     let cycle_head_from_cycle cycle =
       let num_of_pre_trans = List.length % TransitionGraph.pred graph in
       List.max_elt ~compare:(fun a b -> Int.compare (num_of_pre_trans a) (num_of_pre_trans b)) cycle
       |> Option.value_exn
     in
     List.map ~f:cycle_head_from_cycle cycles |> LocationSet.of_list
-  (* List.fold ~f:(fun cycle_heads cycle -> Set.add cycle_heads (List.hd_exn cycle)) ~init:LocationSet.empty cycles *)
 end
