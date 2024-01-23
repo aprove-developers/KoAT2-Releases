@@ -6,8 +6,7 @@ let log ?(level = Logger.INFO) method_name data =
   Logger.log cfr_logger level (fun () -> (method_name, data ()))
 
 
-(* TODO: Is k_encounters used somewhere *)
-type config = { abstract : [ `FVS | `LoopHeads ]; k_encounters : int; update_invariants : bool }
+type config = { abstract : [ `FVS | `LoopHeads ] }
 
 module ApronUtils = struct
   open Constraints

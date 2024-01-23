@@ -123,8 +123,6 @@ type params = {
       [@sep ',']
       (** Choose methods for local control-flow-refinement: pe (Partial Evaluation with IRankFinder), pe_native (Native Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
-  pe_k : int; [@default 0]
-  pe_update_invariants : bool; [@default true]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
@@ -272,8 +270,6 @@ let run (params : params) =
                              `LoopHeads
                            else
                              `FVS);
-                        k_encounters = params.pe_k;
-                        update_invariants = params.pe_update_invariants;
                       }
                   in
                   CFR.pe_native pe_config)

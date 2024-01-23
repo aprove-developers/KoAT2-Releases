@@ -83,9 +83,7 @@ let run (params : params) =
 
   match params.cfr_method with
   | `PartialEvaluationNative ->
-      let cfr_config : NativePartialEvaluation.config =
-        { k_encounters = 0; abstract = params.abstract; update_invariants = true }
-      in
+      let cfr_config : NativePartialEvaluation.config = { abstract = params.abstract } in
       if params.probabilistic then
         let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
         Readers.read_probabilistic_program input

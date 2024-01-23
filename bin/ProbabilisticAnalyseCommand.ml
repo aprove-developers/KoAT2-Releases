@@ -118,8 +118,6 @@ let run (params : params) =
                      `LoopHeads
                    else
                      `FVS);
-                k_encounters = params.pe_k;
-                update_invariants = params.pe_update_invariants;
               };
         ]
       else

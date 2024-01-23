@@ -1,6 +1,6 @@
 open! OurBase
 
-type config = { abstract : [ `FVS | `LoopHeads ]; k_encounters : int; update_invariants : bool }
+type config = { abstract : [ `FVS | `LoopHeads ] }
 
 module ClassicPartialEvaluation : sig
   open ProgramModules
