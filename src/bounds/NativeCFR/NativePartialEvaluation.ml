@@ -120,129 +120,6 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
         fvs_solution
 end
 
-(* TODO: Move to ProgramModules and/or Polynomials *)
-
-(** Generic adapter for program modules with generic overapproximation *)
-module type Adapter = sig
-  type update_element
-  type transition
-  type transition_graph
-  type grouped_transition
-  type grouped_transition_cmp_wit
-  type program
-  type approx = Polynomials.Polynomial.t * Guard.t
-
-  val overapprox_indeterminates : update_element -> approx
-  val outgoing_grouped_transitions : transition_graph -> Location.t -> grouped_transition Sequence.t
-  val empty_grouped_transition_set : (grouped_transition, grouped_transition_cmp_wit) Set.t
-  val guard_of_grouped_transition : grouped_transition -> Guard.t
-
-  val all_grouped_transitions_of_graph :
-    transition_graph -> (grouped_transition, grouped_transition_cmp_wit) Set.t
-
-  val grouped_transition_of_transition : transition -> grouped_transition
-
-  val copy_and_modify_grouped_transition :
-    new_start:Location.t ->
-    add_invariant:Guard.t ->
-    redirect:(transition -> Location.t) ->
-    grouped_transition ->
-    grouped_transition
-
-  (* val copy_grouped_transition : grouped_transition -> grouped_transition *)
-  (** Copy the grouped transition and assign fresh ids *)
-
-  val create_new_program : Location.t -> (grouped_transition, grouped_transition_cmp_wit) Set.t -> program
-end
-
-(* TODO: Move to ProgramModules and/or Polynomials *)
-
-(** Trivial implementation of overapproxmation in classical programs *)
-module ClassicAdapter :
-  Adapter
-    with type update_element = ProgramModules.UpdateElement.t
-     and type transition = ProgramModules.Transition.t
-     and type transition_graph = ProgramModules.TransitionGraph.t
-     and type program = ProgramModules.Program.t = struct
-  open ProgramModules
-
-  type update_element = UpdateElement.t
-  type approx = Polynomials.Polynomial.t * Guard.t
-  type transition = Transition.t
-  type transition_graph = TransitionGraph.t
-  type program = Program.t
-  type grouped_transition = Transition.t
-  type grouped_transition_cmp_wit = Transition.comparator_witness
-
-  (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
-  let overapprox_indeterminates poly = (poly, Guard.mk_true)
-
-  let outgoing_grouped_transitions trans_graph location =
-    TransitionGraph.succ_e trans_graph location |> Sequence.of_list
-
-
-  let empty_grouped_transition_set = TransitionSet.empty
-  let guard_of_grouped_transition = TransitionLabel.guard % Transition.label
-  let all_grouped_transitions_of_graph = TransitionGraph.transitions
-  let grouped_transition_of_transition = identity
-
-  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect ((l, label, l') as transition) =
-    let new_label = TransitionLabel.fresh_id label |> flip TransitionLabel.add_invariant add_invariant in
-    (new_start, new_label, redirect transition)
-
-
-  let create_new_program location tset = Program.from_sequence location (Set.to_sequence tset)
-end
-
-(** Use already existing overapproximation *)
-module ProbabilisticAdapter :
-  Adapter
-    with type update_element = ProbabilisticProgramModules.UpdateElement.t
-     and type transition = ProbabilisticProgramModules.Transition.t
-     and type transition_graph = ProbabilisticProgramModules.TransitionGraph.t
-     and type program = ProbabilisticProgramModules.Program.t = struct
-  open ProbabilisticProgramModules
-
-  type update_element = UpdateElement.t
-  type approx = Polynomials.Polynomial.t * Guard.t
-  type transition = Transition.t
-  type transition_graph = TransitionGraph.t
-  type program = Program.t
-  type grouped_transition = GeneralTransition.t
-  type grouped_transition_cmp_wit = GeneralTransition.comparator_witness
-
-  module P = Polynomials.Polynomial
-
-  let overapprox_indeterminates ue =
-    let new_var = Var.fresh_id Var.Int () in
-    (P.of_var new_var, UpdateElement_.as_guard ue new_var)
-
-
-  let outgoing_grouped_transitions trans_graph location =
-    ProbabilisticProgramModules.TransitionGraph.outgoing_gts trans_graph location |> Set.to_sequence
-
-
-  let empty_grouped_transition_set = GeneralTransitionSet.empty
-  let guard_of_grouped_transition = GeneralTransition.guard
-  let all_grouped_transitions_of_graph = TransitionGraph.gts
-  let grouped_transition_of_transition = Transition.gt
-
-  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect gt =
-    GeneralTransition.mk_from_labels_without_backlink ~start:new_start
-      ~guard_without_invariant:(GeneralTransition.guard_without_inv gt)
-      ~invariant:(Guard.mk_and (GeneralTransition.invariant gt) add_invariant)
-      ~cost:(GeneralTransition.cost gt)
-      ~rhss:
-        (GeneralTransition.transitions gt |> Set.to_sequence
-        |> Sequence.map ~f:(fun ((_, label, _) as transition) ->
-               let target_location = redirect transition in
-               (TransitionLabel.without_backlink label, target_location))
-        |> Sequence.to_list)
-
-
-  let create_new_program = Program.from_gts
-end
-
 module ApronUtils = struct
   open Constraints
   open Polynomials
@@ -288,7 +165,7 @@ module ApronUtils = struct
     |> Sequence.to_array |> Array.unzip
 
 
-  (** Adapter for polyheron operations used directly on constraints *)
+  (** GenericProgram_.Adapter for polyheron operations used directly on constraints *)
   let guard_to_polyh am guard =
     let env = Apron.Environment.make (ApronInterface.Koat2Apron.vars_to_apron (Constraint.vars guard)) [||] in
     let tcons_array = ApronInterface.Koat2Apron.constraint_to_apron env guard in
@@ -296,7 +173,7 @@ module ApronUtils = struct
     polyh
 
 
-  (** Adapter for polyheron operations used directly on constraints *)
+  (** GenericProgram_.Adapter for polyheron operations used directly on constraints *)
   let polyh_to_guard am polyh =
     (* Weird side-effect to get a clean output of constraints *)
     Apron.Abstract1.minimize am polyh;
@@ -413,7 +290,7 @@ module ApronUtils = struct
   let update_guard am update guard = guard_to_polyh am guard |> update_polyh am update |> polyh_to_guard am
 end
 
-module OverApproximationUtils (A : Adapter) = struct
+module OverApproximationUtils (A : GenericProgram_.Adapter) = struct
   open A
 
   let overapprox_update update =
@@ -427,7 +304,9 @@ end
 
 module Unfolding
     (PM : ProgramTypes.ProgramModules)
-    (A : Adapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) =
+    (A : GenericProgram_.Adapter
+           with type update_element = PM.UpdateElement.t
+            and type transition = PM.Transition.t) =
 struct
   open OverApproximationUtils (A)
   open ApronUtils
@@ -511,7 +390,9 @@ end
 
 module PropertyBasedAbstraction
     (PM : ProgramTypes.ProgramModules)
-    (Adapter : Adapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) : sig
+    (Adapter : GenericProgram_.Adapter
+                 with type update_element = PM.UpdateElement.t
+                  and type transition = PM.Transition.t) : sig
   include Abstraction
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
@@ -818,7 +699,7 @@ end
 
 module PartialEvaluation
     (PM : ProgramTypes.ProgramModules)
-    (Adapter : Adapter
+    (Adapter : GenericProgram_.Adapter
                  with type update_element = PM.UpdateElement.t
                   and type transition = PM.Transition.t
                   and type program = PM.Program.t
@@ -1078,5 +959,7 @@ struct
     pe_prog
 end
 
-module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ClassicAdapter)
-module ProbabilisticPartialEvaluation = PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticAdapter)
+module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ProgramModules.ClassicAdapter)
+
+module ProbabilisticPartialEvaluation =
+  PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticProgramModules.ProbabilisticAdapter)
