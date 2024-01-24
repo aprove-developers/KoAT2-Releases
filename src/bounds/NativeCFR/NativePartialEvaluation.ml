@@ -8,25 +8,13 @@ let log ?(level = Logger.INFO) method_name data =
 
 type config = { abstract : [ `FVS | `LoopHeads ] }
 
-module OverApproximationUtils (A : GenericProgram_.Adapter) = struct
-  open A
-
-  let overapprox_update update =
-    Map.fold
-      ~f:(fun ~key:var ~data:ue (new_update, guards) ->
-        let ue_approx, guard = overapprox_indeterminates ue in
-        (Map.add_exn ~key:var ~data:ue_approx new_update, Guard.mk_and guards guard))
-      update
-      ~init:(Map.empty (module Var), Guard.mk_true)
-end
-
 module Unfolding
     (PM : ProgramTypes.ProgramModules)
     (A : GenericProgram_.Adapter
            with type update_element = PM.UpdateElement.t
             and type transition = PM.Transition.t) =
 struct
-  open OverApproximationUtils (A)
+  open GenericProgram_.OverApproximationUtils (A)
   open Polyhedrons
 
   (** [initial_guard_polyh am constr guard] computes a polyhedron overapproximating satisfying assignments for the conjunction of [constr] and [guard] *)
@@ -116,16 +104,16 @@ end
 
 module PropertyBasedAbstraction
     (PM : ProgramTypes.ProgramModules)
-    (Adapter : GenericProgram_.Adapter
-                 with type update_element = PM.UpdateElement.t
-                  and type transition = PM.Transition.t) : sig
+    (A : GenericProgram_.Adapter
+           with type update_element = PM.UpdateElement.t
+            and type transition = PM.Transition.t) : sig
   include Abstraction
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
 end = struct
   open PM
   open Polyhedrons
-  open OverApproximationUtils (Adapter)
+  open GenericProgram_.OverApproximationUtils (A)
   open Formulas
   open Constraints
   open Atoms

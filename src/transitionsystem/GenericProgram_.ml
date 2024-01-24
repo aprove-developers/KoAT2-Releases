@@ -45,3 +45,15 @@ module type Adapter = sig
 
   val create_new_program : Location.t -> (grouped_transition, grouped_transition_cmp_wit) Set.t -> program
 end
+
+module OverApproximationUtils (A : Adapter) = struct
+  open A
+
+  let overapprox_update update =
+    Map.fold
+      ~f:(fun ~key:var ~data:ue (new_update, guards) ->
+        let ue_approx, guard = overapprox_indeterminates ue in
+        (Map.add_exn ~key:var ~data:ue_approx new_update, Guard.mk_and guards guard))
+      update
+      ~init:(Map.empty (module Var), Guard.mk_true)
+end
