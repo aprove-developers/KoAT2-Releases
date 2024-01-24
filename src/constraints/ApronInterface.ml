@@ -59,6 +59,21 @@ module Koat2Apron = struct
       Tcons1.array_set constraints i (Array.get single_constraints i)
     done;
     constraints
+
+
+  (** Converts an update map over polynomials to apron arrays *)
+  let update_to_apron env (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
+    Map.to_sequence update
+    |> Sequence.map ~f:(fun (var, ue) -> (var_to_apron var, poly_to_apron env ue))
+    |> Sequence.to_array |> Array.unzip
+
+
+  (** GenericProgram_.Adapter for polyhedron operations used directly on constraints *)
+  let constraint_to_polyh am guard =
+    let env = Apron.Environment.make (vars_to_apron (Constraint.vars guard)) [||] in
+    let tcons_array = constraint_to_apron env guard in
+    let polyh = Apron.Abstract1.of_tcons_array am env tcons_array in
+    polyh
 end
 
 (** This module provides functions which convert apron datastructures to equivalent koat datastructures. *)
@@ -117,7 +132,7 @@ module Apron2Koat = struct
     comparator (poly_from_apron (Tcons1.get_texpr1 single_constraint)) Polynomial.zero
 
 
-  (** Converts a koat constraint to its apron equivalent *)
+  (** Converts an apron constraint to its koat equivalent *)
   let constraint_from_apron (constraint_array : Apron.Tcons1.earray) : Constraint.t =
     (* If someone still needs a reason to switch to functional programming, here it is. *)
     let result = ref [] in
@@ -125,6 +140,38 @@ module Apron2Koat = struct
       result := atom_from_apron (Apron.Tcons1.array_get constraint_array i) :: !result
     done;
     Constraint.all !result
+
+
+  (** Converts an apron scalar into its a koat integer by truncating floating-point numbers. *)
+  let scalar_from_apron (scalar : Apron.Scalar.t) : OurInt.t =
+    let open Apron in
+    match scalar with
+    | Scalar.Float float -> (OurInt.of_int % int_of_float) float
+    | Scalar.Mpqf float -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
+    | Scalar.Mpfrf float -> (OurInt.of_int % int_of_float % Mpfrf.to_float) float
+
+
+  (** Creates constraints for a variable bounded by an interval *)
+  let interval_from_apron (var : Var.t) (interval : Apron.Interval.t) : Constraint.t =
+    let constr = ref [] in
+    if Apron.Scalar.is_infty interval.sup = 0 then
+      constr :=
+        Constraint.Infix.(
+          interval.sup |> scalar_from_apron |> Polynomial.of_constant >= Polynomial.of_var var)
+        :: !constr;
+    if Apron.Scalar.is_infty interval.inf = 0 then
+      constr :=
+        Constraint.Infix.(
+          interval.inf |> scalar_from_apron |> Polynomial.of_constant <= Polynomial.of_var var)
+        :: !constr;
+    Constraint.all !constr
+
+
+  (** GenericProgram_.Adapter for polyhedron operations used directly on constraints *)
+  let polyh_to_constraint am polyh =
+    (* Weird side-effect to get a clean output of constraints *)
+    Apron.Abstract1.minimize am polyh;
+    polyh |> Apron.Abstract1.to_tcons_array am |> constraint_from_apron
 end
 
 let abstract_to_string a =

@@ -12,102 +12,28 @@ module ApronUtils = struct
   open Constraints
   open Polynomials
 
-  (* TODO: move to ApronInterface *)
-
-  (** Converts an apron scalar into its koat equivalent *)
-  let scalar_from_apron (scalar : Apron.Scalar.t) : OurInt.t =
-    let open Apron in
-    match scalar with
-    | Scalar.Float float -> (OurInt.of_int % int_of_float) float
-    | Scalar.Mpqf float -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
-    | Scalar.Mpfrf float -> (OurInt.of_int % int_of_float % Mpfrf.to_float) float
-
-
-  (* TODO: move to K2A *)
-
-  (** Creates constraints for a variable bounded by an interval *)
-  let interval_from_apron (var : Var.t) (interval : Apron.Interval.t) : Constraint.t =
-    let constr = ref [] in
-    if Apron.Scalar.is_infty interval.sup = 0 then
-      constr :=
-        Constraint.Infix.(
-          interval.sup |> scalar_from_apron |> Polynomial.of_constant >= Polynomial.of_var var)
-        :: !constr;
-    if Apron.Scalar.is_infty interval.inf = 0 then
-      constr :=
-        Constraint.Infix.(
-          interval.inf |> scalar_from_apron |> Polynomial.of_constant <= Polynomial.of_var var)
-        :: !constr;
-    Constraint.all !constr
-
-
-  (* TODO: move to ApronInterface *)
-
-  (** converts an update map over polynomials to apron arrays *)
-  let update_to_apron env (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
-    Map.to_sequence update
-    |> Sequence.map ~f:(fun (var, ue) ->
-           let apron_var = ApronInterface.Koat2Apron.var_to_apron var
-           and apron_expr = ApronInterface.Koat2Apron.poly_to_apron env ue in
-           (apron_var, apron_expr))
-    |> Sequence.to_array |> Array.unzip
-
-
-  (** GenericProgram_.Adapter for polyheron operations used directly on constraints *)
-  let guard_to_polyh am guard =
-    let env = Apron.Environment.make (ApronInterface.Koat2Apron.vars_to_apron (Constraint.vars guard)) [||] in
-    let tcons_array = ApronInterface.Koat2Apron.constraint_to_apron env guard in
-    let polyh = Apron.Abstract1.of_tcons_array am env tcons_array in
-    polyh
-
-
-  (** GenericProgram_.Adapter for polyheron operations used directly on constraints *)
-  let polyh_to_guard am polyh =
-    (* Weird side-effect to get a clean output of constraints *)
-    Apron.Abstract1.minimize am polyh;
-    polyh |> Apron.Abstract1.to_tcons_array am |> ApronInterface.Apron2Koat.constraint_from_apron
-
-
   (*
-    For an abstract domain `'a` there is a manager `'a Manager.t` handling the
-    library stuff underneath. It is not important to this implementation, but
-    is required for most of the operations. We will use the Ppl abstract domain
-    for partial evaluation, but others might be used at will.
+    For an abstract domain `'a` there is a manager `'a Manager.t` handling the library stuff underneath.
+    It is not important to this implementation, but is required for most of the operations. We will use the Ppl abstract domain for partial evaluation, but others might be used as well.
 
-    A value in the abstract domain `'a` is an `'a Abstract.t`. It holds a reference
-    to the environment (variables).
+    A value in the abstract domain `'a` is an `'a Abstract.t`.
+    It holds a reference to the environment (variables).
   *)
 
-  (** add new dimensions to to an abstract value, ignores already existing dimenstions *)
+  (** Add new dimensions to to an abstract value, ignores already existing dimensions. *)
   let add_vars_to_polyh am vars polyh =
     let prev_env = Apron.Abstract1.env polyh in
     let prev_vars = Apron.Environment.vars prev_env |> fst |> ApronInterface.Apron2Koat.vars_from_apron in
-    (* Apron would panic if the variable is alread in the environment *)
     let new_vars = Set.filter ~f:(fun var -> not (Set.mem prev_vars var)) vars in
-
-    (* log ~level:Logger.DEBUG "add_vars_to_polyh" (fun () -> *)
-    (*     [ *)
-    (*       ("REQUESTED_VARS", VarSet.to_string vars); *)
-    (*       ("PRESENT_VARS", VarSet.to_string prev_vars); *)
-    (*       ("NEW_VARS", VarSet.to_string new_vars); *)
-    (*     ]); *)
     let new_env = Apron.Environment.add prev_env (ApronInterface.Koat2Apron.vars_to_apron new_vars) [||] in
-
     Apron.Abstract1.change_environment am polyh new_env false
 
 
-  (** project a polyhedron onto the given variable dimensions
-  Does not add new dimensions for variables not in the polyhedron
+  (**
+    Projects a polyhedron onto the given variables.
+    For variables, which are not already in the polyhedron, no new dimensions have to be added beforewards.
    *)
   let project_polyh am vars polyh =
-    (* let keep_vars = ApronInterface.Koat2Apron.vars_to_apron vars *)
-    (* and prev_env = Apron.Abstract1.env polyh in *)
-    (* let forget_vars = *)
-    (*   Apron.Environment.vars prev_env *)
-    (*   |> fst *)
-    (*   |> Array.filter (fun v -> not (Array.mem v keep_vars)) *)
-    (* in *)
-    (* Apron.Abstract1.forget_array am polyh forget_vars false *)
     let prev_env = Apron.Abstract1.env polyh in
     let apron_vars =
       ApronInterface.Koat2Apron.vars_to_apron vars |> Array.filter ~f:(Apron.Environment.mem_var prev_env)
@@ -117,27 +43,14 @@ module ApronUtils = struct
     Apron.Abstract1.change_environment am polyh new_env false
 
 
-  (* |> tap (fun projected -> *)
-  (*        log ~level:Logger.DEBUG "project" (fun () -> *)
-  (*            [ *)
-  (*              ( "POLYH", *)
-  (*                polyh_to_guard am polyh |> Guard.to_string ~pretty:true ); *)
-  (*              ("VARS", VarSet.to_string ~pretty:true vars); *)
-  (*              ( "PROJECTED", *)
-  (*                polyh_to_guard am projected |> Guard.to_string ~pretty:true *)
-  (*              ); *)
-  (*            ])) *)
-
-  let project_guard am vars guard =
-    guard_to_polyh am guard |> project_polyh am vars
-    (* |> tap (fun p -> Apron.Abstract1.print Format.std_formatter p) *)
-    |> polyh_to_guard am
+  let project_constraint am vars guard =
+    ApronInterface.Koat2Apron.constraint_to_polyh am guard
+    |> project_polyh am vars
+    |> ApronInterface.Apron2Koat.polyh_to_constraint am
 
 
-  (** Intersect a polynomial with a constraint *)
-  let meet am constr polyh =
-    (* log ~level:Logger.DEBUG "meet" (fun () -> *)
-    (*     [ ("CONSTR", Guard.to_string constr) ]); *)
+  (** Intersect a polyhedron with a constraint *)
+  let intersect_constraint am constr polyh =
     let env = Apron.Abstract1.env polyh in
     let apron_expr = ApronInterface.Koat2Apron.constraint_to_apron env constr in
     Apron.Abstract1.meet_tcons_array am polyh apron_expr
@@ -150,13 +63,16 @@ module ApronUtils = struct
     |> Sequence.map ~f:(fun variable ->
            let apron_var = ApronInterface.Koat2Apron.var_to_apron variable in
            if Apron.Environment.mem_var env apron_var then
-             Apron.Abstract1.bound_variable am polyh apron_var |> interval_from_apron variable
+             Apron.Abstract1.bound_variable am polyh apron_var
+             |> ApronInterface.Apron2Koat.interval_from_apron variable
            else
              Guard.mk_true)
     |> Sequence.fold ~f:Constraint.mk_and ~init:Constraint.mk_true
 
 
-  let bound_variables_guard am vars guard = guard_to_polyh am guard |> bound_variables_polyh am vars
+  let bound_variables_guard am vars guard =
+    ApronInterface.Koat2Apron.constraint_to_polyh am guard |> bound_variables_polyh am vars
+
 
   let vars_in_update update =
     Map.fold
@@ -171,11 +87,14 @@ module ApronUtils = struct
     in
     let polyh_with_new_vars = add_vars_to_polyh am vars_in_update polyh in
     let env = Apron.Abstract1.env polyh_with_new_vars in
-    let vars_arr, texpr_arr = update_to_apron env update in
+    let vars_arr, texpr_arr = ApronInterface.Koat2Apron.update_to_apron env update in
     Apron.Abstract1.assign_texpr_array am polyh_with_new_vars vars_arr texpr_arr None
 
 
-  let update_guard am update guard = guard_to_polyh am guard |> update_polyh am update |> polyh_to_guard am
+  let update_guard am update guard =
+    ApronInterface.Koat2Apron.constraint_to_polyh am guard
+    |> update_polyh am update
+    |> ApronInterface.Apron2Koat.polyh_to_constraint am
 end
 
 module OverApproximationUtils (A : GenericProgram_.Adapter) = struct
@@ -204,7 +123,7 @@ struct
     Guard.mk_and constr guard
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
-    |> guard_to_polyh am
+    |> ApronInterface.Koat2Apron.constraint_to_polyh am
 
 
   (** Unfolds the guard with an update, returns None if the guard was UNSAT.*)
@@ -225,13 +144,19 @@ struct
     |> add_vars_to_polyh am (Set.union update_program_vars update_temp_vars)
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
-               [ ("WITH_UPDATE_VARS", polyh_to_guard am p |> Guard.to_string ~pretty:true) ]))
-    |> meet am update_guard
+               [
+                 ( "WITH_UPDATE_VARS",
+                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
+               ]))
+    |> intersect_constraint am update_guard
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
-                 ("INITIAL_POLYH", polyh_to_guard am initial_polyh |> Guard.to_string ~pretty:true);
-                 ("WITH_UPDATE_GUARD", polyh_to_guard am p |> Guard.to_string ~pretty:true);
+                 ( "INITIAL_POLYH",
+                   ApronInterface.Apron2Koat.polyh_to_constraint am initial_polyh
+                   |> Guard.to_string ~pretty:true );
+                 ( "WITH_UPDATE_GUARD",
+                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
                ]))
     |> update_polyh am update_approx
     |> tap (fun p ->
@@ -242,16 +167,18 @@ struct
                    |> Util.sequence_to_string ~f:(fun (x, p) ->
                           Printf.sprintf "%s = %s" (Var.to_string ~pretty:true x)
                             (Polynomials.Polynomial.to_string_pretty p)) );
-                 ("WITH_UPDATE", polyh_to_guard am p |> Guard.to_string ~pretty:true);
+                 ( "WITH_UPDATE",
+                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
                ]))
     |> project_polyh am program_vars
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
                  ("PROGRAM_VARS", VarSet.to_string program_vars);
-                 ("PROJECTED", polyh_to_guard am p |> Guard.to_string ~pretty:true);
+                 ( "PROJECTED",
+                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
                ]))
-    |> polyh_to_guard am
+    |> ApronInterface.Apron2Koat.polyh_to_constraint am
 end
 
 (** Generic type for abstractions *)
@@ -342,27 +269,30 @@ end = struct
     (* TODO eliminate non contributing variables *)
     let pr_h outgoing_transition =
       outgoing_transition |> PM.Transition.label |> PM.TransitionLabel.guard
-      |> project_guard am program_variables |> AtomSet.of_list
+      |> project_constraint am program_variables
+      |> AtomSet.of_list
     in
 
     let pr_hv outgoing_transition =
       outgoing_transition |> PM.Transition.label |> PM.TransitionLabel.guard
       |> bound_variables_guard am program_variables
-      |> project_guard am program_variables |> AtomSet.of_list
+      |> project_constraint am program_variables
+      |> AtomSet.of_list
     in
 
     let pr_c incoming_transition =
       let label = PM.Transition.label incoming_transition in
       let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
-      update_guard am update_approx guard |> project_guard am program_variables |> AtomSet.of_list
+      update_guard am update_approx guard |> project_constraint am program_variables |> AtomSet.of_list
     in
 
     let pr_cv incoming_transition =
       let label = PM.Transition.label incoming_transition in
       let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
-      guard_to_polyh am guard |> project_polyh am program_variables
+      ApronInterface.Koat2Apron.constraint_to_polyh am guard
+      |> project_polyh am program_variables
       |> bound_variables_polyh am program_variables
       |> AtomSet.of_list
     in
@@ -382,7 +312,7 @@ end = struct
           Constraint.Infix.(
             constr && update_guard
             && Constraint.map_polynomial (Polynomials.Polynomial.substitute_all update_approx) combined)
-          |> project_guard am program_variables)
+          |> project_constraint am program_variables)
         cycle ~init:Constraint.mk_true
       |> AtomSet.of_list
     in
