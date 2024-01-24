@@ -111,7 +111,7 @@ let run (params : params) =
       if params.pe then
         [
           CFR.pe_native_probabilistic
-            NativePartialEvaluation.
+            Abstraction.
               {
                 abstract =
                   (if params.no_pe_fvs then

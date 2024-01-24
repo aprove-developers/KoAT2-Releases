@@ -263,7 +263,7 @@ let run (params : params) =
               | `Chaining -> CFR.chaining
               | `PartialEvaluationNative ->
                   let pe_config =
-                    NativePartialEvaluation.
+                    Abstraction.
                       {
                         abstract =
                           (if params.no_pe_fvs then
