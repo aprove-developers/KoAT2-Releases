@@ -75,17 +75,9 @@ end = struct
     | Abstr a -> Set.is_empty a
 
 
-  (** Properties are a set of constraints. If φ is in the properties, then it's
-      negation ¬φ should not, because it is already checked as well. Adding it
-      though would just result in double checks (overhead) *)
-  (* let mk_properties props_list = *)
-  (*   List.fold *)
-  (*     (fun props prop -> *)
-  (*       (1* Add property only, if its negation is not already present *1) *)
-  (*       if not (AtomSet.mem (Atom.neg prop) props) then AtomSet.add prop props *)
-  (*       else props) *)
-  (*     AtomSet.empty props_list *)
-
+  (** Properties are a set of constraints.
+      If φ is in the properties, then it's negation ¬φ should not be in the set.
+      Otherwise, this φ and ¬φ would be checked twice in a refinement step. *)
   let mk_from_heuristic_scc config graph scc program_variables =
     let am = Ppl.manager_alloc_loose () in
 
@@ -227,7 +219,8 @@ end = struct
     let abstract_guard_ properties constr =
       let module Solver = SMT.IncrementalZ3Solver in
       let solver = Solver.create ~model:false () in
-      let f = (* TODO linearize constraints? *) Formula.mk constr in
+      let f = Formula.mk constr in
+      (* TODO linearize constraints? *)
       Solver.add solver f;
 
       (* Fast entailment check which reuses the SMT solver *)

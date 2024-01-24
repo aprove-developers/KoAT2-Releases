@@ -107,36 +107,6 @@ module Version (A : Abstraction.Abstraction) = struct
   include Comparator.Make (Inner)
 end
 
-(* TODO: move somewhere else *)
-module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
-  open PM
-
-  module TransitionGraphWeight (Value : PolyTypes.Ring) = struct
-    type t = Value.t
-    type edge = PM.TransitionGraph.E.t
-
-    let weight (x : edge) = Value.one
-    let compare x y = 0
-    let add x y = Value.add x y
-    let zero = Value.zero
-  end
-
-  module Djikstra = Graph.Path.Dijkstra (PM.TransitionGraph) (TransitionGraphWeight (OurInt))
-
-  let entry_transitions graph scc =
-    TransitionSet.locations scc |> Set.to_sequence
-    |> Sequence.concat_map ~f:(fun l -> TransitionGraph.pred_e graph l |> Sequence.of_list)
-    |> Sequence.filter ~f:(fun t -> not (Set.mem scc t))
-    |> TransitionSet.of_sequence
-
-
-  let exit_transitions graph scc =
-    TransitionSet.locations scc |> Set.to_sequence
-    |> Sequence.concat_map ~f:(fun l -> TransitionGraph.succ_e graph l |> Sequence.of_list)
-    |> Sequence.filter ~f:(fun t -> not (Set.mem scc t))
-    |> TransitionSet.of_sequence
-end
-
 module PartialEvaluation
     (PM : ProgramTypes.ProgramModules)
     (Adapter : GenericProgram_.Adapter
@@ -152,7 +122,7 @@ struct
   open Unfolding (PM) (Adapter)
   open Cycles
   open Cycles (PM)
-  open GraphUtils (PM)
+  open GraphUtils.GraphUtils (PM)
 
   (** The call [generate_version_location_name program_locations index_table version] generates a new location name by appending the string [_vi] to the location of [version] where [i] acts as an index.
       The hashtable [index_table] maps locations to the last {i used} index.
