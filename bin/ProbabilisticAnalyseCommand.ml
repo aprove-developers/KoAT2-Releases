@@ -23,6 +23,7 @@ type params = {
   classic_local : classic_local list;
       [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
+  closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   preprocessing_strategy : Preprocessor.strategy;
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
       [@default Preprocessor.process_till_fixpoint]
@@ -70,6 +71,11 @@ let run (params : params) =
           | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
           | `TWN -> { conf with twn = true })
       ~init:Analysis.default_local_configuration params.classic_local
+    |> fun conf ->
+    if params.closed_form_size_bounds then
+      { conf with closed_form_size_bounds = ComputeClosedFormSizeBounds }
+    else
+      conf
   in
 
   let conf =

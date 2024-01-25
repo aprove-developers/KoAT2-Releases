@@ -8,7 +8,7 @@ type !'bound goal = Complexity : Bounds.Bound.t goal | Termination : Bounds.Bina
 
 type (!'prog_modules_t, 'bound) closed_form_size_bounds =
   | NoClosedFormSizeBounds : ('a, 'b) closed_form_size_bounds
-  | ComputeClosedFormSizeBounds : (ProgramModules.program_modules_t, Bounds.Bound.t) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds : ('a, Bounds.Bound.t) closed_form_size_bounds
 
 type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
