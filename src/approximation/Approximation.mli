@@ -17,6 +17,8 @@ module Make
       The first parameter should be the count of transitions in the program.
       The second parameter should be the count of program variables. *)
 
+  val filter_transitions_and_rvs : (T.t -> bool) -> (PM.RV.t -> bool) -> t -> t
+
   val to_formatted :
     ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> FormattedString.t
   (**  Creates a formatted string containing time,size and cost-bounds. *)
@@ -28,6 +30,9 @@ module Make
 
   val timebound : t -> T.t -> B.t
   (** Returns a timebound for the transition. *)
+
+  val all_finite_timebounds : t -> (T.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite time bounds *)
 
   val program_timebound : t -> PM.Program.t -> B.t
   (** Returns a timebound for the program. *)
@@ -47,6 +52,9 @@ module Make
   val costbound : t -> T.t -> B.t
   (** Returns a costbound for the transition. *)
 
+  val all_finite_costbounds : t -> (T.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite cost bounds *)
+
   val program_costbound : t -> PM.Program.t -> B.t
   (** Returns a costbound for the program. *)
 
@@ -58,6 +66,9 @@ module Make
   val sizebound : t -> PM.RV.transition -> Var.t -> B.t
   (** Returns a sizebound for the var of the transition.
           A sizebound is expressed in relation to the input variable values of the program. *)
+
+  val all_finite_sizebounds : t -> (PM.RV.t * B.t) Sequence.t
+  (** Returns a sequence of all registered finite cost bounds *)
 
   val add_sizebound : B.t -> PM.RV.transition -> Var.t -> t -> t
   (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
@@ -105,4 +116,7 @@ module Probabilistic : sig
           end)
 
   val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
+  val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t
+
+  type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
 end

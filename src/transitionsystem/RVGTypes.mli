@@ -19,21 +19,27 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) : sig
       Graph.Persistent.Digraph.ConcreteBidirectional (MakeRV (PM.TransitionLabel) (PM.Transition))
   (** Module handling result variable graphs, i.e., a digraph where the nodes are result variables. *)
 
-  val rvs_to_id_string : MakeRV(PM.TransitionLabel)(PM.Transition).t list -> string
+  type rv = MakeRV(PM.TransitionLabel)(PM.Transition).t
+  type scc = rv list
+
+  val rvs_to_id_string : rv list -> string
   (** Returns a string which is created by calling [to_id_string] on every result variable. *)
 
-  val pre :
-    t -> MakeRV(PM.TransitionLabel)(PM.Transition).t -> MakeRV(PM.TransitionLabel)(PM.Transition).t List.t
+  val pre : t -> rv -> rv List.t
   (** Returns the predecessors of a result variable in the result variable graph. *)
 
-  type scc = MakeRV(PM.TransitionLabel)(PM.Transition).t list
-
-  val rvg : (MakeRV(PM.TransitionLabel)(PM.Transition).t -> VarSet.t Option.t) -> PM.Program.t -> t
+  val rvg : (rv -> VarSet.t Option.t) -> PM.Program.t -> t
   (** Compute the result variable graph.
       The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
 
-  val rvg_with_sccs :
-    (MakeRV(PM.TransitionLabel)(PM.Transition).t -> VarSet.t Option.t) -> PM.Program.t -> t * scc list Lazy.t
+  val rvg_from_transitionset : (rv -> VarSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t
+  (** Similar to [rvg] but only considers the transition of the given [TransitionSet] and their outgoing transitions *)
+
+  val rvg_with_sccs : (rv -> VarSet.t Option.t) -> PM.Program.t -> t * scc list Lazy.t
   (** Compute the result variable graph and lazily compute the list of all SCCs
       The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
+
+  val rvg_from_transitionset_with_sccs :
+    (rv -> VarSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t * scc list Lazy.t
+  (** Similar to [rvg_with_sccs] but only considers transitions from the given [TransitionSet] and its outgoing transitions *)
 end

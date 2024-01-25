@@ -97,6 +97,6 @@ let run (params : params) =
       if params.probabilistic then
         raise (Invalid_argument "only --cfr_method=native supports probabilistic programs")
       else
-        let module PartialEvaluation = PartialEvaluation.Make (Bounds.Bound) in
+        let module PartialEvaluation = PartialEvaluation in
         Readers.read_file input |> PartialEvaluation.applyIrankFinder |> sane_program_to_file output
   | `Chaining -> raise (Invalid_argument "TODO: --cfr_method=chaining not implemented")

@@ -121,7 +121,7 @@ type params = {
         ]]
       [@default []]
       [@sep ',']
-      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
+      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation with IRankFinder), pe_native (Native Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
@@ -183,7 +183,7 @@ let local_to_string = function
 
 module MakeAnalysis (Bound : BoundType.Bound) = struct
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (ProgramModules)
-  module Analysis = Analysis.Make (Bound) (ProgramModules)
+  module Analysis = Analysis.Classical (Bound)
   open ProgramModules
 
   let run_analysis (analysis_conf : Analysis.allowed_conf_type) program params input_filename output_dir =
@@ -247,25 +247,37 @@ let run (params : params) =
     let build_complete_conf goal closed_form_size_bounds =
       let open Analysis in
       {
-        run_mprf_depth =
-          (if List.mem ~equal:Poly.( = ) params.local `MPRF then
-             Some params.depth
-           else
-             None);
-        twn = List.exists ~f:(( == ) `TWN) params.local;
-        closed_form_size_bounds;
-        goal;
-        cfr_configuration =
-          (match params.cfr with
-          | [] -> NoCFR
-          | l ->
-              l
-              |> List.map ~f:(function
-                   | `Chaining -> Chaining
-                   | `PartialEvaluationNative ->
-                       PartialEvaluationNative (not params.no_pe_fvs, params.pe_k, params.pe_update_invariants)
-                   | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder)
-              |> fun l -> PerformCFR l);
+        local_configuration =
+          {
+            run_mprf_depth =
+              (if List.mem ~equal:Poly.( = ) params.local `MPRF then
+                 Some params.depth
+               else
+                 None);
+            twn = List.exists ~f:(( == ) `TWN) params.local;
+            closed_form_size_bounds;
+            goal;
+          };
+        cfrs =
+          List.map
+            ~f:(function
+              | `PartialEvaluationIRankFinder -> CFR.pe_with_IRankFinder
+              | `Chaining -> CFR.chaining
+              | `PartialEvaluationNative ->
+                  let pe_config =
+                    NativePartialEvaluation.
+                      {
+                        abstract =
+                          (if params.no_pe_fvs then
+                             `LoopHeads
+                           else
+                             `FVS);
+                        k_encounters = params.pe_k;
+                        update_invariants = params.pe_update_invariants;
+                      }
+                  in
+                  CFR.pe_native pe_config)
+            params.cfr;
       }
     in
     if params.termination then

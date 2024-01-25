@@ -194,12 +194,12 @@ struct
           \       </script>"
 end
 
-module MakeFromClassical (PM : ProgramTypes.ClassicalProgramModules) = Make (PM) (MakeDefaultLabelPrint (PM))
+module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) = Make (PM) (MakeDefaultLabelPrint (PM))
 module ProbabilisticGraphPrint = Make (ProbabilisticProgramModules) (ProbabilisticLabelPrint)
 
 (** RVGs are only defined for classical programs, since otherwise we do not know the local size bounds *)
 module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = struct
-  include MakeFromClassical (PM)
+  include MakeForClassicalAnalysis (PM)
   module RVG = MakeRVG (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
 
@@ -230,5 +230,5 @@ module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = str
     print_graph outdir (file ^ "_rvg") graph Dot.output_graph
 end
 
-include MakeFromClassical (ProgramModules)
+include MakeForClassicalAnalysis (ProgramModules)
 include MakeForRVGFromClassical (ProgramModules)

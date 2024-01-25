@@ -1,0 +1,7 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR A B)
+(RULES
+  f(A) -> g(B)     :|: B >= 1
+  g(A) -> g(A + 1) :|: 19 >= A
+)

@@ -14,7 +14,7 @@ val get_pre_size_classical :
 
 val trivial_sizebounds :
   Program.t ->
-  grvs_in:GRV.t list ->
+  grvs_in_and_out:GRV.t list ->
   elcb_map ->
   ClassicalApproximation.t ->
   ExpApproximation.t ->

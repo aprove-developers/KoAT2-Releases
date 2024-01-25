@@ -11,10 +11,21 @@ let preprocess =
 
 
 let default_conf = Analysis.default_configuration
-let mprf5_conf = Analysis.{ default_configuration with run_mprf_depth = Some 5 }
-let twn_conf = Analysis.{ default_configuration with twn = true }
 
-module Analysis = Analysis.Make (Bounds.Bound) (ProgramModules)
+let mprf5_conf =
+  Analysis.
+    {
+      default_configuration with
+      local_configuration = { default_local_configuration with run_mprf_depth = Some 5 };
+    }
+
+
+let twn_conf =
+  Analysis.
+    { default_configuration with local_configuration = { default_local_configuration with twn = true } }
+
+
+module Analysis = Analysis.Classical (Bounds.Bound)
 
 (** Returns an overall costbound for the given program. *)
 let find_costbound ?(conf = default_conf) (program : Program.t) : Bound.t =

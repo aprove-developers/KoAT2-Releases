@@ -21,3 +21,13 @@ module LocalProofOutput : sig
   val add_str_paragraph_to_proof : t -> (unit -> string) -> unit
   val get_proof : t -> Formatter.format -> FormattedString.t
 end
+
+val add_local_proof_to_proof : LocalProofOutput.t -> unit
+(** Appends a local proof to the global one *)
+
+val start_new_subproof : unit -> unit
+(** Starts a new (empty) subproof.
+    The current global proof is pushed on a stack and can hence be retrieved later on *)
+
+val get_subproof : unit -> LocalProofOutput.t
+(** Returns the current (sub) proof and restores the global proof to its previous state (before the start of this subproof) *)

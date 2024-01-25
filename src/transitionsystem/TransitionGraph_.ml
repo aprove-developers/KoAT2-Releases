@@ -69,9 +69,14 @@ struct
     add_edge_e (remove_edge_e graph old_transition) new_transition
 
 
+  let sccs_locs graph =
+    let module SCC = Graph.Components.Make (G) in
+    SCC.scc_list graph |> List.map ~f:LocationSet.of_list
+
+
   let sccs graph =
     let module SCC = Graph.Components.Make (G) in
-    List.map ~f:(loc_transitions graph) @@ SCC.scc_list graph |> List.filter ~f:(not % Set.is_empty)
+    SCC.scc_list graph |> List.map ~f:(loc_transitions graph) |> List.filter ~f:(not % Set.is_empty)
 
 
   let sccs_from_sequence trans =

@@ -35,26 +35,26 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
   module C = Graph.Components.Make (G)
   include G
 
+  type rv = RV.t
   type scc = RV.t list
 
   let rvs_to_id_string rvs = rvs |> List.map ~f:RV.to_id_string |> String.concat ~sep:","
   let pre rvg rv = pred rvg rv
   let add_vertices_to_rvg vertices rvg = Sequence.fold ~f:add_vertex ~init:rvg vertices
 
-  let rvg get_vars_in_lsb (program : Program.t) =
+  let rvg_from_transitionset get_vars_in_lsb program tset =
     let program_vars = Program.input_vars program in
-    let add_transition (post_transition : Transition.t) (rvg : t) : t =
+    let add_transition rvg post_transition =
       let rvg_with_vertices : t =
         add_vertices_to_rvg
           (Set.to_sequence program_vars |> Sequence.map ~f:(fun var -> (post_transition, var)))
           rvg
       in
-      (* Force evaluation of pre_transitions to avoid recomputation in pre_nodes *)
-      let pre_transitions = Set.to_list @@ Program.pre program post_transition in
+      let pre_transitions = Set.inter (Program.pre program post_transition) tset in
       let pre_nodes (post_var : Var.t) =
         get_vars_in_lsb (post_transition, post_var)
         |? VarSet.empty |> Set.to_sequence
-        |> Sequence.cartesian_product (Sequence.of_list pre_transitions)
+        |> Sequence.cartesian_product (Set.to_sequence pre_transitions)
         |> Sequence.map ~f:(fun (pre_transition, pre_var) -> (pre_transition, pre_var, post_var))
       in
       program_vars |> Set.to_sequence |> Sequence.map ~f:pre_nodes |> Sequence.join
@@ -63,10 +63,19 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
              add_edge rvg (pre_transition, pre_var) (post_transition, post_var))
            ~init:rvg_with_vertices
     in
-    TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
+    Set.fold ~init:empty ~f:add_transition tset
+
+
+  let rvg get_vars_in_lsb program =
+    rvg_from_transitionset get_vars_in_lsb program (Program.transitions program)
 
 
   let rvg_with_sccs get_vars_in_lsb program =
     let rvg = rvg get_vars_in_lsb program in
+    (rvg, Lazy.from_fun (fun () -> C.scc_list rvg))
+
+
+  let rvg_from_transitionset_with_sccs get_vars_in_lsb program scc =
+    let rvg = rvg_from_transitionset get_vars_in_lsb program scc in
     (rvg, Lazy.from_fun (fun () -> C.scc_list rvg))
 end

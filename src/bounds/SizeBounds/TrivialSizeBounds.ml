@@ -34,9 +34,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       ~result:Bound.to_string execute
 
 
-  let incoming_bound_lsb rvg get_sizebound lsb t v =
+  let incoming_bound_lsb program get_sizebound lsb t v =
     let pre_transitions =
-      RVG.pre rvg (t, v) |> List.map ~f:RV.transition |> TransitionSet.stable_dedup_list |> Sequence.of_list
+      if Set.is_empty (Bound.vars lsb) then
+        Sequence.empty
+      else
+        Set.to_sequence (Program.pre program t)
     in
     incoming_bound pre_transitions get_sizebound lsb t v
 
@@ -48,7 +51,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
       Corresponds to 'SizeBounds for trivial SCCs'. *)
-  let compute (program : Program.t) rvg get_sizebound (t, v) lsb_as_bound =
+  let compute (program : Program.t) get_sizebound (t, v) lsb_as_bound =
     let open OptionMonad in
     let execute () =
       let res_from_lsb, res_from_update =
@@ -66,7 +69,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           (res_from_lsb, res_from_update)
         else
           let res_from_lsb =
-            Option.map ~f:(fun lsb -> incoming_bound_lsb rvg get_sizebound lsb t v) lsb_as_bound
+            Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
           in
           let res_from_update =
             let tlabel = Transition.label t in

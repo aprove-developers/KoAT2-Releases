@@ -262,8 +262,11 @@ module type TransitionGraph = sig
   val replace_edge_e : transition -> transition -> t -> t
   (** Replaces the first edge by the second edge. *)
 
-  val sccs : t -> transition_set list
+  val sccs_locs : t -> LocationSet.t list
   (** Returns the (biggest) strongly connected components of the transiton graph. *)
+
+  val sccs : t -> transition_set list
+  (** Returns the transitions that make up the (biggest) strongly connected components of the transiton graph. *)
 
   val sccs_from_sequence : transition Sequence.t -> transition_set list
   (** Returns the (biggest) strongly connected components of the transitons. *)
@@ -320,6 +323,9 @@ module type Program = sig
       If however the pre-transitions haven't been computed yet then they are lazily computed when inspecting the returned sequence. These values are *not* added to the cached!
       This is for instance useful when cutting unsatisfiable transitions since during preprocessing the cache is invalidated many times and it suffices to check whether one pre-transition exists. *)
 
+  val succ : t -> transition -> transition_set
+  (** Similar to [pre]. Uses [pre] internally, so heavy computation should be memoized. *)
+
   val is_initial : t -> transition -> bool
   (** Returns true if the given transition is an initial transition. *)
 
@@ -356,8 +362,17 @@ module type Program = sig
   val start : t -> Location.t
   (** Returns start location. *)
 
+  val sccs_locs : t -> LocationSet.t List.t
+  (** Returns the (biggest) strongly connected components of the program in topological order. *)
+
+  val scc_transitions_from_locs : t -> LocationSet.t -> transition_set
+  (** The transitions that make up the SCC given by the [LocationSet] *)
+
+  val scc_transitions_from_locs_with_incoming_and_outgoing : t -> LocationSet.t -> transition_set
+  (** Similar to [scc_transitions_from_locs] but includes incoming & outgoing transitions of the SCC *)
+
   val sccs : t -> transition_set List.t
-  (** Returns the (biggest) strongly connected components of the transiton graph in topological order. *)
+  (** Returns the transitions of the (biggest) strongly connected components of the program in topological order. *)
 
   val parallel_transitions : t -> transition -> transition_set
   (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)

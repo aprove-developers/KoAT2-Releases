@@ -19,7 +19,6 @@ module Make_
   val add_invariant : unit
 end
 
-(** Creates a TransitionGraph over given transition label and location modules *)
 module TransitionGraph : sig
   include
     ProgramTypes.TransitionGraph

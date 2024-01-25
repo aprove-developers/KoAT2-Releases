@@ -1036,6 +1036,29 @@ module ProbabilisticProgram = struct
            |> GeneralTransitionSet.of_sequence)
 
 
+  let scc_gts_from_locs program locs =
+    let transitions =
+      Set.to_sequence locs
+      |> Sequence.map ~f:(fun loc ->
+             Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc)
+             |> Sequence.filter ~f:(Set.mem locs % ProbabilisticTransition.target))
+      |> Sequence.join
+    in
+    Sequence.map ~f:ProbabilisticTransition.gt transitions |> GeneralTransitionSet.of_sequence
+
+
+  let scc_gts_from_locs_with_incoming_and_outgoing program locs =
+    let transitions =
+      Set.to_sequence locs
+      |> Sequence.map ~f:(fun loc ->
+             let incoming = Sequence.of_list (ProbabilisticTransitionGraph.pred_e (graph program) loc) in
+             let outgoing = Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc) in
+             Sequence.append incoming outgoing)
+      |> Sequence.join
+    in
+    Sequence.map ~f:ProbabilisticTransition.gt transitions |> GeneralTransitionSet.of_sequence
+
+
   let to_formatted_string ?(pretty = false) t =
     let transitions =
       Set.to_list (gts t)
@@ -1119,6 +1142,7 @@ module GRV = struct
   let hash ((gt, l), v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
   let variable (_, v) = v
   let transition (t, _) = t
+  let gt ((gt, _), _) = gt
 
   let to_id_string ((gt, l), v) =
     "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"
