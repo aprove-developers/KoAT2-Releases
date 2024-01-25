@@ -19,15 +19,11 @@ type params = {
         |> List.map (fun level -> (Logger.name_of_level level, level))]
       [@default Logger.INFO]
       (** The general log level of the loggers. *)
-  cfr_method : [ `PartialEvaluationNative | `PartialEvaluationIRankFinder ];
-      [@enum [ ("native", `PartialEvaluationNative); ("irankfinder", `PartialEvaluationIRankFinder) ]]
-      [@default `PartialEvaluationNative]
-      (** Choose the cfr method. One of native, irankfinder, or chaining *)
   abstract : [ `LoopHeads | `FVS ];
       [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]] [@default `LoopHeads]
       (** Where to abstract. One of loop_heads or fvs. *)
   refinement_locations : Location.t list option;
-      (** List of comma-seperated location names.
+      (** List of comma-separated location names.
           The refinement is executed along all transitions between pairs of these locations
           If this parameter is ommitted *all* transitions are refined *)
 }
@@ -94,25 +90,13 @@ let run (params : params) =
   let probabilistic_transitions_to_refine program =
     filter_transitions (ProbabilisticProgramModules.Program.transitions program)
   in
-
-  match params.cfr_method with
-  | `PartialEvaluationNative ->
-      let cfr_config : Abstraction.config = { abstract = params.abstract } in
-      if params.probabilistic then
-        let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
-        let program = Readers.read_probabilistic_program input in
-        PE.evaluate_transitions cfr_config program (probabilistic_transitions_to_refine program)
-        |> prob_program_to_file output
-      else
-        let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
-        let program = Readers.read_file input in
-        PE.evaluate_transitions cfr_config program (transitions_to_refine program)
-        |> sane_program_to_file output
-  | `PartialEvaluationIRankFinder ->
-      if params.probabilistic then
-        raise (Invalid_argument "only --cfr_method=native supports probabilistic programs")
-      else
-        let module PartialEvaluation = PartialEvaluation in
-        let program = Readers.read_file input in
-        PartialEvaluation.apply_cfr (transitions_to_refine program) program
-        |> sane_program_to_file output % MaybeChanged.unpack
+  let cfr_config : Abstraction.config = { abstract = params.abstract } in
+  if params.probabilistic then
+    let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
+    let program = Readers.read_probabilistic_program input in
+    PE.evaluate_transitions cfr_config program (probabilistic_transitions_to_refine program)
+    |> prob_program_to_file output
+  else
+    let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
+    let program = Readers.read_file input in
+    PE.evaluate_transitions cfr_config program (transitions_to_refine program) |> sane_program_to_file output

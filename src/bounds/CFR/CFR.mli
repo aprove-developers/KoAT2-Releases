@@ -31,9 +31,6 @@ module Probabilistic : sig
       Also computes trivial time bounds *)
 end
 
-val pe_with_IRankFinder : ProgramModules.program_modules_t cfr_
-(** PartialEvaluation with IRankFinder *)
-
 val chaining : ProgramModules.program_modules_t cfr_
 (** Chaining *)
 

@@ -22,11 +22,6 @@ RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.
     sudo make install && \
     make -j$(nproc) installcheck
 
-RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip && \
-    mkdir irankfinder && \
-    unzip irankfinder.zip -d irankfinder && \
-    rm irankfinder.zip
-
 # Use our fork of opam-repository for static Z3
 RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git && \
     opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda && \
@@ -117,12 +112,9 @@ COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
 COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
 
-ENV PATH=$PATH:/koat2/bin:/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder
 
 COPY --from=koat2_build /home/opam/koat2 bin/koat2
-COPY --from=koat2_build /home/opam/irankfinder ./irankfinder
 
-RUN chmod +x /koat2/irankfinder/1.3.1/irankfinder/CFRefinement
 
 # ENV LD_LIBRARY_PATH=/lib:/usr/local/lib:/usr/lib
 ENTRYPOINT ["wrapper_script.sh"]

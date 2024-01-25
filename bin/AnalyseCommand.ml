@@ -52,7 +52,7 @@ let print_result = function
 
 
 type local = [ `MPRF | `TWN ]
-type cfr = [ `PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining ]
+type cfr = [ `PartialEvaluationNative | `Chaining ]
 
 type params = {
   print_system : bool;  (** Prints the integer transition system at the start as png *)
@@ -115,13 +115,8 @@ type params = {
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   cfr : cfr list;
-      [@enum
-        [
-          ("pe_native", `PartialEvaluationNative); ("pe", `PartialEvaluationIRankFinder); ("chain", `Chaining);
-        ]]
-      [@default []]
-      [@sep ',']
-      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation with IRankFinder), pe_native (Native Partial Evaluation) or chain (Chaining) *)
+      [@enum [ ("pe_native", `PartialEvaluationNative); ("chain", `Chaining) ]] [@default []] [@sep ',']
+      (** Choose methods for local control-flow-refinement: pe_native (Native Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
@@ -259,7 +254,6 @@ let run (params : params) =
         cfrs =
           List.map
             ~f:(function
-              | `PartialEvaluationIRankFinder -> CFR.pe_with_IRankFinder
               | `Chaining -> CFR.chaining
               | `PartialEvaluationNative ->
                   let pe_config =
@@ -317,9 +311,7 @@ let run (params : params) =
      print_string (program_str ^ "\n\n"));
   let program =
     input
-    |> Readers.read_input ~termination:params.termination
-         ~rename:(List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluationIRankFinder || params.rename)
-         params.simple_input
+    |> Readers.read_input ~termination:params.termination ~rename:params.rename params.simple_input
     |> tap (fun prog ->
            ProofOutput.add_to_proof @@ fun () ->
            FormattedString.(
@@ -335,7 +327,4 @@ let run (params : params) =
   |> ignore;
   if params.show_proof then (
     print_string "\n\n";
-    ProofOutput.print_proof params.proof_format);
-  if params.log_level == NONE && not (List.mem ~equal:Poly.( = ) params.cfr `PartialEvaluationIRankFinder)
-  then
-    ignore (Sys.command ("rm -f -r ./tmp_" ^ !PartialEvaluation.uid))
+    ProofOutput.print_proof params.proof_format)

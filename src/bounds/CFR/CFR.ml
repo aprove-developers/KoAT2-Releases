@@ -177,13 +177,6 @@ module Probabilistic = struct
   include Make (ProbabilisticProgramModules) (Bounds.RationalBound)
 end
 
-let pe_with_IRankFinder =
-  let perform_cfr program ~transitions_to_refine =
-    PartialEvaluation.apply_cfr transitions_to_refine program
-  in
-  mk_cfr ~method_name:"PartialEvaluationIRankFinder" perform_cfr
-
-
 let chaining =
   let perform_chaining program ~transitions_to_refine =
     Preprocessor.lift_to_program (Chaining.transform_graph ~scc:(Option.some transitions_to_refine)) program
