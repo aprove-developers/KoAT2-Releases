@@ -38,8 +38,9 @@ jobs:
           tags: ocamlformat:latest
           cache-from: type=gha
           cache-to: type=gha,mode=min
-      # We have to work around a weird permission error below, hence sudo and for some reason we have to ignore the return code
-      - run: docker run -v "$(pwd):$(pwd)" -t ocamlformat bash -c "cd $(pwd); sudo dune build @fmt --auto-promote; exit 0"
+      # We have to work around a weird permission error below, hence sudo.
+      # Run the command twice as on promotion of changes `dune build @fmt` returns 1 as exit code
+      - run: docker run -v "$(pwd):$(pwd)" -t ocamlformat bash -c "cd $(pwd); sudo dune build @fmt --auto-promote; sudo dune build @fmt --auto-promote"
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: ocamlformat
