@@ -5,9 +5,32 @@ open! OurBase
 open ProbabilisticProgramModules
 module OverapprAnalysis = Analysis.Make (Bounds.Bound) (NonProbOverappr)
 open Approximation.Probabilistic
+open Bounds
 
 let description = "Perform a probabilistic analysis on a given PIP"
 let command = "prob-analyse"
+
+(** Prints the whole resulting approximation to the shell. *)
+let print_all_bounds (program : Program.t) (appr : ExpApproximation.t) : unit =
+  ExpApproximation.to_string program appr |> print_string
+
+
+(** Prints the overall timebound of the program to the shell. *)
+let print_overall_costbound (program : Program.t) (appr : ExpApproximation.t) : unit =
+  ExpApproximation.program_costbound appr program |> RationalBound.to_string |> print_endline
+
+
+(** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
+let print_termcomp (program : Program.t) (appr : ExpApproximation.t) : unit =
+  ExpApproximation.program_costbound appr program
+  |> RationalBound.asymptotic_complexity |> RationalBound.show_complexity_termcomp |> print_endline
+
+
+let print_result = function
+  | `PrintOverallCostbound -> print_overall_costbound
+  | `PrintTermcomp -> print_termcomp
+  | `PrintAllBounds -> print_all_bounds
+
 
 type classic_local = [ `MPRF | `TWN ]
 
@@ -33,6 +56,11 @@ type params = {
       [@enum Formatter.all_formats |> List.map (fun f -> (Formatter.format_to_string f, f))]
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
+  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound ];
+      [@enum [ ("termcomp", `PrintTermcomp); ("all", `PrintAllBounds); ("overall", `PrintOverallCostbound) ]]
+      [@default `PrintOverallCostbound]
+      [@aka [ "r" ]]
+      (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
   logs : Logging.logger list;
       [@enum Logging.(List.map (fun l -> (show_logger l, l)) all_available)]
       [@default Logging.all_available]
@@ -63,19 +91,19 @@ let run (params : params) =
   let preprocess =
     Preprocessor.ProbabilisticWithOverappr.process params.preprocessing_strategy params.preprocessors
   in
-
+  let open Analysis in
   let classical_local_conf =
-    List.fold_left
-      ~f:
-        (fun conf -> function
-          | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth }
-          | `TWN -> { conf with twn = true })
-      ~init:Analysis.default_local_configuration params.classic_local
-    |> fun conf ->
-    if params.closed_form_size_bounds then
-      { conf with closed_form_size_bounds = ComputeClosedFormSizeBounds }
-    else
-      conf
+    {
+      run_mprf_depth =
+        (if List.mem ~equal:Poly.( = ) params.classic_local `MPRF then
+           Some params.mprf_depth
+         else
+           None);
+      twn = List.exists ~f:(( == ) `TWN) params.classic_local;
+      closed_form_size_bounds = Analysis.NoClosedFormSizeBounds;
+      (* TODO *)
+      goal = Analysis.Complexity;
+    }
   in
 
   let conf =
@@ -83,15 +111,13 @@ let run (params : params) =
       if params.pe then
         [
           CFR.pe_native_probabilistic
-            NativePartialEvaluation.
+            Abstraction.
               {
                 abstract =
                   (if params.no_pe_fvs then
                      `LoopHeads
                    else
                      `FVS);
-                k_encounters = params.pe_k;
-                update_invariants = params.pe_update_invariants;
               };
         ]
       else
@@ -125,7 +151,6 @@ let run (params : params) =
         mk_str_header_big "Results of Probabilistic Analysis"
         <> FormattedString.reduce_header_sizes ~levels_to_reduce:1
              (ExpApproximation.to_formatted ~pretty:true program apprs.appr));
-  Printf.printf "Overall expected time bound: %s\n"
-    (Bounds.RationalBound.to_string @@ ExpApproximation.program_timebound apprs.appr program);
+  print_result params.result program apprs.appr;
   if params.show_proof then
     ProofOutput.print_proof params.proof_format

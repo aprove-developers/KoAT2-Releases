@@ -37,7 +37,5 @@ val pe_with_IRankFinder : ProgramModules.program_modules_t cfr_
 val chaining : ProgramModules.program_modules_t cfr_
 (** Chaining *)
 
-val pe_native : NativePartialEvaluation.config -> ProgramModules.program_modules_t cfr_
-
-val pe_native_probabilistic :
-  NativePartialEvaluation.config -> ProbabilisticProgramModules.program_modules_t cfr_
+val pe_native : Abstraction.config -> ProgramModules.program_modules_t cfr_
+val pe_native_probabilistic : Abstraction.config -> ProbabilisticProgramModules.program_modules_t cfr_

@@ -112,7 +112,7 @@ type params = {
       (** Choose methods to compute local runtime-bounds: mprf, twn *)
   closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
-  depth : int; [@default 1] [@aka [ "d" ]]
+  mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   cfr : cfr list;
       [@enum
@@ -123,8 +123,6 @@ type params = {
       [@sep ',']
       (** Choose methods for local control-flow-refinement: pe (Partial Evaluation with IRankFinder), pe_native (Native Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
-  pe_k : int; [@default 0]
-  pe_update_invariants : bool; [@default true]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
@@ -251,7 +249,7 @@ let run (params : params) =
           {
             run_mprf_depth =
               (if List.mem ~equal:Poly.( = ) params.local `MPRF then
-                 Some params.depth
+                 Some params.mprf_depth
                else
                  None);
             twn = List.exists ~f:(( == ) `TWN) params.local;
@@ -265,15 +263,13 @@ let run (params : params) =
               | `Chaining -> CFR.chaining
               | `PartialEvaluationNative ->
                   let pe_config =
-                    NativePartialEvaluation.
+                    Abstraction.
                       {
                         abstract =
                           (if params.no_pe_fvs then
                              `LoopHeads
                            else
                              `FVS);
-                        k_encounters = params.pe_k;
-                        update_invariants = params.pe_update_invariants;
                       }
                   in
                   CFR.pe_native pe_config)
