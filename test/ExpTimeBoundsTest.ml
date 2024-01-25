@@ -15,7 +15,7 @@ let enable_twn conf =
 
 
 let enable_cfr_default conf =
-  ProbabilisticAnalysis.{ conf with cfrs = [ CFR.pe_native_probabilistic Abstraction.{ abstract = `FVS } ] }
+  ProbabilisticAnalysis.{ conf with cfrs = [ CFR.pe_probabilistic Abstraction.{ abstract = `FVS } ] }
 
 
 let conf = ProbabilisticAnalysis.default_configuration

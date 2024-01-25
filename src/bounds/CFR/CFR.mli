@@ -34,5 +34,5 @@ end
 val chaining : ProgramModules.program_modules_t cfr_
 (** Chaining *)
 
-val pe_native : Abstraction.config -> ProgramModules.program_modules_t cfr_
-val pe_native_probabilistic : Abstraction.config -> ProbabilisticProgramModules.program_modules_t cfr_
+val pe : Abstraction.config -> ProgramModules.program_modules_t cfr_
+val pe_probabilistic : Abstraction.config -> ProbabilisticProgramModules.program_modules_t cfr_

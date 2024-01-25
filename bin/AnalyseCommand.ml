@@ -52,7 +52,7 @@ let print_result = function
 
 
 type local = [ `MPRF | `TWN ]
-type cfr = [ `PartialEvaluationNative | `Chaining ]
+type cfr = [ `PartialEvaluation | `Chaining ]
 
 type params = {
   print_system : bool;  (** Prints the integer transition system at the start as png *)
@@ -114,9 +114,8 @@ type params = {
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
-  cfr : cfr list;
-      [@enum [ ("pe_native", `PartialEvaluationNative); ("chain", `Chaining) ]] [@default []] [@sep ',']
-      (** Choose methods for local control-flow-refinement: pe_native (Native Partial Evaluation) or chain (Chaining) *)
+  cfr : cfr list; [@enum [ ("pe", `PartialEvaluation); ("chain", `Chaining) ]] [@default []] [@sep ',']
+      (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
   no_pe_fvs : bool; [@default false]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
@@ -255,7 +254,7 @@ let run (params : params) =
           List.map
             ~f:(function
               | `Chaining -> CFR.chaining
-              | `PartialEvaluationNative ->
+              | `PartialEvaluation ->
                   let pe_config =
                     Abstraction.
                       {
@@ -266,7 +265,7 @@ let run (params : params) =
                              `FVS);
                       }
                   in
-                  CFR.pe_native pe_config)
+                  CFR.pe pe_config)
             params.cfr;
       }
     in

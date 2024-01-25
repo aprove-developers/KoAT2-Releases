@@ -184,18 +184,17 @@ let chaining =
   mk_cfr ~method_name:"Chaining" perform_chaining
 
 
-let pe_native pe_config =
+let pe pe_config =
   let perform_cfr program ~transitions_to_refine =
-    NativePartialEvaluation.ClassicPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine program
+    PartialEvaluation.ClassicPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine program
     |> MaybeChanged.changed (* TODO: better solution? *)
   in
-  mk_cfr ~method_name:"PartialEvaluationNative" perform_cfr
+  mk_cfr ~method_name:"PartialEvaluation" perform_cfr
 
 
-let pe_native_probabilistic pe_config =
+let pe_probabilistic pe_config =
   let perform_cfr program ~transitions_to_refine =
-    NativePartialEvaluation.ProbabilisticPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine
-      program
+    PartialEvaluation.ProbabilisticPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine program
     |> MaybeChanged.changed (* TODO: better solution? *)
   in
-  mk_cfr ~method_name:"PartialEvaluationNativeProbabilistic" perform_cfr
+  mk_cfr ~method_name:"PartialEvaluationProbabilistic" perform_cfr

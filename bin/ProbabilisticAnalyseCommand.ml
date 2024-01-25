@@ -73,7 +73,7 @@ type params = {
         |> List.map (fun level -> (Logger.name_of_level level, level))]
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
-  pe : bool;  (** Enable (native) partial evaluation *)
+  pe : bool;  (** Enable partial evaluation *)
   no_pe_fvs : bool; [@default false]
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
@@ -110,7 +110,7 @@ let run (params : params) =
     let cfrs =
       if params.pe then
         [
-          CFR.pe_native_probabilistic
+          CFR.pe_probabilistic
             Abstraction.
               {
                 abstract =
