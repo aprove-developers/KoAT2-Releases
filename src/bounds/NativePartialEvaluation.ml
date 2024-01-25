@@ -1246,19 +1246,20 @@ struct
       exec
 
 
-  let evaluate_program config program =
+  let evaluate_transitions config program transitions =
     let program_vars =
       Program.input_vars program
       |> tap (fun x -> log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
     let pe_prog =
-      evaluate_component_in_program config (Program.transitions program) program_vars (Program.start program)
+      evaluate_component_in_program config transitions program_vars (Program.start program)
         (Program.graph program)
     in
-
     assert (VarSet.equal (Program.input_vars program) (Program.input_vars pe_prog));
     pe_prog
 
+
+  let evaluate_program config program = evaluate_transitions config program (Program.transitions program)
 
   let apply_sub_scc_cfr config (non_linear_transitions : TransitionSet.t) program =
     let program_vars =

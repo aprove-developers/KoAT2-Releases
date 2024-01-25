@@ -16,6 +16,7 @@
  (libraries
   batteries
   base
+  cmdliner
   stdio
   z3
   ocamlgraph

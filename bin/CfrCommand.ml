@@ -19,17 +19,17 @@ type params = {
         |> List.map (fun level -> (Logger.name_of_level level, level))]
       [@default Logger.INFO]
       (** The general log level of the loggers. *)
-  cfr_method : [ `PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining ];
-      [@enum
-        [
-          ("native", `PartialEvaluationNative);
-          ("irankfinder", `PartialEvaluationIRankFinder);
-          ("chaining", `Chaining);
-        ]]
+  cfr_method : [ `PartialEvaluationNative | `PartialEvaluationIRankFinder ];
+      [@enum [ ("native", `PartialEvaluationNative); ("irankfinder", `PartialEvaluationIRankFinder) ]]
       [@default `PartialEvaluationNative]
       (** Choose the cfr method. One of native, irankfinder, or chaining *)
-  abstract : [ `LoopHeads | `FVS ]; [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]] [@default `LoopHeads]
+  abstract : [ `LoopHeads | `FVS ];
+      [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]] [@default `LoopHeads]
       (** Where to abstract. One of loop_heads or fvs. *)
+  refinement_locations : Location.t list option;
+      (** List of comma-seperated location names.
+          The refinement is executed along all transitions between pairs of these locations
+          If this parameter is ommitted *all* transitions are refined *)
 }
 [@@deriving cmdliner]
 (** The shell arguments which can be defined in the console. *)
@@ -81,6 +81,20 @@ let run (params : params) =
 
   Logging.use_loggers [ (Logging.CFR, params.log_level) ];
 
+  let filter_transitions trans =
+    Option.map
+      ~f:(fun locs_list ->
+        let locs = LocationSet.of_list locs_list in
+        Set.filter ~f:(fun (l, _, l') -> Set.mem locs l && Set.mem locs l') trans)
+      params.refinement_locations
+    |? trans
+  in
+
+  let transitions_to_refine program = filter_transitions (ProgramModules.Program.transitions program) in
+  let probabilistic_transitions_to_refine program =
+    filter_transitions (ProbabilisticProgramModules.Program.transitions program)
+  in
+
   match params.cfr_method with
   | `PartialEvaluationNative ->
       let cfr_config : NativePartialEvaluation.config =
@@ -88,15 +102,19 @@ let run (params : params) =
       in
       if params.probabilistic then
         let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
-        Readers.read_probabilistic_program input
-        |> PE.evaluate_program cfr_config |> prob_program_to_file output
+        let program = Readers.read_probabilistic_program input in
+        PE.evaluate_transitions cfr_config program (probabilistic_transitions_to_refine program)
+        |> prob_program_to_file output
       else
         let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
-        Readers.read_file input |> PE.evaluate_program cfr_config |> sane_program_to_file output
+        let program = Readers.read_file input in
+        PE.evaluate_transitions cfr_config program (transitions_to_refine program)
+        |> sane_program_to_file output
   | `PartialEvaluationIRankFinder ->
       if params.probabilistic then
         raise (Invalid_argument "only --cfr_method=native supports probabilistic programs")
       else
         let module PartialEvaluation = PartialEvaluation in
-        Readers.read_file input |> PartialEvaluation.applyIrankFinder |> sane_program_to_file output
-  | `Chaining -> raise (Invalid_argument "TODO: --cfr_method=chaining not implemented")
+        let program = Readers.read_file input in
+        PartialEvaluation.apply_cfr (transitions_to_refine program) program
+        |> sane_program_to_file output % MaybeChanged.unpack
