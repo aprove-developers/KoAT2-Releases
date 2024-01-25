@@ -52,7 +52,8 @@ val lift_to_program :
     The last module contains a proof that both program types are equal. *)
 module Make
     (PM : ProgramTypes.ProgramModules)
-    (CPM : ProgramTypes.ClassicalProgramModules) (_ : sig
+    (CPM : ProgramTypes.ClassicalProgramModules)
+    (_ : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) : sig
   val process : strategy -> PM.Program.t t list -> PM.Program.t -> PM.Program.t

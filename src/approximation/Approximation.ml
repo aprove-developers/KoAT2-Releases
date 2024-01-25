@@ -129,7 +129,8 @@ module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.Program
 module Coerce
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
-    (PM' : ProgramTypes.ProgramModules) (E : sig
+    (PM' : ProgramTypes.ProgramModules)
+    (E : sig
       val trans_eq : (PM.Transition.t, PM'.Transition.t) Type_equal.t
       val rvtuple__eq : (PM.RV.t, PM'.RV.t) Type_equal.t
 

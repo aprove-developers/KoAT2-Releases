@@ -131,7 +131,8 @@ let all_strategies : strategy list = [ process_only_once; process_till_fixpoint 
 
 module Make
     (PM : ProgramTypes.ProgramModules)
-    (CPM : ProgramTypes.ClassicalProgramModules) (Eq : sig
+    (CPM : ProgramTypes.ClassicalProgramModules)
+    (Eq : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) =
 struct
