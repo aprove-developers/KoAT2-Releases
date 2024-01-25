@@ -49,6 +49,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
+  module SolvableSizeBounds = SolvableSizeBounds.Make (PM)
   module TWN = TWN.Make (Bound) (PM)
 
   type allowed_local_conf_type = (PM.program_modules_t, Bound.t) local_configuration
