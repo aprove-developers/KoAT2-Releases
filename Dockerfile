@@ -112,9 +112,9 @@ COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
 COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
 
+ENV PATH=$PATH:/koat2/bin
 
 COPY --from=koat2_build /home/opam/koat2 bin/koat2
-
 
 # ENV LD_LIBRARY_PATH=/lib:/usr/local/lib:/usr/lib
 ENTRYPOINT ["wrapper_script.sh"]
