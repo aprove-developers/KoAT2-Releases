@@ -1,7 +1,7 @@
 open! OurBase
 
 type label_without_backlink = {
-  probability : OurRational.t;
+  probability : Polynomials.RationalLaurentPolynomial.t;
   overappr_guard : Guard.t;
   update : UpdateElement_.t ProgramTypes.VarMap.t;
   overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
@@ -10,7 +10,7 @@ type label_without_backlink = {
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
-  val probability : t -> OurRational.t
+  val probability : t -> Polynomials.RationalLaurentPolynomial.t
   val without_backlink : t -> label_without_backlink
 end
 
@@ -54,7 +54,7 @@ module GeneralTransition : sig
     patterns:Var.t list ->
     cost:Polynomials.Polynomial.t ->
     guard:Guard.t ->
-    rhss:(OurRational.t * UpdateElement_.t list * Location.t) list ->
+    rhss:(Polynomials.RationalLaurentPolynomial.t * UpdateElement_.t list * Location.t) list ->
     t
 
   val mk_from_labels_without_backlink :

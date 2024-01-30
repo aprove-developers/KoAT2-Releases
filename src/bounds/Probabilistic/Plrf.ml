@@ -122,7 +122,7 @@ let expected_poly cache gtrans =
     let template = Hashtbl.find_exn cache.template_table in
     let prob = t |> TransitionLabel.probability in
     RationalParameterPolynomial.mul
-      (prob |> RationalPolynomial.of_constant |> RationalParameterPolynomial.of_polynomial)
+      (prob |> RationalParameterPolynomial.of_polynomial)
       (RationalParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
   in
   Set.fold

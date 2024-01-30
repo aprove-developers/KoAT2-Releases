@@ -7,7 +7,7 @@ exception ProbabilitiesDoNotSumToOne
 module Invariant = Guard
 
 type label_without_backlink = {
-  probability : OurRational.t;
+  probability : RationalLaurentPolynomial.t;
   overappr_guard : Guard.t;
   update : UpdateElement_.t ProgramTypes.VarMap.t;
   overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
@@ -53,7 +53,7 @@ module ProbabilisticTransitionLabel_ = struct
 
   let default_label_without_backlink =
     {
-      probability = OurRational.one;
+      probability = RationalLaurentPolynomial.one;
       overappr_guard = Guard.mk_true;
       (* This guard goes along with overappr_nonprob_update *)
       update = Map.empty (module Var);
@@ -219,7 +219,7 @@ module ProbabilisticTransitionLabel_ = struct
         Polynomial.to_string (cost t) ^ "}>"
     in
     if pretty then
-      OurRational.to_string (probability t)
+      RationalLaurentPolynomial.to_string (probability t)
       ^ ":" ^ "t" ^ Util.natural_to_subscript t.id ^ "∈g"
       ^ Util.natural_to_subscript (gt_id t)
       ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty t ^ " " ^ cost ^ " "
@@ -227,7 +227,7 @@ module ProbabilisticTransitionLabel_ = struct
       ^ guard
     else
       "ID: "
-      ^ OurRational.to_string (probability t)
+      ^ RationalLaurentPolynomial.to_string (probability t)
       ^ ":" ^ invariant
       ^ string_of_int (gt_id t)
       ^ "," ^ string_of_int t.id ^ ", " ^ cost ^ "&euro;" ^ ", "
@@ -352,15 +352,15 @@ module ProbabilisticTransitionLabel = struct
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
     Map.equal UpdateElement_.equal (update_map t1) (update_map t2)
-    && OurRational.equal (probability t1) (probability t2)
+    && RationalLaurentPolynomial.equal (probability t1) (probability t2)
     && Guard.equal (guard t1) (guard t2)
     && Invariant.equal (invariant t1) (invariant t2)
     && Polynomial.equal (cost t1) (cost t2)
 
 
   let compare_equivalent t1 t2 =
-    if OurRational.compare (probability t1) (probability t2) != 0 then
-      OurRational.compare (probability t1) (probability t2)
+    if RationalLaurentPolynomial.compare (probability t1) (probability t2) != 0 then
+      RationalLaurentPolynomial.compare (probability t1) (probability t2)
     else if Map.compare_direct UpdateElement_.compare (update_map t1) (update_map t2) != 0 then
       Map.compare_direct UpdateElement_.compare (update_map t1) (update_map t2)
     else if Guard.compare (guard t1) (guard t2) != 0 then
@@ -587,7 +587,7 @@ module ProbabilisticTransition = struct
     ^ ":"
     ^ Int.to_string (ProbabilisticTransitionLabel.id label)
     ^ ": " ^ Location.to_string l ^ "->"
-    ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
+    ^ RationalLaurentPolynomial.to_string (ProbabilisticTransitionLabel.probability label)
     ^ ":" ^ Location.to_string l'
 
 
@@ -597,17 +597,17 @@ module ProbabilisticTransition = struct
     ^ "∈g"
     ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.gt_id label)
     ^ ": " ^ Location.to_string l ^ "→"
-    ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
+    ^ RationalLaurentPolynomial.to_string (ProbabilisticTransitionLabel.probability label)
     ^ ":" ^ Location.to_string l'
 
 
   let to_file_string_rhs (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
-      if OurRational.(equal one prob) then
+      if RationalLaurentPolynomial.(equal one prob) then
         ""
       else
-        "[" ^ OurRational.to_string prob ^ "]:"
+        "[" ^ RationalLaurentPolynomial.to_string prob ^ "]:"
     in
     prob_string ^ Location.to_string l' ^ ProbabilisticTransitionLabel.update_to_string_rhs label
 
@@ -615,10 +615,10 @@ module ProbabilisticTransition = struct
   let to_string_rhs (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
-      if OurRational.(equal one prob) then
+      if RationalLaurentPolynomial.(equal one prob) then
         ""
       else
-        "[" ^ OurRational.to_string prob ^ "]:"
+        "[" ^ RationalLaurentPolynomial.to_string prob ^ "]:"
     in
     prob_string
     ^ (Int.to_string (ProbabilisticTransitionLabel.id label) ^ ":")
@@ -629,10 +629,10 @@ module ProbabilisticTransition = struct
   let to_string_rhs_pretty (_, label, l') =
     let prob = ProbabilisticTransitionLabel.probability label in
     let prob_string =
-      if OurRational.(equal one prob) then
+      if RationalLaurentPolynomial.(equal one prob) then
         ""
       else
-        "[" ^ OurRational.to_string prob ^ "]:"
+        "[" ^ RationalLaurentPolynomial.to_string prob ^ "]:"
     in
     prob_string
     ^ ("t" ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.id label) ^ ":")
@@ -697,9 +697,11 @@ module GeneralTransition = struct
 
     let mk ~(start : Location.t) ~(fill_up_to_num_arg_vars : int) ~(patterns : Var.t list)
         ~(cost : Polynomials.Polynomial.t) ~(guard : Guard.t)
-        ~(rhss : (OurRational.t * UpdateElement_.t list * Location.t) list) : t =
-      let total_prob = Sequence.of_list rhss |> Sequence.map ~f:Tuple3.first |> OurRational.sum in
-      if not (OurRational.equal OurRational.one total_prob) then
+        ~(rhss : (RationalLaurentPolynomial.t * UpdateElement_.t list * Location.t) list) : t =
+      let total_prob =
+        Sequence.of_list rhss |> Sequence.map ~f:Tuple3.first |> RationalLaurentPolynomial.sum
+      in
+      if not (RationalLaurentPolynomial.equal RationalLaurentPolynomial.one total_prob) then
         raise ProbabilitiesDoNotSumToOne;
 
       let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
@@ -744,9 +746,11 @@ module GeneralTransition = struct
 
     let mk_from_labels_without_backlink ~start ~guard_without_invariant ~invariant ~cost ~rhss : t =
       let total_prob =
-        Sequence.of_list rhss |> Sequence.map ~f:(fun (r, _) -> r.probability) |> OurRational.sum
+        Sequence.of_list rhss
+        |> Sequence.map ~f:(fun (r, _) -> r.probability)
+        |> RationalLaurentPolynomial.sum
       in
-      if not (OurRational.equal OurRational.one total_prob) then
+      if not (RationalLaurentPolynomial.equal RationalLaurentPolynomial.one total_prob) then
         raise ProbabilitiesDoNotSumToOne;
 
       let gt =
@@ -808,7 +812,7 @@ module GeneralTransition = struct
       let show_prob_branch (_, label, l') =
         Int.to_string (ProbabilisticTransitionLabel.id label)
         ^ ": "
-        ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
+        ^ RationalLaurentPolynomial.to_string (ProbabilisticTransitionLabel.probability label)
         ^ ":" ^ Location.to_string l'
       in
       Int.to_string (gt_id t)
@@ -823,7 +827,7 @@ module GeneralTransition = struct
         "t"
         ^ Util.natural_to_subscript (ProbabilisticTransitionLabel.id label)
         ^ ":"
-        ^ OurRational.to_string (ProbabilisticTransitionLabel.probability label)
+        ^ RationalLaurentPolynomial.to_string (ProbabilisticTransitionLabel.probability label)
         ^ ":" ^ Location.to_string l'
       in
       "g"
@@ -1092,7 +1096,7 @@ module ProbabilisticProgram = struct
 
   let remove_zero_prob_transitions tset program =
     Set.fold tset ~init:program ~f:(fun prog (l, t, l') ->
-        assert (OurRational.(equal (ProbabilisticTransitionLabel.probability t) zero));
+        assert (RationalLaurentPolynomial.(equal (ProbabilisticTransitionLabel.probability t) zero));
         remove_transition prog (l, t, l'))
 end
 

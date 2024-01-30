@@ -36,6 +36,8 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
+%start <Polynomials.RationalLaurentPolynomial.t> onlyProb
+
 %start <ProbabilityDistribution.t> onlyProbabilityDistribution
 
 %start <UpdateElement_.t> onlyUpdateElement
@@ -66,6 +68,9 @@
 %}
 
 %%
+
+onlyProb:
+  | prob = rational_laurent_polynomial EOF { prob };
 
 onlyProgram:
   | p_and_g = programAndGoal
@@ -182,10 +187,10 @@ general_transition_rhss:
     { rhss }
     (** If there is only one transition then we allow to omit the probability annotation *)
   | rhs = prob_transition_rhs_without_prob
-    { [(OurRational.one,rhs)] };
+    { [(RationalLaurentPolynomial.one,rhs)] };
 
 prob_transition_rhs_with_prob:
-  | prob=our_float; COLON; rhs_without_prob=prob_transition_rhs_without_prob
+  | prob = rational_laurent_polynomial; COLON; rhs_without_prob=prob_transition_rhs_without_prob
     { (prob,rhs_without_prob) }
 
 prob_transition_rhs_without_prob:
@@ -220,11 +225,11 @@ update_value:
 
 onlyProbabilityDistribution:
   | BERNOULLI; LPAR; p = our_float; RPAR
-    { ProbabilityDistribution.Binomial (Polynomial.one,p) }
+    { if OurRational.(p > one) then failwith "Probability is greater than one!" else ProbabilityDistribution.Binomial (Polynomial.one, p) }
   | BINOMIAL; LPAR; n = polynomial; COMMA; p = our_float; RPAR
-    { ProbabilityDistribution.Binomial (n,p) }
+    { if OurRational.(p > one) then failwith "Probability is greater than one!" else ProbabilityDistribution.Binomial (n, p) }
   | GEOMETRIC; LPAR; p = our_float; RPAR
-    { ProbabilityDistribution.Geometric p }
+    { if OurRational.(p > one) then failwith "Probability is greater than one!" else ProbabilityDistribution.Geometric p }
   | HYPERGEOMETRIC; LPAR; bigN = our_int; COMMA; k = polynomial; COMMA; n = polynomial; RPAR
     { ProbabilityDistribution.Hypergeometric (bigN,k,n) }
   | UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
@@ -295,7 +300,7 @@ onlyUpdateElement:
 
 variable:
   | v = ID
-    { Polynomial.var v } ;
+    { Var.of_string v } ;
 
 our_float:
   | float_string = UFLOAT
@@ -307,7 +312,7 @@ our_int:
 
 polynomial:
   | v = variable
-    { v }
+    { Polynomial.of_var v }
   | c = our_int
     { Polynomial.of_constant c }
   | LPAR; ex = polynomial; RPAR
@@ -317,7 +322,25 @@ polynomial:
   | p1 = polynomial; op = bioperator; p2 = polynomial
     { op p1 p2 }
   | v = variable; POW; c = UINT
-    { Polynomial.pow v (int_of_string c) } ;
+    { Polynomial.pow (Polynomial.of_var v) (int_of_string c) } ;
+
+rational_laurent_polynomial:
+  | v = variable
+    { RationalLaurentPolynomial.of_var v }
+  | c = our_int
+    { RationalLaurentPolynomial.of_constant (OurRational.of_ourint c) }
+  | c = our_float
+    { RationalLaurentPolynomial.of_constant c }
+  | LPAR; ex = rational_laurent_polynomial; RPAR
+    { ex }
+  | MINUS; ex = rational_laurent_polynomial
+    { RationalLaurentPolynomial.neg ex }
+  | p1 = rational_laurent_polynomial; op = laurent_bioperator; p2 = rational_laurent_polynomial
+    { op p1 p2 }
+  | v = variable; POW; c = UINT
+    { RationalLaurentPolynomial.pow (RationalLaurentPolynomial.of_var v) (int_of_string c) } 
+  | v = variable; POW; MINUS; c = UINT
+    { RationalLaurentPolynomial.of_power v (Int.neg @@ int_of_string c) } ;
 
 onlyBound:
   | b = bound EOF { b } ;
@@ -349,3 +372,8 @@ bound:
   | PLUS { Polynomial.add }
   | TIMES { Polynomial.mul }
   | MINUS { Polynomial.sub } ;
+
+%inline laurent_bioperator:
+  | PLUS { RationalLaurentPolynomial.add }
+  | TIMES { RationalLaurentPolynomial.mul }
+  | MINUS { RationalLaurentPolynomial.sub } ;

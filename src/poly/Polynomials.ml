@@ -441,6 +441,8 @@ module RationalPolynomial = struct
   let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly
 end
 
+module RationalLaurentPolynomial = PolynomialOver (OurRational)
+
 module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
   module Outer = PolynomialOver (PolynomialOver (Value))
   module Inner = PolynomialOver (Value)
