@@ -31,7 +31,7 @@ To get a statically linked binary, please execute the script `compile_static_bin
 
 ## Formatting with `ocamlformat`
 We use `ocamlformat` for formatting purposes.
-Currently, we use version 0.25.1 which can be installed with `opam install ocamlformat.0.25.1`.
+Currently, we use version 0.26.1 which can be installed with `opam install ocamlformat.0.26.1`.
 Use `dune build @fmt` to run the formatter, which will output the suggested changes.
 You can accept these changes by executing `dune promote`.
 Alternatively, you can format the code and directly accept all changes with `dune build @fmt --auto-promote`.
@@ -95,9 +95,6 @@ The lower bound is ignored by KoAT2.
 The upper bound has to be non-negative for every model of the transition's guard.
 
 At the moment, we do not support recursion, i.e., we only support `Com_1`, which can also be omitted.
-
-## API
-You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
 
 ## Contact
 If you encounter any difficulties either use GitHub issues or contact aprove [at] i2.informatik.rwth-aachen.de
