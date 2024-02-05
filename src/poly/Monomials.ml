@@ -1,5 +1,15 @@
 open! OurBase
 
+type ('indeterminate, 'indeterminate_cmp_wit) generic_monomial =
+  ('indeterminate, int, 'indeterminate_cmp_wit) Map.t
+
+type generic_var_monomial = (Var.t, Var.comparator_witness) generic_monomial
+
+type 'indeterminate_cmp_wit generic_monomial_comparator_witness =
+  ('indeterminate_cmp_wit, Int.comparator_witness) DerivedComparatorOnMaps.comparator_witness
+
+type generic_var_monomial_comparator_witness = Var.comparator_witness generic_monomial_comparator_witness
+
 module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) = struct
   module Inner = struct
     module Valuation_ = Valuation.MakeOverIndeterminate (I) (Value)
@@ -10,9 +20,12 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
 
     type t = int M.t
 
-    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-    let equal t1 t2 = Map.equal Int.equal t1 t2
-    let compare t1 t2 = Map.compare_direct Int.compare t1 t2
+    type comparator_witness =
+      (I.comparator_witness, Int.comparator_witness) DerivedComparatorOnMaps.comparator_witness
+
+    let comparator = DerivedComparatorOnMaps.comparator I.comparator Int.comparator
+    let equal : t -> t -> bool = Comparator.equal_of_comparator comparator
+    let compare = Comparator.compare_of_comparator comparator
 
     type indeterminate = I.t
     type value = Value.t
@@ -102,7 +115,6 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
   end
 
   include Inner
-  include Comparator.Make (Inner)
 end
 
 module Make = MakeOverIndeterminate (VarIndeterminate)

@@ -3,14 +3,21 @@ open! OurBase
 
 open PolyTypes
 
+type ('indeterminate, 'value, 'indeterminate_cmp_wit) generic_polynomial
+(** generic type of polynomials *)
+
+type 'value generic_var_polynomial = (Var.t, 'value, Var.comparator_witness) generic_polynomial
+(** generic type of Polynomials with variable indeterminates *)
+
 (** Provides default implementations of (laurent) polynomials. *)
 module PolynomialOverIndeterminate (I : Indeterminate) (Value : Ring) :
   Polynomial
     with type value = Value.t
      and type valuation = Valuation.MakeOverIndeterminate(I)(Value).t
-     and type monomial = Monomials.MakeOverIndeterminate(I)(Value).t
+     and type monomial = (I.t, I.comparator_witness) Monomials.generic_monomial
      and type scaled_monomial = ScaledMonomials.MakeOverIndeterminate(I)(Value).t
      and type indeterminate = I.t
+     and type t = (I.t, Value.t, I.comparator_witness) generic_polynomial
 
 (** Constructs a default (laurent) polynomial using a list of monomials and their coefficients *)
 module PolynomialOver (Value : Ring) : sig
@@ -18,9 +25,10 @@ module PolynomialOver (Value : Ring) : sig
     Polynomial
       with type value = Value.t
        and type valuation = Valuation.Make(Value).t
-       and type monomial = Monomials.Make(Value).t
+       and type monomial = (Var.t, Var.comparator_witness) Monomials.generic_monomial
        and type scaled_monomial = ScaledMonomials.Make(Value).t
        and type indeterminate = Var.t
+       and type t = Value.t generic_var_polynomial
 
   val substitute_all : (Var.t, t, Var.comparator_witness) Map.t -> t -> t
   (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
