@@ -2,13 +2,18 @@ open! OurBase
 open Atoms
 open Polynomials
 
-module ConstraintOver (P : ConstraintTypes.Atomizable) (A : ConstraintTypes.Atom with type polynomial = P.t) =
+module ConstraintOver
+    (M : PolyTypes.Monomial)
+    (P : PolyTypes.Polynomial with type monomial = M.t)
+    (A : ConstraintTypes.Atom with type polynomial = P.t with type monomial = M.t) =
 struct
   module A = A
 
   type value = A.value
   type polynomial = A.polynomial
   type atom = A.t
+  type monomial = M.t
+  type monomial_comparator_witness = M.comparator_witness
   type t = A.t list [@@deriving eq, ord]
 
   let lift atom = [ atom ]
@@ -46,6 +51,7 @@ struct
 
 
   let vars constr = constr |> List.map ~f:A.vars |> List.fold_left ~f:Set.union ~init:VarSet.empty
+  let monomials constr = List.map ~f:A.monomials constr |> Set.of_list (module M) % List.join
 
   let to_string ?(to_file = false) ?(pretty = false) ?(conj = " && ") constr =
     String.concat
@@ -91,7 +97,7 @@ struct
 end
 
 module Constraint = struct
-  include ConstraintOver (Polynomial) (Atom)
+  include ConstraintOver (Monomials.Make (OurInt)) (Polynomial) (Atom)
 
   let max_of_occurring_constants atoms =
     atoms |> List.map ~f:Atom.max_of_occurring_constants |> List.fold_left ~f:OurInt.mul ~init:OurInt.one
@@ -103,7 +109,7 @@ module Constraint = struct
 end
 
 module RationalConstraint = struct
-  include ConstraintOver (RationalPolynomial) (RationalAtom)
+  include ConstraintOver (Monomials.Make (OurRational)) (RationalPolynomial) (RationalAtom)
 
   let max_of_occurring_constants atoms =
     atoms
@@ -117,17 +123,23 @@ end
 
 module ParameterConstraintOver
     (Value : PolyTypes.Ring)
-    (Atom : ConstraintTypes.Atom with type value = Value.t and type polynomial = PolynomialOver(Value).t)
+    (Atom : ConstraintTypes.Atom
+              with type value = Value.t
+               and type polynomial = Value.t Polynomials.generic_var_polynomial
+               and type monomial = Monomials.generic_var_monomial)
     (ParamAtom : sig
       include
         ConstraintTypes.Atom
-          with type polynomial = ParameterPolynomialOver(Value).t
+          with type polynomial = Value.t Polynomials.generic_var_polynomial Polynomials.generic_var_polynomial
+           and type monomial = Monomials.generic_var_monomial
            and type value = PolynomialOver(Value).t
     end) =
 struct
-  include ConstraintOver (ParameterPolynomialOver (Value)) (ParamAtom)
+  include
+    ConstraintOver (Monomials.Make (PolynomialOver (Value))) (ParameterPolynomialOver (Value)) (ParamAtom)
+
   module ParaP = ParameterPolynomialOver (Value)
-  module C = ConstraintOver (PolynomialOver (Value)) (Atom)
+  module C = ConstraintOver (Monomials.Make (Value)) (PolynomialOver (Value)) (Atom)
 
   type unparametrised_constraint = C.t
 

@@ -1,5 +1,13 @@
 open! OurBase
 
+type ('indeterminate, 'value, 'indeterminate_cmp_wit) generic_polynomial =
+  ( ('indeterminate, 'indeterminate_cmp_wit) Monomials.generic_monomial,
+    'value,
+    'indeterminate_cmp_wit Monomials.generic_monomial_comparator_witness )
+  Map.t
+
+type 'value generic_var_polynomial = (Var.t, 'value, Var.comparator_witness) generic_polynomial
+
 module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ring) = struct
   module Monomial_ = Monomials.MakeOverIndeterminate (I) (Value)
   module ScaledMonomial_ = ScaledMonomials.MakeOverIndeterminate (I) (Value)
@@ -14,7 +22,10 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
   (* Maybe instead we just use a map here? *)
   module MonMap = MakeMapCreators1 (Monomial_)
 
-  type t = (monomial, value, Monomial_.comparator_witness) Map.t
+  type t = (I.t, value, I.comparator_witness) generic_polynomial
+
+  (** This unused declaration only shows that the type t is a Map from Monomials (over Indeterminates) to Values *)
+  let _t_typeeq : (t, (Monomial_.t, value, Monomial_.comparator_witness) Map.t) Type_equal.t = Type_equal.refl
 
   let equal = Map.equal Value.equal
   let compare t1 t2 = Map.compare_direct Value.compare t1 t2

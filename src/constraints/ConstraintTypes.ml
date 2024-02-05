@@ -1,31 +1,11 @@
 open! OurBase
 (** Provides all modules related to constraints, i.e., atoms, constraints and formulas. *)
 
-open PolyTypes
-
-(** A default atom module. *)
-module type Atomizable = sig
-  type t
-  type value
-
-  include Ring with type t := t
-
-  val sub : t -> t -> t
-  val of_constant : value -> t
-  val of_var : Var.t -> t
-  val vars : t -> VarSet.t
-  val rename : RenameMap.t -> t -> t
-  val is_linear : t -> bool
-  val coeff_of_var : Var.t -> t -> value
-  val get_constant : t -> value
-  val of_coeff_list : value list -> Var.t list -> t
-  val sum : t Sequence.t -> t
-end
-
 (** An atom is a comparison between two polynomials. *)
 module type Atom = sig
   (** A comparator sets two values in a binary relation *)
 
+  type monomial
   type polynomial
   type value
   type t
@@ -75,6 +55,9 @@ module type Atom = sig
   val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
   (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
 
+  val monomials : t -> monomial List.t
+  (** Returns the set of monomials that make up the atom *)
+
   val vars : t -> VarSet.t
   (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
@@ -106,6 +89,8 @@ module type Constraint = sig
   type value
   type polynomial
   type atom
+  type monomial
+  type monomial_comparator_witness
   type t
 
   (** {1  {L Following methods are convenience methods for the creation of constraints.}} *)
@@ -173,6 +158,9 @@ module type Constraint = sig
 
   val compare : t -> t -> int
   (** Stable structural compare, but not an actual compare *)
+
+  val monomials : t -> (monomial, monomial_comparator_witness) Set.t
+  (** Returns the set of monomials that make up the constraint *)
 
   val vars : t -> VarSet.t
   (** Returns the set of variables which are active in the constraint.

@@ -7,7 +7,11 @@ open Polynomials
 
 (** Provides an implementation of atoms over polynomials. *)
 module Atom : sig
-  include ConstraintTypes.Atom with type polynomial = Polynomial.t and type value = Polynomial.value
+  include
+    ConstraintTypes.Atom
+      with type monomial = Polynomial.monomial
+       and type polynomial = Polynomial.t
+       and type value = Polynomial.value
 
   val max_of_occurring_constants : t -> OurInt.t
   (** TODO doc*)
@@ -26,7 +30,10 @@ end
 
 module RationalAtom : sig
   include
-    ConstraintTypes.Atom with type polynomial = RationalPolynomial.t and type value = RationalPolynomial.value
+    ConstraintTypes.Atom
+      with type polynomial = RationalPolynomial.t
+       and type value = RationalPolynomial.value
+       and type monomial = RationalPolynomial.monomial
 
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
@@ -43,14 +50,16 @@ end
 module ParameterAtom : sig
   include
     ConstraintTypes.Atom
-      with type polynomial = ParameterPolynomial.t
+      with type monomial = ParameterPolynomial.monomial
+       and type polynomial = ParameterPolynomial.t
        and type value = ParameterPolynomial.value
 end
 
 module RationalParameterAtom : sig
   include
     ConstraintTypes.Atom
-      with type polynomial = RationalParameterPolynomial.t
+      with type monomial = RationalParameterPolynomial.monomial
+       and type polynomial = RationalParameterPolynomial.t
        and type value = RationalParameterPolynomial.value
 
   val replace_nonlinear_monomials_with_temp_vars : t -> t

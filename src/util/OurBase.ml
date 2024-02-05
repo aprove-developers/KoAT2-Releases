@@ -194,6 +194,21 @@ module DerivedComparatorOnSets = Comparator.Derived_phantom (struct
   let compare _ = Set.compare_direct
 end)
 
+module DerivedComparatorOnMaps = Comparator.Derived2_phantom (struct
+  type ('a, 'b, 'c) t = ('a, 'b, 'c) Map.t
+
+  let sexp_of_t (type a b) (sexp_of_a : a -> Sexp.t) (sexp_of_b : b -> Sexp.t) (t : (a, b, 'c) t) : Sexp.t =
+    let module Sexp_of = struct
+      type t = a
+
+      let sexp_of_t = sexp_of_a
+    end in
+    Map.sexp_of_m__t (module Sexp_of) sexp_of_b t
+
+
+  let compare _ v_compare = Map.compare_direct v_compare
+end)
+
 (** Lexicographic comparisons of tuples *)
 module TupleComparator = Comparator.Derived2 (struct
   type ('a, 'b) t = 'a * 'b [@@deriving sexp_of]
