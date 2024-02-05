@@ -2,7 +2,7 @@ open! OurBase
 open Atoms
 open Polynomials
 
-module ConstraintOver (P : ConstraintTypes.Atomizable) (A : ConstraintTypes.Atom with type polynomial = P.t) =
+module ConstraintOver (P : PolyTypes.Polynomial) (A : ConstraintTypes.Atom with type polynomial = P.t) =
 struct
   module A = A
 

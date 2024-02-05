@@ -3,7 +3,7 @@ open Polynomials
 
 (** This module functor can be used to create generic atoms.
     However, some specific required functions need to be filled in after instantiating this functor. *)
-module GenericAtomHelperOver (P : ConstraintTypes.Atomizable) = struct
+module GenericAtomHelperOver (P : PolyTypes.Polynomial) = struct
   module Inner = struct
     type polynomial = P.t
     type value = P.value

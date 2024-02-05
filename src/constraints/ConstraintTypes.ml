@@ -1,27 +1,6 @@
 open! OurBase
 (** Provides all modules related to constraints, i.e., atoms, constraints and formulas. *)
 
-open PolyTypes
-
-(** A default atom module. *)
-module type Atomizable = sig
-  type t
-  type value
-
-  include Ring with type t := t
-
-  val sub : t -> t -> t
-  val of_constant : value -> t
-  val of_var : Var.t -> t
-  val vars : t -> VarSet.t
-  val rename : RenameMap.t -> t -> t
-  val is_linear : t -> bool
-  val coeff_of_var : Var.t -> t -> value
-  val get_constant : t -> value
-  val of_coeff_list : value list -> Var.t list -> t
-  val sum : t Sequence.t -> t
-end
-
 (** An atom is a comparison between two polynomials. *)
 module type Atom = sig
   (** A comparator sets two values in a binary relation *)
