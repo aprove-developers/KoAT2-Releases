@@ -6,7 +6,9 @@ open! OurBase
 module Constraint : sig
   include
     ConstraintTypes.Constraint
-      with type polynomial = Polynomials.Polynomial.t
+      with type monomial = Monomials.generic_var_monomial
+       and type monomial_comparator_witness = Monomials.generic_var_monomial_comparator_witness
+       and type polynomial = Polynomials.Polynomial.t
        and type value = OurInt.t
        and type atom = Atoms.Atom.t
        and type t = Atoms.Atom.t List.t
@@ -43,7 +45,9 @@ end
 module RationalConstraint : sig
   include
     ConstraintTypes.Constraint
-      with type polynomial = Polynomials.RationalPolynomial.t
+      with type monomial = Monomials.generic_var_monomial
+       and type monomial_comparator_witness = Monomials.generic_var_monomial_comparator_witness
+       and type polynomial = Polynomials.RationalPolynomial.t
        and type value = OurRational.t
        and type atom = Atoms.RationalAtom.t
 
@@ -55,7 +59,9 @@ end
 
 module ParameterConstraint :
   ConstraintTypes.ParameterConstraint
-    with type polynomial = Polynomials.ParameterPolynomial.t
+    with type monomial = Monomials.generic_var_monomial
+     and type monomial_comparator_witness = Monomials.generic_var_monomial_comparator_witness
+     and type polynomial = Polynomials.ParameterPolynomial.t
      and type value = Polynomials.Polynomial.t
      and type atom = Atoms.ParameterAtom.t
      and type unparametrised_constraint = Constraint.t
@@ -63,7 +69,9 @@ module ParameterConstraint :
 module RationalParameterConstraint : sig
   include
     ConstraintTypes.ParameterConstraint
-      with type polynomial = Polynomials.RationalParameterPolynomial.t
+      with type monomial = Monomials.generic_var_monomial
+       and type monomial_comparator_witness = Monomials.generic_var_monomial_comparator_witness
+       and type polynomial = Polynomials.RationalParameterPolynomial.t
        and type value = Polynomials.RationalPolynomial.t
        and type atom = Atoms.RationalParameterAtom.t
        and type unparametrised_constraint = RationalConstraint.t

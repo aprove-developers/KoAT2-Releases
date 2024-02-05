@@ -29,4 +29,5 @@ module Make (Value : PolyTypes.Ring) :
     with type value = Value.t
      and type valuation = Valuation.MakeOverIndeterminate(VarIndeterminate)(Value).t
      and type indeterminate = Var.t
+     and type comparator_witness = generic_var_monomial_comparator_witness
      and type t = MakeOverIndeterminate(VarIndeterminate)(Value).t
