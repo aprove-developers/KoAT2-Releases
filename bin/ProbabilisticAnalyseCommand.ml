@@ -77,10 +77,13 @@ type params = {
   no_pe_fvs : bool; [@default false]
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
+  timeout : float; [@default 0.]
+      (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
 }
 [@@deriving cmdliner]
 
 let run (params : params) =
+  Timeout.start_time_of_koat2 := Unix.gettimeofday ();
   let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let program, _ =
@@ -142,15 +145,19 @@ let run (params : params) =
         match format with
         | Formatter.Html -> mk_raw_str (GP.print_system_pretty_html program)
         | _ -> Empty);
-
-  let program, apprs = ProbabilisticAnalysis.perform_analysis ~conf program in
-
-  ProofOutput.add_to_proof
-    FormattedString.(
-      fun () ->
-        mk_str_header_big "Results of Probabilistic Analysis"
-        <> FormattedString.reduce_header_sizes ~levels_to_reduce:1
-             (ExpApproximation.to_formatted ~pretty:true program apprs.appr));
-  print_result params.result program apprs.appr;
+  Timeout.timed_run params.timeout
+    ~action:(fun () ->
+      print_string
+        "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n")
+    (fun () ->
+      let program, apprs = ProbabilisticAnalysis.perform_analysis ~conf program in
+      ProofOutput.add_to_proof
+        FormattedString.(
+          fun () ->
+            mk_str_header_big "Results of Probabilistic Analysis"
+            <> FormattedString.reduce_header_sizes ~levels_to_reduce:1
+                 (ExpApproximation.to_formatted ~pretty:true program apprs.appr));
+      print_result params.result program apprs.appr)
+  |> ignore;
   if params.show_proof then
     ProofOutput.print_proof params.proof_format

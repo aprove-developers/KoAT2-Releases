@@ -1,0 +1,7 @@
+# syntax = edrevo/dockerfile-plus
+
+INCLUDE+ Dockerfile
+
+COPY docker_scripts/wrapper_script_webinterface.sh bin/wrapper_script_webinterface.sh
+
+ENTRYPOINT ["wrapper_script_webinterface.sh"]
