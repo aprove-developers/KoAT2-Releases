@@ -5,6 +5,7 @@ open Polynomials
     However, some specific required functions need to be filled in after instantiating this functor. *)
 module GenericAtomHelperOver (P : PolyTypes.Polynomial) = struct
   module Inner = struct
+    type monomial = P.monomial
     type polynomial = P.t
     type value = P.value
     type compkind = LE | LT [@@deriving eq, ord]
@@ -54,6 +55,7 @@ module GenericAtomHelperOver (P : PolyTypes.Polynomial) = struct
 
 
     let vars (poly, _) = P.vars poly
+    let monomials (poly, _) = P.monomials poly
     let rename (poly, comp) varmapping = (P.rename varmapping poly, comp)
 
     let fold ~subject ~le ~lt (poly, comp) =
@@ -86,6 +88,7 @@ module Atom = struct
   module Inner = struct
     type polynomial = Polynomial.t
     type value = Polynomial.value
+    type monomial = Polynomial.monomial
 
     type t = Polynomial.t [@@deriving eq, ord]
     (** Invariant: Always in cannonical form p ≤ 0, where the content of p is 1 *)
@@ -116,6 +119,7 @@ module Atom = struct
     let flip_comp t = mk_ge t Polynomial.zero
     let neg t = mk_gt t Polynomial.zero
     let vars = Polynomial.vars
+    let monomials = Polynomial.monomials % poly
     let rename = flip Polynomial.rename
     let is_linear = Polynomial.is_linear
     let fold ~subject ~le ~lt t = le (subject t) (subject Polynomial.zero)
