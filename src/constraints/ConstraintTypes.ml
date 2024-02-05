@@ -89,6 +89,8 @@ module type Constraint = sig
   type value
   type polynomial
   type atom
+  type monomial
+  type monomial_comparator_witness
   type t
 
   (** {1  {L Following methods are convenience methods for the creation of constraints.}} *)
@@ -156,6 +158,9 @@ module type Constraint = sig
 
   val compare : t -> t -> int
   (** Stable structural compare, but not an actual compare *)
+
+  val monomials : t -> (monomial, monomial_comparator_witness) Set.t
+  (** Returns the set of monomials that make up the constraint *)
 
   val vars : t -> VarSet.t
   (** Returns the set of variables which are active in the constraint.
