@@ -88,8 +88,5 @@ At the moment, we do not support recursion, i.e., we only support `Com_1`, which
   For further information run ./koat2 commandname --help
   The main command proceeding a full analysis is the "analyse" command.
 
-## API
-You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
-
 ## Contact
 If you encounter any difficulties either use GitHub issues or contact aprove [at] i2.informatik.rwth-aachen.de
