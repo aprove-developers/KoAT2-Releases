@@ -96,8 +96,5 @@ The upper bound has to be non-negative for every model of the transition's guard
 
 At the moment, we do not support recursion, i.e., we only support `Com_1`, which can also be omitted.
 
-## API
-You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
-
 ## Contact
 If you encounter any difficulties either use GitHub issues or contact aprove [at] i2.informatik.rwth-aachen.de
