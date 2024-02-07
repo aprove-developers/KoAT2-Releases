@@ -38,8 +38,8 @@ module RationalAtom : sig
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
 
-  val get_coefficient : Var.t -> t -> value
-  (** Returns the coefficient of a variable which is normalised to the lhs. *)
+  val get_coefficient : monomial -> t -> value
+  (** Returns the coefficient of a monomial which is normalised to the lhs. *)
 
   val max_of_occurring_constants : t -> OurRational.t
 
