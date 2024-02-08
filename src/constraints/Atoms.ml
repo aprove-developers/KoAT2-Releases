@@ -126,7 +126,7 @@ module Atom = struct
     let is_le _ = true
     let is_lt _ = false
     let get_constant = OurInt.neg % Polynomial.get_constant
-    let get_coefficient var = Polynomial.coeff_of_var var
+    let get_coefficient mon = Polynomial.coeff mon
 
     let comp_to_string ~pretty =
       if pretty then
@@ -188,9 +188,9 @@ module RationalAtom = struct
     OurRational.neg (RationalPolynomial.get_constant poly)
 
 
-  let get_coefficient var t =
+  let get_coefficient mon t =
     let poly, _ = remove_strict t in
-    RationalPolynomial.coeff_of_var var poly
+    RationalPolynomial.coeff mon poly
 
 
   let ( =~= ) = equal
@@ -212,9 +212,9 @@ module ParameterAtom = struct
     Polynomial.neg (ParameterPolynomial.get_constant poly)
 
 
-  let get_coefficient var t =
+  let get_coefficient mon t =
     let poly, _ = remove_strict t in
-    ParameterPolynomial.coeff_of_var var poly
+    ParameterPolynomial.coeff mon poly
 
 
   let ( =~= ) = equal
@@ -250,9 +250,9 @@ module RationalParameterAtom = struct
     RationalPolynomial.neg (RationalParameterPolynomial.get_constant poly)
 
 
-  let get_coefficient var t =
+  let get_coefficient mon t =
     let poly, _ = remove_strict t in
-    RationalParameterPolynomial.coeff_of_var var poly
+    RationalParameterPolynomial.coeff mon poly
 
 
   let ( =~= ) = equal

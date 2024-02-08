@@ -118,7 +118,9 @@ module Methods = struct
                   (fun (expected, var, constr) ->
                     constr >:: fun _ ->
                     assert_equal ~cmp:list_equality ~printer:list_print (List.map OurInt.of_int expected)
-                      (Constraint.get_coefficient_vector (Var.of_string var) (Readers.read_constraint constr)))
+                      (Constraint.get_coefficient_vector
+                         (var |> Var.of_string |> Polynomial.of_var |> Polynomial.monomials |> List.first)
+                         (Readers.read_constraint constr)))
                   [
                     ([ 1; 2; 3 ], "x", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                     ([ 1; 3; -4 ], "y", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -150,7 +152,12 @@ module Methods = struct
                     constr >:: fun _ ->
                     assert_equal ~cmp:list_list_equality ~printer:list_list_print
                       (List.map (List.map OurInt.of_int) expected)
-                      (Constraint.get_matrix (List.map Var.of_string vars) (Readers.read_constraint constr)))
+                      (Constraint.get_matrix
+                         (List.map
+                            (fun var ->
+                              var |> Var.of_string |> Polynomial.of_var |> Polynomial.monomials |> List.first)
+                            vars)
+                         (Readers.read_constraint constr)))
                   [
                     ( [ [ 1; 2; 3 ]; [ 1; 3; -4 ] ],
                       [ "x"; "y" ],

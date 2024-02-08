@@ -52,6 +52,7 @@ struct
 
   let vars constr = constr |> List.map ~f:A.vars |> List.fold_left ~f:Set.union ~init:VarSet.empty
   let monomials constr = List.map ~f:A.monomials constr |> Set.of_list (module M) % List.join
+  let monomials_of_atom atom = A.monomials atom |> Set.of_list (module M)
 
   let to_string ?(to_file = false) ?(pretty = false) ?(conj = " && ") constr =
     String.concat
@@ -75,14 +76,14 @@ struct
   let drop_nonlinear constr = List.filter ~f:A.is_linear constr
   let is_linear = List.for_all ~f:A.is_linear
 
-  (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
-  let get_coefficient_vector var constr = List.map ~f:(A.get_coefficient var) constr
+  (**returns a list of the coefficients of a monomial in all the left sides of the constraints*)
+  let get_coefficient_vector monomial constr = List.map ~f:(A.get_coefficient monomial) constr
 
   (**returns a list of the constants of the constraints*)
   let get_constant_vector constr = List.map ~f:A.get_constant constr
 
   (** returns a list of lists of the coefficients of the constraint*)
-  let get_matrix vars constr = List.map ~f:(fun var -> get_coefficient_vector var constr) vars
+  let get_matrix monomials constr = List.map ~f:(fun mon -> get_coefficient_vector mon constr) monomials
 
   (** returns a list of lists of the coefficients of the constraint*)
   let dualise vars (matrix : P.t list list) column =
@@ -161,10 +162,10 @@ struct
     (* Remove strict comparisons in constraints by replacing them with their non-strict counterparts *)
     let constr, param_atom = (remove_strict constr, A.remove_strict param_atom) in
 
-    let vars = Set.union (vars constr) (A.vars param_atom) |> Set.to_list in
-    let a_matrix = get_matrix vars constr in
+    let monomials = Set.union (monomials constr) (monomials_of_atom param_atom) |> Set.to_list in
+    let a_matrix = get_matrix monomials constr in
     let b_right = get_constant_vector constr in
-    let c_left = List.map ~f:(flip A.get_coefficient param_atom) vars in
+    let c_left = List.map ~f:(flip A.get_coefficient param_atom) monomials in
     let d_right = A.get_constant param_atom in
     apply_farkas a_matrix b_right c_left d_right
 end

@@ -19,11 +19,11 @@ module Constraint : sig
   (** The result of the following drop methods is not equivalent to the input constraint.
       But each satisfying valuation of the input constraint is still a model of the new constraint. *)
 
-  val get_coefficient_vector : Var.t -> t -> value list
-  (** Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination. *)
+  val get_coefficient_vector : monomial -> t -> value list
+  (** Returns the row of all coefficients of a monomial in a constraint, i.e., used for farkas quantor elimination. *)
 
-  val get_matrix : Var.t list -> t -> value list list
-  (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)
+  val get_matrix : monomial list -> t -> value list list
+  (** Returns the matrix of all coefficients of a monomial from a set of monomials in a constraint, i.e., used for farkas quantor elimination. *)
 
   val get_constant_vector : t -> value list
   (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination. *)

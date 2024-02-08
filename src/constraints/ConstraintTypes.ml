@@ -73,8 +73,8 @@ module type Atom = sig
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
 
-  val get_coefficient : Var.t -> t -> value
-  (** Returns the coefficient of a variable which is normalised to the lhs. *)
+  val get_coefficient : monomial -> t -> value
+  (** Returns the coefficient of a monomial which is normalised to the lhs. *)
 
   val get_constant : t -> value
   (** Returns the single right hand side constant of the atom.
@@ -191,11 +191,11 @@ module type Constraint = sig
   (** Drops all nonlinear atoms from the constraints.
           Example: {i (a > 0 && b^2 < 2)} gets transformed to {i (a > 0)} *)
 
-  val get_coefficient_vector : Var.t -> t -> value list
-  (** Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination. *)
+  val get_coefficient_vector : monomial -> t -> value list
+  (** Returns the row of all coefficients of a monomial in a constraint, i.e., used for farkas quantor elimination. *)
 
-  val get_matrix : Var.t list -> t -> value list list
-  (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)
+  val get_matrix : monomial list -> t -> value list list
+  (** Returns the matrix of all coefficients of a monomial from a set of monomials in a constraint, i.e., used for farkas quantor elimination. *)
 
   val get_constant_vector : t -> value list
   (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.*)
