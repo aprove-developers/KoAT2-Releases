@@ -29,7 +29,10 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
 
   let equal = Map.equal Value.equal
   let compare t1 t2 = Map.compare_direct Value.compare t1 t2
-  let make l = List.map ~f:(fun sm -> ScaledMonomial_.(monomial sm, coeff sm)) l |> MonMap.of_alist_exn
+
+  let make l =
+    List.map ~f:(fun sm -> ScaledMonomial_.(monomial sm, coeff sm)) l |> MonMap.of_alist_reduce ~f:Value.add
+
 
   let scaled_monomials (t : t) =
     Map.to_alist ~key_order:`Increasing t |> List.map ~f:(fun (mon, coeff) -> ScaledMonomial_.make coeff mon)
@@ -468,7 +471,17 @@ module RationalPolynomial = struct
   let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly
 end
 
-module RationalLaurentPolynomial = PolynomialOver (OurRational)
+module RationalLaurentPolynomial = struct
+  include PolynomialOver (OurRational)
+
+  let overapprox_neg_exponents t =
+    let overapprox_mon mon =
+      mon |> Monomial_.to_sequence |> Sequence.filter ~f:(fun (_, i) -> Int.(i >= 0)) |> Monomial_.of_sequence
+    in
+    t |> monomials_with_coeffs
+    |> List.map ~f:(fun (coeff, mon) -> (coeff, overapprox_mon mon))
+    |> of_coeff_and_mon_list
+end
 
 module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
   module Outer = PolynomialOver (PolynomialOver (Value))

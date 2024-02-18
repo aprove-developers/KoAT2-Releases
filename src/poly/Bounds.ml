@@ -585,6 +585,11 @@ module RationalBound = struct
       ~log ~inf:infinity
 
 
+  let of_overapprox_laurentpoly =
+    RationalPolynomial.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
+    % RationalLaurentPolynomial.overapprox_neg_exponents
+
+
   let to_intbound =
     (* TODO Move this to Make *)
     fold
