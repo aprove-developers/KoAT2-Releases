@@ -43,13 +43,12 @@ let compute_elcb program_vars ((gt, l), v) =
                   else
                     temp_var_bound v)
          in
-
-         if label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.is_const then
-           RationalBound.(
-             of_constant
-               (label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.get_constant)
-             * ue_exp_abs_diff_bound)
-         else
-           (* TODO *)
-           RationalBound.infinity)
+         let ue_exp_abs_diff_poly = RationalBound.to_poly ue_exp_abs_diff_bound in
+         match ue_exp_abs_diff_poly with
+         | Some ue_exp_abs_diff_poly ->
+             Polynomials.RationalLaurentPolynomial.(ue_exp_abs_diff_poly * TransitionLabel.probability label)
+             |> RationalBound.of_overapprox_laurentpoly
+         | None ->
+             RationalBound.(
+               of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_diff_bound))
   |> RationalBound.sum
