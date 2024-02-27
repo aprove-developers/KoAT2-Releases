@@ -503,10 +503,10 @@ module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
 
   (* Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
   (* Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
-  let of_polynomial (poly : Inner.t) : t =
-    Inner.fold
-      ~const:(fun value -> of_constant (Inner.of_constant value))
-      ~indeterminate:of_var ~plus:add ~times:mul ~pow poly
+  let of_polynomial (poly : Inner.t) =
+    Inner.monomials_with_coeffs poly
+    |> List.map ~f:(fun (c, m) -> (Inner.of_constant c, m))
+    |> Outer.of_coeff_and_mon_list
 end
 
 module ParameterPolynomial = ParameterPolynomialOver (OurInt)
