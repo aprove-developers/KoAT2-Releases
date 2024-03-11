@@ -283,7 +283,7 @@ module ProbabilisticTransitionLabel_ = struct
       t with
       properties =
         {
-          t.properties with
+          probability = RationalLaurentPolynomial.rename rename_map (probability t);
           update = rename_update UpdateElement_.rename (update_map t) rename_map;
           overappr_nonprob_update = rename_update Polynomial.rename (overappr_nonprob_update t) rename_map;
           overappr_guard = Guard.rename (overappr_guard t) rename_map;
