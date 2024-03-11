@@ -25,6 +25,7 @@ let suite =
          ExpectedLocalChangeBoundTest.tests;
          ExpTimeBoundsTest.tests;
          MatrixTest.tests;
+         PlrfTest.tests;
        ]
 
 
