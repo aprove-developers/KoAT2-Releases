@@ -88,12 +88,14 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
     let indeterminates (t : t) = Set.stable_dedup_list (module I) @@ Map.keys t
     let vars t = Map.keys t |> List.map ~f:I.vars |> List.fold ~f:Set.union ~init:VarSet.empty
 
-    let mul =
+    let mul m1 m2 =
       let addPowers ?(p1 = 0) ?(p2 = 0) _ = p1 + p2 in
-      Map.merge ~f:(fun ~key me ->
-          Some
-            (let p1, p2 = Map.Merge_element.(left me, right me) in
-             addPowers ?p1 ?p2 ()))
+      Map.merge m1 m2 ~f:(fun ~key me ->
+          let combined =
+            let p1, p2 = Map.Merge_element.(left me, right me) in
+            addPowers ?p1 ?p2 ()
+          in
+          Option.some_if (combined <> 0) combined)
 
 
     let pow t e = Map.map ~f:(fun i -> i * e) t
