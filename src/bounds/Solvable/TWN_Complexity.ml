@@ -19,18 +19,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       OurInt.one
     else
       let rec test_m m =
-        let tmp1 = OurInt.(pow_ourint m a1 * pow_ourint b1 m) in
-        let tmp2 = OurInt.(pow_ourint m a2 * pow_ourint b2 m * k) in
+        let tmp1 = OurRational.((of_ourint @@ OurInt.pow_ourint m a1) * pow_ourint b1 m) in
+        let tmp2 = OurRational.((of_ourint @@ OurInt.pow_ourint m a2) * pow_ourint b2 m * of_ourint k) in
         if OurInt.is_ge a1 a2 then
-          if OurInt.is_gt tmp1 tmp2 then
+          if OurRational.(tmp1 > tmp2) then
             m
           else
             test_m OurInt.(add m one)
         else
           let tmp =
-            OurRational.(mul (pow_ourint (make m OurInt.(add m one)) (OurInt.sub a2 a1)) (make b1 b2))
+            OurRational.(mul (pow_ourint (make m OurInt.(add m one)) (OurInt.sub a2 a1)) (div b1 b2))
           in
-          if OurRational.(tmp >= one) && OurInt.is_gt tmp1 tmp2 then
+          if OurRational.(tmp >= one && tmp1 > tmp2) then
             m
           else
             test_m OurInt.(add m one)
@@ -40,9 +40,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           m
         else
           let m_dec = OurInt.(m - one) in
-          let tmp1 = OurInt.(pow_ourint m_dec a1 * pow_ourint b1 m_dec) in
-          let tmp2 = OurInt.(pow_ourint m_dec a2 * pow_ourint b2 m_dec * k) in
-          if OurInt.is_ge tmp2 tmp1 then
+          let tmp1 = OurRational.((of_ourint @@ OurInt.pow_ourint m_dec a1) * pow_ourint b1 m_dec) in
+          let tmp2 =
+            OurRational.((of_ourint @@ OurInt.pow_ourint m_dec a2) * pow_ourint b2 m_dec * of_ourint k)
+          in
+          if OurRational.(tmp2 >= tmp1) then
             m
           else
             decrease_m m_dec
@@ -51,7 +53,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let monotonicity_th_int k (b1, a1) (b2, a2) =
-    monotonicity_th (OurInt.of_int k) (OurInt.of_int b1, OurInt.of_int a1) (OurInt.of_int b2, OurInt.of_int a2)
+    monotonicity_th (OurInt.of_int k)
+      (OurRational.of_int b1, OurInt.of_int a1)
+      (OurRational.of_int b2, OurInt.of_int a2)
 
 
   (* let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map OurInt.abs) % Polynomial.coeffs) |> OurInt.max_list *)
@@ -69,9 +73,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let compute_M = function
     | [] -> OurInt.zero
     | x :: [] -> OurInt.zero
-    | (b1, a1) :: (b2, a2) :: xs
-      when OurInt.is_gt b1 b2 || (OurInt.equal b1 b2 && OurInt.is_gt a1 OurInt.(add a2 one)) ->
-        monotonicity_th OurInt.one (b1, a1) (b2, OurInt.(add a2 one))
+    | (b1, a1) :: (b2, a2) :: xs when OurRational.(b1 > b2 || (b1 == b2 && OurInt.(a1 > a2 + one))) ->
+        monotonicity_th OurInt.one (b1, a1) (b2, OurInt.(a2 + one))
     | _ -> OurInt.zero
 
 
@@ -104,7 +107,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         let alphas_abs = compute_alpha_abs alphas in
         Logger.log logger Logger.INFO (fun () ->
             ("complexity.compute_f", [ ("alphas_abs", Polynomial.to_string alphas_abs) ]));
-        let base_exp ys = List.map (fun (_, _, d, b) -> (b, d)) ys in
+        let base_exp ys = List.map (fun (_, _, d, b) -> (OurRational.of_ourint b, d)) ys in
         let prefix ys = List.fold_left (fun acc itt -> (List.hd acc @ [ itt ]) :: acc) [ [] ] ys in
         let n_ = OurInt.max_list (List.map (fun ys -> compute_N (base_exp ys)) (prefix xs)) in
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f", [ ("N", OurInt.to_string n_) ]));
