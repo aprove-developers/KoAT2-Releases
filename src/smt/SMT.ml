@@ -38,6 +38,9 @@ let from_real_poly context =
     ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Real.mk_numeral_i context e))
 
 
+exception SMTNotRepresentable
+
+(* Raises an exception SMTNotRepresentable if logarithms occur in bound. *)
 let from_real_bound context bound =
   let from_finite_bound =
     RationalBound.fold_bound
@@ -56,6 +59,7 @@ let from_real_bound context bound =
           (Z3.Arithmetic.mk_unary_minus context varexp))
       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
+      ~log:(fun v -> raise SMTNotRepresentable)
       ~exp:(fun b e ->
         Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurRational.to_string b) e)
   in
@@ -64,6 +68,7 @@ let from_real_bound context bound =
   | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
 
+(* Raises an exception SMTNotRepresentable if logarithms occur in bound. *)
 let from_bound context bound =
   let from_finite_bound =
     Bound.fold_bound
@@ -82,6 +87,7 @@ let from_bound context bound =
           (Z3.Arithmetic.mk_unary_minus context varexp))
       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
+      ~log:(fun v -> raise SMTNotRepresentable)
       ~exp:(fun b e ->
         Z3.Arithmetic.mk_power context (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string b) e)
   in

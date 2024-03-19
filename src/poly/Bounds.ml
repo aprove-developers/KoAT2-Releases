@@ -19,6 +19,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Pow of Num.t * bound
     | Sum of bound * bound
     | Product of bound * bound
+    | Log of Var.t
+      (* We always consider log-Base 2. And we always normalize s.t. log(x^2 + 2^x) <= 2*log(x) + x. *)
   [@@deriving eq, ord]
 
   type t = bound option [@@deriving eq, ord]
@@ -30,6 +32,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let bound_of_constant c = Const (Num.abs c)
   let of_constant = OptionMonad.return % bound_of_constant
   let of_OurInt = OptionMonad.return % bound_of_constant % Num.of_ourint
+  let bound_log v = Log v
+  let log = OptionMonad.return % bound_log
 
   let is_constant =
     let rec is_constant = function
@@ -38,22 +42,24 @@ module Make (Num : PolyTypes.OurNumber) = struct
       | Pow (_, b) -> is_constant b
       | Sum (b1, b2) -> is_constant b1 && is_constant b2
       | Product (b1, b2) -> is_constant b1 && is_constant b2
+      | Log b -> false
     in
     Option.value ~default:false % Option.map ~f:is_constant
 
 
-  let rec fold_bound ~const ~var ~plus ~times ~exp p =
-    let fold_ = fold_bound ~const ~var ~plus ~times ~exp in
+  let rec fold_bound ~const ~var ~plus ~times ~exp ~log p =
+    let fold_ = fold_bound ~const ~var ~plus ~times ~exp ~log in
     match p with
     | Var v -> var v
     | Const c -> const c
     | Pow (value, n) -> exp value (fold_ n)
     | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
     | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
+    | Log v -> log v
 
 
-  let fold ~const ~var ~plus ~times ~exp ~inf = function
-    | Some b -> fold_bound ~const ~var ~plus ~times ~exp b
+  let fold ~const ~var ~plus ~times ~exp ~log ~inf = function
+    | Some b -> fold_bound ~const ~var ~plus ~times ~exp ~log b
     | None -> inf
 
 
@@ -61,71 +67,97 @@ module Make (Num : PolyTypes.OurNumber) = struct
     fold ~const:(Option.some % Poly.of_constant) ~var:(Option.some % Poly.of_var)
       ~plus:(OptionMonad.liftM2 Poly.add) ~times:(OptionMonad.liftM2 Poly.mul)
       ~exp:(fun _ _ -> None)
+      ~log:(fun _ -> None)
       ~inf:None
 
 
   (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
   type complexity =
-    | Inf  (** Bound is infinite. *)
-    | Polynomial of int  (** Bound is in asymptotic class O(n^i) *)
+    | LogarithmicPolynomial of int * int  (** Bound is in asymptotic class O(log(n)^i * n^j) *)
     | Exponential of int
+    | Inf  (** Bound is infinite. *)
   [@@deriving eq]
 
-  let rec show_complexity = function
+  let rec show_complexity b =
+    let correct_str base_str x =
+      base_str
+      ^
+      if x == 1 then
+        ""
+      else
+        "^" ^ Int.to_string x
+    in
+    match b with
     | Inf -> "Infinity"
-    | Polynomial 0 -> "O(1)"
-    | Polynomial 1 -> "O(n)"
-    | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
+    | LogarithmicPolynomial (0, 0) -> "O(1)"
+    | LogarithmicPolynomial (0, y) -> "O(" ^ correct_str "n" y ^ ")"
+    | LogarithmicPolynomial (x, 0) -> "O(" ^ correct_str "log" x ^ ")"
+    | LogarithmicPolynomial (x, y) -> "O(" ^ correct_str "log" x ^ " * " ^ correct_str "n" y ^ ")"
     | Exponential 1 -> "O(EXP)"
     | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x - 1)) ^ ")"
 
 
   let show_complexity_termcomp = function
     | Inf -> "MAYBE"
-    | Polynomial 0 -> "WORST_CASE(?, O(1))"
-    | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
+    | LogarithmicPolynomial (0, 0) -> "WORST_CASE(?, O(1))"
+    | LogarithmicPolynomial (x, y) -> "WORST_CASE(?, O(n^" ^ Int.to_string (x + y) ^ "))"
     | Exponential _ -> "WORST_CASE(?, O(EXP))"
+
+
+  let lex_compare (b1, a1) (b2, a2) =
+    if b1 == b2 && a1 == a2 then
+      0
+    else if b1 > b2 || (b1 == b2 && a1 > a2) then
+      1
+    else
+      -1
 
 
   let asymptotic_complexity =
     fold
-      ~const:(fun _ -> Polynomial 0)
-      ~var:(fun _ -> Polynomial 1)
+      ~const:(fun _ -> LogarithmicPolynomial (0, 0))
+      ~var:(fun _ -> LogarithmicPolynomial (0, 1))
       ~plus:(fun x y ->
         match (x, y) with
         | Inf, _ -> Inf
         | _, Inf -> Inf
-        | Polynomial x, Polynomial y -> Polynomial (Int.max x y)
+        | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
+            if lex_compare (y1, x1) (y2, x2) == -1 then
+              LogarithmicPolynomial (x2, y2)
+            else
+              LogarithmicPolynomial (x1, y1)
         | Exponential x, Exponential y -> Exponential (Int.max x y)
-        | Polynomial x, Exponential y -> Exponential y
-        | Exponential x, Polynomial y -> Exponential x)
+        | LogarithmicPolynomial _, Exponential y -> Exponential y
+        | Exponential x, LogarithmicPolynomial _ -> Exponential x)
       ~times:(fun x y ->
         match (x, y) with
         | Inf, _ -> Inf
         | _, Inf -> Inf
-        | Polynomial x, Polynomial y -> Polynomial (Int.( + ) x y)
+        | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
+            LogarithmicPolynomial (x1 + x2, y1 + y2)
         | Exponential x, Exponential y -> Exponential (Int.max x y)
-        | Polynomial x, Exponential y -> Exponential y
-        | Exponential x, Polynomial y -> Exponential x)
+        | LogarithmicPolynomial _, Exponential y -> Exponential y
+        | Exponential x, LogarithmicPolynomial _ -> Exponential x)
       ~exp:(fun _ b ->
         match b with
         | Inf -> Inf
-        | Polynomial x -> Exponential 1
+        | LogarithmicPolynomial _ -> Exponential 1
         | Exponential x -> Exponential (Int.succ x))
       ~inf:Inf
+      ~log:(fun _ -> LogarithmicPolynomial (1, 0))
 
 
   (** Returns true iff. the bound is in complexity class O(n) *)
   let is_linear bound =
     match asymptotic_complexity bound with
-    | Polynomial 0 -> true
-    | Polynomial 1 -> true
+    | LogarithmicPolynomial (_, 0) -> true
+    | LogarithmicPolynomial (_, 1) -> true
     | _ -> false
 
 
   let is_polynomial bound =
     match asymptotic_complexity bound with
-    | Polynomial _ -> true
+    | LogarithmicPolynomial _ -> true
     | _ -> false
 
 
@@ -137,7 +169,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Exponential x, Exponential y -> Int.compare x y
     | Exponential x, _ -> 1
     | _, Exponential y -> -1
-    | Polynomial x, Polynomial y -> Int.compare x y
+    | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) -> lex_compare (y1, x1) (y2, x2)
 
 
   let min_asy b1 b2 =
@@ -152,6 +184,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
       ~var:(fun _ -> Num.one)
       ~plus:Num.add ~times:Num.mul
       ~exp:(fun _ -> raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
+      ~log:(fun _ -> Num.one)
       ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
       bound
 
@@ -172,11 +205,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
         "*"
     in
     function
-    | Var v ->
-        if pretty then
-          Var.to_string ~pretty v
-        else
-          Var.to_string v
+    | Var v -> Var.to_string ~pretty v
+    | Log v -> "log(" ^ Var.to_string ~pretty v ^ ")"
     | Const c -> Num.to_string c
     | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner ~pretty b ^ ")"
     | Sum (b1, b2) ->
@@ -317,6 +347,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     let execute () =
       match bound with
       | Var v -> Var v
+      | Log v -> Log v
       | Const c -> Const c
       (* Simplify terms with sum head *)
       | Sum (b1, b2) ->
@@ -469,7 +500,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let is_finite = Option.is_some
 
   let substitute_f (substitution : Var.t -> t) (bound : t) : t =
-    OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp)
+    OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp ~log)
 
 
   let substitute_bound var ~replacement =
@@ -488,6 +519,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
 
   let rec vars_bound = function
     | Var v -> VarSet.singleton v
+    | Log v -> VarSet.singleton v
     | Const _ -> VarSet.empty
     | Pow (v, b) -> vars_bound b
     | Sum (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
@@ -533,7 +565,7 @@ module RationalBound = struct
       ~const:(of_constant % OurRational.of_ourint)
       ~var:of_var ~plus:add ~times:mul
       ~exp:(fun value -> exp (OurRational.of_ourint value))
-      ~inf:infinity
+      ~log ~inf:infinity
 
 
   let to_intbound =
@@ -542,7 +574,7 @@ module RationalBound = struct
       ~const:(Bound.of_constant % OurRational.ceil)
       ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul
       ~exp:(fun value -> Bound.exp (OurRational.ceil value))
-      ~inf:infinity
+      ~log:Bound.of_var ~inf:infinity
 end
 
 module BinaryBound = struct

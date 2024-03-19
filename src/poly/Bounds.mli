@@ -5,9 +5,9 @@ module Make (Num : PolyTypes.OurNumber) : sig
   type bound
 
   type complexity =
-    | Inf  (** Bound is infinite. *)
-    | Polynomial of int  (** Bound is in asymptotic class O(n^i) *)
+    | LogarithmicPolynomial of int * int  (** Bound is in asymptotic class O(log(n)^i * n^j) *)
     | Exponential of int
+    | Inf  (** Bound is infinite. *)
 
   val fold :
     const:(Num.t -> 'b) ->
@@ -15,6 +15,7 @@ module Make (Num : PolyTypes.OurNumber) : sig
     plus:('b -> 'b -> 'b) ->
     times:('b -> 'b -> 'b) ->
     exp:(Num.t -> 'b -> 'b) ->
+    log:(Var.t -> 'b) ->
     inf:'b ->
     t ->
     'b
@@ -26,6 +27,7 @@ module Make (Num : PolyTypes.OurNumber) : sig
     plus:('b -> 'b -> 'b) ->
     times:('b -> 'b -> 'b) ->
     exp:(Num.t -> 'b -> 'b) ->
+    log:(Var.t -> 'b) ->
     bound ->
     'b
   (** Replaces all arithmetical operations by new constructors in finite bounds. *)
