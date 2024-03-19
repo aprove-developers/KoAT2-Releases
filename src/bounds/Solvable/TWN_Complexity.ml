@@ -73,9 +73,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let compute_M = function
     | [] -> OurInt.zero
     | x :: [] -> OurInt.zero
-    | (b1, a1) :: (b2, a2) :: xs when OurRational.(b1 > b2 || (b1 == b2 && OurInt.(a1 > a2 + one))) ->
+    | (b1, a1) :: (b2, a2) :: _ when OurRational.(b1 > b2 || (b1 == b2 && OurInt.(a1 > a2 + one))) ->
         monotonicity_th OurInt.one (b1, a1) (b2, OurInt.(a2 + one))
     | _ -> OurInt.zero
+
+
+  let compute_M' = function
+    | [] -> OurInt.zero
+    | x :: [] -> OurInt.zero
+    | (b1, a1) :: (b2, a2) :: _ ->
+        let eps = OurRational.(one / of_int 2) in
+        monotonicity_th OurInt.one (OurRational.(b2 + eps), a1) (b2, a2)
 
 
   module ScaledMonomial = ScaledMonomials.Make (OurInt)
@@ -132,6 +140,50 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                            ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
+  let rec is_sorted = function
+    | []
+    | [ _ ] ->
+        true
+    | x1 :: x2 :: xs -> OurInt.(x1 > x2) && is_sorted (x2 :: xs)
+
+
+  let compute_f' twn_proofs atom = function
+    | [] -> Bound.zero
+    | x :: [] -> Bound.one
+    | xs ->
+        let alphas = List.map Tuple4.second xs |> List.tl in
+        Logger.log logger Logger.INFO (fun () ->
+            ( "complexity.compute_f'",
+              [ ("alphas", alphas |> List.enum |> Util.enum_to_string Polynomial.to_string) ] ));
+        let alphas_abs = compute_alpha_abs alphas in
+        Logger.log logger Logger.INFO (fun () ->
+            ("complexity.compute_f'", [ ("alphas_abs", Polynomial.to_string alphas_abs) ]));
+        let base_exp ys = List.map (fun (_, _, d, b) -> (OurRational.of_ourint b, d)) ys in
+        let prefix ys = List.fold_left (fun acc itt -> (List.hd acc @ [ itt ]) :: acc) [ [] ] ys in
+        let n_ = OurInt.max_list (List.map (fun ys -> compute_N (base_exp ys)) (prefix xs)) in
+        Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f'", [ ("N", OurInt.to_string n_) ]));
+        let m'_ = OurInt.max_list (List.map (fun ys -> compute_M' (base_exp ys)) (prefix xs)) in
+        Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f'", [ ("M", OurInt.to_string m'_) ]));
+        Bound.of_intpoly
+          Polynomial.(alphas_abs + alphas_abs + (of_constant @@ OurInt.max m'_ n_) + Polynomial.one)
+        (* TODO NILS *)
+        |> tap (fun b ->
+               Logger.log logger Logger.INFO (fun () ->
+                   ("complexity.compute_f'", [ ("log(2*alpha_abs)+max(N,M')", Bound.to_string b) ]));
+               ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+                   [
+                     "alphas_abs: " ^ Polynomial.to_string_pretty alphas_abs;
+                     "M': " ^ OurInt.to_string m'_;
+                     "N: " ^ OurInt.to_string n_;
+                     "Bound: " ^ Bound.to_string ~pretty:true b;
+                   ]
+                   |> List.map FormattedString.mk_str_line |> FormattedString.mappend
+                   |> FormattedString.mk_block
+                   |> FormattedString.( <> )
+                        (FormattedString.mk_str_line
+                           ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
+
+
   let get_bound twn_proofs ((guard, update) : Loop.t) order npe varmap =
     let bound, max_con =
       List.fold_right
@@ -140,10 +192,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             (* Transform from p ≤ 0 to p < 0 *)
             Atom.poly_lt atom |> Polynomial.neg
           in
-          let sub_poly =
-            PE.substitute varmap poly
-            |> PE.remove_frac (* TODO |> PE.monotonic_kernel inv (TWNLoop.guard t) *)
-          in
+          let sub_poly = PE.substitute varmap poly |> PE.remove_frac in
           Logger.log logger Logger.INFO (fun () ->
               ( "complexity: npe -> guard_atom",
                 [ ("atom", Atom.to_string atom); ("subs", "0 <= " ^ PE.to_string sub_poly) ] ));
@@ -153,7 +202,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                    (c, RationalPolynomial.normalize p, d |> OurInt.of_int, b |> OurInt.of_int))
           in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
-          (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
+          if is_sorted @@ List.map Tuple4.fourth sub_poly_n then
+            (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
+          else
+            (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
         (guard |> Formula.atoms |> List.unique ~eq:Atom.equal)
         (Bound.one, OurInt.zero)
     in

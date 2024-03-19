@@ -34,6 +34,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let of_OurInt = OptionMonad.return % bound_of_constant % Num.of_ourint
   let bound_log v = Log v
   let log = OptionMonad.return % bound_log
+  let log c = raise Not_found (* TODO NILS *)
+  let log p = raise Not_found (* TODO NILS *)
 
   let is_constant =
     let rec is_constant = function
@@ -422,6 +424,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
             final_sum_chain true
       (* Simplify terms with pow head *)
       | Pow (value, exponent) -> (
+          (* TODO NILS *)
           match simplify_bound exponent with
           | exponent when Num.(equal value zero) && gt_bound exponent (Const Num.zero) |? false ->
               Const Num.zero
