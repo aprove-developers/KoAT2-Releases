@@ -108,9 +108,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
     if b1 == b2 && a1 == a2 then
       0
     else if b1 > b2 || (b1 == b2 && a1 > a2) then
-      -1
-    else
       1
+    else
+      -1
 
 
   let asymptotic_complexity =
@@ -122,7 +122,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
         | Inf, _ -> Inf
         | _, Inf -> Inf
         | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
-            if lex_compare (y1, x1) (y2, x2) == 1 then
+            if lex_compare (y1, x1) (y2, x2) == -1 then
               LogarithmicPolynomial (x2, y2)
             else
               LogarithmicPolynomial (x1, y1)
