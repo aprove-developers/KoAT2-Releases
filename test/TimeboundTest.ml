@@ -124,20 +124,20 @@ let tests =
            [
              (Inf, "a -> b(), b -> b()", default_conf);
              (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0", default_conf);
-             (Polynomial 0, "a -> b(), b -> c()", default_conf);
-             (Polynomial 0, "a -> b(), b -> c(), a -> c()", default_conf);
-             (* TODO Problem with constant ranking functions (Polynomial 0, "a -> b(x), b -> b(x-x) :|: x>0", default_conf); *)
-             (Polynomial 0, "a -> b(x), b -> b(x-1) :|: x>x", default_conf);
-             (Polynomial 1, "a -> b(x), b -> b(x-1) :|: x>0", default_conf);
-             (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y", default_conf);
-             ( Polynomial 1,
+             (LogarithmicPolynomial (0, 0), "a -> b(), b -> c()", default_conf);
+             (LogarithmicPolynomial (0, 0), "a -> b(), b -> c(), a -> c()", default_conf);
+             (* TODO Problem with constant ranking functions (LogarithmicPolynomial (0,0), "a -> b(x), b -> b(x-x) :|: x>0", default_conf); *)
+             (LogarithmicPolynomial (0, 0), "a -> b(x), b -> b(x-1) :|: x>x", default_conf);
+             (LogarithmicPolynomial (0, 1), "a -> b(x), b -> b(x-1) :|: x>0", default_conf);
+             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(x-1,y) :|: x>y", default_conf);
+             ( LogarithmicPolynomial (0, 1),
                "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y",
                default_conf );
-             ( Polynomial 1,
+             ( LogarithmicPolynomial (0, 1),
                "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
                default_conf );
-             (* Non-linear not supported by Z3 (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0", default_conf); *)
-             ( Polynomial 2,
+             (* Non-linear not supported by Z3 (LogarithmicPolynomial (0,2), "a -> b(x), b -> b(x-1) :|: x^2>0", default_conf); *)
+             ( LogarithmicPolynomial (0, 2),
                "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
                default_conf );
              ( Exponential 1,
@@ -149,28 +149,30 @@ let tests =
                default_conf );
              (* MPRF *)
              (Inf, "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", default_conf);
-             (Polynomial 1, "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", mprf5_conf);
-             (Polynomial 1, "a -> b(x,y,z), b -> b(x+y,y+z,z-1) :|: x > 0", mprf5_conf);
-             (Polynomial 1, "a -> b(x,y,z,u), b -> b(x+y,y+z,z+u,u-1) :|: x > 0", mprf5_conf);
-             (Polynomial 1, "a -> b(x,y,z,u,v), b -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0", mprf5_conf);
+             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", mprf5_conf);
+             (LogarithmicPolynomial (0, 1), "a -> b(x,y,z), b -> b(x+y,y+z,z-1) :|: x > 0", mprf5_conf);
+             (LogarithmicPolynomial (0, 1), "a -> b(x,y,z,u), b -> b(x+y,y+z,z+u,u-1) :|: x > 0", mprf5_conf);
+             ( LogarithmicPolynomial (0, 1),
+               "a -> b(x,y,z,u,v), b -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0",
+               mprf5_conf );
              (* This would require depth > 5 *)
              (Inf, "a -> b(x,y,z,u,v,p), b -> b(x+y,y+z,z+u,u+v,v+p,p-1) :|: x > 0", mprf5_conf);
              (* TWN based on twn001 *)
              (Inf, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
-             (Polynomial 1, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
-             ( Polynomial 1,
+             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
+             ( LogarithmicPolynomial (0, 1),
                "a -> b(x,y,z), b -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b -> c(z,z,z), c -> c(2*x, 3*y, z) \
                 :|: x >= y && y >= 1",
                twn_conf );
-             ( Polynomial 2,
+             ( LogarithmicPolynomial (0, 2),
                "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
                 b(x,y,z)",
                twn_conf );
-             ( Polynomial 2,
+             ( LogarithmicPolynomial (0, 2),
                "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
                 d(z,z,z), d -> d(2*x,3*y,z) :|: x>= y && y >= 1, d -> b(x,y,z)",
                twn_conf );
-             ( Polynomial 3,
+             ( LogarithmicPolynomial (0, 3),
                "a -> b(x,y,z,u), b -> c(x,y,z-1,z) :|: z > 0, c -> d(u,u,z,u-1) :|: u > 0, d -> d(2 * x, 3 * \
                 y,z,u) :|: x >= y && y >= 1, d -> c(y,y,z,u), d -> b(x,y,z,u)",
                twn_conf );

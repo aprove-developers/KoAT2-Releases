@@ -172,12 +172,12 @@ let tests =
                   in
                   assert_equal_string expected_string (Bound.to_string result))
                 [
-                  ("4*Arg_0+4*Arg_1+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
+                  ("7+4*Arg_0+4*Arg_1 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
                   ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
                   ("3 {O(1)}", "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
                   ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67");
-                  ("2*Arg_0+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1");
-                  ( "12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1+12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_2+6*Arg_1*Arg_1*Arg_2*Arg_2+6*Arg_1*Arg_1+6*Arg_0+12 \
+                  ("7+2*Arg_0 {O(n)}", "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1");
+                  ( "12+6*Arg_0+6*Arg_1*Arg_1+6*Arg_1*Arg_1*Arg_2*Arg_2+12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_2+12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1 \
                      {O(n^6)}",
                     "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0" );
                   ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");

@@ -50,15 +50,24 @@ let tests =
                   assert_bool error_msg (RationalBound.equal_complexity complexity complexity_exp))
                 RationalBound.
                   [
-                    ("leading_tacas21", Polynomial 2, "../../../examples/probabilistic/", default_conf);
-                    ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/", default_conf);
-                    ("simple_multdist", Polynomial 1, "../../../examples/probabilistic/", default_conf);
+                    ( "leading_tacas21",
+                      LogarithmicPolynomial (0, 2),
+                      "../../../examples/probabilistic/",
+                      default_conf );
+                    ( "leading_tacas21.1",
+                      LogarithmicPolynomial (0, 2),
+                      "../../../examples/probabilistic/",
+                      default_conf );
+                    ( "simple_multdist",
+                      LogarithmicPolynomial (0, 1),
+                      "../../../examples/probabilistic/",
+                      default_conf );
                     ( "simple_multdist_advanced",
-                      Polynomial 1,
+                      LogarithmicPolynomial (0, 1),
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "probabilistic_nested_bounded",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "probabilistic_nested_unbounded",
@@ -70,7 +79,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_mprf_inner_loop_exptime_classsize",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_mprf5 );
                     ( "nested_mprf_inner_loop_classtime_expsize",
@@ -78,7 +87,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_mprf_inner_loop_classtime_expsize",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_mprf5 );
                     ( "nested_twn_inner_loop_exptime_classsize",
@@ -86,7 +95,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_twn_inner_loop_exptime_classsize",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn_inner_loop_classtime_expsize",
@@ -94,11 +103,11 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_twn_inner_loop_classtime_expsize",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_exptime_classsize",
-                      Polynomial 3,
+                      LogarithmicPolynomial (0, 3),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_expsize",
@@ -106,7 +115,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_mixedsize",
-                      Polynomial 3,
+                      LogarithmicPolynomial (0, 3),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_classtime_mixedsize_exponential",
@@ -114,11 +123,11 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "prob_loop",
-                      Polynomial 1,
+                      LogarithmicPolynomial (0, 1),
                       "../../../examples/probabilistic/tacas21_paper/koat/",
                       default_conf );
                     ( "simple_nested",
-                      Polynomial 2,
+                      LogarithmicPolynomial (0, 2),
                       "../../../examples/probabilistic/tacas21_paper/koat/",
                       default_conf );
                     ( "non_past_rwalk",
@@ -134,11 +143,11 @@ let tests =
                       "../../../examples/probabilistic/cfr/",
                       default_conf );
                     ( "simple_control_on_input_nonprob",
-                      Polynomial 0,
+                      LogarithmicPolynomial (0, 0),
                       "../../../examples/probabilistic/cfr/",
                       default_conf |> enable_cfr_default );
                     ( "cfr_leading",
-                      Polynomial 1,
+                      LogarithmicPolynomial (0, 1),
                       "../../../examples/probabilistic/cfr/",
                       default_conf |> enable_cfr_default );
                   ];
