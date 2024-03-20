@@ -14,6 +14,7 @@
 %token          INFINITY
 %token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
 %token          BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
+%token          LOG
 
 %left           PLUS MINUS
 %left           TIMES
@@ -338,7 +339,7 @@ rational_laurent_polynomial:
   | p1 = rational_laurent_polynomial; op = laurent_bioperator; p2 = rational_laurent_polynomial
     { op p1 p2 }
   | v = variable; POW; c = UINT
-    { RationalLaurentPolynomial.pow (RationalLaurentPolynomial.of_var v) (int_of_string c) } 
+    { RationalLaurentPolynomial.pow (RationalLaurentPolynomial.of_var v) (int_of_string c) }
   | v = variable; POW; MINUS; c = UINT
     { RationalLaurentPolynomial.of_power v (Int.neg @@ int_of_string c) } ;
 
@@ -350,6 +351,8 @@ bound:
     { Bound.infinity }
   | LPAR; b = bound; RPAR
     { b }
+  | LOG; LPAR; b = bound; RPAR
+    { Bound.log_of_bound b }
   | c = our_int b = option(preceded(POW, bound))
     { Bound.exp c BatOption.(b |? Bound.one) }
   | v = ID

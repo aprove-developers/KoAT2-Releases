@@ -1,5 +1,5 @@
 open! OurBase
-(** Implementation of bounds, i.e., polynomials, exponential terms and max/min terms.*)
+(** Implementation of bounds, i.e., polynomials, exponential, and logarithmic terms.*)
 
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module type Bound = sig
@@ -29,6 +29,9 @@ module type Bound = sig
   val to_poly : t -> polynomial Option.t
   (** Tries to convert the bound to a polynomial if possible *)
 
+  val to_poly_overappr_logs : t -> polynomial Option.t
+  (** Tries to convert the bound to a polynomial if possible by overappr. logarithms by their argument. *)
+
   val of_constant : value -> t
   (** Creates a constant bound from a constant value. *)
 
@@ -55,6 +58,11 @@ module type Bound = sig
 
   val exp_int : OurInt.t -> t -> t
   (** Returns for a positive integer value i and a bound b the new bound b^i. *)
+
+  val log : Var.t -> t
+  val log_of_constant : value -> t
+  val log_of_poly : Polynomials.Polynomial.t -> t
+  val log_of_bound : t -> t
 
   val max_of_occurring_constants : t -> value
   (** Returns for a polynomial bound the maximal occuring constant. TODO doc *)

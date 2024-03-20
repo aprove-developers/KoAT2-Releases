@@ -24,6 +24,7 @@ module type OurNumber = sig
 
   val ( =~= ) : t -> t -> bool
   val pow : t -> int -> t
+  val log : t -> t
   val max : t -> t -> t
   val min : t -> t -> t
   val is_integral : t -> bool

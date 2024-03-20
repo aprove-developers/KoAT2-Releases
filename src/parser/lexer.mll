@@ -47,6 +47,7 @@ rule read =
   | "RULES"           { P.RULES }
   | "VAR"             { P.VAR }
   | "inf"             { P.INFINITY }
+  | "log"             { P.LOG }
   | int               { P.UINT (Lexing.lexeme lexbuf) }
   | float             { P.UFLOAT (Lexing.lexeme lexbuf) }
   | id                { P.ID (Lexing.lexeme lexbuf) }

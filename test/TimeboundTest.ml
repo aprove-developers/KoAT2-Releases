@@ -120,7 +120,12 @@ let tests =
              let complexity =
                (asymptotic_complexity % find_costbound ~conf % Readers.read_program_simple) program_str
              in
-             assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity)
+             let error_msg =
+               "Asymptotic Complexity " ^ Bound.show_complexity complexity
+               ^ " does not match expected complexity "
+               ^ Bound.show_complexity expected_complexity
+             in
+             assert_bool error_msg @@ Bound.equal_complexity expected_complexity complexity)
            [
              (Inf, "a -> b(), b -> b()", default_conf);
              (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0", default_conf);
@@ -159,22 +164,22 @@ let tests =
              (Inf, "a -> b(x,y,z,u,v,p), b -> b(x+y,y+z,z+u,u+v,v+p,p-1) :|: x > 0", mprf5_conf);
              (* TWN based on twn001 *)
              (Inf, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
-             ( LogarithmicPolynomial (0, 1),
-               "a -> b(x,y,z), b -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b -> c(z,z,z), c -> c(2*x, 3*y, z) \
+             (LogarithmicPolynomial (1, 0), "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
+             ( LogarithmicPolynomial (0, 0),
+               "a -> b(1,y,z), b -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b -> c(1,z,z), c -> c(2*x, 3*y, z) \
                 :|: x >= y && y >= 1",
                twn_conf );
-             ( LogarithmicPolynomial (0, 2),
-               "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
-                b(x,y,z)",
+             ( LogarithmicPolynomial (1, 1),
+               "a -> b(x,y,z,u,v), b -> c(u,v,z-1,u,v) :|: z > 0, c -> c(2*x,3*y,z,u,v) :|: x >= y && y >= \
+                1, c -> b(x,y,z,u,v)",
                twn_conf );
-             ( LogarithmicPolynomial (0, 2),
-               "a -> b(x,y,z), b -> c(z,z,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
-                d(z,z,z), d -> d(2*x,3*y,z) :|: x>= y && y >= 1, d -> b(x,y,z)",
+             ( LogarithmicPolynomial (1, 1),
+               "a -> b(x,y,z), b -> c(z,1,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
+                d(z,1,z), d -> d(2*x,3*y,z) :|: x>= y && y >= 1, d -> b(x,y,z)",
                twn_conf );
-             ( LogarithmicPolynomial (0, 3),
-               "a -> b(x,y,z,u), b -> c(x,y,z-1,z) :|: z > 0, c -> d(u,u,z,u-1) :|: u > 0, d -> d(2 * x, 3 * \
-                y,z,u) :|: x >= y && y >= 1, d -> c(y,y,z,u), d -> b(x,y,z,u)",
+             ( LogarithmicPolynomial (1, 2),
+               "a -> b(x,y,z,u,v), b -> c(x,y,z-1,z,v) :|: z > 0, c -> d(u,v,z,u-1,v) :|: u > 0, d -> d(2 * \
+                x, 3 * y,z,u,v) :|: x >= y && y >= 1, d -> c(y,y,z,u,v), d -> b(x,y,z,u,v)",
                twn_conf );
            ]);
        ]

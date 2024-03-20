@@ -1,42 +1,37 @@
 open! OurBase
 
-module Inner = struct
-  let is_zero = Z.(equal zero)
+let is_zero = Z.(equal zero)
 
-  let pow_ourint i n =
-    let open Z in
-    let rec helper i m =
-      if is_zero m then
-        one
-      else
-        mul i (helper i (m - one))
-    in
-    helper i n
-
-
-  include Z
-  include Z.Compare
-
-  let ( =~= ) = equal
-  let is_integral _ = true
-  let of_ourint = identity
-  let is_negative a = Compare.(zero > a)
-  let is_ge = Compare.( >= )
-  let is_gt = Compare.( > )
-
-  let rec lcm_list = function
-    | [] -> one
-    | x :: xs -> lcm x (lcm_list xs)
+let pow_ourint i n =
+  let open Z in
+  let rec helper i m =
+    if is_zero m then
+      one
+    else
+      mul i (helper i (m - one))
+  in
+  helper i n
 
 
-  let rec max_list = function
-    | [] -> zero
-    | x :: xs -> max x (max_list xs)
+include Z
+include Z.Compare
+
+let ( =~= ) = equal
+let is_integral _ = true
+let of_ourint = identity
+let is_negative a = Compare.(zero > a)
+let is_ge = Compare.( >= )
+let is_gt = Compare.( > )
+let log x = of_int (Z.log2 x) + one
+
+let rec lcm_list = function
+  | [] -> one
+  | x :: xs -> lcm x (lcm_list xs)
 
 
-  let sum_list = List.fold ~f:( + ) ~init:zero
-  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
-end
+let rec max_list = function
+  | [] -> zero
+  | x :: xs -> max x (max_list xs)
 
-include Inner
-include Comparator.Make (Inner)
+
+let sum_list = List.fold ~f:( + ) ~init:zero

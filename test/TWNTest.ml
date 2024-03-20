@@ -163,25 +163,32 @@ let tests =
                 ];
          "complexity"
          >::: List.map
-                ~f:(fun (expected_string, program) ->
+                ~f:(fun (expected_complexity, program) ->
                   "" >:: fun _ ->
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Complexity.complexity_ twn_proofs
                       (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn)
                   in
-                  assert_equal_string expected_string (Bound.to_string result))
-                [
-                  ("4*Arg_0+4*Arg_1+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
-                  ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
-                  ("3 {O(1)}", "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
-                  ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67");
-                  ("2*Arg_0+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1");
-                  ( "12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1+12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_2+6*Arg_1*Arg_1*Arg_2*Arg_2+6*Arg_1*Arg_1+6*Arg_0+12 \
-                     {O(n^6)}",
-                    "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0" );
-                  ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
-                  ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
-                  ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x,3*y+x*y) :|: x >= y && y >= 1");
-                ];
+                  let error_msg =
+                    "Asymptotic Complexity "
+                    ^ Bound.show_complexity (Bound.asymptotic_complexity result)
+                    ^ " of bound " ^ Bound.to_string result ^ " does not match expected complexity "
+                    ^ Bound.show_complexity expected_complexity
+                  in
+                  assert_bool error_msg
+                  @@ Bound.equal_complexity expected_complexity (Bound.asymptotic_complexity result))
+                Bound.
+                  [
+                    (LogarithmicPolynomial (0, 1), "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
+                    (LogarithmicPolynomial (0, 0), "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
+                    (LogarithmicPolynomial (0, 0), "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
+                    (LogarithmicPolynomial (0, 0), "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67");
+                    (LogarithmicPolynomial (1, 0), "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1");
+                    ( LogarithmicPolynomial (0, 6),
+                      "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0" );
+                    (Inf, "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
+                    (Inf, "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
+                    (Inf, "l0 -> l1(x,y), l1 -> l1(x,3*y+x*y) :|: x >= y && y >= 1");
+                  ];
        ]

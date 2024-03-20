@@ -32,8 +32,6 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let bound_of_constant c = Const (Num.abs c)
   let of_constant = OptionMonad.return % bound_of_constant
   let of_OurInt = OptionMonad.return % bound_of_constant % Num.of_ourint
-  let bound_log v = Log v
-  let log = OptionMonad.return % bound_log
 
   let is_constant =
     let rec is_constant = function
@@ -71,6 +69,13 @@ module Make (Num : PolyTypes.OurNumber) = struct
       ~inf:None
 
 
+  let to_poly_overappr_logs =
+    fold ~const:(Option.some % Poly.of_constant) ~var:(Option.some % Poly.of_var)
+      ~plus:(OptionMonad.liftM2 Poly.add) ~times:(OptionMonad.liftM2 Poly.mul)
+      ~exp:(fun _ _ -> None)
+      ~log:(Option.some % Poly.of_var) ~inf:None
+
+
   (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
   type complexity =
     | LogarithmicPolynomial of int * int  (** Bound is in asymptotic class O(log(n)^i * n^j) *)
@@ -91,8 +96,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Inf -> "Infinity"
     | LogarithmicPolynomial (0, 0) -> "O(1)"
     | LogarithmicPolynomial (0, y) -> "O(" ^ correct_str "n" y ^ ")"
-    | LogarithmicPolynomial (x, 0) -> "O(" ^ correct_str "log" x ^ ")"
-    | LogarithmicPolynomial (x, y) -> "O(" ^ correct_str "log" x ^ " * " ^ correct_str "n" y ^ ")"
+    | LogarithmicPolynomial (x, 0) -> "O(" ^ correct_str "log(n)" x ^ ")"
+    | LogarithmicPolynomial (x, y) -> "O(" ^ correct_str "log(n)" x ^ "*" ^ correct_str "n" y ^ ")"
     | Exponential 1 -> "O(EXP)"
     | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x - 1)) ^ ")"
 
@@ -423,10 +428,11 @@ module Make (Num : PolyTypes.OurNumber) = struct
       (* Simplify terms with pow head *)
       | Pow (value, exponent) -> (
           match simplify_bound exponent with
-          | exponent when Num.(equal value zero) && gt_bound exponent (Const Num.zero) |? false ->
-              Const Num.zero
+          | exponent when Num.(equal value zero) -> Const Num.zero
           | _ when Num.(equal value one) -> Const Num.one
           | Const c -> Const Num.(pow value (to_int c)) (* TODO Do not use Num.to_int *)
+          | Sum (b1, b2) -> Product (simplify_bound (Pow (value, b1)), simplify_bound (Pow (value, b2)))
+          | Log v -> bound_of_var v
           | exponent -> Pow (value, exponent))
     in
 
@@ -473,7 +479,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let ( ** ) = pow
 
   let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
-  let exp value b = Option.map ~f:(exp_bound value) b
+  let exp value b = simplify @@ Option.map ~f:(exp_bound value) b
   let exp_int value b = Option.map ~f:((exp_bound % Num.of_ourint) value) b
   let infinity = None
   let sum bounds = Sequence.reduce ~f:add bounds |> Option.map ~f:simplify |? zero
@@ -492,6 +498,14 @@ module Make (Num : PolyTypes.OurNumber) = struct
         ~times:mul_bound ~pow:pow_bound
 
 
+  let log v = Option.return (Log v)
+  let log_of_constant = of_constant % Num.log
+
+  let log_of_bound b =
+    simplify @@ fold ~const:log_of_constant ~var:log ~plus:add ~times:add ~exp ~log:of_var ~inf:infinity b
+
+
+  let log_of_poly = simplify % log_of_bound % of_intpoly
   let bound_of_int i = Const (Num.of_int @@ Int.abs i)
   let of_int = OptionMonad.return % bound_of_int
   let bound_of_var_string str = Var (Var.of_string str)
@@ -500,7 +514,10 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let is_finite = Option.is_some
 
   let substitute_f (substitution : Var.t -> t) (bound : t) : t =
-    OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp ~log)
+    OptionMonad.(
+      bound
+      >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp
+            ~log:(log_of_bound % substitution))
 
 
   let substitute_bound var ~replacement =
@@ -593,6 +610,7 @@ module BinaryBound = struct
   let of_poly _ = Finite
   let of_intpoly _ = Finite
   let to_poly _ = None
+  let to_poly_overappr_logs _ = None
   let of_constant _ = Finite
   let of_OurInt _ = Finite
 
@@ -608,6 +626,10 @@ module BinaryBound = struct
   let exp _ = identity
   let exp_int _ = identity
   let max_of_occurring_constants _ = raise Not_found (* TODO *)
+  let log _ = Finite
+  let log_of_constant _ = Finite
+  let log_of_poly _ = Finite
+  let log_of_bound = identity
 
   let is_infinity = function
     | Finite -> false

@@ -57,4 +57,5 @@ let ceil t =
       one)
 
 
+let log x = of_ourint @@ OurInt.log @@ ceil x
 let of_intfraction (num, den) = make (Z.of_int num) (Z.of_int den)
