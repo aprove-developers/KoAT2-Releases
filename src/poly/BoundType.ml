@@ -29,6 +29,9 @@ module type Bound = sig
   val to_poly : t -> polynomial Option.t
   (** Tries to convert the bound to a polynomial if possible *)
 
+  val to_poly_overappr_logs : t -> polynomial Option.t
+  (** Tries to convert the bound to a polynomial if possible by overappr. logarithms by their argument. *)
+
   val of_constant : value -> t
   (** Creates a constant bound from a constant value. *)
 

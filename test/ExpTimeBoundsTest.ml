@@ -95,7 +95,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_twn_inner_loop_exptime_classsize",
-                      LogarithmicPolynomial (0, 2),
+                      LogarithmicPolynomial (1, 1),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn_inner_loop_classtime_expsize",
@@ -103,7 +103,7 @@ let tests =
                       "../../../examples/probabilistic/",
                       default_conf );
                     ( "nested_twn_inner_loop_classtime_expsize",
-                      LogarithmicPolynomial (0, 2),
+                      LogarithmicPolynomial (1, 1),
                       "../../../examples/probabilistic/",
                       default_conf |> enable_twn );
                     ( "nested_twn003_inner_loop_exptime_classsize",

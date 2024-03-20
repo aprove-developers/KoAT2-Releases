@@ -78,12 +78,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | _ -> OurInt.zero
 
 
-  let compute_M' = function
+  let compute_M' eps = function
     | [] -> OurInt.zero
     | x :: [] -> OurInt.zero
-    | (b1, a1) :: (b2, a2) :: _ ->
-        let eps = OurRational.(one / of_int 2) in
-        monotonicity_th OurInt.one (OurRational.(b2 + eps), a1) (b2, a2)
+    | (b1, a1) :: (b2, a2) :: _ -> monotonicity_th OurInt.one (OurRational.(b2 + eps), a1) (b2, a2)
 
 
   module ScaledMonomial = ScaledMonomials.Make (OurInt)
@@ -147,6 +145,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     | x1 :: x2 :: xs -> OurInt.(x1 > x2) && is_sorted (x2 :: xs)
 
 
+  let rec min_logbase eps = function
+    | []
+    | [ _ ] ->
+        OurRational.one
+    | x1 :: x2 :: xs -> OurRational.(min (x1 / (x2 + eps)) (min_logbase eps (x2 :: xs)))
+
+
   let compute_f' twn_proofs atom = function
     | [] -> Bound.zero
     | x :: [] -> Bound.one
@@ -162,11 +167,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         let prefix ys = List.fold_left (fun acc itt -> (List.hd acc @ [ itt ]) :: acc) [ [] ] ys in
         let n_ = OurInt.max_list (List.map (fun ys -> compute_N (base_exp ys)) (prefix xs)) in
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f'", [ ("N", OurInt.to_string n_) ]));
-        let m'_ = OurInt.max_list (List.map (fun ys -> compute_M' (base_exp ys)) (prefix xs)) in
+        let eps = OurRational.(one / of_int 2) in
+        let m'_ = OurInt.max_list (List.map (fun ys -> compute_M' eps (base_exp ys)) (prefix xs)) in
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f'", [ ("M", OurInt.to_string m'_) ]));
-        Bound.of_intpoly
-          Polynomial.(alphas_abs + alphas_abs + (of_constant @@ OurInt.max m'_ n_) + Polynomial.one)
-        (* TODO NILS *)
+        let coeff =
+          OurRational.(ceil @@ (one / min_logbase eps (List.map (OurRational.of_ourint % Tuple4.fourth) xs)))
+        in
+        Bound.(
+          (of_OurInt coeff * log_of_poly Polynomial.(alphas_abs + alphas_abs))
+          + (of_OurInt @@ OurInt.max m'_ n_))
         |> tap (fun b ->
                Logger.log logger Logger.INFO (fun () ->
                    ("complexity.compute_f'", [ ("log(2*alpha_abs)+max(N,M')", Bound.to_string b) ]));

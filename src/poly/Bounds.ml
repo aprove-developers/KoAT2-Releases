@@ -69,6 +69,13 @@ module Make (Num : PolyTypes.OurNumber) = struct
       ~inf:None
 
 
+  let to_poly_overappr_logs =
+    fold ~const:(Option.some % Poly.of_constant) ~var:(Option.some % Poly.of_var)
+      ~plus:(OptionMonad.liftM2 Poly.add) ~times:(OptionMonad.liftM2 Poly.mul)
+      ~exp:(fun _ _ -> None)
+      ~log:(Option.some % Poly.of_var) ~inf:None
+
+
   (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
   type complexity =
     | LogarithmicPolynomial of int * int  (** Bound is in asymptotic class O(log(n)^i * n^j) *)
@@ -90,7 +97,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | LogarithmicPolynomial (0, 0) -> "O(1)"
     | LogarithmicPolynomial (0, y) -> "O(" ^ correct_str "n" y ^ ")"
     | LogarithmicPolynomial (x, 0) -> "O(" ^ correct_str "log(n)" x ^ ")"
-    | LogarithmicPolynomial (x, y) -> "O(" ^ correct_str "log(n)" x ^ " * " ^ correct_str "n" y ^ ")"
+    | LogarithmicPolynomial (x, y) -> "O(" ^ correct_str "log(n)" x ^ "*" ^ correct_str "n" y ^ ")"
     | Exponential 1 -> "O(EXP)"
     | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x - 1)) ^ ")"
 
@@ -472,7 +479,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let ( ** ) = pow
 
   let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
-  let exp value b = Option.map ~f:(exp_bound value) b
+  let exp value b = simplify @@ Option.map ~f:(exp_bound value) b
   let exp_int value b = Option.map ~f:((exp_bound % Num.of_ourint) value) b
   let infinity = None
   let sum bounds = Sequence.reduce ~f:add bounds |> Option.map ~f:simplify |? zero
@@ -507,7 +514,10 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let is_finite = Option.is_some
 
   let substitute_f (substitution : Var.t -> t) (bound : t) : t =
-    OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp ~log)
+    OptionMonad.(
+      bound
+      >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp
+            ~log:(log_of_bound % substitution))
 
 
   let substitute_bound var ~replacement =
@@ -600,6 +610,7 @@ module BinaryBound = struct
   let of_poly _ = Finite
   let of_intpoly _ = Finite
   let to_poly _ = None
+  let to_poly_overappr_logs _ = None
   let of_constant _ = Finite
   let of_OurInt _ = Finite
 
