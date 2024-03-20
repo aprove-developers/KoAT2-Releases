@@ -51,5 +51,9 @@ let tests =
                   ("10*(x+y)", "10*x + 10*y");
                   (* Sum over Product *)
                   ("5*x", "3*x+2*x");
+                  (* Log *)
+                  ("log(3*x^2+y)", "2*log(x)+log(y)+2");
+                  ("2^(log(x) + log(y))", "x*y");
+                  ("3^(log(x) + log(y))", "x*y");
                 ];
        ]
