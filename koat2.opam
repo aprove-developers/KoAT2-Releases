@@ -29,7 +29,7 @@ depends: [
   "ppx_deriving_cmdliner"
   "ppx_sexp_conv"
   "zarith"
-  "z3" {= "4.12.2"}
+  "z3" {= "4.12.2-1"}
 ]
 build: [
   ["dune" "subst"] {dev}
