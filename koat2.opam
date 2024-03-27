@@ -5,8 +5,8 @@ synopsis: "KoAT2: Runtime Analysis of Integer Programs"
 maintainer: ["eleanore.meyer@cs.rwth-aachen.de" "lommen@cs.rwth-aachen.de"]
 authors: ["Eleanore Meyer" "Nils Lommen"]
 license: "LICENSE"
-homepage: "https://github.com/aprove-developers/Koat2"
-bug-reports: "https://github.com/aprove-developers/Koat2/issues"
+homepage: "https://github.com/aprove-developers/KoAT2"
+bug-reports: "https://github.com/aprove-developers/KoAT2/issues"
 depends: [
   "apron"
   "base" {> "v0.16.0"}
@@ -46,4 +46,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/aprove-developers/Koat2.git"
+dev-repo: "git+https://github.com/aprove-developers/KoAT2.git"

@@ -20,7 +20,7 @@
 (package
  (name koat2_external)
  (synopsis "External (automatically generated files) for KoAT2")
- (depends (z3 (= 4.12.2)))
+ (depends (z3 (= 4.12.2-1)))
 )
 
 (package
@@ -48,7 +48,7 @@
    ppx_deriving_cmdliner
    ppx_sexp_conv
    zarith
-   (z3 (= 4.12.2))
+   (z3 (= 4.12.2-1))
    koat2_external
    )
  )
