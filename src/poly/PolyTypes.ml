@@ -461,6 +461,9 @@ module type Polynomial = sig
   val of_coeff_list : value list -> indeterminate list -> t
   (** Creates a polynomial from a coefficient list and a corresponding indeterminate list. *)
 
+  val of_coeff : value list -> indeterminate -> t
+  (** Creates the polynomial a_0 + a_1 X + ... + a_n X^n from the coefficient list [a_0,...,a_n] for the indeterminate X. *)
+
   (** {1 {L Following methods return information over the polynomial.}} *)
 
   val coeff : monomial -> t -> value

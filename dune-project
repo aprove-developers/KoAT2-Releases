@@ -11,11 +11,17 @@
 (source
  (github aprove-developers/Koat2))
 
-(authors "Eleanore Meyer")
+(authors "Eleanore Meyer" "Nils Lommen")
 
-(maintainers "eleanore.meyer@cs.rwth-aachen.de")
+(maintainers "eleanore.meyer@cs.rwth-aachen.de" "lommen@cs.rwth-aachen.de")
 
 (license LICENSE)
+
+(package
+ (name koat2_external)
+ (synopsis "External (automatically generated files) for KoAT2")
+ (depends (z3 (= 4.12.2-1)))
+)
 
 (package
  (name koat2)
@@ -42,8 +48,7 @@
    ppx_deriving_cmdliner
    ppx_sexp_conv
    zarith
-   (z3 (= 4.12.2))
+   (z3 (= 4.12.2-1))
+   koat2_external
    )
  )
-
-

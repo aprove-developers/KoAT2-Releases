@@ -3,6 +3,7 @@
 (include_subdirs unqualified)
 
 (executable
+ (package koat2)
  (public_name koat2)
  (name main)
  (preprocess

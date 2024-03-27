@@ -47,6 +47,8 @@ module Polynomial : sig
   val separate_by_sign : t -> t * t
   (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficients and the other list with only scaled monomials with non-negative coefficients. *)
 
+  val roots : t -> OurAlgebraicComplex.t list
+
   val max_of_occurring_constants : t -> OurInt.t
   (** TODO doc *)
 end

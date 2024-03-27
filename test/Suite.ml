@@ -24,6 +24,7 @@ let suite =
          UpdateElementTest.tests;
          ExpectedLocalChangeBoundTest.tests;
          ExpTimeBoundsTest.tests;
+         MatrixTest.tests;
        ]
 
 

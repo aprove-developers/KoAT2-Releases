@@ -28,6 +28,7 @@ RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opa
     opam repo remove default
 
 COPY --chown=opam:opam koat2.opam .
+COPY --chown=koat2_external:opam koat2_external.opam .
 RUN opam update && \
     opam install -j $(nproc) . --deps-only
 
@@ -43,6 +44,7 @@ COPY --chown=opam:opam dune-project ./dune-project
 COPY --chown=opam:opam test ./test
 COPY --chown=opam:opam bin ./bin
 COPY --chown=opam:opam src ./src
+COPY --chown=opam:opam external ./external
 
 # Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN

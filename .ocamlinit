@@ -1,4 +1,4 @@
-#use_output "dune ocaml top";;
+#use_output "dune ocaml top --profile release";;
 #require "ppx_deriving.eq"
 #require "ppx_deriving.ord"
 #require "ppx_deriving.show"
