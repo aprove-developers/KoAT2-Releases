@@ -63,6 +63,7 @@ module MatrixOver (Value : PolyTypes.Ring) = struct
       (Sequence.of_list rows)
 
 
+  let equal v w = List.equal (List.equal Value.equal) (to_list v) (to_list w)
   let smult scalar mat = smult_mat { times = Value.mul } scalar mat
   let add = plus_mat { plus = Value.add }
   let sub mat1 mat2 = add mat1 (smult Value.(neg one) mat2)
@@ -175,11 +176,11 @@ module IntMatrix = struct
 
 
   (* Computes a list xs of algebraic complex numbers, s.t., λ \in xs iff there exists an eigenvector ev != 0 with mat*ev = λ*ev. *)
-  let eigenvalues mat = Polynomial.roots @@ char_poly mat
+  let eigenvalues mat = Polynomial.roots @@ char_poly mat (* TODO raise exception if dim row != dim col *)
 
   (* Computes JNF mat = p * j * p^-1 and returns (p,j,p^-1). *)
   let jordan_normal_form mat =
-    let eigenvalues = eigenvalues mat in
+    let eigenvalues = eigenvalues mat |> List.sort ~compare:OurAlgebraicComplex.compare in
     (* Use Schur decomposition to obtain matrices b,p,q s.t. b is triangular and [mat = p * w * q] *)
     let w, (p, q) =
       if is_upper_triangular mat then
@@ -187,7 +188,6 @@ module IntMatrix = struct
       else
         schur_decomp mat eigenvalues
     in
-    let w = convertMatrixToCA mat in
     (* There is a block of size n for the eigenvalue λ if we have the tuple (n,λ). *)
     let jordan_blocks =
       List.map ~f:(Tuple2.map1 (OurInt.to_int % integer_of_nat)) (triangular_to_jnf_vector_ca w)
@@ -197,32 +197,23 @@ module IntMatrix = struct
     let j =
       let rec compute_j n = function
         | [] -> []
-        | (1, ev) :: xs ->
-            List.init (dim_row mat) ~f:(fun m ->
-                if m == n then
-                  ev
-                else
-                  OurAlgebraicComplex.zero)
-            :: compute_j (n + 1) xs
         | (x, ev) :: xs ->
-            List.init (dim_row mat) ~f:(fun m ->
-                if m == n then
-                  ev
-                else if m + 1 == n then
-                  OurAlgebraicComplex.one
-                else
-                  OurAlgebraicComplex.zero)
-            :: compute_j (n + 1) ((x - 1, ev) :: xs)
+            List.init x ~f:(fun i ->
+                List.init (dim_row mat) ~f:(fun j ->
+                    if j == i + n then
+                      ev
+                    else if j == i + n + 1 && i < x - 1 then
+                      OurAlgebraicComplex.one
+                    else
+                      OurAlgebraicComplex.zero))
+            @ compute_j (n + x) xs
       in
       of_list @@ compute_j 0 jordan_blocks
     in
     (* Change of basis matrix *)
     let b =
-      let rec compute_jordan_chain eigen_mat general_eigenvec = function
-        | 1, _ -> [ general_eigenvec ]
-        | n, mat ->
-            CAMatrix.mul_vec mat general_eigenvec
-            :: compute_jordan_chain eigen_mat general_eigenvec (n - 1, CAMatrix.mul eigen_mat mat)
+      let compute_jordan_chain eigen_mat general_eigenvec n =
+        List.init n ~f:(fun i -> CAMatrix.mul_vec (CAMatrix.pow eigen_mat i) general_eigenvec) |> List.rev
       in
       let jordan_blocks_grouped =
         List.sort_and_group ~compare:(fun (_, x) (_, y) -> OurAlgebraicComplex.compare x y) jordan_blocks
@@ -244,7 +235,7 @@ module IntMatrix = struct
                   List.find_exn (kernel eigen_mat_n) ~f:(fun x ->
                       not @@ CAVector.is_zero (mul_vec eigen_mat_n1 x))
                 in
-                compute_jordan_chain eigen_mat general_eigenvec (n, eigen_mat))
+                compute_jordan_chain eigen_mat general_eigenvec n)
       |> List.concat |> CAMatrix.of_vec_list |> transpose_mat
     in
     CAMatrix.(mul p b, j, mul (Option.value_exn @@ inv b) q)

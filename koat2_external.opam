@@ -5,8 +5,8 @@ synopsis: "External (automatically generated files) for KoAT2"
 maintainer: ["eleanore.meyer@cs.rwth-aachen.de" "lommen@cs.rwth-aachen.de"]
 authors: ["Eleanore Meyer" "Nils Lommen"]
 license: "LICENSE"
-homepage: "https://github.com/aprove-developers/KoAT2"
-bug-reports: "https://github.com/aprove-developers/KoAT2/issues"
+homepage: "https://github.com/aprove-developers/Koat2"
+bug-reports: "https://github.com/aprove-developers/Koat2/issues"
 depends: [
   "dune" {>= "3.3"}
   "z3" {= "4.12.2-1"}
@@ -26,4 +26,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/aprove-developers/KoAT2.git"
+dev-repo: "git+https://github.com/aprove-developers/Koat2.git"
