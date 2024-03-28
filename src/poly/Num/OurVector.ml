@@ -25,6 +25,7 @@ module VectorOver (Value : PolyTypes.Ring) = struct
     let sum = Sequence.fold ~f:Value.add ~init:Value.zero in
     sum @@ Sequence.of_list @@ List.map (List.zip_truncate (to_list v) (to_list w)) ~f:(uncurry Value.mul)
 
+
   let equal v w = List.equal Value.equal (to_list v) (to_list w)
   let is_zero = List.for_all ~f:(fun x -> Value.(equal zero x)) % to_list
 end
