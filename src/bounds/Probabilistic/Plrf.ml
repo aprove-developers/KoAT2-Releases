@@ -180,7 +180,9 @@ let general_transition_constraint cache constraint_type gtrans : RationalFormula
           >= RationalParameterPolynomial.(
                expected_poly cache gtrans + RationalParameterPolynomial.of_polynomial RationalPolynomial.one))
         |> lift_paraatom
-    | `Bounded ->
+    | `Bounded_For_Nonincreasing when not (GeneralTransition.is_probabilistic gtrans) -> []
+    | `Bounded_For_Decreasing
+    | `Bounded_For_Nonincreasing ->
         (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
          * evaluated at the corresponding location is non-negative *)
         let transition_bound t =
@@ -226,8 +228,13 @@ let non_increasing_constraint cache transition =
   general_transition_constraint cache `Non_Increasing transition
 
 
-let bounded_constraint cache transition =
-  let constr = general_transition_constraint cache `Bounded transition in
+let bounded_for_decreasing_constraint cache transition =
+  let constr = general_transition_constraint cache `Bounded_For_Decreasing transition in
+  constr
+
+
+let bounded_for_nonincreasing_constraint cache transition =
+  let constr = general_transition_constraint cache `Bounded_For_Nonincreasing transition in
   constr
 
 
@@ -244,12 +251,12 @@ let decreasing_constraint cache transition =
 module Solver = SMT.IncrementalZ3Solver
 
 (* Add the corresponding bounding constrained depending whether we perform a refind analysis*)
-let add_bounding_constraint ~refined cache solver gt =
+let add_bounded_for_nonincreasing_constraint ~refined cache solver gt =
   (* Try to add the normal bound constraint *)
   if refined then
     Solver.add_real solver (bounded_refined_constraint cache gt)
   else
-    Solver.add_real solver (bounded_constraint cache gt)
+    Solver.add_real solver (bounded_for_nonincreasing_constraint cache gt)
 
 
 type plrf_problem = {
@@ -338,7 +345,7 @@ let rec backtrack cache ?(refined = false) steps_left index solver non_increasin
         Solver.push solver;
 
         Solver.add_real solver (non_increasing_constraint cache transition);
-        add_bounding_constraint ~refined cache solver transition;
+        add_bounded_for_nonincreasing_constraint ~refined cache solver transition;
 
         Stack.push non_increasing transition;
         backtrack cache ~refined (steps_left - 1) (i + 1) solver non_increasing problem;
@@ -355,7 +362,7 @@ let compute_plrf ~refined cache program is_time_bounded unbounded_vars transitio
   Solver.add_real solver (decreasing_constraint cache decreasing);
   (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
    * a decreasing transition *)
-  add_bounding_constraint ~refined:false cache solver decreasing;
+  Solver.add_real solver (bounded_for_decreasing_constraint cache decreasing);
   let make_non_increasing = Set.(remove transitions decreasing |> to_array) in
   try
     backtrack cache ~refined (Array.length make_non_increasing) 0 solver (Stack.singleton decreasing)

@@ -808,6 +808,15 @@ module GeneralTransition = struct
 
     let locations t = Set.add (targets t) (src t)
 
+    let is_probabilistic t =
+      let transs = transitions t in
+      match Set.choose transs with
+      | Some trans when Set.length transs = 1 ->
+          let update_map = ProbabilisticTransitionLabel.update_map (ProbabilisticTransition.label trans) in
+          Map.exists update_map ~f:UpdateElement_.is_probabilistic
+      | _ -> true
+
+
     let to_id_string t =
       let show_prob_branch (_, label, l') =
         Int.to_string (ProbabilisticTransitionLabel.id label)

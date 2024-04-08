@@ -30,6 +30,9 @@ end
 
 include module type of PolynomialOverIndeterminate (UpdateValue) (OurInt)
 
+val is_probabilistic : t -> bool
+(** checks whether the update element contains a distribution*)
+
 val of_poly : Polynomial.t -> t
 (** Create an UpdateElement from a Polynomial *)
 

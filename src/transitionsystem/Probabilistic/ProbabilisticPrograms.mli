@@ -77,6 +77,9 @@ module GeneralTransition : sig
   val transitions_to_target :
     Location.t -> t -> (ProbabilisticTransition.t, ProbabilisticTransition.comparator_witness) Set.t
 
+  val is_probabilistic : t -> bool
+  (** tests if the general transition contains probabilistic behaviour (i.e., probabilistic updates or probabilistic branching) *)
+
   val gt_id : t -> int
   val to_id_string : t -> string
   val to_id_string_pretty : t -> string
