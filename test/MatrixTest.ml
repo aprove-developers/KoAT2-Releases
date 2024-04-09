@@ -52,16 +52,19 @@ let tests =
                 ];
          "JNF"
          >::: List.map
-                ~f:(fun (expected_string_J, expected_string_P, mat) ->
+                ~f:(fun (expected_string_J, mat) ->
                   "" >:: fun _ ->
                   let p, j, p_inv = jordan_normal_form mat in
                   assert_true OurMatrix.CAMatrix.(equal (mul p p_inv) (identity (dim_col mat)));
                   assert_true OurMatrix.CAMatrix.(equal (mul p_inv p) (identity (dim_col mat)));
-                  assert_true OurMatrix.CAMatrix.(equal (mul p (mul j p_inv)) (convertMatrixToCA mat)))
+                  assert_true OurMatrix.CAMatrix.(equal (mul p (mul j p_inv)) (convertMatrixToCA mat));
+                  assert_equal_string expected_string_J (OurMatrix.CAMatrix.to_string j))
                 [
-                  (* ("", "[0; -1; -8]", mat1);
-                     ("", "[1i; -1i]", mat3);
-                     ("", "[2; 1]", mat4); *)
-                  ("[[4; 0; 0; 0]; [0; 5; 1; 0]; [0; 0; 5; 1]; [0; 0; 0; 5]]", "[5; 4]", mat5);
+                  ("[[-8; 0; 0]; [0; -1; 0]; [0; 0; 0]]", mat1);
+                  ("[[-1i; 0]; [0; 1i]]", mat3);
+                  ( "[[1; 1; 0; 0; 0]; [0; 1; 0; 0; 0]; [0; 0; 2; 1; 0]; [0; 0; 0; 2; 1]; [0; 0; 0; 0; 2]]",
+                    mat4 );
+                  ("[[4; 0; 0; 0]; [0; 5; 1; 0]; [0; 0; 5; 1]; [0; 0; 0; 5]]", mat5);
+                  ("[[5; 1; 0]; [0; 5; 0]; [0; 0; 5]]", mat6);
                 ];
        ]
