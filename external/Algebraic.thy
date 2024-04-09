@@ -1,7 +1,8 @@
 theory Algebraic
   imports
     Algebraic_Numbers.Algebraic_Numbers_External_Code
-    Factor_Algebraic_Polynomial.Roots_of_Real_Complex_Poly    
+    Factor_Algebraic_Polynomial.Roots_of_Real_Complex_Poly
+    Factor_Algebraic_Polynomial.Factor_Complex_Poly  
     Cubic_Quartic_Equations.Complex_Roots
     Jordan_Normal_Form.Gauss_Jordan_Elimination 
     Jordan_Normal_Form.Matrix_IArray_Impl
@@ -54,6 +55,9 @@ definition plus_mat :: "('a :: plus) mat \<Rightarrow> 'a mat \<Rightarrow> 'a m
 
 definition gauss_jordan_single_ca :: "complex mat \<Rightarrow> complex mat" where
   "gauss_jordan_single_ca = gauss_jordan_single"
+
+definition factor_poly :: "integer list \<Rightarrow> complex \<times> (complex \<times> nat) list" where
+  "factor_poly xs = factor_complex_main (poly_of_list (map (complex_of_int o int_of_integer) xs))"
 
 export_code 
 
@@ -114,6 +118,7 @@ export_code
   complex_roots_of_rational_poly
   complex_roots_of_real_poly
   complex_roots_of_complex_poly
+  factor_poly
   coeffs_int
 
   (* JNF *)

@@ -64,6 +64,7 @@ module Algebraic : sig
   val one_ca : complex
   val one_ra : real_alg
   val complex_roots_of_integer_poly : Z.t list -> complex list
+  val factor_poly : Z.t list -> complex * (complex * nat) list
   val less_ra : real_alg -> real_alg -> bool
   val plus_ca : complex -> complex -> complex
   val plus_ra : real_alg -> real_alg -> real_alg

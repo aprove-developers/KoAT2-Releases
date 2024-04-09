@@ -190,6 +190,7 @@ module Algebraic : sig
   val vec_of_list : 'a list -> 'a vec
   val coeffs_int : Z.t poly -> Z.t list
   val mat_inv_ca : complex mat -> complex mat option
+  val factor_poly : Z.t list -> complex * (complex * nat) list
   val of_integer_ca : Z.t -> complex
   val schur_decomp : Z.t mat -> complex list -> complex mat * (complex mat * complex mat)
   val char_poly_int : Z.t mat -> Z.t poly
@@ -965,7 +966,6 @@ end = struct
 
 
   let rec unit_factor_inta x = sgn_int x
-  let rec divide_inta k l = Int_of_integer (divide_integera (integer_of_int k) (integer_of_int l))
 
   type 'a divide = { divide : 'a -> 'a -> 'a }
 
@@ -995,6 +995,7 @@ end = struct
   }
 
   let normalizea _A = _A.normalizea
+  let rec divide_inta k l = Int_of_integer (divide_integera (integer_of_int k) (integer_of_int l))
 
   type 'a comm_monoid_gcd = {
     gcd_comm_monoid_gcd : 'a gcda;
@@ -1158,30 +1159,6 @@ end = struct
   let rec compare_int x = comparator_of (equal_int, linorder_int) x
   let ccompare_inta : (int -> int -> ordera) option = Some compare_int
   let ccompare_int = ({ ccompare = ccompare_inta } : int ccompare)
-
-  type 'a normalization_semidom_multiplicative = {
-    normalization_semidom_normalization_semidom_multiplicative : 'a normalization_semidom;
-  }
-
-  type 'a semiring_gcd_mult_normalize = {
-    semiring_gcd_semiring_gcd_mult_normalize : 'a semiring_gcd;
-    normalization_semidom_multiplicative_semiring_gcd_mult_normalize : 'a normalization_semidom_multiplicative;
-  }
-
-  let normalization_semidom_multiplicative_int =
-    ({ normalization_semidom_normalization_semidom_multiplicative = normalization_semidom_int }
-      : int normalization_semidom_multiplicative)
-
-
-  let semiring_gcd_mult_normalize_int =
-    ({
-       semiring_gcd_semiring_gcd_mult_normalize = semiring_gcd_int;
-       normalization_semidom_multiplicative_semiring_gcd_mult_normalize =
-         normalization_semidom_multiplicative_int;
-     }
-      : int semiring_gcd_mult_normalize)
-
-
   let rec euclidean_size_int x = comp nat abs_int x
 
   type 'a euclidean_semiring = {
@@ -1207,6 +1184,29 @@ end = struct
        idom_modulo_euclidean_ring = idom_modulo_int;
      }
       : int euclidean_ring)
+
+
+  type 'a normalization_semidom_multiplicative = {
+    normalization_semidom_normalization_semidom_multiplicative : 'a normalization_semidom;
+  }
+
+  type 'a semiring_gcd_mult_normalize = {
+    semiring_gcd_semiring_gcd_mult_normalize : 'a semiring_gcd;
+    normalization_semidom_multiplicative_semiring_gcd_mult_normalize : 'a normalization_semidom_multiplicative;
+  }
+
+  let normalization_semidom_multiplicative_int =
+    ({ normalization_semidom_normalization_semidom_multiplicative = normalization_semidom_int }
+      : int normalization_semidom_multiplicative)
+
+
+  let semiring_gcd_mult_normalize_int =
+    ({
+       semiring_gcd_semiring_gcd_mult_normalize = semiring_gcd_int;
+       normalization_semidom_multiplicative_semiring_gcd_mult_normalize =
+         normalization_semidom_multiplicative_int;
+     }
+      : int semiring_gcd_mult_normalize)
 
 
   type 'a factorial_semiring = { normalization_semidom_factorial_semiring : 'a normalization_semidom }
@@ -10345,6 +10345,14 @@ end = struct
       : complex conjugatable_field)
 
 
+  let euclidean_ring_complex =
+    ({
+       euclidean_semiring_euclidean_ring = euclidean_semiring_complex;
+       idom_modulo_euclidean_ring = idom_modulo_complex;
+     }
+      : complex euclidean_ring)
+
+
   let normalization_semidom_multiplicative_complex =
     ({ normalization_semidom_normalization_semidom_multiplicative = normalization_semidom_complex }
       : complex normalization_semidom_multiplicative)
@@ -10357,14 +10365,6 @@ end = struct
          normalization_semidom_multiplicative_complex;
      }
       : complex semiring_gcd_mult_normalize)
-
-
-  let euclidean_ring_complex =
-    ({
-       euclidean_semiring_euclidean_ring = euclidean_semiring_complex;
-       idom_modulo_euclidean_ring = idom_modulo_complex;
-     }
-      : complex euclidean_ring)
 
 
   let factorial_semiring_gcd_complex =
@@ -10673,10 +10673,8 @@ end = struct
     | Set_Monad xs, p -> list_all p xs
 
 
-  let rec fBall (_A1, _A2) xa = ball (_A1, _A2) (fset xa)
-
   let rec fmpred (_A1, _A2, _A3, _A4) (_B1, _B2, _B3) p m =
-    fBall (_A1, _A2) (fmdom (_A1, _A2, _A4) (_B1, _B2, _B3) m) (fun x -> p x (the (fmlookup _A3 m x)))
+    ball (_A1, _A2) (fset (fmdom (_A1, _A2, _A4) (_B1, _B2, _B3) m)) (fun x -> p x (the (fmlookup _A3 m x)))
 
 
   let rec update _A k v x2 =
@@ -14416,408 +14414,31 @@ end = struct
 
   let rec int_of_rat x = fst (quotient_of x)
   let rec to_int _A x = int_of_rat (to_rat _A x)
-
-  let rec char_matrix _A a e =
-    plus_mata
-      _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
-        .numeral_neg_numeral
-        .semigroup_add_numeral
-        .plus_semigroup_add a
-      (smult_mat
-         _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-           .comm_semiring_1_comm_semiring_1_cancel
-           .comm_monoid_mult_comm_semiring_1
-           .dvd_comm_monoid_mult
-           .times_dvd
-         (uminus
-            _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
-              .group_add_neg_numeral
-              .uminus_group_add e)
-         (one_mat
-            ( _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
-                .numeral_neg_numeral
-                .one_numeral,
-              _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-                .comm_semiring_1_comm_semiring_1_cancel
-                .semiring_1_comm_semiring_1
-                .semiring_0_semiring_1
-                .mult_zero_semiring_0
-                .zero_mult_zero )
-            (dim_row a)))
-
-
-  let rec conjugate_vec _A v = vec (dim_vec v) (fun i -> conjugate _A (vec_index v i))
-  let rec plus_vec _A v_1 v_2 = vec (dim_vec v_2) (fun i -> plus _A (vec_index v_1 i) (vec_index v_2 i))
-
-  let rec adjuster _A n w x2 =
-    match (n, w, x2) with
-    | n, w, [] ->
-        zero_vec
-          _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-            .comm_semiring_1_cancel_semidom
-            .comm_semiring_1_comm_semiring_1_cancel
-            .semiring_1_comm_semiring_1
-            .semiring_0_semiring_1
-            .mult_zero_semiring_0
-            .zero_mult_zero n
-    | n, w, u :: us ->
-        plus_vec
-          _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
-            .neg_numeral_ring_1
-            .numeral_neg_numeral
-            .semigroup_add_numeral
-            .plus_semigroup_add
-          (smult_vec
-             _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-               .comm_semiring_1_cancel_semidom
-               .comm_semiring_1_comm_semiring_1_cancel
-               .comm_monoid_mult_comm_semiring_1
-               .dvd_comm_monoid_mult
-               .times_dvd
-             (divide _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
-                (uminus
-                   _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
-                     .ring_1_comm_ring_1
-                     .neg_numeral_ring_1
-                     .group_add_neg_numeral
-                     .uminus_group_add
-                   (scalar_prod
-                      _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                        .comm_semiring_1_cancel_semidom
-                        .comm_semiring_1_comm_semiring_1_cancel
-                        .semiring_1_comm_semiring_1
-                        .semiring_0_semiring_1 w
-                      (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring u)))
-                (scalar_prod
-                   _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                     .comm_semiring_1_cancel_semidom
-                     .comm_semiring_1_comm_semiring_1_cancel
-                     .semiring_1_comm_semiring_1
-                     .semiring_0_semiring_1 u
-                   (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring u)))
-             u)
-          (adjuster _A n w us)
-
-
-  let rec four_block_mat a b c d =
-    let nra = dim_row a in
-    let nrd = dim_row d in
-    let nca = dim_col a in
-    let ncd = dim_col d in
-    mat (plus_nata nra nrd) (plus_nata nca ncd) (fun (i, j) ->
-        if less_nat i nra then
-          if less_nat j nca then
-            index_mat a (i, j)
-          else
-            index_mat b (i, minus_nata j nca)
-        else if less_nat j nca then
-          index_mat c (minus_nata i nra, j)
-        else
-          index_mat d (minus_nata i nra, minus_nata j nca))
-
-
-  let rec of_integer_ca x = comp (of_inta ring_1_complex) (fun a -> Int_of_integer a) x
-
-  let rec basis_completion (_A1, _A2) v =
-    let n = dim_vec v in
-    let drop_index =
-      hda
-        (maps
-           (fun i ->
-             if
-               not
-                 (eq _A1 (vec_index v i)
-                    (zero
-                       _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_0_semiring_1
-                         .mult_zero_semiring_0
-                         .zero_mult_zero))
-             then
-               [ i ]
-             else
-               [])
-           (upt zero_nata n))
-    in
-    let a =
-      maps
-        (fun i ->
-          if not (equal_nata i drop_index) then
-            [ unit_vec _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.zero_neq_one_semiring_1 n i ]
-          else
-            [])
-        (upt zero_nata n)
-    in
-    v :: a
-
-
-  let rec vec_inv _A v =
-    smult_vec
-      _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-        .comm_semiring_1_cancel_semidom
-        .comm_semiring_1_comm_semiring_1_cancel
-        .comm_monoid_mult_comm_semiring_1
-        .dvd_comm_monoid_mult
-        .times_dvd
-      (divide _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
-         (one
-            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
-              .neg_numeral_ring_1
-              .numeral_neg_numeral
-              .one_numeral)
-         (scalar_prod
-            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-              .comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1 v
-            (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring v)))
-      (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring v)
-
-
-  let rec corthogonal_inv _A a = mat_of_rows (dim_row a) (map (vec_inv _A) (cols a))
-
-  let rec find_base_vector (_A1, _A2) a =
-    let pp =
-      pivot_positions_gen _A1
-        (zero
-           _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel
-             .semiring_1_comm_semiring_1
-             .semiring_0_semiring_1
-             .mult_zero_semiring_0
-             .zero_mult_zero)
-        a
-    in
-    let cands = filtera (fun j -> not (membera equal_nat (map snd pp) j)) (upt zero_nata (dim_col a)) in
-    non_pivot_base_gen
-      (uminus _A2.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add)
-      (zero
-         _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel
-           .semiring_1_comm_semiring_1
-           .semiring_0_semiring_1
-           .mult_zero_semiring_0
-           .zero_mult_zero)
-      (one _A2.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
-      a pp (hda cands)
-
-
-  let rec find_eigenvector (_A1, _A2) a e =
-    find_base_vector
-      (_A2, _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom)
-      (fst
-         (gauss_jordan (_A1, _A2) (char_matrix _A1 a e)
-            (zero_mat
-               _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-                 .comm_semiring_1_comm_semiring_1_cancel
-                 .semiring_1_comm_semiring_1
-                 .semiring_0_semiring_1
-                 .mult_zero_semiring_0
-                 .zero_mult_zero (dim_row a) zero_nata)))
-
-
-  let rec gram_schmidt_sub2 _A n us x2 =
-    match (n, us, x2) with
-    | n, us, [] -> []
-    | n, us, w :: ws ->
-        let u =
-          plus_vec
-            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
-              .neg_numeral_ring_1
-              .numeral_neg_numeral
-              .semigroup_add_numeral
-              .plus_semigroup_add (adjuster _A n w us) w
-        in
-        u :: gram_schmidt_sub2 _A n (u :: us) ws
-
-
-  let rec gram_schmidt _A n ws = gram_schmidt_sub2 _A n [] ws
-
-  let rec schur_decomposition (_A1, _A2) a x1 =
-    match (a, x1) with
-    | a, [] ->
-        ( a,
-          ( one_mat
-              ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
-                  .ring_1_comm_ring_1
-                  .neg_numeral_ring_1
-                  .numeral_neg_numeral
-                  .one_numeral,
-                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                  .comm_semiring_1_cancel_semidom
-                  .comm_semiring_1_comm_semiring_1_cancel
-                  .semiring_1_comm_semiring_1
-                  .semiring_0_semiring_1
-                  .mult_zero_semiring_0
-                  .zero_mult_zero )
-              (dim_row a),
-            one_mat
-              ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
-                  .ring_1_comm_ring_1
-                  .neg_numeral_ring_1
-                  .numeral_neg_numeral
-                  .one_numeral,
-                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                  .comm_semiring_1_cancel_semidom
-                  .comm_semiring_1_comm_semiring_1_cancel
-                  .semiring_1_comm_semiring_1
-                  .semiring_0_semiring_1
-                  .mult_zero_semiring_0
-                  .zero_mult_zero )
-              (dim_row a) ) )
-    | a, e :: es ->
-        let n = dim_row a in
-        let n1 = minus_nata n one_nata in
-        let v = find_eigenvector (_A1.field_conjugatable_field, _A2) a e in
-        let ws =
-          gram_schmidt _A1 n
-            (basis_completion
-               ( _A2,
-                 _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
-                   .ring_1_comm_ring_1 )
-               v)
-        in
-        let w = mat_of_cols n ws in
-        let wa = corthogonal_inv _A1 w in
-        let aa =
-          times_mat
-            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-              .comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-            (times_mat
-               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                 .comm_semiring_1_cancel_semidom
-                 .comm_semiring_1_comm_semiring_1_cancel
-                 .semiring_1_comm_semiring_1
-                 .semiring_0_semiring_1 wa a)
-            w
-        in
-        let a1, (a2, (a0, a3)) = split_block aa one_nata one_nata in
-        let b, (p, q) = schur_decomposition (_A1, _A2) a3 es in
-        let z_row =
-          zero_mat
-            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-              .comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-              .mult_zero_semiring_0
-              .zero_mult_zero one_nata n1
-        in
-        let z_col =
-          zero_mat
-            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-              .comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-              .mult_zero_semiring_0
-              .zero_mult_zero n1 one_nata
-        in
-        let one_1 =
-          one_mat
-            ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
-                .ring_1_comm_ring_1
-                .neg_numeral_ring_1
-                .numeral_neg_numeral
-                .one_numeral,
-              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                .comm_semiring_1_cancel_semidom
-                .comm_semiring_1_comm_semiring_1_cancel
-                .semiring_1_comm_semiring_1
-                .semiring_0_semiring_1
-                .mult_zero_semiring_0
-                .zero_mult_zero )
-            one_nata
-        in
-        ( four_block_mat a1
-            (times_mat
-               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                 .comm_semiring_1_cancel_semidom
-                 .comm_semiring_1_comm_semiring_1_cancel
-                 .semiring_1_comm_semiring_1
-                 .semiring_0_semiring_1 a2 p)
-            a0 b,
-          ( times_mat
-              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                .comm_semiring_1_cancel_semidom
-                .comm_semiring_1_comm_semiring_1_cancel
-                .semiring_1_comm_semiring_1
-                .semiring_0_semiring_1 w (four_block_mat one_1 z_row z_col p),
-            times_mat
-              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
-                .comm_semiring_1_cancel_semidom
-                .comm_semiring_1_comm_semiring_1_cancel
-                .semiring_1_comm_semiring_1
-                .semiring_0_semiring_1 (four_block_mat one_1 z_row z_col q) wa ) )
-
-
-  let rec schur_decomp a es =
-    let b, (p, q) =
-      schur_decomposition (conjugatable_field_complex, equal_complex) (map_mat of_integer_ca a) es
-    in
-    (b, (p, q))
-
-
-  let imaginary_unit : complex = Complex (zero_reala, one_reala)
-  let rec char_poly_int x = char_poly (equal_integer, idom_divide_integer) x
-
-  let rec upper_triangular (_A1, _A2) a =
-    all_interval_nat
-      (fun i -> all_interval_nat (fun j -> eq _A2 (index_mat a (i, j)) (zero _A1)) zero_nata i)
-      zero_nata (dim_row a)
-
-
-  let rec common_denom xs =
-    let nds = map quotient_of xs in
-    let denom = lcms semiring_gcd_int (map snd nds) in
-    let a = map (fun (n, a) -> divide_inta (times_inta n denom) a) nds in
-    (denom, a)
-
-
   let rec is_int_rat x = equal_inta (snd (quotient_of x)) one_inta
 
-  let rec gauss_jordan_single (_A1, _A2) a =
-    fst
-      (gauss_jordan (_A1, _A2) a
-         (zero_mat
-            _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-              .mult_zero_semiring_0
-              .zero_mult_zero (dim_row a) zero_nata))
-
-
-  let rec kernel_dim (_A1, _A2) a =
-    minus_nata (dim_col a)
-      (size_list
-         (pivot_positions_gen _A2
-            (zero
-               _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-                 .comm_semiring_1_comm_semiring_1_cancel
-                 .semiring_1_comm_semiring_1
-                 .semiring_0_semiring_1
-                 .mult_zero_semiring_0
-                 .zero_mult_zero)
-            (gauss_jordan_single (_A1, _A2) a)))
-
-
-  let rec show_complex x =
-    let r = re x in
-    let i = im x in
-    if equal_reala i zero_reala then
-      show_real r
-    else if equal_reala r zero_reala then
-      show_real i @ [ Chara (true, false, false, true, false, true, true, false) ]
-    else
-      [ Chara (false, false, false, true, false, true, false, false) ]
-      @ show_real r
-      @ [ Chara (true, true, false, true, false, true, false, false) ]
-      @ show_real i
-      @ [
-          Chara (true, false, false, true, false, true, true, false);
-          Chara (true, false, false, true, false, true, false, false);
-        ]
+  let rec initial_root_problem_complex p =
+    let n = degreea zero_complex p in
+    let cs = coeffs zero_complex p in
+    let rcs =
+      remdups equal_complex (filtera (fun c -> not (is_rat_complexa c && is_int_rat (to_rat_complex c))) cs)
+    in
+    let pairs = map (fun c -> (c, min_int_poly_complex c)) rcs in
+    let spairs = sort_key linorder_nat (fun (_, a) -> degreea zero_int a) pairs in
+    let triples = zip (upt zero_nata (size_list spairs)) spairs in
+    let mpoly =
+      sum_list
+        (monoid_add_mpoly (monoid_add_int, equal_int))
+        (map
+           (fun i ->
+             let c = coeffa zero_complex p i in
+             times_mpolya (equal_int, semiring_0_int)
+               (monom (zero_int, equal_int) (single (zero_nat, equal_nat) zero_nata i) one_inta)
+               (match find (fun (_, (d, _)) -> equal_complexa d c) triples with
+               | None -> const (zero_int, equal_int) (to_int is_rat_complex c)
+               | Some (j, _) -> var (one_int, zero_int, equal_int) (suc j)))
+           (upt zero_nata (suc n)))
+    in
+    (mpoly, triples)
 
 
   let rec basic_div_exp _A x y n =
@@ -14835,175 +14456,6 @@ end = struct
            .semiring_numeral_semiring_1
            .monoid_mult_semiring_numeral y (minus_nata n one_nata))
 
-
-  let rec rat_to_int_poly p =
-    let ais = coeffs zero_rat p in
-    let d = fst (common_denom ais) in
-    ( d,
-      map_poly zero_rat (zero_int, equal_int)
-        (fun x ->
-          let pa, a = quotient_of x in
-          divide_inta (times_inta pa d) a)
-        p )
-
-
-  let rec showsp_complex p x y = show_complex x @ y
-
-  let rec mat_addcol _A aa k l a =
-    mat (dim_row a) (dim_col a) (fun (i, j) ->
-        if equal_nata k j then
-          plus
-            _A.semiring_numeral_semiring_1.numeral_semiring_numeral.semigroup_add_numeral.plus_semigroup_add
-            (times _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power
-               aa
-               (index_mat a (i, l)))
-            (index_mat a (i, j))
-        else
-          index_mat a (i, j))
-
-
-  let rec mat_multcol _A k aa a =
-    mat (dim_row a) (dim_col a) (fun (i, j) ->
-        if equal_nata k j then
-          times _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power aa
-            (index_mat a (i, j))
-        else
-          index_mat a (i, j))
-
-
-  let rec of_rat _A p =
-    let a, b = quotient_of p in
-    divide _A.field_field_char_0.division_ring_field.inverse_division_ring.divide_inverse
-      (of_inta _A.ring_char_0_field_char_0.ring_1_ring_char_0 a)
-      (of_inta _A.ring_char_0_field_char_0.ring_1_ring_char_0 b)
-
-
-  let rec showsp_real_alg p x y = show_real_alg x @ y
-
-  let rec mat_swapcols k l a =
-    mat (dim_row a) (dim_col a) (fun (i, j) ->
-        if equal_nata k j then
-          index_mat a (i, l)
-        else if equal_nata l j then
-          index_mat a (i, k)
-        else
-          index_mat a (i, j))
-
-
-  let rec dim_gen_eigenspace (_A1, _A2) a ev k =
-    kernel_dim (_A1, _A2)
-      (pow_mat
-         _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-           .comm_semiring_1_comm_semiring_1_cancel
-           .semiring_1_comm_semiring_1 (char_matrix _A1 a ev) k)
-
-
-  let rec dim_gen_eigenspace_ca x = dim_gen_eigenspace (field_complex, equal_complex) x
-  let rec gauss_jordan_single_ca x = gauss_jordan_single (field_complex, equal_complex) x
-  let rec swap_cols_rows k l a = mat_swaprows k l (mat_swapcols k l a)
-
-  let rec add_col_sub_row _A aa k l a =
-    mat_addrow_gen
-      (plus _A.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add)
-      (times
-         _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_numeral_semiring_1
-           .monoid_mult_semiring_numeral
-           .power_monoid_mult
-           .times_power)
-      (uminus _A.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add aa)
-      k l
-      (mat_addcol _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel aa l k a)
-
-
-  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-      _A
-      (Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-        x) =
-    x
-
-
-  let rec sel12_aux _A xa =
-    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list
-      (let _, x2 =
-         rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-           _A xa
-       in
-       x2)
-
-
-  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A
-      (Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list x) =
-    x
-
-
-  let rec sel22a _A xa =
-    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list
-      (match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
-      | [] ->
-          rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A (failwith "undefined")
-      | _ :: x22 -> x22)
-
-
-  let rec rep_rf_poly _A (Abs_rf_poly x) = x
-
-  let rec sel21_aux _A xa =
-    Abs_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod
-      (match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
-      | [] -> map_prod (rep_rf_poly _A) id (failwith "undefined")
-      | x21 :: _ -> x21)
-
-
-  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A
-      (Abs_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod x) =
-    x
-
-
-  let rec sel12 _A xa =
-    let _, x2 = rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A xa in
-    x2
-
-
-  let rec sel11 _A xa =
-    Abs_rf_poly
-      (let x1, _ = rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A xa in
-       x1)
-
-
-  let rec rep_isomb _A x = (sel11 _A x, sel12 _A x)
-  let rec sel21b _A x = rep_isomb _A (sel21_aux _A x)
-
-  let rec dis1b _A xa =
-    match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
-    | [] -> true
-    | _ :: _ -> false
-
-
-  let rec rep_isomc _A x =
-    if dis1b _A x then
-      []
-    else
-      sel21b _A x :: rep_isomc _A (sel22a _A x)
-
-
-  let rec sel12a _A x = rep_isomc _A (sel12_aux _A x)
-
-  let rec sel11a _A xa =
-    let x1, _ =
-      rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-        _A xa
-    in
-    x1
-
-
-  let rec rep_isomd _A x = (sel11a _A x, sel12a _A x)
-  let rec rep_rf_polys _A (Abs_rf_polys x) = x
-
-  let rec yun_rf_aux _A x =
-    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-      (rep_rf_polys _A x)
-
-
-  let rec yun_rf _A x = rep_isomd _A (yun_rf_aux _A x)
 
   let rec resultant_impl_rec_basic (_A1, _A2) gi_1 gi ni_1 d1_1 hi_2 =
     let ni =
@@ -15439,6 +14891,802 @@ end = struct
             .uminus_group_add res
 
 
+  let rec resultant_mpoly_poly (_A1, _A2, _A3, _A4, _A5) x p q =
+    resultant_impl_basic
+      ( equal_mpoly
+          ( _A1,
+            _A2,
+            _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+              .mult_zero_semiring_0
+              .zero_mult_zero,
+            _A3,
+            _A5 ),
+        idom_divide_mpoly (_A1, _A2, _A3, _A4, _A5) )
+      (mpoly_to_mpoly_poly (_A1, _A2, _A3, _A4.idom_idom_divide.comm_ring_1_idom, _A5) x p)
+      (map_poly
+         _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+           .comm_semiring_1_comm_semiring_1_cancel
+           .semiring_1_comm_semiring_1
+           .semiring_0_semiring_1
+           .mult_zero_semiring_0
+           .zero_mult_zero
+         ( zero_mpoly
+             _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+               .comm_semiring_1_comm_semiring_1_cancel
+               .semiring_1_comm_semiring_1
+               .semiring_0_semiring_1
+               .mult_zero_semiring_0
+               .zero_mult_zero,
+           equal_mpoly
+             ( _A1,
+               _A2,
+               _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+                 .comm_semiring_1_comm_semiring_1_cancel
+                 .semiring_1_comm_semiring_1
+                 .semiring_0_semiring_1
+                 .mult_zero_semiring_0
+                 .zero_mult_zero,
+               _A3,
+               _A5 ) )
+         (const
+            ( _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+                .comm_semiring_1_comm_semiring_1_cancel
+                .semiring_1_comm_semiring_1
+                .semiring_0_semiring_1
+                .mult_zero_semiring_0
+                .zero_mult_zero,
+              _A3 ))
+         q)
+
+
+  let rec mpoly_to_poly (_A1, _A2, _A3, _A4, _A5) x p =
+    Poly
+      (let i =
+         image
+           ( ceq_poly_mapping
+               (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
+               (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
+             ccompare_poly_mapping )
+           (ceq_nat, ccompare_nat, set_impl_nat)
+           (fun m -> lookupa equal_nat zero_nat m x)
+           (filter
+              ( ceq_poly_mapping
+                  (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
+                  (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
+                ccompare_poly_mapping )
+              (fun m ->
+                ball (ceq_nat, ccompare_nat)
+                  (keysb
+                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
+                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat)
+                     m)
+                  (fun y -> equal_nata y x))
+              (keysb
+                 ( ceq_poly_mapping
+                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
+                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
+                   ccompare_poly_mapping,
+                   equal_poly_mapping
+                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
+                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
+                   set_impl_poly_mapping )
+                 (_A1, _A2, _A3.monoid_add_comm_monoid_add.zero_monoid_add, _A4, _A5)
+                 (mapping_of _A3.monoid_add_comm_monoid_add.zero_monoid_add p)))
+       in
+       if
+         set_eq (cenum_nat, ceq_nat, ccompare_nat) i
+           (set_empty (ceq_nat, ccompare_nat) (of_phantom set_impl_nata))
+       then
+         []
+       else
+         map
+           (fun n ->
+             coeff _A3.monoid_add_comm_monoid_add.zero_monoid_add p (single (zero_nat, equal_nat) x n))
+           (upt zero_nata (plus_nata (maxa (ceq_nat, ccompare_nat, lattice_nat, linorder_nat) i) one_nata)))
+
+
+  let rec eliminate_aux_vars (_A1, _A2, _A3, _A4, _A5) p qs x2 =
+    match (p, qs, x2) with
+    | p, qs, [] ->
+        mpoly_to_poly
+          ( _A1,
+            _A2,
+            _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+              .comm_monoid_add_semiring_0,
+            _A3,
+            _A5 )
+          zero_nata p
+    | p, qs, i :: is ->
+        eliminate_aux_vars (_A1, _A2, _A3, _A4, _A5)
+          (resultant_mpoly_poly (_A1, _A2, _A3, _A4, _A5) (suc i) p (qs i))
+          qs is
+
+
+  let rec representative_poly_complex p =
+    let mp, triples = initial_root_problem_complex p in
+    let is = map fst triples in
+    let qs j = snd (snd (nth triples j)) in
+    eliminate_aux_vars (ceq_int, ccompare_int, equal_int, idom_divide_int, set_impl_int) mp qs is
+
+
+  let rec roots_of_poly_dummy (_A1, _A2) p =
+    failwith "roots-of-poly-dummy" (fun _ -> roots_of_poly_dummy (_A1, _A2) p)
+
+
+  let rec rep_rf_poly _A (Abs_rf_poly x) = x
+
+  let rec roots_of_complex_rf_poly_part1 xa =
+    Abs_genuine_roots_aux
+      (if list_all algebraic_complex (coeffs zero_complex (rep_rf_poly idom_complex xa)) then
+         let q = representative_poly_complex (rep_rf_poly idom_complex xa) in
+         let zeros = complex_roots_of_int_poly q in
+         ( rep_rf_poly idom_complex xa,
+           ( zeros,
+             ( degreea zero_complex (rep_rf_poly idom_complex xa),
+               filter_fun_complex (rep_rf_poly idom_complex xa) ) ) )
+       else
+         ( rep_rf_poly idom_complex xa,
+           ( roots_of_poly_dummy
+               (comm_ring_1_complex, ring_no_zero_divisors_complex)
+               (rep_rf_poly idom_complex xa),
+             ( degreea zero_complex (rep_rf_poly idom_complex xa),
+               filter_fun_complex (rep_rf_poly idom_complex xa) ) ) ))
+
+
+  let rec roots_of_complex_rf_poly p =
+    genuine_roots_impl field_char_0_complex (roots_of_complex_rf_poly_part1 p)
+
+
+  let rec yun_factorization (_A1, _A2, _A3) gcd p =
+    if
+      is_zero
+        _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
+          .semiring_Gcd_factorial_semiring_gcd
+          .gcd_semiring_Gcd
+          .gcd_Gcd
+          .zero_gcd p
+    then
+      ( zero
+          _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
+            .semiring_Gcd_factorial_semiring_gcd
+            .gcd_semiring_Gcd
+            .gcd_Gcd
+            .zero_gcd,
+        [] )
+    else
+      let c =
+        coeffa
+          _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
+            .semiring_Gcd_factorial_semiring_gcd
+            .gcd_semiring_Gcd
+            .gcd_Gcd
+            .zero_gcd p
+          (degreea
+             _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
+               .semiring_Gcd_factorial_semiring_gcd
+               .gcd_semiring_Gcd
+               .gcd_Gcd
+               .zero_gcd p)
+      in
+      let q =
+        smult
+          ( _A3,
+            _A1.euclidean_ring_euclidean_ring_gcd.idom_modulo_euclidean_ring.idom_divide_idom_modulo
+              .idom_idom_divide
+              .semidom_idom
+              .comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .comm_semiring_0_comm_semiring_1,
+            _A1.euclidean_ring_euclidean_ring_gcd.idom_modulo_euclidean_ring.idom_divide_idom_modulo
+              .idom_idom_divide
+              .semidom_idom
+              .semiring_1_no_zero_divisors_semidom
+              .semiring_no_zero_divisors_semiring_1_no_zero_divisors )
+          (inverse _A2.field_field_char_0.division_ring_field.inverse_division_ring c)
+          p
+      in
+      (c, yun_monic_factorization (_A1.factorial_ring_gcd_euclidean_ring_gcd, _A3) gcd q)
+
+
+  let rec yun_polys (_A1, _A2, _A3, _A4) xa =
+    Abs_rf_polys
+      (yun_factorization (_A1, _A2, _A4) (gcd_polyc (_A1.factorial_ring_gcd_euclidean_ring_gcd, _A3, _A4)) xa)
+
+
+  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
+      _A
+      (Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
+        x) =
+    x
+
+
+  let rec sel12_aux _A xa =
+    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list
+      (let _, x2 =
+         rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
+           _A xa
+       in
+       x2)
+
+
+  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A
+      (Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list x) =
+    x
+
+
+  let rec sel22a _A xa =
+    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list
+      (match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
+      | [] ->
+          rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A (failwith "undefined")
+      | _ :: x22 -> x22)
+
+
+  let rec sel21_aux _A xa =
+    Abs_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod
+      (match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
+      | [] -> map_prod (rep_rf_poly _A) id (failwith "undefined")
+      | x21 :: _ -> x21)
+
+
+  let rec rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A
+      (Abs_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod x) =
+    x
+
+
+  let rec sel12 _A xa =
+    let _, x2 = rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A xa in
+    x2
+
+
+  let rec sel11 _A xa =
+    Abs_rf_poly
+      (let x1, _ = rep_nat_x_idom_x_x_a_rf_poly_prod_x_x_nat_x_idom_x_x_a_poly_prod _A xa in
+       x1)
+
+
+  let rec rep_isomb _A x = (sel11 _A x, sel12 _A x)
+  let rec sel21b _A x = rep_isomb _A (sel21_aux _A x)
+
+  let rec dis1b _A xa =
+    match rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_x_nat_x_idom_x_x_a_poly_prod_list _A xa with
+    | [] -> true
+    | _ :: _ -> false
+
+
+  let rec rep_isomc _A x =
+    if dis1b _A x then
+      []
+    else
+      sel21b _A x :: rep_isomc _A (sel22a _A x)
+
+
+  let rec sel12a _A x = rep_isomc _A (sel12_aux _A x)
+
+  let rec sel11a _A xa =
+    let x1, _ =
+      rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
+        _A xa
+    in
+    x1
+
+
+  let rec rep_isomd _A x = (sel11a _A x, sel12a _A x)
+  let rec rep_rf_polys _A (Abs_rf_polys x) = x
+
+  let rec yun_rf_aux _A x =
+    Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
+      (rep_rf_polys _A x)
+
+
+  let rec yun_rf _A x = rep_isomd _A (yun_rf_aux _A x)
+
+  let rec factor_complex_main p =
+    let c, pis =
+      yun_rf idom_complex
+        (yun_polys
+           ( euclidean_ring_gcd_complex,
+             field_char_0_complex,
+             semiring_gcd_mult_normalize_complex,
+             equal_complex )
+           p)
+    in
+    (c, maps (fun (pa, i) -> map (fun r -> (r, i)) (roots_of_complex_rf_poly pa)) pis)
+
+
+  let rec factor_poly xs =
+    factor_complex_main
+      (poly_of_list
+         (comm_monoid_add_complex, equal_complex)
+         (map (comp (of_inta ring_1_complex) (fun a -> Int_of_integer a)) xs))
+
+
+  let rec char_matrix _A a e =
+    plus_mata
+      _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
+        .numeral_neg_numeral
+        .semigroup_add_numeral
+        .plus_semigroup_add a
+      (smult_mat
+         _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+           .comm_semiring_1_comm_semiring_1_cancel
+           .comm_monoid_mult_comm_semiring_1
+           .dvd_comm_monoid_mult
+           .times_dvd
+         (uminus
+            _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
+              .group_add_neg_numeral
+              .uminus_group_add e)
+         (one_mat
+            ( _A.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1.neg_numeral_ring_1
+                .numeral_neg_numeral
+                .one_numeral,
+              _A.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+                .comm_semiring_1_comm_semiring_1_cancel
+                .semiring_1_comm_semiring_1
+                .semiring_0_semiring_1
+                .mult_zero_semiring_0
+                .zero_mult_zero )
+            (dim_row a)))
+
+
+  let rec conjugate_vec _A v = vec (dim_vec v) (fun i -> conjugate _A (vec_index v i))
+  let rec plus_vec _A v_1 v_2 = vec (dim_vec v_2) (fun i -> plus _A (vec_index v_1 i) (vec_index v_2 i))
+
+  let rec adjuster _A n w x2 =
+    match (n, w, x2) with
+    | n, w, [] ->
+        zero_vec
+          _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+            .comm_semiring_1_cancel_semidom
+            .comm_semiring_1_comm_semiring_1_cancel
+            .semiring_1_comm_semiring_1
+            .semiring_0_semiring_1
+            .mult_zero_semiring_0
+            .zero_mult_zero n
+    | n, w, u :: us ->
+        plus_vec
+          _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+            .neg_numeral_ring_1
+            .numeral_neg_numeral
+            .semigroup_add_numeral
+            .plus_semigroup_add
+          (smult_vec
+             _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+               .comm_semiring_1_cancel_semidom
+               .comm_semiring_1_comm_semiring_1_cancel
+               .comm_monoid_mult_comm_semiring_1
+               .dvd_comm_monoid_mult
+               .times_dvd
+             (divide _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
+                (uminus
+                   _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
+                     .ring_1_comm_ring_1
+                     .neg_numeral_ring_1
+                     .group_add_neg_numeral
+                     .uminus_group_add
+                   (scalar_prod
+                      _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                        .comm_semiring_1_cancel_semidom
+                        .comm_semiring_1_comm_semiring_1_cancel
+                        .semiring_1_comm_semiring_1
+                        .semiring_0_semiring_1 w
+                      (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring u)))
+                (scalar_prod
+                   _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                     .comm_semiring_1_cancel_semidom
+                     .comm_semiring_1_comm_semiring_1_cancel
+                     .semiring_1_comm_semiring_1
+                     .semiring_0_semiring_1 u
+                   (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring u)))
+             u)
+          (adjuster _A n w us)
+
+
+  let rec four_block_mat a b c d =
+    let nra = dim_row a in
+    let nrd = dim_row d in
+    let nca = dim_col a in
+    let ncd = dim_col d in
+    mat (plus_nata nra nrd) (plus_nata nca ncd) (fun (i, j) ->
+        if less_nat i nra then
+          if less_nat j nca then
+            index_mat a (i, j)
+          else
+            index_mat b (i, minus_nata j nca)
+        else if less_nat j nca then
+          index_mat c (minus_nata i nra, j)
+        else
+          index_mat d (minus_nata i nra, minus_nata j nca))
+
+
+  let rec of_integer_ca x = comp (of_inta ring_1_complex) (fun a -> Int_of_integer a) x
+
+  let rec basis_completion (_A1, _A2) v =
+    let n = dim_vec v in
+    let drop_index =
+      hda
+        (maps
+           (fun i ->
+             if
+               not
+                 (eq _A1 (vec_index v i)
+                    (zero
+                       _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_0_semiring_1
+                         .mult_zero_semiring_0
+                         .zero_mult_zero))
+             then
+               [ i ]
+             else
+               [])
+           (upt zero_nata n))
+    in
+    let a =
+      maps
+        (fun i ->
+          if not (equal_nata i drop_index) then
+            [ unit_vec _A2.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.zero_neq_one_semiring_1 n i ]
+          else
+            [])
+        (upt zero_nata n)
+    in
+    v :: a
+
+
+  let rec vec_inv _A v =
+    smult_vec
+      _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+        .comm_semiring_1_cancel_semidom
+        .comm_semiring_1_comm_semiring_1_cancel
+        .comm_monoid_mult_comm_semiring_1
+        .dvd_comm_monoid_mult
+        .times_dvd
+      (divide _A.field_conjugatable_field.division_ring_field.inverse_division_ring.divide_inverse
+         (one
+            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+              .neg_numeral_ring_1
+              .numeral_neg_numeral
+              .one_numeral)
+         (scalar_prod
+            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+              .comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1 v
+            (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring v)))
+      (conjugate_vec _A.conjugatable_ring_conjugatable_field.conjugate_conjugatable_ring v)
+
+
+  let rec corthogonal_inv _A a = mat_of_rows (dim_row a) (map (vec_inv _A) (cols a))
+
+  let rec find_base_vector (_A1, _A2) a =
+    let pp =
+      pivot_positions_gen _A1
+        (zero
+           _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel
+             .semiring_1_comm_semiring_1
+             .semiring_0_semiring_1
+             .mult_zero_semiring_0
+             .zero_mult_zero)
+        a
+    in
+    let cands = filtera (fun j -> not (membera equal_nat (map snd pp) j)) (upt zero_nata (dim_col a)) in
+    non_pivot_base_gen
+      (uminus _A2.ring_1_comm_ring_1.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add)
+      (zero
+         _A2.comm_semiring_1_cancel_comm_ring_1.comm_semiring_1_comm_semiring_1_cancel
+           .semiring_1_comm_semiring_1
+           .semiring_0_semiring_1
+           .mult_zero_semiring_0
+           .zero_mult_zero)
+      (one _A2.ring_1_comm_ring_1.neg_numeral_ring_1.numeral_neg_numeral.one_numeral)
+      a pp (hda cands)
+
+
+  let rec find_eigenvector (_A1, _A2) a e =
+    find_base_vector
+      (_A2, _A1.idom_divide_field.idom_idom_divide.comm_ring_1_idom)
+      (fst
+         (gauss_jordan (_A1, _A2) (char_matrix _A1 a e)
+            (zero_mat
+               _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+                 .comm_semiring_1_comm_semiring_1_cancel
+                 .semiring_1_comm_semiring_1
+                 .semiring_0_semiring_1
+                 .mult_zero_semiring_0
+                 .zero_mult_zero (dim_row a) zero_nata)))
+
+
+  let rec gram_schmidt_sub2 _A n us x2 =
+    match (n, us, x2) with
+    | n, us, [] -> []
+    | n, us, w :: ws ->
+        let u =
+          plus_vec
+            _A.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom.ring_1_comm_ring_1
+              .neg_numeral_ring_1
+              .numeral_neg_numeral
+              .semigroup_add_numeral
+              .plus_semigroup_add (adjuster _A n w us) w
+        in
+        u :: gram_schmidt_sub2 _A n (u :: us) ws
+
+
+  let rec gram_schmidt _A n ws = gram_schmidt_sub2 _A n [] ws
+
+  let rec schur_decomposition (_A1, _A2) a x1 =
+    match (a, x1) with
+    | a, [] ->
+        ( a,
+          ( one_mat
+              ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
+                  .ring_1_comm_ring_1
+                  .neg_numeral_ring_1
+                  .numeral_neg_numeral
+                  .one_numeral,
+                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                  .comm_semiring_1_cancel_semidom
+                  .comm_semiring_1_comm_semiring_1_cancel
+                  .semiring_1_comm_semiring_1
+                  .semiring_0_semiring_1
+                  .mult_zero_semiring_0
+                  .zero_mult_zero )
+              (dim_row a),
+            one_mat
+              ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
+                  .ring_1_comm_ring_1
+                  .neg_numeral_ring_1
+                  .numeral_neg_numeral
+                  .one_numeral,
+                _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                  .comm_semiring_1_cancel_semidom
+                  .comm_semiring_1_comm_semiring_1_cancel
+                  .semiring_1_comm_semiring_1
+                  .semiring_0_semiring_1
+                  .mult_zero_semiring_0
+                  .zero_mult_zero )
+              (dim_row a) ) )
+    | a, e :: es ->
+        let n = dim_row a in
+        let n1 = minus_nata n one_nata in
+        let v = find_eigenvector (_A1.field_conjugatable_field, _A2) a e in
+        let ws =
+          gram_schmidt _A1 n
+            (basis_completion
+               ( _A2,
+                 _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
+                   .ring_1_comm_ring_1 )
+               v)
+        in
+        let w = mat_of_cols n ws in
+        let wa = corthogonal_inv _A1 w in
+        let aa =
+          times_mat
+            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+              .comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+            (times_mat
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                 .comm_semiring_1_cancel_semidom
+                 .comm_semiring_1_comm_semiring_1_cancel
+                 .semiring_1_comm_semiring_1
+                 .semiring_0_semiring_1 wa a)
+            w
+        in
+        let a1, (a2, (a0, a3)) = split_block aa one_nata one_nata in
+        let b, (p, q) = schur_decomposition (_A1, _A2) a3 es in
+        let z_row =
+          zero_mat
+            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+              .comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+              .mult_zero_semiring_0
+              .zero_mult_zero one_nata n1
+        in
+        let z_col =
+          zero_mat
+            _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+              .comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+              .mult_zero_semiring_0
+              .zero_mult_zero n1 one_nata
+        in
+        let one_1 =
+          one_mat
+            ( _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.comm_ring_1_idom
+                .ring_1_comm_ring_1
+                .neg_numeral_ring_1
+                .numeral_neg_numeral
+                .one_numeral,
+              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                .comm_semiring_1_cancel_semidom
+                .comm_semiring_1_comm_semiring_1_cancel
+                .semiring_1_comm_semiring_1
+                .semiring_0_semiring_1
+                .mult_zero_semiring_0
+                .zero_mult_zero )
+            one_nata
+        in
+        ( four_block_mat a1
+            (times_mat
+               _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                 .comm_semiring_1_cancel_semidom
+                 .comm_semiring_1_comm_semiring_1_cancel
+                 .semiring_1_comm_semiring_1
+                 .semiring_0_semiring_1 a2 p)
+            a0 b,
+          ( times_mat
+              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                .comm_semiring_1_cancel_semidom
+                .comm_semiring_1_comm_semiring_1_cancel
+                .semiring_1_comm_semiring_1
+                .semiring_0_semiring_1 w (four_block_mat one_1 z_row z_col p),
+            times_mat
+              _A1.field_conjugatable_field.idom_divide_field.idom_idom_divide.semidom_idom
+                .comm_semiring_1_cancel_semidom
+                .comm_semiring_1_comm_semiring_1_cancel
+                .semiring_1_comm_semiring_1
+                .semiring_0_semiring_1 (four_block_mat one_1 z_row z_col q) wa ) )
+
+
+  let rec schur_decomp a es =
+    let b, (p, q) =
+      schur_decomposition (conjugatable_field_complex, equal_complex) (map_mat of_integer_ca a) es
+    in
+    (b, (p, q))
+
+
+  let imaginary_unit : complex = Complex (zero_reala, one_reala)
+  let rec char_poly_int x = char_poly (equal_integer, idom_divide_integer) x
+
+  let rec upper_triangular (_A1, _A2) a =
+    all_interval_nat
+      (fun i -> all_interval_nat (fun j -> eq _A2 (index_mat a (i, j)) (zero _A1)) zero_nata i)
+      zero_nata (dim_row a)
+
+
+  let rec common_denom xs =
+    let nds = map quotient_of xs in
+    let denom = lcms semiring_gcd_int (map snd nds) in
+    let a = map (fun (n, a) -> divide_inta (times_inta n denom) a) nds in
+    (denom, a)
+
+
+  let rec gauss_jordan_single (_A1, _A2) a =
+    fst
+      (gauss_jordan (_A1, _A2) a
+         (zero_mat
+            _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+              .comm_semiring_1_comm_semiring_1_cancel
+              .semiring_1_comm_semiring_1
+              .semiring_0_semiring_1
+              .mult_zero_semiring_0
+              .zero_mult_zero (dim_row a) zero_nata))
+
+
+  let rec kernel_dim (_A1, _A2) a =
+    minus_nata (dim_col a)
+      (size_list
+         (pivot_positions_gen _A2
+            (zero
+               _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+                 .comm_semiring_1_comm_semiring_1_cancel
+                 .semiring_1_comm_semiring_1
+                 .semiring_0_semiring_1
+                 .mult_zero_semiring_0
+                 .zero_mult_zero)
+            (gauss_jordan_single (_A1, _A2) a)))
+
+
+  let rec show_complex x =
+    let r = re x in
+    let i = im x in
+    if equal_reala i zero_reala then
+      show_real r
+    else if equal_reala r zero_reala then
+      show_real i @ [ Chara (true, false, false, true, false, true, true, false) ]
+    else
+      [ Chara (false, false, false, true, false, true, false, false) ]
+      @ show_real r
+      @ [ Chara (true, true, false, true, false, true, false, false) ]
+      @ show_real i
+      @ [
+          Chara (true, false, false, true, false, true, true, false);
+          Chara (true, false, false, true, false, true, false, false);
+        ]
+
+
+  let rec rat_to_int_poly p =
+    let ais = coeffs zero_rat p in
+    let d = fst (common_denom ais) in
+    ( d,
+      map_poly zero_rat (zero_int, equal_int)
+        (fun x ->
+          let pa, a = quotient_of x in
+          divide_inta (times_inta pa d) a)
+        p )
+
+
+  let rec showsp_complex p x y = show_complex x @ y
+
+  let rec mat_addcol _A aa k l a =
+    mat (dim_row a) (dim_col a) (fun (i, j) ->
+        if equal_nata k j then
+          plus
+            _A.semiring_numeral_semiring_1.numeral_semiring_numeral.semigroup_add_numeral.plus_semigroup_add
+            (times _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power
+               aa
+               (index_mat a (i, l)))
+            (index_mat a (i, j))
+        else
+          index_mat a (i, j))
+
+
+  let rec mat_multcol _A k aa a =
+    mat (dim_row a) (dim_col a) (fun (i, j) ->
+        if equal_nata k j then
+          times _A.semiring_numeral_semiring_1.monoid_mult_semiring_numeral.power_monoid_mult.times_power aa
+            (index_mat a (i, j))
+        else
+          index_mat a (i, j))
+
+
+  let rec of_rat _A p =
+    let a, b = quotient_of p in
+    divide _A.field_field_char_0.division_ring_field.inverse_division_ring.divide_inverse
+      (of_inta _A.ring_char_0_field_char_0.ring_1_ring_char_0 a)
+      (of_inta _A.ring_char_0_field_char_0.ring_1_ring_char_0 b)
+
+
+  let rec showsp_real_alg p x y = show_real_alg x @ y
+
+  let rec mat_swapcols k l a =
+    mat (dim_row a) (dim_col a) (fun (i, j) ->
+        if equal_nata k j then
+          index_mat a (i, l)
+        else if equal_nata l j then
+          index_mat a (i, k)
+        else
+          index_mat a (i, j))
+
+
+  let rec dim_gen_eigenspace (_A1, _A2) a ev k =
+    kernel_dim (_A1, _A2)
+      (pow_mat
+         _A1.idom_divide_field.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
+           .comm_semiring_1_comm_semiring_1_cancel
+           .semiring_1_comm_semiring_1 (char_matrix _A1 a ev) k)
+
+
+  let rec dim_gen_eigenspace_ca x = dim_gen_eigenspace (field_complex, equal_complex) x
+  let rec gauss_jordan_single_ca x = gauss_jordan_single (field_complex, equal_complex) x
+  let rec swap_cols_rows k l a = mat_swaprows k l (mat_swapcols k l a)
+
+  let rec add_col_sub_row _A aa k l a =
+    mat_addrow_gen
+      (plus _A.neg_numeral_ring_1.numeral_neg_numeral.semigroup_add_numeral.plus_semigroup_add)
+      (times
+         _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel.semiring_numeral_semiring_1
+           .monoid_mult_semiring_numeral
+           .power_monoid_mult
+           .times_power)
+      (uminus _A.neg_numeral_ring_1.group_add_neg_numeral.uminus_group_add aa)
+      k l
+      (mat_addcol _A.semiring_1_cancel_ring_1.semiring_1_semiring_1_cancel aa l k a)
+
+
   let rec mult_col_div_row _A aa k a =
     mat_multrow_gen
       (times
@@ -15657,242 +15905,9 @@ end = struct
 
 
   let rec step_3 (_A1, _A2) a = step_3_main (_A1, _A2) (dim_row a) one_nata a
-
-  let rec mpoly_to_poly (_A1, _A2, _A3, _A4, _A5) x p =
-    Poly
-      (let i =
-         image
-           ( ceq_poly_mapping
-               (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
-               (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
-             ccompare_poly_mapping )
-           (ceq_nat, ccompare_nat, set_impl_nat)
-           (fun m -> lookupa equal_nat zero_nat m x)
-           (filter
-              ( ceq_poly_mapping
-                  (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
-                  (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
-                ccompare_poly_mapping )
-              (fun m ->
-                ball (ceq_nat, ccompare_nat)
-                  (keysb
-                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
-                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat)
-                     m)
-                  (fun y -> equal_nata y x))
-              (keysb
-                 ( ceq_poly_mapping
-                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
-                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
-                   ccompare_poly_mapping,
-                   equal_poly_mapping
-                     (ceq_nat, ccompare_nat, equal_nat, set_impl_nat)
-                     (ceq_nat, ccompare_nat, zero_nat, equal_nat, set_impl_nat),
-                   set_impl_poly_mapping )
-                 (_A1, _A2, _A3.monoid_add_comm_monoid_add.zero_monoid_add, _A4, _A5)
-                 (mapping_of _A3.monoid_add_comm_monoid_add.zero_monoid_add p)))
-       in
-       if
-         set_eq (cenum_nat, ceq_nat, ccompare_nat) i
-           (set_empty (ceq_nat, ccompare_nat) (of_phantom set_impl_nata))
-       then
-         []
-       else
-         map
-           (fun n ->
-             coeff _A3.monoid_add_comm_monoid_add.zero_monoid_add p (single (zero_nat, equal_nat) x n))
-           (upt zero_nata (plus_nata (maxa (ceq_nat, ccompare_nat, lattice_nat, linorder_nat) i) one_nata)))
-
-
   let rec polys_rf _A = comp (comp (map fst) snd) (yun_rf _A)
   let rec of_real_imag_ca x = (fun (real, imag) -> Complex (Real_of real, Real_of imag)) x
-
-  let rec initial_root_problem_complex p =
-    let n = degreea zero_complex p in
-    let cs = coeffs zero_complex p in
-    let rcs =
-      remdups equal_complex (filtera (fun c -> not (is_rat_complexa c && is_int_rat (to_rat_complex c))) cs)
-    in
-    let pairs = map (fun c -> (c, min_int_poly_complex c)) rcs in
-    let spairs = sort_key linorder_nat (fun (_, a) -> degreea zero_int a) pairs in
-    let triples = zip (upt zero_nata (size_list spairs)) spairs in
-    let mpoly =
-      sum_list
-        (monoid_add_mpoly (monoid_add_int, equal_int))
-        (map
-           (fun i ->
-             let c = coeffa zero_complex p i in
-             times_mpolya (equal_int, semiring_0_int)
-               (monom (zero_int, equal_int) (single (zero_nat, equal_nat) zero_nata i) one_inta)
-               (match find (fun (_, (d, _)) -> equal_complexa d c) triples with
-               | None -> const (zero_int, equal_int) (to_int is_rat_complex c)
-               | Some (j, _) -> var (one_int, zero_int, equal_int) (suc j)))
-           (upt zero_nata (suc n)))
-    in
-    (mpoly, triples)
-
-
-  let rec resultant_mpoly_poly (_A1, _A2, _A3, _A4, _A5) x p q =
-    resultant_impl_basic
-      ( equal_mpoly
-          ( _A1,
-            _A2,
-            _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-              .mult_zero_semiring_0
-              .zero_mult_zero,
-            _A3,
-            _A5 ),
-        idom_divide_mpoly (_A1, _A2, _A3, _A4, _A5) )
-      (mpoly_to_mpoly_poly (_A1, _A2, _A3, _A4.idom_idom_divide.comm_ring_1_idom, _A5) x p)
-      (map_poly
-         _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-           .comm_semiring_1_comm_semiring_1_cancel
-           .semiring_1_comm_semiring_1
-           .semiring_0_semiring_1
-           .mult_zero_semiring_0
-           .zero_mult_zero
-         ( zero_mpoly
-             _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-               .comm_semiring_1_comm_semiring_1_cancel
-               .semiring_1_comm_semiring_1
-               .semiring_0_semiring_1
-               .mult_zero_semiring_0
-               .zero_mult_zero,
-           equal_mpoly
-             ( _A1,
-               _A2,
-               _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-                 .comm_semiring_1_comm_semiring_1_cancel
-                 .semiring_1_comm_semiring_1
-                 .semiring_0_semiring_1
-                 .mult_zero_semiring_0
-                 .zero_mult_zero,
-               _A3,
-               _A5 ) )
-         (const
-            ( _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-                .comm_semiring_1_comm_semiring_1_cancel
-                .semiring_1_comm_semiring_1
-                .semiring_0_semiring_1
-                .mult_zero_semiring_0
-                .zero_mult_zero,
-              _A3 ))
-         q)
-
-
-  let rec eliminate_aux_vars (_A1, _A2, _A3, _A4, _A5) p qs x2 =
-    match (p, qs, x2) with
-    | p, qs, [] ->
-        mpoly_to_poly
-          ( _A1,
-            _A2,
-            _A4.idom_idom_divide.semidom_idom.comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .semiring_1_comm_semiring_1
-              .semiring_0_semiring_1
-              .comm_monoid_add_semiring_0,
-            _A3,
-            _A5 )
-          zero_nata p
-    | p, qs, i :: is ->
-        eliminate_aux_vars (_A1, _A2, _A3, _A4, _A5)
-          (resultant_mpoly_poly (_A1, _A2, _A3, _A4, _A5) (suc i) p (qs i))
-          qs is
-
-
-  let rec representative_poly_complex p =
-    let mp, triples = initial_root_problem_complex p in
-    let is = map fst triples in
-    let qs j = snd (snd (nth triples j)) in
-    eliminate_aux_vars (ceq_int, ccompare_int, equal_int, idom_divide_int, set_impl_int) mp qs is
-
-
-  let rec roots_of_poly_dummy (_A1, _A2) p =
-    failwith "roots-of-poly-dummy" (fun _ -> roots_of_poly_dummy (_A1, _A2) p)
-
-
-  let rec roots_of_complex_rf_poly_part1 xa =
-    Abs_genuine_roots_aux
-      (if list_all algebraic_complex (coeffs zero_complex (rep_rf_poly idom_complex xa)) then
-         let q = representative_poly_complex (rep_rf_poly idom_complex xa) in
-         let zeros = complex_roots_of_int_poly q in
-         ( rep_rf_poly idom_complex xa,
-           ( zeros,
-             ( degreea zero_complex (rep_rf_poly idom_complex xa),
-               filter_fun_complex (rep_rf_poly idom_complex xa) ) ) )
-       else
-         ( rep_rf_poly idom_complex xa,
-           ( roots_of_poly_dummy
-               (comm_ring_1_complex, ring_no_zero_divisors_complex)
-               (rep_rf_poly idom_complex xa),
-             ( degreea zero_complex (rep_rf_poly idom_complex xa),
-               filter_fun_complex (rep_rf_poly idom_complex xa) ) ) ))
-
-
-  let rec roots_of_complex_rf_poly p =
-    genuine_roots_impl field_char_0_complex (roots_of_complex_rf_poly_part1 p)
-
-
   let rec roots_of_complex_rf_polys ps = maps roots_of_complex_rf_poly (polys_rf idom_complex ps)
-
-  let rec yun_factorization (_A1, _A2, _A3) gcd p =
-    if
-      is_zero
-        _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
-          .semiring_Gcd_factorial_semiring_gcd
-          .gcd_semiring_Gcd
-          .gcd_Gcd
-          .zero_gcd p
-    then
-      ( zero
-          _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
-            .semiring_Gcd_factorial_semiring_gcd
-            .gcd_semiring_Gcd
-            .gcd_Gcd
-            .zero_gcd,
-        [] )
-    else
-      let c =
-        coeffa
-          _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
-            .semiring_Gcd_factorial_semiring_gcd
-            .gcd_semiring_Gcd
-            .gcd_Gcd
-            .zero_gcd p
-          (degreea
-             _A1.factorial_ring_gcd_euclidean_ring_gcd.factorial_semiring_gcd_factorial_ring_gcd
-               .semiring_Gcd_factorial_semiring_gcd
-               .gcd_semiring_Gcd
-               .gcd_Gcd
-               .zero_gcd p)
-      in
-      let q =
-        smult
-          ( _A3,
-            _A1.euclidean_ring_euclidean_ring_gcd.idom_modulo_euclidean_ring.idom_divide_idom_modulo
-              .idom_idom_divide
-              .semidom_idom
-              .comm_semiring_1_cancel_semidom
-              .comm_semiring_1_comm_semiring_1_cancel
-              .comm_semiring_0_comm_semiring_1,
-            _A1.euclidean_ring_euclidean_ring_gcd.idom_modulo_euclidean_ring.idom_divide_idom_modulo
-              .idom_idom_divide
-              .semidom_idom
-              .semiring_1_no_zero_divisors_semidom
-              .semiring_no_zero_divisors_semiring_1_no_zero_divisors )
-          (inverse _A2.field_field_char_0.division_ring_field.inverse_division_ring c)
-          p
-      in
-      (c, yun_monic_factorization (_A1.factorial_ring_gcd_euclidean_ring_gcd, _A3) gcd q)
-
-
-  let rec yun_polys (_A1, _A2, _A3, _A4) xa =
-    Abs_rf_polys
-      (yun_factorization (_A1, _A2, _A4) (gcd_polyc (_A1.factorial_ring_gcd_euclidean_ring_gcd, _A3, _A4)) xa)
-
 
   let rec roots_of_complex_poly p =
     if equal_polya (zero_complex, equal_complex) p (zero_polya zero_complex) then

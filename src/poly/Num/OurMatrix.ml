@@ -180,8 +180,15 @@ module IntMatrix = struct
 
   (* Computes JNF mat = p * j * p^-1 and returns (p,j,p^-1). *)
   let jordan_normal_form mat =
-    let eigenvalues = eigenvalues mat |> List.sort ~compare:OurAlgebraicComplex.compare in
-    (* Use Schur decomposition to obtain matrices b,p,q s.t. b is triangular and [mat = p * w * q] *)
+    let eigenvalues =
+      List.map
+        (Polynomial.roots_quantity (char_poly mat))
+        ~f:(fun (eigen, quantity) -> List.init (OurInt.to_int quantity) ~f:(const eigen))
+      |> List.concat
+      |> List.sort ~compare:OurAlgebraicComplex.compare
+    in
+    (* TODO Remove Schur decomp and use kernel construction instead. *)
+    (* Use Schur decomposition to obtain matrices w,p, and q s.t. [mat = p * w * q] *)
     let w, (p, q) =
       if is_upper_triangular mat then
         (convertMatrixToCA mat, (CAMatrix.identity (dim_col mat), CAMatrix.identity (dim_col mat)))
@@ -191,7 +198,12 @@ module IntMatrix = struct
     (* There is a block of size n for the eigenvalue λ if we have the tuple (n,λ). *)
     let jordan_blocks =
       List.map ~f:(Tuple2.map1 (OurInt.to_int % integer_of_nat)) (triangular_to_jnf_vector_ca w)
-      |> List.sort ~compare:(fun (_, x) (_, y) -> OurAlgebraicComplex.compare x y)
+      |> List.sort ~compare:(fun (m, x) (n, y) ->
+             let compareXY = OurAlgebraicComplex.compare x y in
+             if compareXY != 0 then
+               compareXY
+             else
+               -compare m n)
     in
     (* Constructs j. *)
     let j =
@@ -215,28 +227,32 @@ module IntMatrix = struct
       let compute_jordan_chain eigen_mat general_eigenvec n =
         List.init n ~f:(fun i -> CAMatrix.mul_vec (CAMatrix.pow eigen_mat i) general_eigenvec) |> List.rev
       in
-      let jordan_blocks_grouped =
-        List.sort_and_group ~compare:(fun (_, x) (_, y) -> OurAlgebraicComplex.compare x y) jordan_blocks
-        |> List.map ~f:(fun xs ->
-               let n, ev = List.hd_exn xs in
-               (List.fold ~init:0 ~f:(fun sum (x, _) -> sum + x) xs, ev))
-      in
-      List.map jordan_blocks_grouped
+      List.fold jordan_blocks
+        ~init:(List.hd_exn eigenvalues, [], [])
         ~f:
           CAMatrix.(
-            fun (n, eigen) ->
+            fun (previous_eigen, vecs, xs) (n, eigen) ->
+              let vecs =
+                if OurAlgebraicComplex.equal previous_eigen eigen then
+                  vecs
+                else
+                  []
+              in
               let eigen_mat = eigen_mat w eigen in
               if n == 1 then
-                kernel eigen_mat
+                let res = List.find_exn (kernel eigen_mat) ~f:(not % List.mem vecs ~equal:CAVector.equal) in
+                (eigen, res :: vecs, xs @ [ res ])
               else
                 let eigen_mat_n1 = pow eigen_mat (n - 1) in
                 let eigen_mat_n = mul eigen_mat_n1 eigen_mat in
                 let general_eigenvec =
                   List.find_exn (kernel eigen_mat_n) ~f:(fun x ->
-                      not @@ CAVector.is_zero (mul_vec eigen_mat_n1 x))
+                      (not @@ CAVector.is_zero (mul_vec eigen_mat_n1 x))
+                      && (not @@ List.mem vecs ~equal:CAVector.equal x))
                 in
-                compute_jordan_chain eigen_mat general_eigenvec n)
-      |> List.concat |> CAMatrix.of_vec_list |> transpose_mat
+                let res = compute_jordan_chain eigen_mat general_eigenvec n in
+                (eigen, res @ vecs, xs @ res))
+      |> Tuple3.third |> CAMatrix.of_vec_list |> transpose_mat
     in
     CAMatrix.(mul p b, j, mul (Option.value_exn @@ inv b) q)
 end

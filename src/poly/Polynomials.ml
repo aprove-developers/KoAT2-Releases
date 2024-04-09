@@ -417,6 +417,12 @@ module Polynomial = struct
 
 
   let roots = Koat2_external.Algebraic.Algebraic.complex_roots_of_integer_poly % degree_coeff_list
+
+  let roots_quantity p =
+    let c, xs = (Koat2_external.Algebraic.Algebraic.factor_poly % degree_coeff_list) p in
+    List.map xs ~f:(fun (root, n) ->
+        ( OurAlgebraicComplex.mul c root,
+          OurInt.(add one (Koat2_external.Algebraic.Algebraic.integer_of_nat n)) ))
 end
 
 module RationalPolynomial = struct
