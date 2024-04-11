@@ -126,7 +126,7 @@ let run (params : params) =
       else
         []
     in
-    ProbabilisticAnalysis.{ classical_local = classical_local_conf; cfrs; compute_refined_plrfs = false }
+    ProbabilisticAnalysis.{ classical_local = classical_local_conf; cfrs }
   in
 
   let program =

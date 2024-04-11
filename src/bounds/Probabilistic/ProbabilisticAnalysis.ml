@@ -4,14 +4,11 @@ open Bounds
 open Approximation.Probabilistic
 
 type configuration = {
-  compute_refined_plrfs : bool;
   classical_local : (NonProbOverappr.program_modules_t, Bounds.Bound.t) Analysis.local_configuration;
   cfrs : CFR.Probabilistic.cfr List.t;
 }
 
-let default_configuration =
-  { compute_refined_plrfs = false; cfrs = []; classical_local = Analysis.default_local_configuration }
-
+let default_configuration = { cfrs = []; classical_local = Analysis.default_local_configuration }
 
 let rvts_from_gts gts =
   Set.to_sequence gts
@@ -60,10 +57,7 @@ let lift_bounds program program_vars gts apprs : ExpApproximation.t =
 
 let improve_timebounds twn_state ~conf program scc apprs =
   let open MaybeChanged.Monad in
-  let* appr =
-    PlrfBounds.improve_timebounds_plrf ~compute_refined_plrfs:conf.compute_refined_plrfs program scc
-      (apprs.class_appr, apprs.appr)
-  in
+  let* appr = PlrfBounds.improve_timebounds_plrf program scc (apprs.class_appr, apprs.appr) in
   IntegrateClassicalAnalysis.improve ~twn:twn_state ~mprf_depth:conf.classical_local.run_mprf_depth program
     scc (apprs.class_appr, appr)
 

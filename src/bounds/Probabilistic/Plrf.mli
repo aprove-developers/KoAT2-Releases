@@ -14,7 +14,6 @@ val non_increasing : t -> GeneralTransitionSet.t
 (** Returns all non_increasing and decreasing general transitions *)
 
 val find_scc :
-  ?refined:bool ->
   Program.t ->
   (GeneralTransition.t * Location.t -> bool)
   (** Is the general transition already time bounded? The target location of the general transition is provided to better utilise classic time bounds *) ->
@@ -23,7 +22,7 @@ val find_scc :
   GeneralTransition.t ->
   t option
 
-val find : ?refined:bool -> Program.t -> t Sequence.t
+val find : Program.t -> t Sequence.t
 (** Tries to compute Plrfs for all general transitions of the program *)
 
 val to_string : t -> string

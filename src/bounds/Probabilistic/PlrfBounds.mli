@@ -3,7 +3,6 @@ open ProbabilisticProgramModules
 open Approximation.Probabilistic
 
 val improve_timebounds_plrf :
-  compute_refined_plrfs:bool ->
   Program.t ->
   GeneralTransitionSet.t ->
   ClassicalApproximation.t * ExpApproximation.t ->

@@ -190,31 +190,7 @@ let general_transition_constraint cache constraint_type gtrans : RationalFormula
           ( RationalParameterConstraint.of_constraint @@ RationalConstraint.mk_and guard_real upd_constrs,
             RationalParameterAtom.Infix.(templ_subst >= RationalParameterPolynomial.zero) )
         in
-
         GeneralTransition.transitions gtrans |> Set.to_list |> List.map ~f:transition_bound
-    | `Bounded_Refined ->
-        (* for every transition the guard needs to imply that all possible successor states have the same sign of the evaluated template *)
-        let tlist = GeneralTransition.transitions gtrans |> Set.to_list in
-        let t1_nonneg_implies_t2_nonneg t1 t2 : RationalParameterConstraint.t * RationalParameterAtom.t =
-          (* Under the condition that transition t1 leads to a state where the template is non-negative then transition t2
-           * also leads to a succesor state such that the corresponding template is non-negative*)
-          let upd_constraints_t1, template_subst_t1 = encode_update cache guard t1 in
-          let upd_constraints_t2, template_subst_t2 = encode_update cache guard t2 in
-          let t1_pos = RationalParameterConstraint.mk_ge template_subst_t1 RationalParameterPolynomial.zero in
-          let t2_pos = RationalParameterAtom.mk_ge template_subst_t2 RationalParameterPolynomial.zero in
-          let extended_guard =
-            RationalParameterConstraint.of_intconstraint guard
-            |> RationalParameterConstraint.mk_and
-                 (RationalParameterConstraint.of_constraint upd_constraints_t1)
-            |> RationalParameterConstraint.mk_and
-                 (RationalParameterConstraint.of_constraint upd_constraints_t2)
-            |> RationalParameterConstraint.mk_and t1_pos
-          in
-
-          (extended_guard, t2_pos)
-        in
-
-        List.cartesian_product tlist tlist |> List.map ~f:(uncurry t1_nonneg_implies_t2_nonneg)
   in
   List.map
     ~f:(fun (c, a) ->
@@ -238,11 +214,6 @@ let bounded_for_nonincreasing_constraint cache transition =
   constr
 
 
-let bounded_refined_constraint cache transition =
-  let constr = general_transition_constraint cache `Bounded_Refined transition in
-  constr
-
-
 let decreasing_constraint cache transition =
   let constr = general_transition_constraint cache `Decreasing transition in
   constr
@@ -251,12 +222,9 @@ let decreasing_constraint cache transition =
 module Solver = SMT.IncrementalZ3Solver
 
 (* Add the corresponding bounding constrained depending whether we perform a refind analysis*)
-let add_bounded_for_nonincreasing_constraint ~refined cache solver gt =
+let add_bounded_for_nonincreasing_constraint cache solver gt =
   (* Try to add the normal bound constraint *)
-  if refined then
-    Solver.add_real solver (bounded_refined_constraint cache gt)
-  else
-    Solver.add_real solver (bounded_for_nonincreasing_constraint cache gt)
+  Solver.add_real solver (bounded_for_nonincreasing_constraint cache gt)
 
 
 type plrf_problem = {
@@ -283,8 +251,8 @@ let entry_transitions_from_non_increasing program (non_increasing : GeneralTrans
   all_possible_pre_trans |> Set.filter ~f:(fun (gt, _) -> not (Set.mem non_incr_set gt))
 
 
-let finalise_plrf cache ~refined solver non_increasing
-    (entry_trans : (GeneralTransition.t * Location.t, 'b) Set.t) problem =
+let finalise_plrf cache solver non_increasing (entry_trans : (GeneralTransition.t * Location.t, 'b) Set.t)
+    problem =
   let entry_trans_grouped_by_loc =
     Set.to_list entry_trans |> List.sort_and_group ~compare:(fun (_, l1) (_, l2) -> Location.compare l1 l2)
   in
@@ -328,11 +296,11 @@ let finalise_plrf cache ~refined solver non_increasing
     Solver.pop solver
 
 
-let rec backtrack cache ?(refined = false) steps_left index solver non_increasing problem =
+let rec backtrack cache steps_left index solver non_increasing problem =
   let finalise_if_entrytime_bounded non_increasing =
     let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
     if Set.for_all ~f:problem.is_time_bounded entry_trans then
-      finalise_plrf cache ~refined solver non_increasing entry_trans problem
+      finalise_plrf cache solver non_increasing entry_trans problem
   in
 
   if Solver.satisfiable solver then
@@ -345,10 +313,10 @@ let rec backtrack cache ?(refined = false) steps_left index solver non_increasin
         Solver.push solver;
 
         Solver.add_real solver (non_increasing_constraint cache transition);
-        add_bounded_for_nonincreasing_constraint ~refined cache solver transition;
+        add_bounded_for_nonincreasing_constraint cache solver transition;
 
         Stack.push non_increasing transition;
-        backtrack cache ~refined (steps_left - 1) (i + 1) solver non_increasing problem;
+        backtrack cache (steps_left - 1) (i + 1) solver non_increasing problem;
         ignore (Stack.pop non_increasing);
 
         Solver.pop solver
@@ -357,7 +325,7 @@ let rec backtrack cache ?(refined = false) steps_left index solver non_increasin
 
 
 (* Compute a RSM as needed by KoAT. *)
-let compute_plrf ~refined cache program is_time_bounded unbounded_vars transitions decreasing =
+let compute_plrf cache program is_time_bounded unbounded_vars transitions decreasing =
   let solver = Solver.create () in
   Solver.add_real solver (decreasing_constraint cache decreasing);
   (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
@@ -365,7 +333,7 @@ let compute_plrf ~refined cache program is_time_bounded unbounded_vars transitio
   Solver.add_real solver (bounded_for_decreasing_constraint cache decreasing);
   let make_non_increasing = Set.(remove transitions decreasing |> to_array) in
   try
-    backtrack cache ~refined (Array.length make_non_increasing) 0 solver (Stack.singleton decreasing)
+    backtrack cache (Array.length make_non_increasing) 0 solver (Stack.singleton decreasing)
       { program; is_time_bounded; unbounded_vars; decreasing; make_non_increasing }
   with
   | Exit -> ()
@@ -373,11 +341,11 @@ let compute_plrf ~refined cache program is_time_bounded unbounded_vars transitio
 
 (* Compute a ranking function as a side effect such that the given transition is decreasing.
  * The computed ranking function is subsequently added to the RankingTable cache *)
-let find_plrf ~refined program is_time_bounded unbounded_vars vars locations trans decreasing =
+let find_plrf program is_time_bounded unbounded_vars vars locations trans decreasing =
   let cache = new_cache () in
   compute_ranking_templates cache vars locations;
 
-  compute_plrf ~refined cache program is_time_bounded unbounded_vars trans decreasing;
+  compute_plrf cache program is_time_bounded unbounded_vars trans decreasing;
   !(cache.rank)
 
 
@@ -386,7 +354,7 @@ let plrf_option_to_string = function
   | None -> "None"
 
 
-let find_scc ?(refined = false) program is_time_bounded unbounded_vars scc gt =
+let find_scc program is_time_bounded unbounded_vars scc gt =
   let execute () =
     let vars =
       Set.to_sequence scc
@@ -394,7 +362,7 @@ let find_scc ?(refined = false) program is_time_bounded unbounded_vars scc gt =
       |> Sequence.fold ~f:Set.union ~init:VarSet.empty
     in
     let locations = GeneralTransitionSet.locations scc |> Set.to_list in
-    find_plrf ~refined program is_time_bounded unbounded_vars vars locations scc gt
+    find_plrf program is_time_bounded unbounded_vars vars locations scc gt
     |> tap (function
          | Some r -> Logger.log logger Logger.INFO (fun () -> ("found_plrf", [ ("plrf", to_string r) ]))
          | None ->
@@ -404,12 +372,14 @@ let find_scc ?(refined = false) program is_time_bounded unbounded_vars scc gt =
 
   Logger.with_log logger Logger.DEBUG
     (fun () ->
-      ("find_scc", [ ("decreasing:", GeneralTransition.to_id_string gt); ("refined", Bool.to_string refined) ]))
+      ( "find_scc",
+        [ ("decreasing:", GeneralTransition.to_id_string gt); ("refined", "TODO" (*Bool.to_string refined*)) ]
+      ))
     ~result:plrf_option_to_string execute
 
 
 (** Compute a ranking function such that the given gt is decreasing and return it. *)
-let find ?(refined = false) program =
+let find program =
   let execute () =
     Sequence.of_list (Program.sccs_gts program)
     |> Sequence.map ~f:(fun scc ->
@@ -421,12 +391,11 @@ let find ?(refined = false) program =
                VarSet.empty
            in
            Set.to_sequence scc
-           |> Sequence.map ~f:(fun gt ->
-                  (gt, find_scc ~refined program is_time_bounded unbounded_vars scc gt)))
+           |> Sequence.map ~f:(fun gt -> (gt, find_scc program is_time_bounded unbounded_vars scc gt)))
     |> Sequence.join |> Sequence.memoize
   in
   Logger.with_log logger Logger.DEBUG
-    (fun () -> ("find", [ ("refined", Bool.to_string refined) ]))
+    (fun () -> ("find", [ ("refined", "TODO" (*Bool.to_string refined*)) ]))
     ~result:
       (Util.sequence_to_string ~f:(fun (gt, plrfo) ->
            GeneralTransition.to_id_string gt ^ ": " ^ plrf_option_to_string plrfo))
