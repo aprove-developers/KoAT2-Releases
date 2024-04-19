@@ -62,7 +62,6 @@ module RationalPolynomial : sig
   val of_intconstant : OurInt.t -> t
   val max_of_occurring_constants : t -> OurRational.t
   val of_intpoly : Polynomial.t -> t
-  val degree_coeff_list : t -> value list
 
   val normalize : t -> Polynomial.t
   (** Multiply with lcm. *)

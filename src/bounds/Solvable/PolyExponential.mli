@@ -1,5 +1,4 @@
 open Batteries
-open Polynomials
 open Bounds
 
 (** Provides an implementation of polynomial-exponential expressions*)
@@ -19,19 +18,33 @@ module ConstantConstraint : sig
   val to_string : t -> string
 end
 
-module PE : sig
-  type t = (ConstantConstraint.t * RationalPolynomial.t * int * int) list
+module type IntSupRing = sig
+  type t
 
-  val mk : ConstantConstraint.t -> RationalPolynomial.t -> int -> int -> t
+  include PolyTypes.Math with type t := t
+  include PolyTypes.Ring with type t := t
+
+  val of_ourint : OurInt.t -> t
+  val div : t -> t -> t
+end
+
+module PE (Value : IntSupRing) : sig
+  module Polynomial : module type of Polynomials.PolynomialOver (Value)
+
+  type t = (ConstantConstraint.t * Polynomial.t * int * Value.t) list
+
+  val mk : ConstantConstraint.t -> Polynomial.t -> int -> Value.t -> t
   val to_string : t -> string
   val to_string_pretty : t -> string
   val substitute : (Var.t, t) Hashtbl.t -> Polynomial.t -> t
   val normalize : t list -> t list
   val max_const : t -> OurInt.t
-  val remove_frac : t -> t
   val compute_closed_form : (Var.t * Polynomial.t) list -> t list
+end
 
-  (* val monotonic_kernel : Formula.t -> Formula.t -> t -> t * ((int * int) * (int * int)) list *)
+module RationalPE : sig
+  include module type of PE (OurRational)
 
+  val remove_frac : t -> t
   val overapprox : t -> Bound.t -> Bound.t
 end

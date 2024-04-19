@@ -141,15 +141,12 @@ module ConstantConstraint = struct
 
   let compare c1 c2 =
     match (c1, c2) with
+    | C atoms1, C atoms2 -> compare_ atoms1 atoms2
     | T, F -> -1
     | F, T -> 1
-    | C _, T -> 1
-    | C _, F -> 1
-    | T, C _ -> -1
-    | F, C _ -> -1
-    | C atoms1, C atoms2 -> compare_ atoms1 atoms2
-    | T, T -> 0
-    | F, F -> 0
+    | C _, _ -> 1
+    | _, C _ -> -1
+    | _ -> 0
 
 
   let contains_positive = function
@@ -180,20 +177,31 @@ module ConstantConstraint = struct
     | _ -> OurInt.minus_one
 end
 
-module PE = struct
-  type t = (ConstantConstraint.t * RationalPolynomial.t * int * int) list
-  (** A  Polynomial Expression has the form \sum_j constraint(n) * poly(vars) * n^a * b^n *)
+module type IntSupRing = sig
+  type t
 
-  module ScaledMonomial = ScaledMonomials.Make (OurInt)
-  module Monomial = Monomials.Make (OurInt)
+  include PolyTypes.Math with type t := t
+  include PolyTypes.Ring with type t := t
+
+  val of_ourint : OurInt.t -> t
+  val div : t -> t -> t
+end
+
+module PE (Value : IntSupRing) = struct
+  module Polynomial = PolynomialOver (Value)
+  module ScaledMonomial = ScaledMonomials.Make (Value)
+  module Monomial = Monomials.Make (Value)
+
+  type t = (ConstantConstraint.t * Polynomial.t * int * Value.t) list
+  (** A  Polynomial Expression has the form \sum_j constraint(n) * poly(vars) * n^a * b^n *)
 
   let mk constr poly degree base : t = [ (constr, poly, degree, base) ]
 
   let mk_cons cons =
-    if OurRational.equal OurRational.zero cons then
+    if Value.equal Value.zero cons then
       []
     else
-      [ (ConstantConstraint.mk_true, RationalPolynomial.of_constant cons, 0, 1) ]
+      [ (ConstantConstraint.mk_true, Polynomial.of_constant cons, 0, Value.one) ]
 
 
   let to_string pe =
@@ -202,7 +210,7 @@ module PE = struct
     | xs ->
         let to_string_cc (c, p, d, b) =
           if ConstantConstraint.is_true c then
-            if d = 0 && b = 1 && RationalPolynomial.is_one p then
+            if d = 0 && Value.(equal one b) && Polynomial.is_one p then
               "1"
             else
               ""
@@ -210,12 +218,12 @@ module PE = struct
             ConstantConstraint.to_string c
         in
         let to_string_poly p =
-          if RationalPolynomial.is_one p then
+          if Polynomial.is_one p then
             ""
-          else if p |> RationalPolynomial.monomials |> List.length |> ( < ) 1 then
-            "(" ^ RationalPolynomial.to_string p ^ ")"
+          else if p |> Polynomial.monomials |> List.length |> ( < ) 1 then
+            "(" ^ Polynomial.to_string p ^ ")"
           else
-            RationalPolynomial.to_string p
+            Polynomial.to_string p
         in
         let to_string_poly_n d =
           if d = 0 then
@@ -224,10 +232,10 @@ module PE = struct
             "n^" ^ string_of_int d
         in
         let to_string_exp_n b =
-          if b = 1 then
+          if Value.(equal one b) then
             ""
           else
-            string_of_int b ^ "^n"
+            Value.to_string b ^ "^n"
         in
         xs
         |> List.map (fun (c, p, d, b) ->
@@ -244,7 +252,7 @@ module PE = struct
     | xs ->
         let to_string_cc (c, p, d, b) =
           if ConstantConstraint.is_true c then
-            if d = 0 && b = 1 && RationalPolynomial.is_one p then
+            if d = 0 && Value.(equal one b) && Polynomial.is_one p then
               "1"
             else
               ""
@@ -252,12 +260,12 @@ module PE = struct
             ConstantConstraint.to_string c
         in
         let to_string_poly p =
-          if RationalPolynomial.is_one p then
+          if Polynomial.is_one p then
             ""
-          else if p |> RationalPolynomial.monomials |> List.length |> ( < ) 1 then
-            "(" ^ RationalPolynomial.to_string_pretty p ^ ")"
+          else if p |> Polynomial.monomials |> List.length |> ( < ) 1 then
+            "(" ^ Polynomial.to_string_pretty p ^ ")"
           else
-            RationalPolynomial.to_string_pretty p
+            Polynomial.to_string_pretty p
         in
         let to_string_poly_n d =
           if d = 0 then
@@ -266,10 +274,10 @@ module PE = struct
             "n^" ^ string_of_int d
         in
         let to_string_exp_n b =
-          if b = 1 then
+          if Value.(equal one b) then
             ""
           else
-            string_of_int b ^ "^n"
+            Value.to_string b ^ "^n"
         in
         xs
         |> List.map (fun (c, p, d, b) ->
@@ -283,8 +291,8 @@ module PE = struct
   let compare (c1, p1, d1, b1) (c2, p2, d2, b2) =
     if ConstantConstraint.compare c1 c2 != 0 then
       ConstantConstraint.compare c1 c2
-    else if b2 - b1 != 0 then
-      b2 - b1
+    else if not @@ Value.equal b1 b2 then
+      Value.compare b2 b1
     else if d2 - d1 != 0 then
       d2 - d1
     else
@@ -295,21 +303,21 @@ module PE = struct
     List.group compare pe
     |> List.map (fun list ->
            List.fold_right
-             (fun (c, p, d, b) (c1, p1, d1, b1) -> (c, RationalPolynomial.add p p1, d, b))
+             (fun (c, p, d, b) (c1, p1, d1, b1) -> (c, Polynomial.add p p1, d, b))
              list
-             (ConstantConstraint.mk_true, RationalPolynomial.of_constant OurRational.zero, 0, 1))
-    |> List.filter (fun (c, p, d, b) -> not (RationalPolynomial.is_zero p))
+             (ConstantConstraint.mk_true, Polynomial.of_constant Value.zero, 0, Value.one))
+    |> List.filter (fun (c, p, d, b) -> not (Polynomial.is_zero p))
     |> List.map (fun (c, p, d, b) -> (ConstantConstraint.simplify c, p, d, b))
     |> List.filter (fun (c, p, d, b) -> not (ConstantConstraint.is_false c))
     |> List.sort compare
 
 
-  let add = List.append % List.filter (fun (c, p, d, b) -> not (RationalPolynomial.is_zero p))
+  let add = List.append % List.filter (fun (c, p, d, b) -> not (Polynomial.is_zero p))
 
   let mul pe1 pe2 =
     List.cartesian_product pe1 pe2
     |> List.map (fun ((c1, p1, d1, b1), (c2, p2, d2, b2)) ->
-           (ConstantConstraint.mk_and c1 c2, RationalPolynomial.mul p1 p2, d1 + d2, b1 * b2))
+           (ConstantConstraint.mk_and c1 c2, Polynomial.mul p1 p2, d1 + d2, Value.(b1 * b2)))
     |> List.filter (fun (c, p, d, b) -> not (ConstantConstraint.is_false c))
 
 
@@ -328,7 +336,7 @@ module PE = struct
 
 
   let substitute varmap poly =
-    Polynomial.fold ~const:(mk_cons % OurRational.of_ourint)
+    Polynomial.fold ~const:mk_cons
       ~indeterminate:(fun var ->
         try Hashtbl.find varmap var with
         | Not_found -> [])
@@ -350,15 +358,15 @@ module PE = struct
       (fun i p ->
         let coeff =
           let exp = (d - i) mod 2 in
-          OurInt.(pow (of_int (-1)) exp * binomial d i) |> OurRational.of_ourint
+          OurInt.(pow (of_int (-1)) exp * binomial d i) |> Value.of_ourint
         in
         let poly =
           match i with
-          | 0 -> RationalPolynomial.of_constant coeff
-          | _ -> RationalPolynomial.mult_with_const coeff (RationalPolynomial.of_power n i)
+          | 0 -> Polynomial.of_constant coeff
+          | _ -> Polynomial.mult_with_const coeff (Polynomial.of_power n i)
         in
-        RationalPolynomial.add p poly)
-      (List.range 0 `To d) RationalPolynomial.zero
+        Polynomial.add p poly)
+      (List.range 0 `To d) Polynomial.zero
 
 
   module ClosedFormTable = Hashtbl.Make (Var)
@@ -366,7 +374,7 @@ module PE = struct
   let closed_form_table : t ClosedFormTable.t = ClosedFormTable.create 10
 
   (* c.f.: masterthesis *)
-  let multiply var poly monomials =
+  let insert_previous_cf var poly monomials =
     let scaled_monomials = Polynomial.scaled_monomials poly in
     List.fold_right
       (fun tmp pe -> add tmp pe)
@@ -374,7 +382,7 @@ module PE = struct
          (fun scaled_monom ->
            let vars = scaled_monom |> Base.Set.to_list % ScaledMonomial.vars in
            let monom = ScaledMonomial.monomial scaled_monom in
-           let constant = (mk_cons (OurRational.of_ourint (ScaledMonomial.coeff scaled_monom)), 1) in
+           let constant = (mk_cons (ScaledMonomial.coeff scaled_monom), 1) in
            vars
            |> List.map (fun var ->
                   (ClosedFormTable.find closed_form_table var, Monomial.degree_variable var monom))
@@ -387,7 +395,7 @@ module PE = struct
   (* c.f.: eq. (6) *)
   let only_poly var poly =
     let monomials = Polynomial.monomials poly in
-    let pe = multiply var poly monomials in
+    let pe = insert_previous_cf var poly monomials in
     let pe_ =
       List.fold_right
         (fun (c, p, d, b) pe ->
@@ -396,21 +404,20 @@ module PE = struct
                (fun i ->
                  let coeff =
                    let exp = (d - i) mod 2 in
-                   let term = OurInt.(pow (of_int (-1)) exp * binomial d i) |> OurRational.of_ourint in
-                   OurRational.div term (OurRational.of_int b)
+                   let term = OurInt.(pow (of_int (-1)) exp * binomial d i) |> Value.of_ourint in
+                   Value.div term b
                  in
                  ( ConstantConstraint.mk_and
                      (ConstantConstraint.increase OurInt.one c)
                      (ConstantConstraint.mk_neq OurInt.zero),
-                   RationalPolynomial.mult_with_const coeff p,
+                   Polynomial.mult_with_const coeff p,
                    i,
                    b ))
                (List.range 0 `To d))
             pe)
         pe []
     in
-    (* TODO: QQ[x] ?*)
-    [ (ConstantConstraint.mk_eq OurInt.zero, RationalPolynomial.of_var var, 0, 1) ] @ pe_
+    [ (ConstantConstraint.mk_eq OurInt.zero, Polynomial.of_var var, 0, Value.one) ] @ pe_
 
 
   (* c.f.: eq. (7) *)
@@ -420,41 +427,34 @@ module PE = struct
     else
       let pos_const_int = OurInt.to_int pos_const in
       let coeff =
-        OurRational.div
-          OurRational.(of_ourint OurInt.(mul (pow pos_const d) (pow (of_int b) pos_const_int)))
-          OurRational.(of_ourint OurInt.(pow (of_int coeff_var) (to_int (pos_const + OurInt.one))))
+        Value.(
+          div
+            (mul (pow (Value.of_ourint pos_const) d) (pow b pos_const_int))
+            (pow coeff_var OurInt.(to_int (pos_const + one))))
       in
-      [ (ConstantConstraint.mk_gt pos_const_int, RationalPolynomial.mult_with_const coeff p, 0, coeff_var) ]
+      [ (ConstantConstraint.mk_gt pos_const_int, Polynomial.mult_with_const coeff p, 0, coeff_var) ]
 
 
   let rec compute_r q c =
     let n = Var.of_string "n" in
-    if RationalPolynomial.is_const q then
-      if OurRational.equal OurRational.one c then
-        RationalPolynomial.of_coeff_list [ RationalPolynomial.get_constant q ] [ n ]
+    if Polynomial.is_const q then
+      if Value.equal Value.one c then
+        Polynomial.of_coeff_list [ Polynomial.get_constant q ] [ n ]
       else
-        RationalPolynomial.of_constant OurRational.(div (RationalPolynomial.get_constant q) (one - c))
+        Polynomial.of_constant Value.(div (Polynomial.get_constant q) (one - c))
     else
-      let d = RationalPolynomial.degree q in
-      let c_d = q |> RationalPolynomial.degree_coeff_list |> List.last in
-      if OurRational.equal OurRational.one c then
+      let d = Polynomial.degree q in
+      let c_d = q |> Polynomial.degree_coeff_list |> List.last in
+      if Value.equal Value.one c then
         let s =
-          RationalPolynomial.mult_with_const
-            (OurRational.div c_d (OurRational.of_int (d + 1)))
-            (RationalPolynomial.of_power n (d + 1))
+          Polynomial.mult_with_const (Value.div c_d (Value.of_int (d + 1))) (Polynomial.of_power n (d + 1))
         in
-        let s_ =
-          RationalPolynomial.mult_with_const
-            (OurRational.div c_d (OurRational.of_int (d + 1)))
-            (transform (d + 1))
-        in
-        RationalPolynomial.add s (compute_r RationalPolynomial.(add (sub q s) (mult_with_const c s_)) c)
+        let s_ = Polynomial.mult_with_const (Value.div c_d (Value.of_int (d + 1))) (transform (d + 1)) in
+        Polynomial.add s (compute_r Polynomial.(add (sub q s) (mult_with_const c s_)) c)
       else
-        let s =
-          RationalPolynomial.mult_with_const OurRational.(div c_d (one - c)) (RationalPolynomial.of_power n d)
-        in
-        let s_ = RationalPolynomial.mult_with_const OurRational.(div c_d (one - c)) (transform d) in
-        RationalPolynomial.add s (compute_r RationalPolynomial.(add (sub q s) (mult_with_const c s_)) c)
+        let s = Polynomial.mult_with_const Value.(div c_d (one - c)) (Polynomial.of_power n d) in
+        let s_ = Polynomial.mult_with_const Value.(div c_d (one - c)) (transform d) in
+        Polynomial.add s (compute_r Polynomial.(add (sub q s) (mult_with_const c s_)) c)
 
 
   (* c.f.: eq. (8) *)
@@ -463,43 +463,35 @@ module PE = struct
       []
     else
       (* c.f.: eq. (9) *)
-      let rec le_max i =
-        let tmp = i - 1 in
-        let term =
-          if ConstantConstraint.eval (OurInt.of_int tmp) c && i >= 1 then
-            let coeff =
-              OurRational.div
-                OurRational.(of_ourint OurInt.(mul (pow (of_int tmp) d) (pow (of_int b) tmp)))
-                OurRational.(of_ourint OurInt.(pow (of_int coeff_var) i))
-            in
-            [ (ConstantConstraint.mk_gt tmp, RationalPolynomial.mult_with_const coeff p, 0, coeff_var) ]
-          else
-            []
-        in
-        match i with
+      let rec le_max = function
         | -1 -> []
         | 0 -> []
-        | _ -> term @ le_max tmp
+        | i ->
+            let tmp = i - 1 in
+            let term =
+              if ConstantConstraint.eval (OurInt.of_int tmp) c && i >= 1 then
+                let coeff = Value.(div (mul (pow (of_int tmp) d) (pow b tmp)) (pow coeff_var i)) in
+                [ (ConstantConstraint.mk_gt tmp, Polynomial.mult_with_const coeff p, 0, coeff_var) ]
+              else
+                []
+            in
+            term @ le_max tmp
       in
       (* c.f.: eq. (10) *)
       let gt_max =
-        let r = compute_r (transform d) OurRational.(div (of_int coeff_var) (of_int b)) in
+        let r = compute_r (transform d) Value.(div coeff_var b) in
         let max_const_inc = OurInt.(max_const + one) in
         let coeff =
-          OurRational.(
-            mul
-              (div
-                 (pow (div (of_int b) (of_int coeff_var)) (OurInt.to_int max_const_inc))
-                 (of_int (Int.neg b)))
-              (RationalPolynomial.eval_f r (fun _ -> OurRational.of_ourint max_const_inc)))
+          Value.(mul (div (pow (div b coeff_var) (OurInt.to_int max_const_inc)) (neg b)))
+            (Polynomial.eval_f r (fun _ -> Value.of_ourint max_const_inc))
         in
-        let coeff_list = RationalPolynomial.degree_coeff_list r in
+        let coeff_list = Polynomial.degree_coeff_list r in
         let degree_r = List.length coeff_list - 1 in
         let rec pe_ coeff_list_ i =
           let term x =
             [
               ( ConstantConstraint.mk_gt (OurInt.to_int max_const + 1),
-                RationalPolynomial.mult_with_const (OurRational.div x (OurRational.of_int b)) p,
+                Polynomial.mult_with_const (Value.div x b) p,
                 degree_r - i,
                 b );
             ]
@@ -510,7 +502,7 @@ module PE = struct
         in
         [
           ( ConstantConstraint.mk_gt (OurInt.to_int max_const + 1),
-            RationalPolynomial.mult_with_const coeff p,
+            Polynomial.mult_with_const coeff p,
             0,
             coeff_var );
         ]
@@ -523,11 +515,9 @@ module PE = struct
     let monomials =
       Polynomial.monomials poly |> List.filter (fun monomial -> Monomial.degree_variable var monomial = 0)
     in
-    let coeff_var = poly |> Polynomial.coeff_of_var var |> OurInt.to_int in
+    let coeff_var = poly |> Polynomial.coeff_of_var var in
     let pe =
-      multiply var
-        (Polynomial.sub poly (Polynomial.of_coeff_list [ OurInt.of_int coeff_var ] [ var ]))
-        monomials
+      insert_previous_cf var (Polynomial.sub poly (Polynomial.of_coeff_list [ coeff_var ] [ var ])) monomials
     in
     let pe_ =
       List.fold_right
@@ -539,7 +529,7 @@ module PE = struct
             no_positive (c, p, d, b) (ConstantConstraint.max_constant c) coeff_var @ tmp)
         pe []
     in
-    [ (ConstantConstraint.mk_true, RationalPolynomial.of_var var, 0, coeff_var) ] @ pe_
+    [ (ConstantConstraint.mk_true, Polynomial.of_var var, 0, coeff_var) ] @ pe_
 
 
   let normalize pe_list =
@@ -553,16 +543,6 @@ module PE = struct
                  (ConstantConstraint.mk_true, p, d, b))
              pe
            |> simplify)
-
-
-  let remove_frac pe =
-    let lcm =
-      List.map (RationalPolynomial.coeffs % Tuple4.second) pe
-      |> List.concat |> List.map OurRational.den |> OurInt.lcm_list
-    in
-    List.map
-      (fun (c, p, d, b) -> (c, RationalPolynomial.mult_with_const (OurRational.of_ourint lcm) p, d, b))
-      pe
 
 
   let max_const = function
@@ -583,6 +563,17 @@ module PE = struct
         in
         tmp |> simplify |> tap (fun pe -> ClosedFormTable.add closed_form_table var pe))
       var_poly
+end
+
+module RationalPE = struct
+  include PE (OurRational)
+
+  let remove_frac pe =
+    let lcm =
+      List.map (Polynomial.coeffs % Tuple4.second) pe
+      |> List.concat |> List.map OurRational.den |> OurInt.lcm_list
+    in
+    List.map (fun (c, p, d, b) -> (c, Polynomial.mult_with_const (OurRational.of_ourint lcm) p, d, b)) pe
 
 
   open Bounds
@@ -592,7 +583,7 @@ module PE = struct
       (fun (c, p, d, b) ->
         let bound_p = Bound.of_poly @@ RationalPolynomial.overapprox p
         and bound_d = Bound.pow runtime_bound d
-        and bound_b = Bound.exp (OurInt.of_int b) runtime_bound in
+        and bound_b = Bound.exp (OurRational.ceil b) runtime_bound in
         Bound.(bound_p * bound_d * bound_b))
       t
     |> Bound.sum_list

@@ -478,6 +478,8 @@ module type Polynomial = sig
   val coeff_of_var : Var.t -> t -> value
   (** Returns the coefficient of the term where only the given variable occurs. *)
 
+  val degree_coeff_list : t -> value list
+
   val monomials : t -> monomial list
   (** Returns the monomials of the polynomial without the empty monomial. *)
 

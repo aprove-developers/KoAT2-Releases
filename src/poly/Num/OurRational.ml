@@ -2,39 +2,37 @@ open! OurBase
 
 exception Div_Zero of string
 
-(** [n] must be non-negative. Raises Div_Zero for [0^0] *)
-let pow_ourint b e =
-  let open Q in
-  let rec pow_ourint_tail_rec_pos_e acc (e : Z.t) =
-    if Z.(equal e zero) then
-      acc
-    else
-      pow_ourint_tail_rec_pos_e (acc * b) Z.(e - one)
-  in
-  if b = zero then
-    if Z.(equal zero e) then
-      raise (Div_Zero "OurRational.pow_ourint 0^0")
-    else
-      zero
-  else if Z.Compare.(e >= Z.zero) then
-    pow_ourint_tail_rec_pos_e one e
-  else
-    one / pow_ourint_tail_rec_pos_e one (Z.neg e)
-
-
 include Q
 
-let pow b e = pow_ourint b Z.(of_int e)
+let product = Sequence.fold ~init:Q.one ~f:Q.mul
 let is_integral t = OurInt.equal OurInt.one t.den
 let sum = Sequence.fold ~f:( + ) ~init:zero
 let list_sum = sum % Sequence.of_list
 let ( =~= ) = equal
 let of_ourint = of_bigint
 
+exception NotConvertibleInteger of string
+
 (** Floors the result *)
-let to_ourint t = Z.fdiv t.num t.den
+let to_ourint t =
+  if true || is_integral t then
+    Z.div t.num t.den
+  else
+    raise (NotConvertibleInteger (Q.to_string t))
+
 
 let minus_one = sub zero one
+
+(** [n] must be non-negative. *)
+let pow_ourint b e =
+  if OurInt.is_zero e then
+    one
+  else
+    make (OurInt.pow_ourint b.num e) (OurInt.pow_ourint b.den e)
+
+
+let pow b e = pow_ourint b Z.(of_int e)
+let ( ** ) = pow
 
 module Compare = struct
   let ( < ) = ( < )
@@ -58,4 +56,3 @@ let ceil t =
 
 
 let log x = of_ourint @@ OurInt.log @@ ceil x
-let of_intfraction (num, den) = make (Z.of_int num) (Z.of_int den)

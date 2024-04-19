@@ -5,6 +5,8 @@ open Helper
 open ProgramModules
 open PolyExponential
 open Bounds
+
+(* open Bounds *)
 module Check_TWN = Check_TWN.Make (Bounds.Bound) (ProgramModules)
 module TWN_Complexity = TWN_Complexity.Make (Bounds.Bound) (ProgramModules)
 module TWN_Termination = TWN_Termination.Make (Bounds.Bound) (ProgramModules)
@@ -34,10 +36,15 @@ let tests =
                 ~f:(fun (expected_string, expr) ->
                   "" >:: fun _ ->
                   let input =
-                    List.map ~f:(fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr
+                    List.map
+                      ~f:(fun (str1, str2) ->
+                        ( Var.of_string str1,
+                          Polynomials.RationalPolynomial.of_intpoly @@ Readers.read_polynomial str2 ))
+                      expr
                   in
                   let result =
-                    Util.sequence_to_string ~f:PE.to_string (PE.compute_closed_form input |> Sequence.of_list)
+                    Util.sequence_to_string ~f:RationalPE.to_string
+                      (RationalPE.compute_closed_form input |> Sequence.of_list)
                   in
                   assert_equal_string expected_string result)
                 [
@@ -81,11 +88,15 @@ let tests =
                 ~f:(fun (expected_string, expr) ->
                   "" >:: fun _ ->
                   let input =
-                    List.map ~f:(fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr
+                    List.map
+                      ~f:(fun (str1, str2) ->
+                        ( Var.of_string str1,
+                          Polynomials.RationalPolynomial.of_intpoly @@ Readers.read_polynomial str2 ))
+                      expr
                   in
                   let result =
-                    Util.sequence_to_string ~f:PE.to_string
-                      (PE.compute_closed_form input |> PE.normalize |> Sequence.of_list)
+                    Util.sequence_to_string ~f:RationalPE.to_string
+                      (RationalPE.compute_closed_form input |> RationalPE.normalize |> Sequence.of_list)
                   in
                   assert_equal_string expected_string result)
                 [
