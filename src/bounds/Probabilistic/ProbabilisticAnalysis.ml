@@ -27,14 +27,13 @@ let grvs_from_gts_and_vars gts vars =
 module TrivialTimeBounds = TrivialTimeBounds.Probabilistic
 
 let lift_bounds program program_vars gts apprs : ExpApproximation.t =
-  let lift_time_bounds appr =
+  let lift_size_bounds_like view set appr =
     let gt_timebound gt =
       Set.to_sequence (GeneralTransition.transitions gt)
-      |> Sequence.map ~f:(ClassicalApproximation.timebound apprs.class_appr)
+      |> Sequence.map ~f:(view apprs.class_appr)
       |> RationalBound.of_intbound % Bound.sum
     in
-    Set.to_sequence gts
-    |> Sequence.fold ~f:(fun appr gt -> ExpApproximation.add_timebound (gt_timebound gt) gt appr) ~init:appr
+    Set.to_sequence gts |> Sequence.fold ~f:(fun appr gt -> set (gt_timebound gt) gt appr) ~init:appr
   in
 
   let lift_size_bounds appr =
@@ -48,7 +47,9 @@ let lift_bounds program program_vars gts apprs : ExpApproximation.t =
          ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt, v)) rvt v appr)
          ~init:appr
   in
-  lift_size_bounds (lift_time_bounds apprs.appr)
+  lift_size_bounds_like ClassicalApproximation.timebound ExpApproximation.add_timebound apprs.appr
+  |> lift_size_bounds_like ClassicalApproximation.costbound ExpApproximation.add_costbound
+  |> lift_size_bounds
   |> tap (fun appr ->
          ProofOutput.add_to_proof
            FormattedString.(
@@ -101,6 +102,7 @@ let improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcb
 
 module ELCBMap = MakeMapCreators1 (GRV)
 module ClassicAnalysis = Analysis.Make (Bound) (NonProbOverappr)
+module CostBounds = CostBounds.Make (Bound) (NonProbOverappr)
 
 let improve_scc_classically ~classical_local_conf program program_vars scc_locs apprs =
   ProofOutput.start_new_subproof ();
@@ -109,9 +111,15 @@ let improve_scc_classically ~classical_local_conf program program_vars scc_locs 
   let overappr_classical_program =
     Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program
   in
+  let overappr_scc_with_in_and_out =
+    NonProbOverappr.Program.scc_transitions_from_locs_with_incoming_and_outgoing overappr_classical_program
+      scc_locs
+  in
   let class_appr =
     coerce_from_classical_approximation apprs.class_appr
     |> ClassicAnalysis.improve_scc ~conf:classical_local_conf scc_locs overappr_classical_program
+    |> CostBounds.infer_from_timebounds_for_transitions overappr_classical_program
+         overappr_scc_with_in_and_out
     |> coerce_from_nonprob_overappr_approximation
   in
   let appr = lift_bounds program program_vars scc_with_in_and_out { apprs with class_appr } in

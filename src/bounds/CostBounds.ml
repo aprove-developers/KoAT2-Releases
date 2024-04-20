@@ -9,7 +9,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let unbounded appr transition = Bound.is_infinity (Approximation.costbound appr transition)
 
   (** Infers cost-bounds from time-bounds by multiplying the costs of a transition with the time-bound of the same transition. *)
-  let infer_from_timebounds program appr =
+  let infer_from_timebounds_for_transitions program transitions appr =
     let add_costbound transition appr =
       if unbounded appr transition then
         if Polynomials.Polynomial.is_const (Transition.cost transition) then
@@ -43,5 +43,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       else
         appr
     in
-    TransitionGraph.fold_edges_e add_costbound (Program.graph program) appr
+    Set.fold ~init:appr ~f:(fun appr t -> add_costbound t appr) transitions
+
+
+  let infer_from_timebounds program appr =
+    infer_from_timebounds_for_transitions program (Program.transitions program) appr
 end
