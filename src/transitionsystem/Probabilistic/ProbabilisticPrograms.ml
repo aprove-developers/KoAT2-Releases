@@ -732,7 +732,7 @@ module GeneralTransition = struct
         {
           gt_id;
           guard;
-          cost;
+          cost = Polynomial.rename map_to_arg_vars cost;
           invariant = update_admissibility;
           transitions =
             ProbabilisticTransitionSet.of_list
