@@ -72,6 +72,7 @@ end
 include PolynomialOverIndeterminate (UpdateValue) (OurInt)
 module Monomial_ = Monomials.MakeOverIndeterminate (UpdateValue) (OurInt)
 
+let is_probabilistic = List.exists ~f:UpdateValue.is_dist % indeterminates
 let is_integral _ = true
 
 let to_polynomial =

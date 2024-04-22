@@ -96,26 +96,19 @@ let improve_with_plrf program (class_appr, appr) rank =
     MaybeChanged.same appr
 
 
-let improve_timebounds_plrf ~compute_refined_plrfs program scc (class_appr, appr) :
-    ExpApproximation.t MaybeChanged.t =
+let improve_timebounds_plrf program scc (class_appr, appr) : ExpApproximation.t MaybeChanged.t =
   let get_timebound, get_sizebound = get_timebound_and_sizebound_both_directions (class_appr, appr) in
   let is_exptime_bounded = RationalBound.is_finite % get_timebound in
   let unbounded_vars (gt, l) =
     Program.input_vars program
     |> Set.filter ~f:(RationalBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
   in
-  let find_plrfs refined =
+  let find_plrfs =
     Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc
     |> Set.to_array
-    |> Parmap.array_parmap (Plrf.find_scc ~refined program is_exptime_bounded unbounded_vars scc)
+    |> Parmap.array_parmap (Plrf.find_scc program is_exptime_bounded unbounded_vars scc)
     |> Array.to_sequence |> Sequence.filter_opt
   in
-  (if compute_refined_plrfs then
-     Sequence.of_list [ false; true ]
-   else
-     Sequence.of_list [ false ])
-  |> Sequence.map ~f:find_plrfs
-  |> Sequence.filter ~f:(not % Sequence.is_empty)
-  |> fun seq ->
+  Sequence.of_list [ find_plrfs ] |> Sequence.filter ~f:(not % Sequence.is_empty) |> fun seq ->
   Sequence.hd seq |? Sequence.empty
   |> MaybeChanged.fold_sequence ~f:(fun appr -> improve_with_plrf program (class_appr, appr)) ~init:appr
