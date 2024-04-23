@@ -49,6 +49,9 @@ module RationalBound : sig
   val of_intbound : Bound.t -> t
   val of_intpoly : Polynomials.Polynomial.t -> t
 
+  val of_overapprox_laurentpoly : Polynomials.RationalLaurentPolynomial.t -> t
+  (** Overapproximates variables with negative exponents with 1 *)
+
   val to_intbound : t -> Bound.t
   (** Ceil Floats to Ints *)
 end

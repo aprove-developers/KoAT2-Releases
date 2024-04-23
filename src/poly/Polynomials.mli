@@ -76,8 +76,13 @@ module RationalPolynomial : sig
   val is_integral : t -> bool
 end
 
-module RationalLaurentPolynomial : module type of PolynomialOver (OurRational)
 (** Provides default implementation of laurent polynomials ranged over [OurRational]. *)
+module RationalLaurentPolynomial : sig
+  include module type of PolynomialOver (OurRational)
+
+  val overapprox_neg_exponents : t -> RationalPolynomial.t
+  (** Overapproximates variables with negative exponents with 1 *)
+end
 
 (** Provides polynomials where the coefficients are polynomials over {i Value}. *)
 module ParameterPolynomialOver (Value : PolyTypes.Ring) : sig

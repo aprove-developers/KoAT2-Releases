@@ -60,15 +60,15 @@ let trivial_sizebounds program ~grvs_in_and_out elcbs class_appr appr =
         |> List.map ~f:(fun (_, label, _) ->
                let open OptionMonad in
                let+ update = TransitionLabel.update label v in
-               RationalBound.mul
-                 (if label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.is_const
-                  then
-                    label |> TransitionLabel.probability |> Polynomials.RationalLaurentPolynomial.get_constant
-                    |> RationalBound.of_constant
-                  else
-                    (* TODO *)
-                    RationalBound.infinity)
-                 (UpdateElement.exp_value_abs_bound update))
+               let ue_exp_abs_bound = UpdateElement.exp_value_abs_bound update in
+               let ue_exp_abs_poly = RationalBound.to_poly ue_exp_abs_bound in
+               match ue_exp_abs_poly with
+               | Some ue_exp_abs_poly ->
+                   Polynomials.RationalLaurentPolynomial.(ue_exp_abs_poly * TransitionLabel.probability label)
+                   |> RationalBound.of_overapprox_laurentpoly
+               | None ->
+                   RationalBound.(
+                     of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_bound))
         |> OptionMonad.sequence |> Option.map ~f:RationalBound.sum_list
       in
       match combined_updates with
