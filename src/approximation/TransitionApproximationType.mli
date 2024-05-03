@@ -14,7 +14,7 @@ module type ApproximableTransition = sig
   include Comparator.S with type t := t
 end
 
-module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) :
+module MakeDefaultApproximableTransition (PM : ProgramTypes.ClassicalProgramModules) :
   ApproximableTransition
     with type program = PM.Program.t
      and type t = PM.Transition.t

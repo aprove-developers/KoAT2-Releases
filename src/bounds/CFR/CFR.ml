@@ -29,7 +29,7 @@ let logger_cfr = Logging.(get CFR)
 (* Measures the time spend on CFR. *)
 let time_cfr = ref 180.
 
-module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
+module Make (PM : ProgramTypes.ClassicalProgramModules) (Bound : BoundType.Bound) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
@@ -89,7 +89,6 @@ module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struc
               ("timelimit", string_of_float timelimit);
             ] ))
         execute
-        ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
     in
     let rec apply_cfrs = function
       | cfr :: cfrs when !time_cfr > 0. -> (
@@ -192,10 +191,11 @@ let pe pe_config =
   in
   mk_cfr ~method_name:"PartialEvaluation" perform_cfr
 
+(*
 
 let pe_probabilistic pe_config =
   let perform_cfr program ~transitions_to_refine =
     PartialEvaluation.ProbabilisticPartialEvaluation.apply_sub_scc_cfr pe_config transitions_to_refine program
     |> MaybeChanged.changed (* TODO: better solution? *)
   in
-  mk_cfr ~method_name:"PartialEvaluationProbabilistic" perform_cfr
+  mk_cfr ~method_name:"PartialEvaluationProbabilistic" perform_cfr *)

@@ -59,9 +59,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val add_to_proof : t -> Bound.t option -> PM.Program.t -> unit
 
-  module Loop : module type of Loop.Make (Bound) (PM)
+  module Loop : module type of Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
 
   val time_bound : Loop.t -> ?non_increasing:Loop.t list option -> int -> Bound.t
 end
 
-include module type of Make (Bounds.Bound) (ProgramModules) (* TODO Bounds *)
+include module type of Make (Bounds.Bound) (ProgramModules)

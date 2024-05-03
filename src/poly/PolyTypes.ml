@@ -402,7 +402,7 @@ module type Ring = sig
   (** Returns a string representing an element. *)
 end
 
-(** A Polynomial represents a mathematical polynomial *)
+(** A polynomial represents a mathematical polynomial *)
 module type Polynomial = sig
   type t
 

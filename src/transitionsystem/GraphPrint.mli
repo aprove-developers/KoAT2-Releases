@@ -1,6 +1,6 @@
 open! OurBase
 
-module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) :
+module MakeForClassicalAnalysis (PM : ProgramTypes.ClassicalProgramModules) :
   GraphPrintType.GraphPrint
     with type transition_label = PM.TransitionLabel.t
      and type transition_comparator_witness = PM.Transition.comparator_witness
@@ -16,11 +16,11 @@ module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) : sig
     unit
 end
 
-module ProbabilisticGraphPrint :
-  GraphPrintType.GraphPrint
-    with type transition_label = ProbabilisticProgramModules.TransitionLabel.t
-     and type transition_comparator_witness = ProbabilisticProgramModules.Transition.comparator_witness
-     and type program = ProbabilisticProgramModules.Program.t
+(* module ProbabilisticGraphPrint :
+   GraphPrintType.GraphPrint
+     with type transition_label = ProbabilisticProgramModules.TransitionLabel.t
+      and type transition_comparator_witness = ProbabilisticProgramModules.Transition.comparator_witness
+      and type program = ProbabilisticProgramModules.Program.t *)
 
 include module type of MakeForClassicalAnalysis (ProgramModules)
 include module type of MakeForRVGFromClassical (ProgramModules)

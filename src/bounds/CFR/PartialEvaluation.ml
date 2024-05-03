@@ -7,9 +7,9 @@ let log ?(level = Logger.INFO) method_name data =
 
 
 module Unfolding
-    (PM : ProgramTypes.ProgramModules)
+    (PM : ProgramTypes.ClassicalProgramModules)
     (A : GenericProgram_.Adapter
-           with type update_element = PM.UpdateElement.t
+           with type update_element = PM.UpdateElementNonRec.t
             and type transition = PM.Transition.t) =
 struct
   open GenericProgram_.OverApproximationUtils (A)
@@ -80,9 +80,9 @@ struct
 end
 
 module PartialEvaluation
-    (PM : ProgramTypes.ProgramModules)
+    (PM : ProgramTypes.ClassicalProgramModules)
     (Adapter : GenericProgram_.Adapter
-                 with type update_element = PM.UpdateElement.t
+                 with type update_element = PM.UpdateElementNonRec.t
                   and type transition = PM.Transition.t
                   and type program = PM.Program.t
                   and type transition_graph = PM.TransitionGraph.t) =
@@ -167,7 +167,7 @@ struct
         if Set.mem exit_transitions transition then
           `ExitTransition (Version.mk_true target_loc)
         else
-          let update = TransitionLabel.update_map label in
+          let update = TransitionLabel.(TransitionLabelNonRec.update_map @@ to_non_rec label) in
           let unfolded_constr = unfold_update am src_polyh program_vars update in
           let abstracted = Abstraction.abstract abstr_ctx target_loc unfolded_constr in
           `EvaluatedTransition (Version.mk target_loc abstracted)
@@ -347,5 +347,5 @@ end
 
 module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ProgramModules.ClassicAdapter)
 
-module ProbabilisticPartialEvaluation =
-  PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticProgramModules.ProbabilisticAdapter)
+(* module ProbabilisticPartialEvaluation =
+   PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticProgramModules.ProbabilisticAdapter) *)

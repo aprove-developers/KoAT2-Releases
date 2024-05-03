@@ -3,7 +3,7 @@ open! OurBase
 let cfr_logger = Logging.(get CFR)
 
 (** This module computes all cycles in a graph. *)
-module Cycles (PM : ProgramTypes.ProgramModules) = struct
+module Cycles (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   let cycle_to_string cycle = Sequence.of_list cycle |> Util.sequence_to_string ~f:Location.to_string

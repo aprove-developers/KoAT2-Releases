@@ -4,7 +4,7 @@ module UnliftedTimeBound : sig
   type ('trans, 'bound, 'trans_cmp_wit) unlifted_time_bound
   (** The abstract type *)
 
-  module Make (PM : ProgramTypes.ProgramModules) (B : BoundType.Bound) : sig
+  module Make (PM : ProgramTypes.ClassicalProgramModules) (B : BoundType.Bound) : sig
     open PM
 
     type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound

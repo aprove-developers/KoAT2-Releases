@@ -1,6 +1,6 @@
 open! OurBase
 
-module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
+module GraphUtils (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module TransitionGraphWeight (Value : PolyTypes.Ring) = struct

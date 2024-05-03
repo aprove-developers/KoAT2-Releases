@@ -24,7 +24,7 @@ module type Adapter = sig
   type grouped_transition
   type grouped_transition_cmp_wit
   type program
-  type approx = Polynomials.Polynomial.t * Guard.t
+  type approx = update_element * Guard.t
 
   val overapprox_indeterminates : update_element -> approx
   val outgoing_grouped_transitions : transition_graph -> Location.t -> grouped_transition Sequence.t
@@ -47,12 +47,10 @@ module type Adapter = sig
 end
 
 module OverApproximationUtils (A : Adapter) = struct
-  open A
-
   let overapprox_update update =
     Map.fold
       ~f:(fun ~key:var ~data:ue (new_update, guards) ->
-        let ue_approx, guard = overapprox_indeterminates ue in
+        let ue_approx, guard = A.overapprox_indeterminates ue in
         (Map.add_exn ~key:var ~data:ue_approx new_update, Guard.mk_and guards guard))
       update
       ~init:(Map.empty (module Var), Guard.mk_true)

@@ -4,7 +4,7 @@ open! OurBase
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.
     Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ProgramModules) = struct
+module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
@@ -28,9 +28,9 @@ end
 module Classical (Bound : BoundType.Bound) = struct
   include Make (Bound) (ProgramModules)
 end
-
-module Probabilistic (BP : BoundPair.T) = struct
-  module TrivialTimeBoundsProbabilistic = Make (BP.ClassBound) (ProbabilisticProgramModules)
+(*
+module Probabilistic = struct
+  module TrivialTimeBoundsProbabilistic = Make (Bounds.Bound) (ProbabilisticProgramModules)
 
   let compute program (apprs : Approximation.Probabilistic(BP).apprs) =
     let open Approximation.Probabilistic (BP) in
@@ -55,6 +55,6 @@ module Probabilistic (BP : BoundPair.T) = struct
     in
 
     { class_appr; appr }
-end
+end *)
 
 include Classical (Bounds.Bound)

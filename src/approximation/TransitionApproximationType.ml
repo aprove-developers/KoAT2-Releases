@@ -16,7 +16,7 @@ module type ApproximableTransition = sig
   include Comparator.S with type t := t
 end
 
-module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) = struct
+module MakeDefaultApproximableTransition (PM : ProgramTypes.ClassicalProgramModules) = struct
   type program = PM.Program.t
 
   let all_from_program = Set.to_sequence % PM.Program.transitions

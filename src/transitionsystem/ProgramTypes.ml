@@ -121,9 +121,6 @@ module type TransitionLabel = sig
   val changed_vars : t -> VarSet.t
   (** All input variables where the update is not x' = x.*)
 
-  val chain_guards : t -> t -> Guard.t
-  (** Guard that is true if both transitions can be executed one after another *)
-
   val remove_non_contributors : VarSet.t -> t -> t
 
   include Comparator.S with type t := t
@@ -131,22 +128,43 @@ module type TransitionLabel = sig
   val sexp_of_t : t -> Sexp.t
 end
 
-module type ClassicalTransitionLabel = sig
+module type ClassicalTransitionLabelNonRec = sig
   include TransitionLabel with type update_element = Polynomial.t
+
+  val append : t -> t -> t
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
 
-  val relax_guard : non_static:VarSet.t -> t -> t
+  val relax_guard :
+    deterministic:VarSet.t -> t -> t (* TODO Nils rename this static -> deterministic and move*)
   (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 
-  (** Create an equivalent label with new id's, takes gt_id from the provided table and
-      if not available creates and adds a new id_for the general transition to the table.
-      *)
-  (* val copy_rename: (int, int) Hashtbl.t -> t -> t *)
+  val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t
+
+  val chain_guards : t -> t -> Guard.t
+  (** Guard that is true if both transitions can be executed one after another *)
+end
+
+module type ClassicalTransitionLabel = sig
+  include TransitionLabel with type update_element = PolyRec.PolyRec.t
+  module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
+
+  val map_guard : (Guard.t -> Guard.t) -> t -> t
+  (** Apply function to guard *)
+
+  val relax_guard : deterministic:VarSet.t -> t -> t
+  (** Keeps only the atoms of the guard whose variables are deterministic *)
+
+  val overapprox_nonlinear_updates : t -> t
+  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
+
+  val has_rec_calls : t -> bool
+  val of_non_rec : TransitionLabelNonRec.t -> t
+  val to_non_rec : t -> TransitionLabelNonRec.t
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -207,8 +225,10 @@ end
 
 module type ClassicalTransition = sig
   include Transition
+  module TransitionLabel : ClassicalTransitionLabel
 
   val overapprox_nonlinear_updates : t -> t
+  val has_rec_calls : t -> bool
 end
 
 (** This module represents a transition graph. *)
@@ -471,8 +491,10 @@ end
 module type ClassicalProgramModules = sig
   (* Can we avoid copy/pasting below? *)
 
-  module UpdateElement : module type of Polynomial
+  module UpdateElement : module type of PolyRec.PolyRec
   module TransitionLabel : ClassicalTransitionLabel
+  module UpdateElementNonRec : module type of Polynomial
+  module TransitionLabelNonRec : TransitionLabel with type update_element = UpdateElementNonRec.t
 
   module Transition :
     ClassicalTransition

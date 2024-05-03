@@ -27,7 +27,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   end)
 
   type mprf_problem = {
-    program : Program.t;
+    program : PM.Program.t;
     measure : measure;
     make_non_increasing : Transition.t Array.t;
     make_decreasing : Transition.t;
@@ -256,7 +256,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     and template1_l = TemplateTable.find template_table1 l
     and template1_l' = TemplateTable.find template_table1 l' in
     transition_constraint_i_ (measure, constraint_type)
-      (TransitionLabel.update_map t, TransitionLabel.guard t, TransitionLabel.cost t)
+      TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
       template0_l template1_l template1_l'
 
 
@@ -282,7 +282,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let template1_l = TemplateTable.find template_table1 l
     and template1_l' = TemplateTable.find template_table1 l' in
     transition_constraint_1_ (measure, constraint_type)
-      (TransitionLabel.update_map t, TransitionLabel.guard t, TransitionLabel.cost t)
+      TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
       template1_l template1_l'
 
 
@@ -297,11 +297,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let transition_constraint_d bound (template_table1, measure, constraint_type, (l, t, l')) : Formula.t =
     let template1_l = TemplateTable.find template_table1 l in
-    transition_constraint_d_ bound (measure, constraint_type) (TransitionLabel.guard t) template1_l
+    transition_constraint_d_ bound (measure, constraint_type)
+      (TransitionLabel.TransitionLabelNonRec.guard t)
+      template1_l
 
 
   (* use all three functions above combined*)
-  let transition_constraint_ cache (depth, measure, constraint_type, (l, t, l')) : Formula.t =
+  let transition_constraint_ cache (depth, measure, constraint_type, (l, (t : TransitionLabel.t), l')) :
+      Formula.t =
+    let t_non_rec = TransitionLabel.to_non_rec t in
     let res = ref Formula.mk_true in
     for i = 1 to depth - 1 do
       res :=
@@ -309,20 +313,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Array.get cache.template_table i,
           measure,
           constraint_type,
-          (l, t, l') )
+          (l, t_non_rec, l') )
         |> transition_constraint_i |> Formula.mk_and !res
     done;
     res :=
-      (Array.get cache.template_table 0, measure, constraint_type, (l, t, l'))
+      (Array.get cache.template_table 0, measure, constraint_type, (l, t_non_rec, l'))
       |> transition_constraint_1 |> Formula.mk_and !res;
     if depth > 1 then
       res :=
-        (Array.get cache.template_table (depth - 1), measure, constraint_type, (l, t, l'))
+        (Array.get cache.template_table (depth - 1), measure, constraint_type, (l, t_non_rec, l'))
         |> transition_constraint_d ParameterPolynomial.zero
         |> Formula.mk_and !res
     else
       res :=
-        (Array.get cache.template_table (depth - 1), measure, constraint_type, (l, t, l'))
+        (Array.get cache.template_table (depth - 1), measure, constraint_type, (l, t_non_rec, l'))
         |> transition_constraint_d ParameterPolynomial.one
         |> Formula.mk_and !res;
 
@@ -465,7 +469,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let rec helper min_applicable =
       (* get time_unbounded pre transitions *)
       Base.Set.to_sequence min_applicable
-      |> Base.Sequence.map ~f:(Program.pre mprf_problem.program)
+      |> Base.Sequence.map ~f:(PM.Program.pre mprf_problem.program)
       (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
       |> Base.Sequence.map ~f:Base.Set.to_sequence
       |> Base.Sequence.join
@@ -485,8 +489,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let compute_scc cache program mprf_problem =
-    let locations = Base.Set.to_list @@ TransitionGraph.locations (Program.graph program) in
-    let vars = Program.input_vars program in
+    let locations = Base.Set.to_list @@ PM.TransitionGraph.locations (PM.Program.graph program) in
+    let vars = PM.Program.input_vars program in
     compute_ranking_templates cache mprf_problem.find_depth vars locations;
 
     let solver_int = Solver.create () in
@@ -550,7 +554,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let find measure program depth =
     let execute () =
-      Base.Sequence.of_list (Program.sccs program)
+      Base.Sequence.of_list (PM.Program.sccs program)
       |> Base.Sequence.map ~f:(fun scc ->
              Base.Set.to_sequence scc
              |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc depth))
@@ -562,7 +566,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       execute
 
 
-  module Loop = Loop.Make (Bound) (PM)
+  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
 
   type t_loop = { rank : Polynomial.t list; depth : int }
 

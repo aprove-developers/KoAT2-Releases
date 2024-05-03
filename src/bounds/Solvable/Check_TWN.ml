@@ -1,9 +1,8 @@
 open OurBase
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open! PM
-  module Loop = Loop.Make (Bound) (PM)
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
+  module Loop = Loop.Make (Bound) (TL)
 
   type twn = TWN of Var.t list | NOTTRIANGULAR
 

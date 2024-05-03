@@ -78,8 +78,10 @@ end
 
 module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) = struct
   include Make (TL)
+  module TransitionLabel = TL
 
   let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
+  let has_rec_calls = TL.has_rec_calls % label
 end
 
 open! OurBase

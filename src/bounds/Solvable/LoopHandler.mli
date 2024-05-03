@@ -6,7 +6,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val handled_transitions : loop -> TransitionSet.t
 
-  module Loop : module type of Loop.Make (Bound) (PM)
+  module Loop : module type of Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
 
   val find_all_possible_loops_for_scc :
     (Loop.t -> bool) -> TransitionSet.t -> Program.t -> loop ProofOutput.LocalProofOutput.with_proof list

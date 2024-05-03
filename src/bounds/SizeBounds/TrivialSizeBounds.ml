@@ -58,9 +58,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         if Program.is_initial program t then
           let res_from_lsb = lsb_as_bound in
           let res_from_update =
-            let tlabel = Transition.label t in
-            let+ update = TransitionLabel.update tlabel v in
-            if Set.is_subset (Polynomials.Polynomial.vars update) ~of_:(TransitionLabel.input_vars tlabel)
+            let tlabel = TransitionLabel.to_non_rec (Transition.label t) in
+            let+ update = TransitionLabel.TransitionLabelNonRec.update tlabel v in
+            if
+              Set.is_subset (Polynomials.Polynomial.vars update)
+                ~of_:(TransitionLabel.TransitionLabelNonRec.input_vars tlabel)
             then
               Bound.of_poly update
             else
@@ -72,9 +74,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
           in
           let res_from_update =
-            let tlabel = Transition.label t in
-            let+ update = TransitionLabel.update (Transition.label t) v in
-            if Set.is_subset (Polynomials.Polynomial.vars update) ~of_:(TransitionLabel.input_vars tlabel)
+            let tlabel = TransitionLabel.to_non_rec (Transition.label t) in
+            let+ update = TransitionLabel.TransitionLabelNonRec.update tlabel v in
+            if
+              Set.is_subset (Polynomials.Polynomial.vars update)
+                ~of_:(TransitionLabel.TransitionLabelNonRec.input_vars tlabel)
             then
               incoming_bound_lifted_update program get_sizebound update t v
             else

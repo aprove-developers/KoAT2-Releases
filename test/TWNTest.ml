@@ -5,10 +5,10 @@ open Helper
 open ProgramModules
 open PolyExponential
 open Bounds
-module Check_TWN = Check_TWN.Make (Bounds.Bound) (ProgramModules)
-module TWN_Complexity = TWN_Complexity.Make (Bounds.Bound) (ProgramModules)
-module TWN_Termination = TWN_Termination.Make (Bounds.Bound) (ProgramModules)
-module Loop = Loop.Make (Bounds.Bound) (ProgramModules)
+module Check_TWN = Check_TWN.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
+module TWN_Complexity = TWN_Complexity.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
+module TWN_Termination = TWN_Termination.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
+module Loop = Loop.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
 
 let tests =
   "TWN"
@@ -20,7 +20,8 @@ let tests =
                   let program = Readers.read_program_simple program in
                   let result =
                     Check_TWN.check_twn
-                      (program |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second |> Loop.mk)
+                      (program |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
+                     |> ProgramModules.TransitionLabel.to_non_rec |> Loop.mk)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -130,7 +131,7 @@ let tests =
                   let result =
                     TWN_Termination.termination twn_proofs
                       (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> Loop.mk)
+                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_rec |> Loop.mk)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -185,7 +186,7 @@ let tests =
                   let result =
                     TWN_Complexity.complexity twn_proofs
                       (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> Loop.mk)
+                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_rec |> Loop.mk)
                   in
                   let error_msg =
                     "Asymptotic Complexity "
@@ -219,7 +220,7 @@ let tests =
                   let result =
                     TWN_Complexity.complexity twn_proofs ~twnlog:true
                       (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> Loop.mk)
+                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_rec |> Loop.mk)
                   in
                   let error_msg =
                     "Asymptotic Complexity "

@@ -120,51 +120,51 @@ struct
 end
 
 (* TODO clean-up. *)
-module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
+module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) =
   Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
 
-module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) =
   MakeWithDefaultTransition (B) (PM)
 
-module Coerce
-    (B : BoundType.Bound)
-    (PM : ProgramTypes.ProgramModules)
-    (PM' : ProgramTypes.ProgramModules)
-    (E : sig
-      val trans_eq : (PM.Transition.t, PM'.Transition.t) Type_equal.t
-      val rvtuple__eq : (PM.RV.t, PM'.RV.t) Type_equal.t
+(* module Coerce
+       (B : BoundType.Bound)
+       (PM : ProgramTypes.ClassicalProgramModules)
+       (PM' : ProgramTypes.ClassicalProgramModules)
+       (E : sig
+         val trans_eq : (PM.Transition.t, PM'.Transition.t) Type_equal.t
+         val rvtuple__eq : (PM.RV.t, PM'.RV.t) Type_equal.t
 
-      val trans_cmp_wit_eq :
-        (PM.Transition.comparator_witness, PM'.Transition.comparator_witness) Type_equal.t
+         val trans_cmp_wit_eq :
+           (PM.Transition.comparator_witness, PM'.Transition.comparator_witness) Type_equal.t
 
-      val rvtuple__cmp_wit_eq : (PM.RV.comparator_witness, PM'.RV.comparator_witness) Type_equal.t
-    end) =
-struct
-  let trans_appr_proof =
-    let module L = Type_equal.Lift3 (struct
-      type ('trans, 'bound, 'trans_cmp_wit) t =
-        ('trans, 'bound, 'trans_cmp_wit) TransitionApproximationType.transition_approximation_t
-    end) in
-    L.lift E.trans_eq Type_equal.refl E.trans_cmp_wit_eq
-
-
-  let size_appr_proof =
-    let module L = Type_equal.Lift3 (struct
-      type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) t =
-        ('rvtuple_, 'bound, 'rvtuple__cmp_wit) SizeApproximationType.size_approximation_t
-    end) in
-    L.lift E.rvtuple__eq Type_equal.refl E.rvtuple__cmp_wit_eq
+         val rvtuple__cmp_wit_eq : (PM.RV.comparator_witness, PM'.RV.comparator_witness) Type_equal.t
+       end) =
+   struct
+     let trans_appr_proof =
+       let module L = Type_equal.Lift3 (struct
+         type ('trans, 'bound, 'trans_cmp_wit) t =
+           ('trans, 'bound, 'trans_cmp_wit) TransitionApproximationType.transition_approximation_t
+       end) in
+       L.lift E.trans_eq Type_equal.refl E.trans_cmp_wit_eq
 
 
-  let coerce : MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t =
-   fun appr ->
-    Type_equal.
-      {
-        size = conv size_appr_proof appr.size;
-        time = conv trans_appr_proof appr.time;
-        cost = conv trans_appr_proof appr.cost;
-      }
-end
+     let size_appr_proof =
+       let module L = Type_equal.Lift3 (struct
+         type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) t =
+           ('rvtuple_, 'bound, 'rvtuple__cmp_wit) SizeApproximationType.size_approximation_t
+       end) in
+       L.lift E.rvtuple__eq Type_equal.refl E.rvtuple__cmp_wit_eq
+
+
+     let coerce : MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t =
+      fun appr ->
+       Type_equal.
+         {
+           size = conv size_appr_proof appr.size;
+           time = conv trans_appr_proof appr.time;
+           cost = conv trans_appr_proof appr.cost;
+         }
+   end *)
 
 include MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
@@ -184,15 +184,15 @@ module Probabilistic (BP : BoundPair.T) = struct
       (struct
         open ProbabilisticProgramModules
 
-        type program = Program.t
+           type program = Program.t
 
-        include GeneralTransition
+           include GeneralTransition
 
-        let id = gt_id
-        let all_from_program = Set.to_sequence % Program.gts
-      end)
+           let id = gt_id
+           let all_from_program = Set.to_sequence % Program.gts
+         end)
 
-  type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
+     type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
 
   let coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
       =
@@ -210,11 +210,11 @@ module Probabilistic (BP : BoundPair.T) = struct
           open Type_equal
           module E = ProbabilisticPrograms.Equalities
 
-          let trans_eq = sym E.trans_eq
-          let rvtuple__eq = sym E.rvtuple__eq
-          let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
-          let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
-        end)
-    in
-    M.coerce
-end
+             let trans_eq = sym E.trans_eq
+             let rvtuple__eq = sym E.rvtuple__eq
+             let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
+             let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
+           end)
+       in
+       M.coerce
+   end

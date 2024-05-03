@@ -12,7 +12,7 @@
 %token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token          COMMA COLON
 %token          INFINITY
-%token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE ALMOSTSURETERMINATION
+%token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
 %token          BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
 %token          LOG
 
@@ -37,6 +37,8 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
+%start <PolyRec.t> onlyPolynomialRec
+
 %start <Polynomials.RationalLaurentPolynomial.t> onlyProb
 
 %start <ProbabilityDistribution.t> onlyProbabilityDistribution
@@ -57,12 +59,15 @@
 
 %type <Polynomials.Polynomial.t> polynomial
 
+%type <PolyRec.t> polynomialRec
+
 %type <Var.t list> variables
 
 %{
   open Constraints
   open Atoms
   open Polynomials
+  open PolyRec
   open Formulas
   open ProgramModules
   open Bounds
@@ -133,8 +138,6 @@ probabilisticGoal:
     { Goal.ExpectedComplexity }
   | LPAR GOAL EXPECTEDSIZE var=ID RPAR
     { Goal.ExpectedSize (Var.of_string var) }
-  | LPAR GOAL ALMOSTSURETERMINATION RPAR
-    { Goal.AlmostSureTermination }
 
 start:
   | LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
@@ -185,7 +188,7 @@ transition_rhs:
    { ("Com_1", [target]) } ;
 
 transition_target:
-  | target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
+  | target = ID; LPAR assignments = separated_list(COMMA, polynomialRec) RPAR
     { (target, assignments) } ;
 
 (* TODO: Alternatively parse classical transition here *)
@@ -302,6 +305,9 @@ formula_atom:
 onlyPolynomial:
   | poly = polynomial EOF { poly } ;
 
+onlyPolynomialRec:
+  | poly = polynomialRec EOF { poly } ;
+
 onlyUpdateElement:
   | ue = update_element EOF { ue };
 
@@ -330,6 +336,20 @@ polynomial:
     { op p1 p2 }
   | v = variable; POW; c = UINT
     { Polynomial.pow (Polynomial.of_var v) (int_of_string c) } ;
+
+polynomialRec:
+  | v = variable
+    { PolyRec.of_var v }
+  | c = our_int
+    { PolyRec.of_constant c }
+  | LPAR; ex = polynomialRec; RPAR
+    { ex }
+  | MINUS; ex = polynomialRec
+    { PolyRec.neg ex }
+  | p1 = polynomialRec; op = bioperatorRec; p2 = polynomialRec
+    { op p1 p2 }
+  | v = variable; POW; c = UINT
+    { PolyRec.pow (PolyRec.of_var v) (int_of_string c) } ;
 
 rational_laurent_polynomial:
   | v = variable
@@ -381,6 +401,11 @@ bound:
   | PLUS { Polynomial.add }
   | TIMES { Polynomial.mul }
   | MINUS { Polynomial.sub } ;
+
+%inline bioperatorRec:
+  | PLUS { PolyRec.add }
+  | TIMES { PolyRec.mul }
+  | MINUS { PolyRec.sub } ;
 
 %inline laurent_bioperator:
   | PLUS { RationalLaurentPolynomial.add }

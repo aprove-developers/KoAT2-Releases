@@ -5,7 +5,7 @@ exception RecursionNotSupported
 (** KoAT does not support recursion yet *)
 
 module Make
-    (TL : ProgramTypes.TransitionLabel)
+    (TL : ProgramTypes.ClassicalTransitionLabel)
     (T : ProgramTypes.Transition
            with type transition_label = TL.t
             and type transition_label_comparator_witness = TL.comparator_witness)

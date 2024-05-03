@@ -1,9 +1,8 @@
 open OurBase
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open! PM
-  module Loop = Loop.Make (Bound) (PM)
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
+  module Loop = Loop.Make (Bound) (TL)
 
   type blocks = Var.t list list
 
@@ -66,7 +65,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       None
 
 
-  let check_solvable_ (_, t, _) = check_solvable @@ Loop.mk t
+  let check_solvable_ t = check_solvable @@ Loop.mk t
 
   let compute_update_matrix loop (block : Var.t list) =
     let open OurMatrix in
