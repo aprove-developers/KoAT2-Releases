@@ -70,6 +70,7 @@ let as_guard d v' =
 let exp_value_poly = function
   | Binomial (n, p) -> RationalPolynomial.(of_intpoly n * of_constant p)
   | Geometric a -> RationalPolynomial.of_constant OurRational.(div (of_int 1) a)
+  | Hypergeometric (bigN, k, n) when OurInt.(bigN = zero) -> RationalPolynomial.of_int 0
   | Hypergeometric (bigN, k, n) ->
       RationalPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one / of_ourint bigN))
   | Uniform (a, b) ->
@@ -78,57 +79,103 @@ let exp_value_poly = function
         (RationalPolynomial.add (RationalPolynomial.of_intpoly a) (RationalPolynomial.of_intpoly b))
 
 
-(* TODO generalise to higher orders we might want to use polylogs for geo distribution *)
-let moment_poly d i =
-  if i = 1 then
+let rec moment_poly d i =
+  if i = 0 then
+    RationalPolynomial.of_int 1
+  else if i = 1 then
     exp_value_poly d
   else
     match d with
-    | Binomial (n, p) -> (
-        match i with
-        | 2 ->
-            let n, p = (RationalPolynomial.of_intpoly n, RationalPolynomial.of_constant p) in
-            RationalPolynomial.((n * p * (one - p)) + (pow n 2 * pow p 2))
-        | _ -> failwith @@ Int.to_string i ^ ". moment of binomial distribution not yet implemented.")
-    | Geometric a -> (
-        match i with
-        | 2 -> RationalPolynomial.of_constant @@ OurRational.((of_int 2 - a) / pow a 2)
-        | _ -> failwith @@ Int.to_string i ^ ". moment of geometric distribution not yet implemented.")
-    | Hypergeometric (bigN, k, n) -> (
-        match i with
-        (* RationalPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one/of_ourint bigN)) *)
-        | 2 ->
-            let expv = exp_value_poly d in
-            let bigN, k, n =
-              (OurRational.of_ourint bigN, RationalPolynomial.of_intpoly k, RationalPolynomial.of_intpoly n)
-            in
+    | Binomial (n, p) ->
+        (* ∑_{j=0}^i (p-1)^j binom(n,j) ∑_{k=0}^j (-1)^k binom(j,k) (n-k)^i  [https://doi.org/10.1137/070700024, Theorem 4.1] *)
+        let q = OurRational.(one - p) in
+        RationalPolynomial.sum
+        @@ Sequence.map
+             OurInt.(range zero (of_int i))
+             ~f:(fun j ->
+               (* c = (-q)^j *)
+               let c = RationalPolynomial.(pow (of_constant OurRational.(-q)) (OurInt.to_int j)) in
+               (* c2 = binomial(n,j) *)
+               let c2 = Math.binomial_poly n j in
+               let inner_sum j =
+                 RationalPolynomial.sum
+                 @@ Sequence.map
+                      OurInt.(range zero j)
+                      ~f:(fun k ->
+                        (* sgn = (-1)^k *)
+                        let sgn =
+                          if OurInt.(is_even k) then
+                            RationalPolynomial.one
+                          else
+                            RationalPolynomial.(-one)
+                        in
+                        (* c3 = binomial(j,k) *)
+                        let c3 = RationalPolynomial.of_intconstant @@ OurInt.binomial j k in
+                        (* c4 = (n-k)^i *)
+                        let c4 = RationalPolynomial.(pow (of_intpoly n - of_intconstant k) i) in
+                        RationalPolynomial.(sgn * c3 * c4))
+               in
+
+               RationalPolynomial.(c * c2 * inner_sum j))
+    | Geometric a ->
+        RationalPolynomial.of_constant
+        @@ OurRational.(a / (one - a) * Math.negative_polylog (OurInt.of_int i) (one - a))
+        (* p/(1-p) * Li_{-n}(1-p) *)
+    | Hypergeometric (bigN, k, n) ->
+        if Polynomial.is_zero n || Polynomial.is_zero k || OurInt.is_zero bigN then
+          RationalPolynomial.of_int 0
+        else if Polynomial.(equal n (of_constant bigN)) then
+          RationalPolynomial.(pow (of_intpoly k) i)
+        else if Polynomial.(equal k (of_constant bigN)) then
+          RationalPolynomial.(pow (of_intpoly n) i)
+          (* TODO n and k are polynomials; what if one is a polynomial that can have the value 0 *)
+        else
+          (* 𝔼[X^i] = n*k/bigN * 𝔼[(Y+1)^(i-1)]  where Y is hypergeometric distributed with (bigN-1, k-1, n-1) *)
+          (*        = n*k/bigN * ∑_{j=0}^(i-1) binomial(i-1,j) * 1^(i-1-j) * 𝔼(Y^j) *)
+          (*        = n*k/bigN * ∑_{j=0}^(i-1) binomial(i-1,j) * 𝔼(Y^j) *)
+          let nk_bigN =
+            RationalPolynomial.(of_intpoly k * of_intpoly n * of_constant OurRational.(one / of_ourint bigN))
+          in
+          let sum_part =
+            OurInt.(range zero OurInt.(of_int i - one))
+            |> Sequence.map ~f:(fun j ->
+                   let bin_coeff = RationalPolynomial.of_intconstant OurInt.(binomial (of_int i - one) j) in
+                   let rec_res =
+                     moment_poly
+                       (Hypergeometric (OurInt.(bigN - one), Polynomial.(k - one), Polynomial.(n - one)))
+                       (OurInt.to_int j)
+                   in
+                   RationalPolynomial.(bin_coeff * rec_res))
+            |> RationalPolynomial.sum
+          in
+          RationalPolynomial.(nk_bigN * sum_part)
+    | Uniform (a, b) ->
+        (* Derived from 𝔼(X^n) = (B_{n+1} (b + 1) - B_{n+1} (a))/ ((n+1) (b - a + 1)) where B_n is Bernoulli polynomial *)
+        (* 𝔼(X^n) = 1/(n+1) * ∑_{k=1}^{n+1} ((b+1)^k-a^k)/((b+1)-a) * bernoulli(n-k+1) * binomial(n+1,k) *)
+        let rec multiplier k =
+          if OurInt.(equal k one) then
+            (* ((b+1)-a)/((b+1)-a) = 1 *)
+            RationalPolynomial.one
+          else if OurInt.(equal k (one + one)) then
+            (* ((b+1)^2-a^2)/((b+1)-a) = (b+1)+a *)
+            RationalPolynomial.of_intpoly Polynomial.(a + b + one)
+          else
+            (* (b+1)^k-a^k) = (b+1) * ( (b+1)^{k-1}-a^{k-1})         + a^{k-1} ((b+1)-a)  *)
+            (*              = (b+1) * (multiplier(k-1) * ((b+1)-a))  + a^{k-1} ((b+1)-a)  *)
+            (*              = ((b+1)-a)) * ((b+1) * (multiplier(k-1) + a^{k-1}) *)
             RationalPolynomial.(
-              expv
-              + expv
-                * (of_constant OurRational.(one / bigN) * (of_constant bigN - k))
-                * (of_constant OurRational.(one / (bigN - one)) * (of_constant bigN - n)))
-        | _ -> failwith @@ Int.to_string i ^ ". moment of hypergeometric distribution not yet implemented.")
-    | Uniform (a, b) -> (
-        match i with
-        | 2 ->
-            (* Variance is given by ((b - a + 1)² - 1)/12 *)
-            let one = RationalPolynomial.of_constant OurRational.one in
-            let variance =
-              RationalPolynomial.mul
-                (RationalPolynomial.of_constant @@ OurRational.div OurRational.one (OurRational.of_int 12))
-                (RationalPolynomial.sub
-                   (RationalPolynomial.pow
-                      (RationalPolynomial.add
-                         (RationalPolynomial.sub (RationalPolynomial.of_intpoly b)
-                            (RationalPolynomial.of_intpoly a))
-                         one)
-                      2)
-                   one)
-            in
-            let exp_squared = RationalPolynomial.pow (exp_value_poly d) 2 in
-            RationalPolynomial.add variance exp_squared
-        (* TODO *)
-        | _ -> failwith @@ Int.to_string i ^ ". moment of uniform distribution not yet implemented.")
+              pow (of_intpoly a) OurInt.(to_int (k - one))
+              + (of_intpoly Polynomial.(b + one) * multiplier OurInt.(k - one)))
+        in
+        RationalPolynomial.mult_with_const OurRational.(div one (of_int i + one))
+        @@ RationalPolynomial.sum
+        @@ Sequence.map
+             ~f:(fun k ->
+               RationalPolynomial.(
+                 multiplier k
+                 * of_constant (Math.bernoulli OurInt.(of_int i - k + one))
+                 * of_intconstant OurInt.(binomial (of_int i + one) k)))
+             OurInt.(range one (of_int i + one))
 
 
 open Bounds
