@@ -24,6 +24,10 @@ let is_ge = Compare.( >= )
 let is_gt = Compare.( > )
 let log x = of_int (Z.log2 x) + one
 
+let all_nonnegative =
+  Sequence.unfold_step ~init:zero ~f:(fun s -> Sequence.Step.Yield { value = s; state = add s one })
+
+
 let rec lcm_list = function
   | [] -> one
   | x :: xs -> lcm x (lcm_list xs)
