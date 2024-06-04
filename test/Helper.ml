@@ -16,6 +16,7 @@ let assert_equal_varset_enum =
 
 
 let assert_equal_value = assert_equal ~cmp:OurInt.( =~= ) ~printer:OurInt.to_string
+let assert_equal_OurRational = assert_equal ~cmp:OurRational.equal ~printer:OurRational.to_string
 let assert_equal_varset = assert_equal ~cmp:Base.Set.equal ~printer:VarSet.to_string
 let assert_equal_poly = assert_equal ~cmp:Polynomial.( =~= ) ~printer:Polynomial.to_string
 

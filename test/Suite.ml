@@ -26,6 +26,7 @@ let suite =
          ExpTimeBoundsTest.tests;
          MatrixTest.tests;
          PlrfTest.tests;
+         MomentsTest.tests;
        ]
 
 
