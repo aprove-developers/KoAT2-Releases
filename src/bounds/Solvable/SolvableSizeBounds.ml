@@ -1,6 +1,7 @@
 open Batteries
 open Polynomials
 open Bounds
+open OurBase
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
@@ -18,7 +19,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           Polynomial.coeff_of_indeterminate x (Loop.update_var loop var_left)
           :: get_linear_update_of_var loop xs var_left
     in
-    List.map (get_linear_update_of_var loop block) block
+    List.map ~f:(get_linear_update_of_var loop block) block
 
 
   (* This function was written by Tom Küspert *)
@@ -39,12 +40,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let vars_str =
       (* vars x1,x2,... are encoded (for the python script) by ["x1","x2",...]. *)
       block
-      |> List.map (fun var -> "\"" ^ Var.to_string var ^ "\"")
-      |> List.enum |> Util.enum_to_string identity
+      |> List.map ~f:(fun var -> "\"" ^ Var.to_string var ^ "\"")
+      |> Sequence.of_list |> Util.sequence_to_string ~f:identity
       |> Str.global_replace (Str.regexp ";") ","
     and update_str =
       (* update matrix A encoded (for the python script) row-wise w.r.t. x1,x2,.... *)
-      update_matrix |> List.flatten |> List.enum |> Util.enum_to_string OurInt.to_string
+      update_matrix |> List.concat |> Sequence.of_list
+      |> Util.sequence_to_string ~f:OurInt.to_string
       |> Str.global_replace (Str.regexp ";") ","
     in
     let command =
@@ -76,7 +78,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let hash = Hashtbl.hash
   end
 
-  module SizeBoundTable = Hashtbl.Make (VT)
+  module SizeBoundTable = Batteries.Hashtbl.Make (VT)
 
   let size_bound_table : (Transition.t * Bound.t) list option SizeBoundTable.t = SizeBoundTable.create 10
 
@@ -89,17 +91,27 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   let lift twn_proofs appr t var = function
     | None -> Bound.infinity
     | Some xs ->
+        ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+          FormattedString.(
+            fun () ->
+              mk_str_header_small @@ "Solv. Size Bound - Lifting for " ^ Transition.to_id_string_pretty t
+              ^ " and " ^ Var.to_string ~pretty:true var ^ ": ");
         xs
-        |> List.map (fun (entry, local_size) ->
-               Bound.substitute_f (Approximation.sizebound appr entry) local_size)
+        |> List.map ~f:(fun (entry, local_size) ->
+               Bound.substitute_f (Approximation.sizebound appr entry) local_size
+               |> tap (fun b ->
+                      ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+                        FormattedString.(
+                          fun () ->
+                            mk_str_line @@ "Insert size-bounds of " ^ Transition.to_id_string_pretty entry
+                            ^ ":"
+                            ^ Util.sequence_to_string
+                                (Set.to_sequence @@ Bound.vars b)
+                                ~f:(Bound.to_string ~pretty:true % Approximation.sizebound appr entry))))
         |> OurBase.Sequence.of_list |> Bound.sum
         |> tap (fun b ->
                ProofOutput.LocalProofOutput.add_to_proof twn_proofs
-                 FormattedString.(
-                   fun () ->
-                     mk_str_header_small @@ "Solv. Size Bound - Lifting for "
-                     ^ Transition.to_id_string_pretty t ^ " and " ^ Var.to_string ~pretty:true var ^ ": "
-                     ^ Bound.to_string ~pretty:true b))
+                 FormattedString.(fun () -> mk_str_line @@ "result: " ^ Bound.to_string ~pretty:true b))
 
 
   let improve_t program trans t appr =
@@ -124,7 +136,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               heuristic_for_cycle appr program trans t
           in
           if Option.is_some loops_opt then (
-            let loop, entries_traversal = Option.get loops_opt in
+            let loop, entries_traversal = Option.value_exn loops_opt in
             let loop_red =
               Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop
             in
@@ -134,17 +146,17 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               if Option.is_none blocks then
                 Bound.infinity
               else
-                (* As we obtain minimal solvable blocks, we have to merge them, e.g., if we consider Y in for (X,Y) <- (2*X,X), we infer the blocks [X],[Y] and have to merge them to [X,Y] . *)
+                (* As we obtain minimal solvable blocks, we have to merge them, e.g., if we consider Y in (X,Y) <- (2*X,X^2), we infer the blocks [X],[Y] and have to merge them to [X,Y] . *)
                 let block =
-                  List.flatten
-                  @@ List.filter (fun block ->
-                         List.exists (flip List.mem block)
+                  List.concat
+                  @@ List.filter ~f:(fun block ->
+                         List.exists ~f:(List.mem block ~equal:Var.equal)
                            (Base.Set.to_list @@ Base.Set.add (Loop.updated_vars loop_red) var))
-                  @@ Option.get blocks
+                  @@ Option.value_exn blocks
                 in
                 let opt = run_python var block (matrix_of_linear_assignments loop_red block) in
                 if Option.is_some opt then
-                  let n, b = Option.get opt in
+                  let n, b = Option.value_exn opt in
                   Bound.add (Loop.compute_bound_n_iterations loop_red var n) b
                 else
                   Bound.infinity
@@ -158,7 +170,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
             let res =
               List.map
-                (fun (entry, traversal) ->
+                ~f:(fun (entry, traversal) ->
                   ( entry,
                     Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
                     |> Bound.substitute_f (fun var ->
