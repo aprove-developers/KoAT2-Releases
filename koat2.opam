@@ -9,7 +9,7 @@ homepage: "https://github.com/aprove-developers/Koat2"
 bug-reports: "https://github.com/aprove-developers/Koat2/issues"
 depends: [
   "apron"
-  "base" {> "v0.16.0"}
+  "base" {= "v0.16.3"}
   "stdio"
   "batteries"
   "cmdliner"
@@ -29,7 +29,7 @@ depends: [
   "ppx_deriving_cmdliner"
   "ppx_sexp_conv"
   "zarith"
-  "z3" {= "4.12.2-1"}
+  "z3" {= "4.13.0-3"}
   "koat2_external"
 ]
 build: [

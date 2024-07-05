@@ -1,7 +1,7 @@
 #-------------------------------------------
 # Build KoAT
 #-------------------------------------------
-FROM ocaml/opam:alpine@sha256:7bc1fcafcff5c152ef57e23314781e903e5a91ffa13e9e40cd3a478687d958b6 as koat2_build
+FROM ocaml/opam:alpine@sha256:7bc1fcafcff5c152ef57e23314781e903e5a91ffa13e9e40cd3a478687d958b6 AS koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 LABEL author="Nils Lommen"
@@ -57,7 +57,7 @@ RUN eval $(opam env) && \
 # Get llvm2kittel + clang to analyse C programs
 #-------------------------------------------
 
-FROM ubuntu:14.04 as koat2_c_utils
+FROM ubuntu:14.04 AS koat2_c_utils
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y cmake gcc g++ libgmp-dev git llvm zlib1g-dev wget xz-utils
@@ -78,7 +78,7 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
     mv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10/bin/clang .
 
 # Build SMTPushdown
-FROM ocaml/opam:ubuntu-20.04-ocaml-4.12 as koat2_smt2
+FROM ocaml/opam:ubuntu-20.04-ocaml-4.12 AS koat2_smt2
 
 RUN git clone https://github.com/aprove-developers/SMTPushdown.git && \
     opam install ocamlbuild ocamlfind sexplib && \

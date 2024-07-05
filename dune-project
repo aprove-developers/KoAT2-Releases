@@ -28,7 +28,7 @@
  (synopsis "KoAT2: Runtime Analysis of Integer Programs")
  (depends
    apron
-   (base (> v0.16.0))
+   (base (= v0.16.3))
    stdio
    batteries
    cmdliner
@@ -48,7 +48,7 @@
    ppx_deriving_cmdliner
    ppx_sexp_conv
    zarith
-   (z3 (= 4.12.2-1))
+   (z3 (= 4.13.0-3))
    koat2_external
    )
  )

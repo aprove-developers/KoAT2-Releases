@@ -9,7 +9,7 @@ homepage: "https://github.com/aprove-developers/Koat2"
 bug-reports: "https://github.com/aprove-developers/Koat2/issues"
 depends: [
   "dune" {>= "3.3"}
-  "z3" {= "4.12.2-1"}
+  "z3" {= "4.13.0-3"}
   "odoc" {with-doc}
 ]
 build: [
