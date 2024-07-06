@@ -53,6 +53,7 @@ val update_to_file_string_rhs : t -> string
 
 val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t
 val rename : RenameMap.t -> t -> t
+val tmp_vars_update : t -> VarSet.t
 
 val rename_temp_vars : t -> Var.t Sequence.t -> t
 (** Rename temporary variables to identifiers provided by the (possibly infinite) sequence *)

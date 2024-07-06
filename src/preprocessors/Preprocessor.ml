@@ -31,7 +31,7 @@ let affects : type p. p t -> p t list = function
   | InvariantGeneration -> [ CutUnsatisfiableTransitions ]
   | CutUnsatisfiableTransitions -> [ CutUnreachableLocations; EliminateNonContributors ]
   | EliminateNonContributors -> []
-  | EliminateTempVars -> [ EliminateNonContributors; CutUnsatisfiableTransitions ]
+  | EliminateTempVars -> [ EliminateTempVars; EliminateNonContributors; CutUnsatisfiableTransitions ]
   | Chaining -> [ CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration ]
   | ChainingConservative ->
       [ CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration ]

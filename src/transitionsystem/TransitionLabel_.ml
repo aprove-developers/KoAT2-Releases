@@ -181,47 +181,6 @@ module Inner = struct
     { t with guard = guard'; update = update' }
 
 
-  let eliminate_tmp_var var t =
-    let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
-    let occurs_in_equality var label =
-      let atoms = Guard.atom_list orig_guard_and_invariants in
-      List.find
-        ~f:(fun (atom1, atom2) ->
-          Atom.is_le atom1 && Atom.is_le atom2
-          && Atom.equal atom1 (Atom.flip_comp atom2)
-          && Set.mem (Atom.vars atom1) var
-          && Polynomial.var_only_linear var (Atom.poly atom1))
-        (List.cartesian_product atoms atoms)
-    in
-    let opt = occurs_in_equality var t in
-    if Option.is_some opt then
-      let atom1, atom2 = Option.value_exn opt in
-      let replacement =
-        let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
-        if OurInt.(coeff_of_var < zero) then
-          Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
-        else
-          Polynomial.neg
-          @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
-      in
-      let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
-      let guard' =
-        List.filter
-          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-          (Guard.atom_list @@ t.guard)
-        |> Guard.map_polynomial (Polynomial.substitute var ~replacement)
-      in
-      let inv' =
-        List.filter
-          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-          (Invariant.atom_list @@ t.invariant)
-        |> Invariant.map_polynomial (Polynomial.substitute var ~replacement)
-      in
-      MaybeChanged.changed { t with guard = guard'; invariant = inv'; update = update' }
-    else
-      MaybeChanged.same t
-
-
   let guard t = Guard.mk_and t.guard t.invariant
   let chain_guards t1 t2 = guard (append t1 t2)
   let guard_without_inv t = t.guard
@@ -395,6 +354,11 @@ module Inner = struct
   let input_size t = t |> input_vars |> Set.length
   let tmp_vars t = Set.diff (vars t) (input_vars t)
 
+  let tmp_vars_update t =
+    Set.inter (tmp_vars t)
+      (Map.fold ~f:(fun ~key ~data -> Set.union (Polynomial.vars data)) t.update ~init:VarSet.empty)
+
+
   let changed_vars t =
     input_vars t |> Set.filter ~f:(fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
 
@@ -454,6 +418,50 @@ module Inner = struct
           ~f:(fun atom -> List.exists ~f:(fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant')
           t.guard;
     }
+
+
+  let eliminate_tmp_var var t =
+    let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
+    let occurs_in_equality var label =
+      let atoms = Guard.atom_list orig_guard_and_invariants in
+      List.find
+        ~f:(fun (atom1, atom2) ->
+          Atom.is_le atom1 && Atom.is_le atom2
+          && Atom.equal atom1 (Atom.flip_comp atom2)
+          && Set.mem (Atom.vars atom1) var
+          && Polynomial.var_only_linear var (Atom.poly atom1))
+        (List.cartesian_product atoms atoms)
+    in
+    let opt = occurs_in_equality var t in
+    if Option.is_some opt then
+      let atom1, atom2 = Option.value_exn opt in
+      let replacement =
+        let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
+        if OurInt.(coeff_of_var < zero) then
+          Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
+        else
+          Polynomial.neg
+          @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
+      in
+      if Set.are_disjoint (Polynomial.vars replacement) (tmp_vars t) then
+        let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
+        let guard' =
+          List.filter
+            ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
+            (Guard.atom_list @@ t.guard)
+          |> Guard.map_polynomial (Polynomial.substitute var ~replacement)
+        in
+        let inv' =
+          List.filter
+            ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
+            (Invariant.atom_list @@ t.invariant)
+          |> Invariant.map_polynomial (Polynomial.substitute var ~replacement)
+        in
+        MaybeChanged.changed { t with guard = guard'; invariant = inv'; update = update' }
+      else
+        MaybeChanged.same t
+    else
+      MaybeChanged.same t
 end
 
 include Inner

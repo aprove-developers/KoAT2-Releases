@@ -6,12 +6,16 @@ open ProgramModules
 let logger = Logging.(get Preprocessor)
 
 let eliminate_tmp_vars program =
-  let tmp_vars = Set.to_list @@ Program.tmp_vars program
-  and trans = Set.to_list @@ Program.transitions program in
+  let trans = Set.to_list @@ Program.transitions program in
   let result =
     MaybeChanged.fold
       (fun trans (l, t, l') ->
-        let changed_t = MaybeChanged.fold (flip TransitionLabel.eliminate_tmp_var) t tmp_vars in
+        let changed_t =
+          MaybeChanged.fold
+            (flip TransitionLabel.eliminate_tmp_var)
+            t
+            (Set.to_list @@ TransitionLabel.tmp_vars_update t)
+        in
         if MaybeChanged.has_changed changed_t then (
           Logger.(
             log logger INFO (fun () ->
