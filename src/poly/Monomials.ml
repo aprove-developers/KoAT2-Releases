@@ -36,7 +36,10 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
 
     let of_sequence seq =
       let addEntry map (var, n) =
-        Map.change map var ~f:(Option.some % Option.value_map ~f:(( + ) n) ~default:n)
+        if n != 0 then
+          Map.change map var ~f:(Option.some % Option.value_map ~f:(( + ) n) ~default:n)
+        else
+          map
       in
       Sequence.fold ~f:addEntry ~init:M.empty seq
 

@@ -34,12 +34,18 @@ module PE (Value : IntSupRing) : sig
   type t = (ConstantConstraint.t * Polynomial.t * int * Value.t) list
 
   val mk : ConstantConstraint.t -> Polynomial.t -> int -> Value.t -> t
+  val mk_cons : Value.t -> t
+  val mk_var : Var.t -> t
   val to_string : t -> string
   val to_string_pretty : t -> string
   val substitute : (Var.t, t) Hashtbl.t -> Polynomial.t -> t
+  val substitute_f : (Var.t -> Polynomial.t) -> t -> t
   val normalize : t list -> t list
   val max_const : t -> OurInt.t
   val compute_closed_form : (Var.t * Polynomial.t) list -> t list
+  val add : t -> t -> t
+  val mul : t -> t -> t
+  val power : t -> int -> t
 end
 
 module RationalPE : sig
@@ -47,4 +53,11 @@ module RationalPE : sig
 
   val remove_frac : t -> t
   val overapprox : t -> Bound.t -> Bound.t
+end
+
+module ComplexPE : sig
+  include module type of PE (OurAlgebraicComplex)
+
+  val to_bound : t -> Bound.t
+  (** Adds absolute values and ceiling and returns a bound in the program variables and the distinguished variable n. *)
 end

@@ -471,6 +471,21 @@ module RationalPolynomial = struct
   let is_integral poly = List.for_all ~f:OurRational.is_integral @@ coeffs poly
 end
 
+module CAPolynomial = struct
+  include PolynomialOver (OurAlgebraicComplex)
+
+  let overapprox =
+    fold
+      ~const:(Polynomial.of_constant % OurAlgebraic.ceil % OurAlgebraicComplex.abs)
+      ~indeterminate:Polynomial.of_var ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
+
+
+  let of_intpoly =
+    Polynomial.fold
+      ~const:(of_constant % OurAlgebraicComplex.of_ourint)
+      ~indeterminate:of_var ~plus:add ~times:mul ~pow
+end
+
 module RationalLaurentPolynomial = struct
   include PolynomialOver (OurRational)
 

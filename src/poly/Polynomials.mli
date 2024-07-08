@@ -75,6 +75,16 @@ module RationalPolynomial : sig
   val is_integral : t -> bool
 end
 
+(** Provides default implementation of polynomials ranged over [OurAlgebraicComplex]. *)
+module CAPolynomial : sig
+  include module type of PolynomialOver (OurAlgebraicComplex)
+
+  val overapprox : t -> Polynomial.t
+  (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
+
+  val of_intpoly : Polynomial.t -> t
+end
+
 (** Provides default implementation of laurent polynomials ranged over [OurRational]. *)
 module RationalLaurentPolynomial : sig
   include module type of PolynomialOver (OurRational)

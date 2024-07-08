@@ -13,7 +13,12 @@ module MakeOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTypes.Ri
   type monomial = Monomial.t
   type value = Value.t
 
-  let make coefficient monomial = { coeff = coefficient; mon = monomial }
+  let make coefficient monomial =
+    if Value.(equal zero coefficient) then
+      { coeff = coefficient; mon = Monomial.one }
+    else
+      { coeff = coefficient; mon = monomial }
+
 
   let fold ~const ~indeterminate ~times ~pow scaled =
     times (const scaled.coeff) (Monomial.fold ~const ~indeterminate ~times ~pow scaled.mon)

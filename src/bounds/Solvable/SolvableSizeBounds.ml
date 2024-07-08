@@ -1,4 +1,3 @@
-open Batteries
 open Polynomials
 open Bounds
 open OurBase
@@ -10,65 +9,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module SimpleCycle = SimpleCycle.Make (Bounds.Bound) (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (Bounds.Bound) (PM)
 
-  let matrix_of_linear_assignments loop (block : Var.t list) =
-    (* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
-    let rec get_linear_update_of_var loop (block : Var.t list) (var_left : Var.t) =
-      match block with
-      | [] -> []
-      | x :: xs ->
-          Polynomial.coeff_of_indeterminate x (Loop.update_var loop var_left)
-          :: get_linear_update_of_var loop xs var_left
-    in
-    List.map ~f:(get_linear_update_of_var loop block) block
-
-
-  (* This function was written by Tom Küspert *)
-  let read_process_lines command =
-    let lines = ref [] in
-    let in_channel = Unix.open_process_in command in
-    (try
-       while true do
-         lines := input_line in_channel :: !lines
-       done
-     with
-    | BatInnerIO.Input_closed -> ()
-    | End_of_file -> ());
-    List.rev !lines
-
-
-  let run_python var block update_matrix =
-    let vars_str =
-      (* vars x1,x2,... are encoded (for the python script) by ["x1","x2",...]. *)
-      block
-      |> List.map ~f:(fun var -> "\"" ^ Var.to_string var ^ "\"")
-      |> Sequence.of_list |> Util.sequence_to_string ~f:identity
-      |> Str.global_replace (Str.regexp ";") ","
-    and update_str =
-      (* update matrix A encoded (for the python script) row-wise w.r.t. x1,x2,.... *)
-      update_matrix |> List.concat |> Sequence.of_list
-      |> Util.sequence_to_string ~f:OurInt.to_string
-      |> Str.global_replace (Str.regexp ";") ","
-    in
-    let command =
-      "python3 -c 'from python.SizeBoundSolvable import size_bound; size_bound(" ^ update_str ^ "," ^ vars_str
-      ^ ",\"" ^ Var.to_string var ^ "\")'"
-    in
-    let python_output = read_process_lines command in
-    match python_output with
-    | [ error ] -> None
-    | [ n; a ] -> Some (int_of_string n, a |> Readers.read_bound)
-    | _ -> None (* Error string *)
-
-
   let heuristic_for_cycle appr program loop =
-    (Option.is_some @@ Check_Solvable.check_solvable loop)
-    && Base.Set.for_all
-         ~f:(fun var -> Polynomial.is_linear @@ Loop.update_var loop var)
-         (Loop.updated_vars loop)
-    && Base.Set.for_all
-         ~f:(fun var -> Polynomial.no_constant_addend @@ Loop.update_var loop var)
-         (Loop.updated_vars loop)
-    && Base.Set.length @@ Loop.vars loop > 1
+    (Option.is_some @@ Check_Solvable.check_solvable loop) && Base.Set.length @@ Loop.vars loop > 1
 
 
   module VT = struct
@@ -104,6 +46,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                         FormattedString.(
                           fun () ->
                             mk_str_line @@ "Insert size-bounds of " ^ Transition.to_id_string_pretty entry
+                            ^ " into "
+                            ^ Bound.to_string ~pretty:true local_size
                             ^ ":"
                             ^ Util.sequence_to_string
                                 (Set.to_sequence @@ Bound.vars b)
@@ -115,21 +59,24 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let improve_t program trans t appr =
-    let twn_proofs = ProofOutput.LocalProofOutput.create () in
+    let lift_var appr var =
+      let twn_proofs = ProofOutput.LocalProofOutput.create () in
+      let lifted_bound = lift twn_proofs appr t var (SizeBoundTable.find size_bound_table (t, var)) in
+      if Bound.is_finite lifted_bound then
+        ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
+      Approximation.add_sizebound lifted_bound t var appr
+    in
     Base.Set.fold
       ~f:(fun appr var ->
+        let twn_proofs = ProofOutput.LocalProofOutput.create () in
         if
           SizeBoundTable.mem size_bound_table (t, var)
           && (not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var)
-        then (
-          let lifted_bound = lift twn_proofs appr t var (SizeBoundTable.find size_bound_table (t, var)) in
-          if Bound.is_finite lifted_bound then
-            ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
-          Approximation.add_sizebound lifted_bound t var appr)
+        then
+          lift_var appr var
         else if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then (
           ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-              FormattedString.mk_str_header_big @@ "Solv. Size Bound: " ^ Transition.to_id_string_pretty t
-              ^ " for " ^ Var.to_string ~pretty:true var);
+              FormattedString.mk_str_header_big @@ "Solv. Size Bound: " ^ Transition.to_id_string_pretty t);
           let loops_opt =
             SimpleCycle.find_loop twn_proofs
               ~relevant_vars:(Option.some @@ VarSet.singleton var)
@@ -140,50 +87,40 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             let loop_red =
               Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop
             in
-            let local_bound =
-              (* We first compute for every var (with a closed form) and every entry a local size bound *)
-              let blocks = Check_Solvable.check_solvable loop_red in
-              if Option.is_none blocks then
-                Bound.infinity
-              else
-                (* As we obtain minimal solvable blocks, we have to merge them, e.g., if we consider Y in (X,Y) <- (2*X,X^2), we infer the blocks [X],[Y] and have to merge them to [X,Y] . *)
-                let block =
-                  List.concat
-                  @@ List.filter ~f:(fun block ->
-                         List.exists ~f:(List.mem block ~equal:Var.equal)
-                           (Base.Set.to_list @@ Base.Set.add (Loop.updated_vars loop_red) var))
-                  @@ Option.value_exn blocks
-                in
-                let opt = run_python var block (matrix_of_linear_assignments loop_red block) in
-                if Option.is_some opt then
-                  let n, b = Option.value_exn opt in
-                  Bound.add (Loop.compute_bound_n_iterations loop_red var n) b
-                else
-                  Bound.infinity
-            in
-            let time_bound = MultiphaseRankingFunction.time_bound loop 5 in
+            let closed_forms = Check_Solvable.compute_closed_form loop_red
+            and time_bound = MultiphaseRankingFunction.time_bound loop 5 in
             ProofOutput.LocalProofOutput.add_to_proof twn_proofs
               FormattedString.(
                 fun () ->
                   mk_str_line @@ "loop: " ^ Loop.to_string loop_red
-                  <> mk_str_line @@ "overappr. closed-form: " ^ Bound.to_string ~pretty:true local_bound
                   <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
-            let res =
-              List.map
-                ~f:(fun (entry, traversal) ->
-                  ( entry,
-                    Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
-                    |> Bound.substitute_f (fun var ->
-                           Bound.of_poly @@ (Base.Map.find traversal var |? Polynomial.of_var var)) ))
-                entries_traversal
-              |> Option.some
-            in
-            SizeBoundTable.add size_bound_table (t, var) res;
-            (* Lifting previously computed local size bounds and store them in appr. *)
-            let lifted_bound = lift twn_proofs appr t var res in
-            if Bound.is_finite lifted_bound then
-              ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
-            Approximation.add_sizebound lifted_bound t var appr)
+            List.iter
+              ~f:(fun (var, pe) ->
+                let local_bound =
+                  Bound.max
+                    (Loop.compute_bound_n_iterations loop_red var
+                       (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
+                    (PolyExponential.ComplexPE.to_bound pe)
+                in
+                ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+                  FormattedString.(
+                    fun () ->
+                      mk_str_line @@ "overappr. closed-form for " ^ Var.to_string var ^ ": "
+                      ^ Bound.to_string ~pretty:true local_bound);
+                let res =
+                  List.map
+                    ~f:(fun (entry, traversal) ->
+                      ( entry,
+                        Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
+                        |> Bound.substitute_f (fun var ->
+                               Bound.of_poly @@ (Base.Map.find traversal var |? Polynomial.of_var var)) ))
+                    entries_traversal
+                  |> Option.some
+                in
+                SizeBoundTable.add size_bound_table (t, var) res)
+              (Option.value_exn closed_forms);
+            ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
+            Set.fold (Loop.vars loop_red) ~init:appr ~f:lift_var)
           else
             appr)
         else

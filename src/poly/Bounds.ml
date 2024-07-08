@@ -449,6 +449,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let add_bound b1 b2 = simplify_bound (Sum (b1, b2))
   let add = OptionMonad.liftM2 add_bound
   let mul_bound b1 b2 = simplify_bound (Product (b1, b2))
+  let max = add
 
   let mul b1 b2 =
     match (b1, b2) with

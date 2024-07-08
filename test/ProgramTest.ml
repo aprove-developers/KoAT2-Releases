@@ -27,18 +27,18 @@ let tests =
                      ^ ", however the opposite was computed.")
                     (has_pre = (1 = Set.length (Program.pre program trans))))
                 [
-                  ("a -> b(), b -> c()", true);
-                  ("a -> b(3), b -> c() :|: x>0", true);
-                  ("a -> b(3), b -> c() :|: x<0", false);
-                  ("a -> b(Temp), b -> c() :|: x<0", true);
-                  ("a -> b(Temp) :|: Temp > 0, b -> c() :|: x<0", false);
-                  ("a -> b() :|: Temp > 0, b -> c() :|: Temp<0", true);
-                  ("a -> b() :|: Temp > 0, b -> c() :|: Temp>0", true);
-                  ("a -> b(Temp) :|: Temp > 0, b -> c() :|: x<0", false);
-                  ("a -> b(Temp) :|: Temp > 0, b -> c() :|: x<0", false);
-                  ("a -> b(Temp) :|: Temp > 0, b -> c() :|: Temp<0", true);
-                  ("a -> b(y), b -> c() :|: x<y", false);
-                  ("a -> b(y), b -> c() :|: x<=y", true);
+                  ("a() -> b(), b() -> c()", true);
+                  ("a(x) -> b(3), b(x) -> c(x) :|: x>0", true);
+                  ("a(x) -> b(3), b(x) -> c(x) :|: x<0", false);
+                  ("a(x) -> b(Temp), b(x) -> c(x) :|: x<0", true);
+                  ("a(x) -> b(Temp) :|: Temp > 0, b(x) -> c(x) :|: x<0", false);
+                  ("a(x) -> b(x) :|: Temp > 0, b(x) -> c(x) :|: Temp<0", true);
+                  ("a(x) -> b(x) :|: Temp > 0, b(x) -> c(x) :|: Temp>0", true);
+                  ("a(x) -> b(Temp) :|: Temp > 0, b(x) -> c(x) :|: x<0", false);
+                  ("a(x) -> b(Temp) :|: Temp > 0, b(x) -> c(x) :|: x<0", false);
+                  ("a(x) -> b(Temp) :|: Temp > 0, b(x) -> c(x) :|: Temp<0", true);
+                  ("a(x,y) -> b(y,y), b(x,y) -> c(x,y) :|: x<y", false);
+                  ("a(x,y) -> b(y,y), b(x,y) -> c(x,y) :|: x<=y", true);
                 ];
          "pre_cache"
          >::: List.map
@@ -158,5 +158,5 @@ let tests =
                                 (Sequence.map ~f:after_invalidating_invariants
                                    (LocationSet.powerset @@ Program.locations program));
                          ])
-                [ "a -> b(), b -> c(), c -> c(), c -> d(), d -> c()" ];
+                [ "a() -> b(), b() -> c(), c() -> c(), c() -> d(), d() -> c()" ];
        ]

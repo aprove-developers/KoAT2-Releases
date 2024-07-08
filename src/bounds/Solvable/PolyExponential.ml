@@ -204,6 +204,8 @@ module PE (Value : IntSupRing) = struct
       [ (ConstantConstraint.mk_true, Polynomial.of_constant cons, 0, Value.one) ]
 
 
+  let mk_var var = [ (ConstantConstraint.mk_true, Polynomial.of_var var, 0, Value.one) ]
+
   let to_string pe =
     match pe with
     | [] -> "0"
@@ -235,7 +237,7 @@ module PE (Value : IntSupRing) = struct
           if Value.(equal one b) then
             ""
           else
-            Value.to_string b ^ "^n"
+            "(" ^ Value.to_string b ^ ")^n"
         in
         xs
         |> List.map (fun (c, p, d, b) ->
@@ -277,13 +279,13 @@ module PE (Value : IntSupRing) = struct
           if Value.(equal one b) then
             ""
           else
-            Value.to_string b ^ "^n"
+            "(" ^ Value.to_string b ^ ")^n"
         in
         xs
         |> List.map (fun (c, p, d, b) ->
                [ to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b ]
                |> List.filter (not % String.equal "")
-               |> String.concat " * ")
+               |> String.concat "⋅")
         |> List.filter (not % String.equal "")
         |> String.concat " + "
 
@@ -312,13 +314,13 @@ module PE (Value : IntSupRing) = struct
     |> List.sort compare
 
 
-  let add = List.append % List.filter (fun (c, p, d, b) -> not (Polynomial.is_zero p))
+  let add = List.append % simplify
 
   let mul pe1 pe2 =
     List.cartesian_product pe1 pe2
     |> List.map (fun ((c1, p1, d1, b1), (c2, p2, d2, b2)) ->
            (ConstantConstraint.mk_and c1 c2, Polynomial.mul p1 p2, d1 + d2, Value.(b1 * b2)))
-    |> List.filter (fun (c, p, d, b) -> not (ConstantConstraint.is_false c))
+    |> simplify
 
 
   let rec power pe exponent =
@@ -343,6 +345,8 @@ module PE (Value : IntSupRing) = struct
       ~plus:add ~times:mul ~pow:power poly
     |> simplify
 
+
+  let substitute_f f = List.map (Tuple4.map2 @@ Polynomial.substitute_f f)
 
   let rec binomial n k =
     if n = k then
@@ -376,8 +380,7 @@ module PE (Value : IntSupRing) = struct
   (* c.f.: masterthesis *)
   let insert_previous_cf var poly monomials =
     let scaled_monomials = Polynomial.scaled_monomials poly in
-    List.fold_right
-      (fun tmp pe -> add tmp pe)
+    List.fold_right add
       (List.map
          (fun scaled_monom ->
            let vars = scaled_monom |> Base.Set.to_list % ScaledMonomial.vars in
@@ -584,6 +587,22 @@ module RationalPE = struct
         let bound_p = Bound.of_poly @@ RationalPolynomial.overapprox p
         and bound_d = Bound.pow runtime_bound d
         and bound_b = Bound.exp (OurRational.ceil b) runtime_bound in
+        Bound.(bound_p * bound_d * bound_b))
+      t
+    |> Bound.sum_list
+end
+
+module ComplexPE = struct
+  include PE (OurAlgebraicComplex)
+  open Bounds
+
+  let to_bound t =
+    let n = Var.of_string "n" in
+    List.map
+      (fun (c, p, d, b) ->
+        let bound_p = Bound.of_poly @@ CAPolynomial.overapprox p
+        and bound_d = Bound.(pow (Bound.of_var n) d)
+        and bound_b = Bound.exp (OurAlgebraic.ceil @@ OurAlgebraicComplex.abs b) (Bound.of_var n) in
         Bound.(bound_p * bound_d * bound_b))
       t
     |> Bound.sum_list

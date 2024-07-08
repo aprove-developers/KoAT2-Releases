@@ -36,3 +36,6 @@ let compare_order = function
 let compare x y = compare_ra x y |> compare_order
 let of_int = of_integer_ra % OurInt.of_int
 let to_string = show_ra
+let sqrt = root_ra (OurInt.of_int 2)
+let ceil = ceiling_ra
+let floor = floor_ra
