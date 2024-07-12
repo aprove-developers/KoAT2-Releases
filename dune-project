@@ -20,7 +20,7 @@
 (package
  (name koat2_external)
  (synopsis "External (automatically generated files) for KoAT2")
- (depends (z3 (= 4.12.2-1)))
+ (depends (z3 (= 4.13.0-3)))
 )
 
 (package
