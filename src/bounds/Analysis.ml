@@ -12,6 +12,7 @@ type (!'prog_modules_t, !'bound) closed_form_size_bounds =
 type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
   twn : bool;
+  unsolvable : bool;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
   goal : 'bound goal;
 }
@@ -31,6 +32,7 @@ let default_local_configuration : ('a, Bounds.Bound.t) local_configuration =
   {
     run_mprf_depth = Some 1;
     twn = false;
+    unsolvable = false;
     goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
   }
@@ -132,27 +134,27 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   (* We initially compute all possible twn loops.
      Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
-  type twn_state = { remaining_twn_loops : TWN.twn_loop ProofOutput.LocalProofOutput.with_proof List.t }
+  type loop_state = { remaining_loops : TWN.twn_loop ProofOutput.LocalProofOutput.with_proof List.t }
 
-  let initial_twn_state program scc =
-    let all_loops = TWN.find_all_possible_loops_for_scc scc program in
-    { remaining_twn_loops = all_loops }
+  let initial_loop_state requirement_for_cycle program scc =
+    let all_loops = TWN.find_all_possible_loops_for_scc requirement_for_cycle scc program in
+    { remaining_loops = all_loops }
 
 
-  let empty_twn_state = { remaining_twn_loops = [] }
+  let empty_loop_state = { remaining_loops = [] }
 
-  let improve_with_twn ~(conf : allowed_local_conf_type) program scc twn_state appr =
-    let not_all_trans_bounded twn_loop =
-      TWN.handled_transitions (ProofOutput.LocalProofOutput.result twn_loop)
+  let improve_with_twn ~(conf : allowed_local_conf_type) program scc loop_state appr =
+    let not_all_trans_bounded loop =
+      TWN.handled_transitions (ProofOutput.LocalProofOutput.result loop)
       |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
     in
-    let remaining_twn_loops, appr_mc =
-      List.fold_left !twn_state.remaining_twn_loops
+    let remaining_loops, appr_mc =
+      List.fold_left !loop_state.remaining_loops
         ~init:([], MaybeChanged.same appr)
-        ~f:(fun (remaining_twn_loops, appr_mc) twn_loop ->
+        ~f:(fun (remaining_loops, appr_mc) loop ->
           let appr = MaybeChanged.unpack appr_mc in
-          let twn_loop_res = ProofOutput.LocalProofOutput.result twn_loop in
-          if not_all_trans_bounded twn_loop then
+          let loop_res = ProofOutput.LocalProofOutput.result loop in
+          if not_all_trans_bounded loop then
             if
               let heuristic_size_bounds (goal : Bound.t goal) =
                 match goal with
@@ -161,25 +163,25 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               in
               TWN.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
                 ~get_sizebound:(heuristic_size_bounds conf.goal appr)
-                twn_loop_res
+                loop_res
             then
-              (* compute a new global time bound *)
-              let unlifted_bound = TWN.to_unlifted_bounds twn_loop in
+              (* Compute a new global time bound *)
+              let unlifted_bound = TWN.to_unlifted_bounds ~unsolvable:conf.unsolvable loop in
               let new_appr_mc =
                 MaybeChanged.flat_map
                   (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
                   appr_mc
               in
-              (remaining_twn_loops, new_appr_mc)
+              (remaining_loops, new_appr_mc)
             else
               (* We wouldn't be able to compute a finite global time bound from this TWN Loop for now. So keep loop for later *)
-              (twn_loop :: remaining_twn_loops, appr_mc)
+              (loop :: remaining_loops, appr_mc)
           else
             (* all transitions handled by this TWN are already terminating. Get rid of it *)
-            (remaining_twn_loops, appr_mc))
+            (remaining_loops, appr_mc))
     in
-    (* update twn_state to updated list of remaining loops *)
-    twn_state := { remaining_twn_loops };
+    (* update loop_state to updated list of remaining loops *)
+    loop_state := { remaining_loops };
     appr_mc
 
 
@@ -222,22 +224,22 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improve_with_rank_mprf measure program)
 
 
-  let run_local ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) twn_state measure program appr =
+  let run_local ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) loop_state measure program appr =
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
       | Some max_depth -> local_rank ~conf scc measure program max_depth appr
       | None -> MaybeChanged.return appr)
       >>= fun appr ->
-      match (measure, conf.twn) with
+      match (measure, conf.twn || conf.unsolvable) with
       | `Cost, _ -> MaybeChanged.return appr
       | `Time, false -> MaybeChanged.return appr
-      | `Time, true -> improve_with_twn ~conf program scc twn_state appr)
+      | `Time, true -> improve_with_twn ~conf program scc loop_state appr)
 
 
-  let improve_timebound ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) twn_state measure program
+  let improve_timebound ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) loop_state measure program
       appr =
-    let execute () = run_local ~conf scc twn_state measure program appr in
+    let execute () = run_local ~conf scc loop_state measure program appr in
     Logger.with_log logger Logger.INFO
       (fun () ->
         ("improve_bounds", [ ("scc", TransitionSet.to_string scc); ("measure", show_measure measure) ]))
@@ -290,7 +292,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let reset_all_caches () =
     (* TODO: Get rid of implicit caching in the following modules. Write a record to group all explicit caches *)
-    TWN.reset_cfr ();
     TWNSizeBounds.reset_cfr ();
     SolvableSizeBounds.reset_cfr ()
 
@@ -299,16 +300,19 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let lsbs = compute_lsbs program scc_locs in
     let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
     let scc = Program.scc_transitions_from_locs program scc_locs in
-    let twn_state =
-      if conf.twn then
-        ref (initial_twn_state program scc)
+    let loop_state =
+      let module Check_TWN = Check_TWN.Make (Bound) (PM) in
+      if conf.unsolvable then
+        ref (initial_loop_state (const true) program scc)
+      else if conf.twn then
+        ref (initial_loop_state Check_TWN.check_twn program scc)
       else
-        ref empty_twn_state
+        ref empty_loop_state
     in
     let improvement_step appr =
       knowledge_propagation scc program appr
       |> improve_size_bounds ~conf program rvg_with_sccs scc lsbs
-      |> improve_timebound ~conf scc twn_state `Time program
+      |> improve_timebound ~conf scc loop_state `Time program
     in
 
     (* reset all caches, since we might prior have analysed a different version of the same SCC (i.e., due to CFR) *)
@@ -326,7 +330,7 @@ module Classical (Bound : BoundType.Bound) = struct
 
   let scc_cost_bounds ~conf program scc appr =
     if Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
-      MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_twn_state) `Cost program appr)
+      MaybeChanged.unpack (improve_timebound ~conf scc (ref empty_loop_state) `Cost program appr)
     else
       appr
 

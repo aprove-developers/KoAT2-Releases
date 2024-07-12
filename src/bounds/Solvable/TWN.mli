@@ -6,8 +6,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val handled_transitions : twn_loop -> TransitionSet.t
 
+  module Loop : module type of Loop.Make (Bound) (PM)
+
   val find_all_possible_loops_for_scc :
-    TransitionSet.t -> Program.t -> twn_loop ProofOutput.LocalProofOutput.with_proof list
+    (Loop.t -> bool) -> TransitionSet.t -> Program.t -> twn_loop ProofOutput.LocalProofOutput.with_proof list
 
   val finite_bound_possible_if_terminating :
     get_timebound:(Transition.t -> Bound.t) ->
@@ -21,12 +23,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** Similar to [finite_bound_possible_if_twn_terminates] but allows for more choice when obtaining the bounds. *)
 
   val to_unlifted_bounds :
+    ?unsolvable:bool ->
     twn_loop ProofOutput.LocalProofOutput.with_proof ->
     ( Transition.t,
       Bound.t,
       Transition.comparator_witness )
     UnliftedBounds.UnliftedTimeBound.unlifted_time_bound
-
-  val terminates : Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> bool
-  val reset_cfr : unit -> unit
 end

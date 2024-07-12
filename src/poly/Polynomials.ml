@@ -426,6 +426,31 @@ module Polynomial = struct
     List.map xs ~f:(fun (root, n) ->
         ( OurAlgebraicComplex.mul c root,
           OurInt.(add one (Koat2_external.Algebraic.Algebraic.integer_of_nat n)) ))
+
+
+  (* E.g. for the polynomials p = 4x + 2y + z and q = 2x + y returns Some 2. *)
+  let find_common_factor p q =
+    let exception NO_COMMON_FACTOR in
+    try
+      let quotients =
+        List.dedup_and_sort ~compare:OurRational.compare
+        @@ List.map
+             ~f:(fun mon ->
+               OurRational.make
+                 (let opt = Map.find p mon in
+                  if Option.is_some opt then
+                    Option.value_exn opt
+                  else
+                    raise NO_COMMON_FACTOR)
+                 (Map.find_exn q mon))
+             (Map.keys q)
+      in
+      if List.length quotients == 1 then
+        Some (List.hd_exn quotients)
+      else
+        None
+    with
+    | NO_COMMON_FACTOR -> None
 end
 
 module RationalPolynomial = struct

@@ -212,7 +212,8 @@ let empty_twn_state =
 let initial_twn_state program scc =
   let class_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
   let scc_nonprob = gts_to_nonprob_transs scc in
-  let all_loops = TWN.find_all_possible_loops_for_scc scc_nonprob class_program in
+  let module Check_TWN = Check_TWN.Make (Bound) (NonProbOverappr) in
+  let all_loops = TWN.find_all_possible_loops_for_scc Check_TWN.check_twn scc_nonprob class_program in
   {
     bounds_from_twn_loops = Map.empty (module Transition);
     remaining_twn_loops = Set.of_list (module TWNLoopWithProof) all_loops;

@@ -62,8 +62,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (OurRational.of_int b2, OurInt.of_int a2)
 
 
-  (* let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map OurInt.abs) % Polynomial.coeffs) |> OurInt.max_list *)
-
   let compute_N = function
     | [] -> OurInt.zero
     | x :: [] -> OurInt.zero
@@ -224,7 +222,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (guard |> Formula.atoms |> List.unique ~eq:Atom.equal)
         (Bound.one, OurInt.zero)
     in
-    (* TODO guard without inv *)
     Logger.log logger Logger.INFO (fun () ->
         ("complexity.get_bound", [ ("max constant in constant constraint", OurInt.to_string max_con) ]));
     Bound.(add bound (of_OurInt OurInt.(max_con + one)))
@@ -233,67 +230,102 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                ("complexity.get_bound", [ ("local bound", Bound.to_string b) ])))
 
 
-  let complexity twn_proofs ?(entry = None) ?(termination = true) ((guard, update) : Loop.t) =
-    let loop = (guard, update) in
-    let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
-    let t_, was_negative =
-      if Check_TWN.check_weakly_negativitiy loop then
-        ( Loop.chain loop
-          |> tap (fun loop ->
-                 Logger.log logger Logger.INFO (fun () -> ("negative", [ ("chained", Loop.to_string loop) ]))),
-          true )
-      else
-        (loop, false)
+  let preprocess_unsolvable twn_proofs loop =
+    let defective_vars = VarSet.of_list Check_TWN.(defective_vars @@ check_weakly_monotonicity loop) in
+    let candidates_for_substition =
+      List.filter
+        (fun atom -> OurBase.Set.is_subset defective_vars ~of_:(Atom.vars atom))
+        (Formula.atoms @@ Loop.guard loop)
     in
-    Logger.log logger Logger.INFO (fun () ->
-        ("order", [ ("order", Util.enum_to_string Var.to_string (List.enum order)) ]));
-    ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-        FormattedString.mk_str_line ("  loop: " ^ Loop.to_string (guard, update)));
-    ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-        FormattedString.mk_str_line
-          ("  order: " ^ Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)));
-    let pe =
-      RationalPE.compute_closed_form
-        (List.map
-           (fun var ->
-             let update_var = Loop.update_var t_ var in
-             (var, RationalPolynomial.of_intpoly update_var))
-           order)
-    in
-    Logger.log logger Logger.INFO (fun () ->
-        ("closed-form", List.combine (List.map Var.to_string order) (List.map RationalPE.to_string pe)));
-    ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-        FormattedString.(
-          mk_str "closed-form:"
-          <> (List.combine
-                (List.map (Var.to_string ~pretty:true) order)
-                (List.map RationalPE.to_string_pretty pe)
-             |> List.map (fun (a, b) -> a ^ ": " ^ b)
-             |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block)));
-    let npe = RationalPE.normalize pe in
-    Logger.log logger Logger.INFO (fun () ->
-        ( "constrained-free closed-form",
-          List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
-    let varmap = Hashtbl.of_list @@ List.combine order npe in
-    let terminating =
-      if not termination then
-        true
-      else
-        TWN_Termination.termination_ twn_proofs t_ ~entry varmap
-    in
-    if not terminating then
-      Bound.infinity
+    if List.is_empty candidates_for_substition then
+      raise Check_TWN.NOT_TWN
     else
-      let f = get_bound twn_proofs t_ order npe varmap in
-      if was_negative then
-        Bound.(f + f + one)
+      let q =
+        List.hd candidates_for_substition |> Atom.poly |> Polynomial.monomials_with_coeffs
+        |> List.filter (fun (_, mon) -> not @@ OurBase.Set.are_disjoint defective_vars (Monomial.vars mon))
+        |> List.map (uncurry ScaledMonomial.make)
+        |> Polynomial.make
+      in
+      let x = Var.fresh_id Int () in
+      let candidate_loop = Loop.substition_unsolvable loop q x |> Loop.eliminate_non_contributors in
+      if Check_TWN.check_twn candidate_loop then
+        ( candidate_loop,
+          fun v ->
+            if Var.equal x v then
+              Bound.of_intpoly q
+            else
+              Bound.of_var v )
       else
-        f
+        raise Check_TWN.NOT_TWN
 
 
-  let complexity_ twn_proofs t =
-    if Check_TWN.check_twn_t t then
-      complexity twn_proofs @@ (Loop.mk % Tuple3.second) t
-    else
-      Bound.infinity
+  let complexity twn_proofs ?(entry = None) ?(termination = true) ?(unsolvable = false) (loop : Loop.t) =
+    try
+      let loop, var_replacement =
+        if not @@ Check_TWN.check_twn loop then
+          if unsolvable then
+            preprocess_unsolvable twn_proofs loop
+          else
+            raise Check_TWN.NOT_TWN
+        else
+          (loop, Bound.of_var)
+      in
+      let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
+      let t_, was_negative =
+        if Check_TWN.check_weakly_negativitiy loop then
+          ( Loop.chain loop
+            |> tap (fun loop ->
+                   Logger.log logger Logger.INFO (fun () ->
+                       ("negative", [ ("chained", Loop.to_string loop) ]))),
+            true )
+        else
+          (loop, false)
+      in
+      Logger.log logger Logger.INFO (fun () ->
+          ("order", [ ("order", Util.enum_to_string Var.to_string (List.enum order)) ]));
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+          FormattedString.mk_str_line ("  loop: " ^ Loop.to_string loop));
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+          FormattedString.mk_str_line
+            ("  order: " ^ Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)));
+      let pe =
+        RationalPE.compute_closed_form
+          (List.map
+             (fun var ->
+               let update_var = Loop.update_var t_ var in
+               (var, RationalPolynomial.of_intpoly update_var))
+             order)
+      in
+      Logger.log logger Logger.INFO (fun () ->
+          ("closed-form", List.combine (List.map Var.to_string order) (List.map RationalPE.to_string pe)));
+      ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+          FormattedString.(
+            mk_str "closed-form:"
+            <> (List.combine
+                  (List.map (Var.to_string ~pretty:true) order)
+                  (List.map RationalPE.to_string_pretty pe)
+               |> List.map (fun (a, b) -> a ^ ": " ^ b)
+               |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block
+               )));
+      let npe = RationalPE.normalize pe in
+      Logger.log logger Logger.INFO (fun () ->
+          ( "constrained-free closed-form",
+            List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
+      let varmap = Hashtbl.of_list @@ List.combine order npe in
+      let terminating =
+        if not termination then
+          true
+        else
+          TWN_Termination.termination_ twn_proofs t_ ~entry varmap
+      in
+      if not terminating then
+        Bound.infinity
+      else
+        let f = get_bound twn_proofs t_ order npe varmap |> Bound.substitute_f var_replacement in
+        if was_negative then
+          Bound.(f + f + one)
+        else
+          f
+    with
+    | Check_TWN.NOT_TWN -> Bound.infinity
 end

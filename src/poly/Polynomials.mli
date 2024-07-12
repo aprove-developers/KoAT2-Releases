@@ -52,6 +52,8 @@ module Polynomial : sig
 
   val max_of_occurring_constants : t -> OurInt.t
   (** TODO doc *)
+
+  val find_common_factor : t -> t -> OurRational.t option
 end
 
 (** Provides default implementation of polynomials ranged over [OurRational]. *)
