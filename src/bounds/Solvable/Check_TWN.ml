@@ -5,6 +5,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   open! PM
   module Loop = Loop.Make (Bound) (PM)
 
+  type t = TWN of Var.t list | NOTTWN of Var.t list
+
+  let eval_twn = function
+    | TWN _ -> true
+    | _ -> false
+
+
+  let unwrap_twn = function
+    | TWN xs -> xs
+    | NOTTWN xs -> xs
+
+
   (* TOPOLOGICAL ORDERING: *)
   let check_triangular (t : Loop.t) =
     let module DG = Graph.Persistent.Digraph.ConcreteBidirectional (Var) in
@@ -18,9 +30,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let module Topological = Graph.Topological.Make (DG) in
     let module SCC = Graph.Components.Make (DG) in
     if List.exists (SCC.scc_list dependency_graph) ~f:(( < ) 1 % List.length) then
-      []
+      NOTTWN (List.concat @@ List.filter (SCC.scc_list dependency_graph) ~f:(( < ) 1 % List.length))
     else
-      Topological.fold List.cons dependency_graph []
+      TWN (Topological.fold List.cons dependency_graph [])
 
 
   (* MONOTONICITY *)
@@ -41,11 +53,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (Loop.updated_vars t)
 
 
-  let check_twn loop =
-    check_weakly_monotonicity loop
-    && List.length (check_triangular loop) == Set.length (Loop.updated_vars loop)
-
+  let check_twn loop = check_weakly_monotonicity loop && (eval_twn @@ check_triangular loop)
 
   (* For Testing *)
-  let check_twn_ (_, t, _) = check_twn (Loop.mk t)
+  let check_twn_t (_, t, _) = check_twn (Loop.mk t)
 end

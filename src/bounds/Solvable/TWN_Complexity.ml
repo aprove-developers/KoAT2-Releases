@@ -235,7 +235,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let complexity twn_proofs ?(entry = None) ?(termination = true) ((guard, update) : Loop.t) =
     let loop = (guard, update) in
-    let order = Check_TWN.check_triangular loop in
+    let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
     let t_, was_negative =
       if Check_TWN.check_weakly_negativitiy loop then
         ( Loop.chain loop
@@ -292,7 +292,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let complexity_ twn_proofs t =
-    if Check_TWN.check_twn_ t then
+    if Check_TWN.check_twn_t t then
       complexity twn_proofs @@ (Loop.mk % Tuple3.second) t
     else
       Bound.infinity

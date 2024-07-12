@@ -97,7 +97,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   (* Counterpart to TWN_Complexity.complexity *)
   let termination twn_proofs ?(entry = None) loop =
-    let order = Check_TWN.check_triangular loop in
+    let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
     let t_ =
       if Check_TWN.check_weakly_negativitiy loop then
         Loop.chain loop
