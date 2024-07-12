@@ -62,7 +62,6 @@ module RationalPolynomial : sig
   val of_intconstant : OurInt.t -> t
   val max_of_occurring_constants : t -> OurRational.t
   val of_intpoly : Polynomial.t -> t
-  val degree_coeff_list : t -> value list
 
   val normalize : t -> Polynomial.t
   (** Multiply with lcm. *)
@@ -74,6 +73,16 @@ module RationalPolynomial : sig
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
 
   val is_integral : t -> bool
+end
+
+(** Provides default implementation of polynomials ranged over [OurAlgebraicComplex]. *)
+module CAPolynomial : sig
+  include module type of PolynomialOver (OurAlgebraicComplex)
+
+  val overapprox : t -> Polynomial.t
+  (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
+
+  val of_intpoly : Polynomial.t -> t
 end
 
 (** Provides default implementation of laurent polynomials ranged over [OurRational]. *)

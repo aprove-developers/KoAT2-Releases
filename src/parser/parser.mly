@@ -115,8 +115,12 @@ program_simple:
     { ParserUtil.mk_program_simple (List.flatten transitions) } ;
 
 transition_simple:
-  | start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints
-    { ParserUtil.mk_transition_simple start cost rhs formula } ;
+  | start = ID; LPAR vars = variables_simple RPAR cost = cost ; rhs = transition_rhs; formula = withConstraints
+    { ParserUtil.mk_transition_simple start vars cost rhs formula } ;
+
+variables_simple:
+  | vars = separated_list(COMMA,ID)
+    { List.map Var.of_string vars } ;
 
 goal:
   | LPAR GOAL COMPLEXITY RPAR

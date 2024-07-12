@@ -92,6 +92,8 @@ module type Bound = sig
   val add : t -> t -> t
   (** Returns sum of two element. *)
 
+  val max : t -> t -> t
+
   val mul : t -> t -> t
   (** Returns product of two element. *)
 

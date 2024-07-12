@@ -17,6 +17,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let monotonicity_th k (b1, a1) (b2, a2) =
     if OurInt.is_negative k || OurInt.is_zero k then
       OurInt.one
+    else if OurInt.is_zero a1 && (not @@ OurInt.is_zero a2) then
+      OurInt.zero
+    else if OurInt.is_zero a1 && OurInt.is_zero a2 then
+      OurRational.(ceil @@ (log (of_ourint k) + one))
     else
       let rec test_m m =
         let tmp1 = OurRational.((of_ourint @@ OurInt.pow_ourint m a1) * pow_ourint b1 m) in
@@ -201,16 +205,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             (* Transform from p ≤ 0 to p < 0 *)
             Atom.poly_lt atom |> Polynomial.neg
           in
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac in
+          let sub_poly =
+            RationalPE.substitute varmap (RationalPolynomial.of_intpoly poly) |> RationalPE.remove_frac
+          in
           Logger.log logger Logger.INFO (fun () ->
               ( "complexity: npe -> guard_atom",
-                [ ("atom", Atom.to_string atom); ("subs", "0 <= " ^ PE.to_string sub_poly) ] ));
+                [ ("atom", Atom.to_string atom); ("subs", "0 <= " ^ RationalPE.to_string sub_poly) ] ));
           let sub_poly_n =
             sub_poly
             |> List.map (fun (c, p, d, b) ->
-                   (c, RationalPolynomial.normalize p, d |> OurInt.of_int, b |> OurInt.of_int))
+                   (c, RationalPolynomial.normalize p, d |> OurInt.of_int, OurRational.to_ourint b))
           in
-          let max_const = OurInt.max const (PE.max_const sub_poly) in
+          let max_const = OurInt.max const (RationalPE.max_const sub_poly) in
           if is_sorted @@ List.map Tuple4.fourth sub_poly_n then
             (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
           else
@@ -247,25 +253,27 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         FormattedString.mk_str_line
           ("  order: " ^ Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)));
     let pe =
-      PE.compute_closed_form
+      RationalPE.compute_closed_form
         (List.map
            (fun var ->
              let update_var = Loop.update_var t_ var in
-             (var, update_var))
+             (var, RationalPolynomial.of_intpoly update_var))
            order)
     in
     Logger.log logger Logger.INFO (fun () ->
-        ("closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+        ("closed-form", List.combine (List.map Var.to_string order) (List.map RationalPE.to_string pe)));
     ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         FormattedString.(
           mk_str "closed-form:"
-          <> (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe)
+          <> (List.combine
+                (List.map (Var.to_string ~pretty:true) order)
+                (List.map RationalPE.to_string_pretty pe)
              |> List.map (fun (a, b) -> a ^ ": " ^ b)
              |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block)));
-    let npe = PE.normalize pe in
+    let npe = RationalPE.normalize pe in
     Logger.log logger Logger.INFO (fun () ->
         ( "constrained-free closed-form",
-          List.combine (List.map Var.to_string order) (List.map PE.to_string npe) ));
+          List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
     let terminating =
       if not termination then

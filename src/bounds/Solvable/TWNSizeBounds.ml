@@ -91,7 +91,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 None
               else
                 let closed_form =
-                  PE.compute_closed_form @@ List.map (fun var -> (var, Loop.update_var loop_red var)) order
+                  RationalPE.compute_closed_form
+                  @@ List.map
+                       (fun var -> (var, RationalPolynomial.of_intpoly @@ Loop.update_var loop_red var))
+                       order
                   |> List.combine order
                   |> List.find (Var.equal var % Tuple2.first)
                   |> Tuple2.second
@@ -101,12 +104,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   FormattedString.(
                     fun () ->
                       mk_str_line @@ "loop: " ^ Loop.to_string loop_red
-                      <> mk_str_line @@ "closed-form: " ^ PE.to_string_pretty closed_form
+                      <> mk_str_line @@ "closed-form: " ^ RationalPE.to_string_pretty closed_form
                       <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
                 List.map
                   (fun (entry, traversal) ->
                     ( entry,
-                      PE.overapprox closed_form time_bound
+                      RationalPE.overapprox closed_form time_bound
                       |> Bound.substitute_f (fun var ->
                              Bound.of_poly @@ (Base.Map.find traversal var |? Polynomial.of_var var)) ))
                   entries_traversal

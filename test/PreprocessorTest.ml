@@ -17,33 +17,12 @@ let tests =
                   in
                   assert_equal_program (Readers.read_program_simple expected_program) result)
                 [
-                  ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x)");
-                  ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l2(x), l2 -> l3(x), l4 -> l5(x)");
-                  ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l3(x)");
-                  ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l3(x)");
-                  ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x), l4 -> l5(x)");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x), l3(x) -> l4(x)");
+                  ("l1(x) -> l2(x), l2(x) -> l3(x)", "l1(x) -> l2(x), l2(x) -> l3(x), l4(x) -> l5(x)");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x), l3(x) -> l3(x)");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x), l3(x) -> l3(x)");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x), l3(x) -> l4(x), l4(x) -> l5(x)");
                 ];
-         (* TODO TransitionIDs instead of locations
-               ("TrivialTimeBounds" >:::
-                  List.map (fun (src, target, program) ->
-                      program >:: (fun _ ->
-                              let result =
-                                Approximation.empty 5 5
-                                |> TrivialTimeBounds.compute (Readers.read_program_simple program)
-                                |> (fun time -> Approximation.timebound_between time (Location.of_string src) (Location.of_string target))
-                              in
-                              reset ();
-                              assert_equal_bound_option (Some Bound.one) result))
-                           [
-                             ("l1", "l2", "l1 -> l2(x)");
-                             ("l2", "l3", "l1 -> l2(x), l2 -> l3(x)");
-                             ("l2", "l3", "l1 -> l2(x), l2 -> l2(x), l2 -> l3(x)");
-                             ("l3", "l4", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x)");
-                             ("l3", "l4", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x), l4 -> l4(x), l4 -> l5(x)");
-                             ("l4", "l5", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x), l4 -> l4(x), l4 -> l5(x)");
-                           ]
-               );
-         *)
          "CutUnsatisfiableTransitions"
          >::: List.map
                 (fun (expected_program, program) ->
@@ -53,7 +32,10 @@ let tests =
                       (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))
                   in
                   assert_equal_program (Readers.read_program_simple expected_program) result)
-                [ ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l3(x) :|: 2 > 3, l1 -> l2(x), l2 -> l3(x)") ];
+                [
+                  ( "l1(x) -> l2(x), l2(x) -> l3(x)",
+                    "l1(x) -> l3(x) :|: 2 > 3, l1(x) -> l2(x), l2(x) -> l3(x)" );
+                ];
          "Chaining"
          >::: List.map
                 (fun (expected_program, program) ->
@@ -65,15 +47,19 @@ let tests =
                   in
                   assert_equal_program (Readers.read_program_simple expected_program) result)
                 [
-                  ("l1 -> l2(x)", "l1 -> l2(x)");
-                  ("l1 -{2}> l3(x), l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x)");
-                  ("l1 -> l2(x), l1 -{2}> l3(x), l1 -{3}> l4(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l4(x)");
-                  ( "l1 -> l2(x), l3 -> l2(x), l1 -{2}> l3(x), l3 -{2}> l3(x)",
-                    "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x)" );
-                  ("l1 -> l2(2*x), l1 -{2}> l3(6*x)", "l1 -> l2(2*x), l2 -> l3(3*x)");
-                  ("l1 -> l2(2*y,3), l1 -{2}> l3(6*y,15)", "l1 -> l2(2*y,3), l2 -> l3(3*x,5*y)");
-                  ("l1 -> l2(x) :|: x > 2, l1 -{2}> l3(x) :|: x > 2", "l1 -> l2(x) :|: x > 2, l2 -> l3(x)");
-                  ("l1 -> l2(y), l1 -{2}> l3(y) :|: y > 2", "l1 -> l2(y), l2 -> l3(x) :|: x > 2");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x)");
+                  ("l1(x) -{2}> l3(x), l1(x) -> l2(x)", "l1(x) -> l2(x), l2(x) -> l3(x)");
+                  ( "l1(x) -> l2(x), l1(x) -{2}> l3(x), l1(x) -{3}> l4(x)",
+                    "l1(x) -> l2(x), l2(x) -> l3(x), l3(x) -> l4(x)" );
+                  ( "l1(x) -> l2(x), l3(x) -> l2(x), l1(x) -{2}> l3(x), l3(x) -{2}> l3(x)",
+                    "l1(x) -> l2(x), l2(x) -> l3(x), l3(x) -> l2(x)" );
+                  ("l1(x) -> l2(2*x), l1(x) -{2}> l3(6*x)", "l1(x) -> l2(2*x), l2(x) -> l3(3*x)");
+                  ( "l1(x,y) -> l2(2*y,3), l1(x,y) -{2}> l3(6*y,15)",
+                    "l1(x,y) -> l2(2*y,3), l2(x,y) -> l3(3*x,5*y)" );
+                  ( "l1(x) -> l2(x) :|: x > 2, l1(x) -{2}> l3(x) :|: x > 2",
+                    "l1(x) -> l2(x) :|: x > 2, l2(x) -> l3(x)" );
+                  ( "l1(x,y) -> l2(y,y), l1(x,y) -{2}> l3(y,y) :|: y > 2",
+                    "l1(x,y) -> l2(y,y), l2(x,y) -> l3(x,y) :|: x > 2" );
                 ];
          "process_til_fixpoint"
          >::: List.map
@@ -86,5 +72,8 @@ let tests =
                         (Readers.read_program_simple program))
                   in
                   assert_equal_program (Readers.read_program_simple expected_program) result)
-                [ ("l1 -> l2(x)", "l1 -> l2(x)"); ("l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x) :|: 2 > 3") ];
+                [
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x)");
+                  ("l1(x) -> l2(x)", "l1(x) -> l2(x), l2(x) -> l3(x) :|: 2 > 3");
+                ];
        ]

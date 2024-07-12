@@ -166,7 +166,7 @@ module IntMatrix = struct
   include MatrixOver (OurInt)
 
   let convertMatrixToCA mat =
-    mat |> to_list |> List.map ~f:(List.map ~f:OurAlgebraicComplex.of_OurInt) |> CAMatrix.of_list
+    mat |> to_list |> List.map ~f:(List.map ~f:OurAlgebraicComplex.of_ourint) |> CAMatrix.of_list
 
 
   (* Computes det(I*λ - a) *)
@@ -255,4 +255,15 @@ module IntMatrix = struct
       |> Tuple3.third |> CAMatrix.of_vec_list |> transpose_mat
     in
     CAMatrix.(mul p b, j, mul (Option.value_exn @@ inv b) q)
+end
+
+module CAPolyMatrix = struct
+  module CAVector = OurVector.VectorOver (CAPolynomial)
+  include MatrixOver (CAPolynomial)
+
+  let of_CAMatrix = map CAPolynomial.of_constant
+
+  let linear_map mat var_list =
+    let res_vec = mul_vec (of_CAMatrix mat) (CAVector.of_list @@ List.map var_list ~f:CAPolynomial.of_var) in
+    List.zip_exn var_list (CAVector.to_list res_vec)
 end

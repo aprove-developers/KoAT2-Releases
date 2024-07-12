@@ -88,27 +88,29 @@ let tests =
                     (smaller_or_equal (Program.vars program) costbound wanted_costbound))
                 [
                   (* Constant bound *)
-                  ("1", None, "a -> b(x)");
-                  ("2", None, "a -> b(x), b -> c(x)");
-                  ("2", Some "4", "a -> b(x), b -> c(x), b -> d(x)");
-                  ("3", Some "5", "a -> b(x), b -> c(x), b -> d(x), c -> d(x)");
-                  ("11", Some "12", "a -> b(10), b -> b(x-1) :|: x>0");
+                  ("1", None, "a(x) -> b(x)");
+                  ("2", None, "a(x) -> b(x), b(x) -> c(x)");
+                  ("2", Some "4", "a(x) -> b(x), b(x) -> c(x), b(x) -> d(x)");
+                  ("3", Some "5", "a(x) -> b(x), b(x) -> c(x), b(x) -> d(x), c(x) -> d(x)");
+                  ("11", Some "12", "a(x) -> b(10), b(x) -> b(x-1) :|: x>0");
                   (* TODO Possible? ("6", None, "a -> b(10), b -> b(x-2) :|: x>0"); *)
 
                   (* Linear bound *)
-                  ("Arg_0+1", None, "a -> b(x), b -> b(x-1) :|: x>0");
-                  ("Arg_0+Arg_1+1", None, "a -> b(x,y), b -> b(x-1,y) :|: x+y>0");
-                  ("Arg_0+Arg_1+1", None, "a -> b(x,y), b -> b(x-1,y) :|: x>y");
-                  ("Arg_0+Arg_1+1", None, "a -> b(x,y), b -> b(x+1,y) :|: x<y");
-                  ("Arg_1+1", None, "a -> b(0,y), b -> b(x+1,y) :|: x<y");
+                  ("Arg_0+1", None, "a(x) -> b(x), b(x) -> b(x-1) :|: x>0");
+                  ("Arg_0+Arg_1+1", None, "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x+y>0");
+                  ("Arg_0+Arg_1+1", None, "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>y");
+                  ("Arg_0+Arg_1+1", None, "a(x,y) -> b(x,y), b(x,y) -> b(x+1,y) :|: x<y");
+                  ("Arg_1+1", None, "a(x,y) -> b(0,y), b(x,y) -> b(x+1,y) :|: x<y");
                   (* This is not the smallest possible bound. But it is the smallest that can be computed using monotone bounds. *)
                   ( "Arg_0+Arg_1+2 + Arg_1",
                     None,
-                    "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x,y-1) :|: y>0" );
+                    "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>0, b(x,y) -> c(x,y), c(x,y) -> c(x,y-1) :|: \
+                     y>0" );
                   (* This is not the smallest possible bound. But it is the smallest that can be computed using monotone bounds. *)
                   ( "Arg_0+(Arg_1+Arg_0)+2 + Arg_1",
                     None,
-                    "a -> b(x,y), b -> b(x-1,y+1) :|: x>0, b -> c(x,y) :|: x<=0, c -> c(x,y-1) :|: y>0" );
+                    "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y+1) :|: x>0, b(x,y) -> c(x,y) :|: x<=0, c(x,y) -> \
+                     c(x,y-1) :|: y>0" );
                   (* Quadratic bound *)
                 ];
          ("Correct complexity class"
@@ -127,59 +129,72 @@ let tests =
              in
              assert_bool error_msg @@ Bound.equal_complexity expected_complexity complexity)
            [
-             (Inf, "a -> b(), b -> b()", default_conf);
-             (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0", default_conf);
-             (LogarithmicPolynomial (0, 0), "a -> b(), b -> c()", default_conf);
-             (LogarithmicPolynomial (0, 0), "a -> b(), b -> c(), a -> c()", default_conf);
+             (Inf, "a() -> b(), b() -> b()", default_conf);
+             (Inf, "a(x) -> b(x), b(x) -> b(x-1) :|: x>0, b(x) -> b(x+1) :|: x<=0", default_conf);
+             (LogarithmicPolynomial (0, 0), "a() -> b(), b() -> c()", default_conf);
+             (LogarithmicPolynomial (0, 0), "a() -> b(), b() -> c(), a() -> c()", default_conf);
              (* TODO Problem with constant ranking functions (LogarithmicPolynomial (0,0), "a -> b(x), b -> b(x-x) :|: x>0", default_conf); *)
-             (LogarithmicPolynomial (0, 0), "a -> b(x), b -> b(x-1) :|: x>x", default_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x), b -> b(x-1) :|: x>0", default_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(x-1,y) :|: x>y", default_conf);
+             (LogarithmicPolynomial (0, 0), "a(x) -> b(x), b(x) -> b(x-1) :|: x>x", default_conf);
+             (LogarithmicPolynomial (0, 1), "a(x) -> b(x), b(x) -> b(x-1) :|: x>0", default_conf);
+             (LogarithmicPolynomial (0, 1), "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>y", default_conf);
              ( LogarithmicPolynomial (0, 1),
-               "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y",
+               "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>0, b(x,y) -> c(x,y), c(x,y) -> c(x+1,y) :|: x<y",
                default_conf );
              ( LogarithmicPolynomial (0, 1),
-               "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               "a(x,y) -> b(x,y), b(x,y) -> b(x+1,y-1) :|: y>0, b(x,y) -> c(x,y), c(x,y) -> c(x-1,y) :|: x > \
+                0",
                default_conf );
              (* Non-linear not supported by Z3 (LogarithmicPolynomial (0,2), "a -> b(x), b -> b(x-1) :|: x^2>0", default_conf); *)
              ( LogarithmicPolynomial (0, 2),
-               "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: y>0, b(x,y) -> c(x,y), c(x,y) -> c(x-1,y) :|: x > \
+                0",
                default_conf );
              ( Exponential 1,
-               "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0",
+               "a(x,y) -> b(x,y), b(x,y) -> b(2*x,y-1) :|: y>0, b(x,y) -> c(x,y), c(x,y) -> c(x-1,y) :|: x > \
+                0",
                default_conf );
              ( Exponential 1,
-               "a -> b(x,y,z), b -> c(x+y,y,z-1) :|: z>0, c -> b(x,x,z) :|: z>0, c -> d(x,y,z), d -> \
-                d(x-1,y,z) :|: x>0",
+               "a(x,y,z) -> b(x,y,z), b(x,y,z) -> c(x+y,y,z-1) :|: z>0, c(x,y,z) -> b(x,x,z) :|: z>0, \
+                c(x,y,z) -> d(x,y,z), d(x,y,z) -> d(x-1,y,z) :|: x>0",
                default_conf );
              (* MPRF *)
-             (Inf, "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", default_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x,y), b -> b(x+y,y-1) :|: x > 0", mprf5_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x,y,z), b -> b(x+y,y+z,z-1) :|: x > 0", mprf5_conf);
-             (LogarithmicPolynomial (0, 1), "a -> b(x,y,z,u), b -> b(x+y,y+z,z+u,u-1) :|: x > 0", mprf5_conf);
+             (Inf, "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: x > 0", default_conf);
+             (LogarithmicPolynomial (0, 1), "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: x > 0", mprf5_conf);
              ( LogarithmicPolynomial (0, 1),
-               "a -> b(x,y,z,u,v), b -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0",
+               "a(x,y,z) -> b(x,y,z), b(x,y,z) -> b(x+y,y+z,z-1) :|: x > 0",
+               mprf5_conf );
+             ( LogarithmicPolynomial (0, 1),
+               "a(x,y,z,u) -> b(x,y,z,u), b(x,y,z,u) -> b(x+y,y+z,z+u,u-1) :|: x > 0",
+               mprf5_conf );
+             ( LogarithmicPolynomial (0, 1),
+               "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0",
                mprf5_conf );
              (* This would require depth > 5 *)
-             (Inf, "a -> b(x,y,z,u,v,p), b -> b(x+y,y+z,z+u,u+v,v+p,p-1) :|: x > 0", mprf5_conf);
+             ( Inf,
+               "a(x,y,z,u,v,p) -> b(x,y,z,u,v,p), b(x,y,z,u,v,p) -> b(x+y,y+z,z+u,u+v,v+p,p-1) :|: x > 0",
+               mprf5_conf );
              (* TWN based on twn001 *)
-             (Inf, "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
-             (LogarithmicPolynomial (1, 0), "a -> b(x,y), b -> b(2*x, 3*y) :|: x >= y && y >= 1", twn_conf);
+             (Inf, "a(x,y) -> b(x,y), b(x,y) -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
+             ( LogarithmicPolynomial (1, 0),
+               "a(x,y) -> b(x,y), b(x,y) -> b(2*x, 3*y) :|: x >= y && y >= 1",
+               twn_conf );
              ( LogarithmicPolynomial (0, 0),
-               "a -> b(1,y,z), b -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b -> c(1,z,z), c -> c(2*x, 3*y, z) \
-                :|: x >= y && y >= 1",
+               "a(x,y,z) -> b(1,y,z), b(x,y,z) -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b(x,y,z) -> c(1,z,z), \
+                c(x,y,z) -> c(2*x, 3*y, z) :|: x >= y && y >= 1",
                twn_conf );
              ( LogarithmicPolynomial (1, 1),
-               "a -> b(x,y,z,u,v), b -> c(u,v,z-1,u,v) :|: z > 0, c -> c(2*x,3*y,z,u,v) :|: x >= y && y >= \
-                1, c -> b(x,y,z,u,v)",
+               "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(u,v,z-1,u,v) :|: z > 0, c(x,y,z,u,v) -> \
+                c(2*x,3*y,z,u,v) :|: x >= y && y >= 1, c(x,y,z,u,v) -> b(x,y,z,u,v)",
                twn_conf );
              ( LogarithmicPolynomial (1, 1),
-               "a -> b(x,y,z), b -> c(z,1,z-1) :|: z > 0, c -> c(2*x,3*y,z) :|: x >= y && y >= 1, c -> \
-                d(z,1,z), d -> d(2*x,3*y,z) :|: x>= y && y >= 1, d -> b(x,y,z)",
+               "a(x,y,z) -> b(x,y,z), b(x,y,z) -> c(z,1,z-1) :|: z > 0, c(x,y,z) -> c(2*x,3*y,z) :|: x >= y \
+                && y >= 1, c(x,y,z) -> d(z,1,z), d(x,y,z) -> d(2*x,3*y,z) :|: x>= y && y >= 1, d(x,y,z) -> \
+                b(x,y,z)",
                twn_conf );
              ( LogarithmicPolynomial (1, 2),
-               "a -> b(x,y,z,u,v), b -> c(x,y,z-1,z,v) :|: z > 0, c -> d(u,v,z,u-1,v) :|: u > 0, d -> d(2 * \
-                x, 3 * y,z,u,v) :|: x >= y && y >= 1, d -> c(y,y,z,u,v), d -> b(x,y,z,u,v)",
+               "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(x,y,z-1,z,v) :|: z > 0, c(x,y,z,u,v) -> \
+                d(u,v,z,u-1,v) :|: u > 0, d(x,y,z,u,v) -> d(2 * x, 3 * y,z,u,v) :|: x >= y && y >= 1, \
+                d(x,y,z,u,v) -> c(y,y,z,u,v), d(x,y,z,u,v) -> b(x,y,z,u,v)",
                twn_conf );
            ]);
        ]

@@ -29,7 +29,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> List.split
       |> fun (xs, ys) -> "(" ^ String.concat "," xs ^ ") -> (" ^ String.concat "," ys ^ ")"
     in
-    "(" ^ Formula.to_string ~pretty:true guard ^ "," ^ update_str
+    "("
+    ^ (if Formula.is_true guard then
+         "true"
+       else
+         Formula.to_string ~pretty:true guard)
+    ^ "," ^ update_str ^ ")"
 
 
   (** Appends two loops. *)

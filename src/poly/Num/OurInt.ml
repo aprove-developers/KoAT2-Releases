@@ -1,16 +1,25 @@
 open! OurBase
 
+exception Div_Zero of string
+
 let is_zero = Z.(equal zero)
 
-let pow_ourint i n =
+(** [n] must be non-negative. Raises Div_Zero for [0^0] *)
+let pow_ourint b n =
   let open Z in
-  let rec helper i m =
-    if is_zero m then
+  let rec helper b n =
+    if is_zero n then
       one
     else
-      mul i (helper i (m - one))
+      let res = helper b (div n (of_int 2)) in
+      let res_sq = mul res res in
+      mul res_sq
+        (if n mod of_int 2 = zero then
+           one
+         else
+           b)
   in
-  helper i n
+  helper b n
 
 
 include Z
@@ -22,7 +31,7 @@ let of_ourint = identity
 let is_negative a = Compare.(zero > a)
 let is_ge = Compare.( >= )
 let is_gt = Compare.( > )
-let log x = of_int (Z.log2 x) + one
+let log x = of_int (Z.log2up x)
 
 let all_nonnegative =
   Sequence.unfold_step ~init:zero ~f:(fun s -> Sequence.Step.Yield { value = s; state = add s one })

@@ -61,12 +61,9 @@ let mk_transition lhs (cost : Polynomial.t) rhs (formula : Formula.t) (vars : Va
   |> List.map ~f:(List.map ~f:(fun (l, t, l') -> (l, t, l')))
 
 
-(** Returns list of default variables: x,y,z,u,v,w,p and q *)
-let default_vars = [ "x"; "y"; "z"; "u"; "v"; "w"; "p"; "q" ] |> List.map ~f:Var.of_string
-
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input.
     Assume Com_1 transitions *)
-let mk_transition_simple (start : string) (cost : Polynomial.t)
+let mk_transition_simple (start : string) vars (cost : Polynomial.t)
     (rhs : string * (string * Polynomial.t list) list) (formula : Formula.t) : Transition.t list =
   let com_kind = get_com_kind_from_com_str (Tuple2.first rhs) in
   if not (Int.equal com_kind 1) then
@@ -76,7 +73,9 @@ let mk_transition_simple (start : string) (cost : Polynomial.t)
     formula |> Formula.constraints
     |> List.map ~f:(fun constr ->
            ( Location.of_string start,
-             TransitionLabel.mk ~id:None ~assignments:updates ~patterns:default_vars ~guard:constr ~cost,
+             TransitionLabel.mk ~id:None ~assignments:updates
+               ~patterns:(List.take vars (List.length updates))
+               ~guard:constr ~cost,
              Location.of_string target_loc ))
 
 

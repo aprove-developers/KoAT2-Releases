@@ -67,7 +67,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                (fun atom formula ->
                  let poly = Atom.poly atom in
                  let sub_poly =
-                   PE.substitute varmap poly |> PE.remove_frac
+                   RationalPE.substitute varmap (RationalPolynomial.of_intpoly poly)
+                   |> RationalPE.remove_frac
                    |> List.map (RationalPolynomial.normalize % Tuple4.second)
                  in
                  let formula_poly = red_le sub_poly in
@@ -111,25 +112,27 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         FormattedString.mk_str_line @@ "  order: "
         ^ Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order));
     let pe =
-      PE.compute_closed_form
+      RationalPE.compute_closed_form
         (List.map
            (fun var ->
-             let update_var = Loop.update_var t_ var in
+             let update_var = RationalPolynomial.of_intpoly @@ Loop.update_var t_ var in
              (var, update_var))
            order)
     in
     Logger.log logger Logger.INFO (fun () ->
-        ("closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+        ("closed-form", List.combine (List.map Var.to_string order) (List.map RationalPE.to_string pe)));
     ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
         FormattedString.(
           mk_str "closed-form:"
-          <> (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe)
+          <> (List.combine
+                (List.map (Var.to_string ~pretty:true) order)
+                (List.map RationalPE.to_string_pretty pe)
              |> List.map (fun (a, b) -> a ^ ": " ^ b)
              |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block)));
-    let npe = PE.normalize pe in
+    let npe = RationalPE.normalize pe in
     Logger.log logger Logger.INFO (fun () ->
         ( "constrained-free closed-form",
-          List.combine (List.map Var.to_string order) (List.map PE.to_string npe) ));
+          List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
     termination_ twn_proofs t_ ~entry varmap
 end

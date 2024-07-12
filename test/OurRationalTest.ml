@@ -4,6 +4,8 @@ open OUnit2
 open Helper
 open! ProgramModules
 
+let of_intfraction (x, y) = OurRational.make (OurInt.of_int x) (OurInt.of_int y)
+
 let tests =
   "OurRational"
   >::: [
@@ -11,16 +13,14 @@ let tests =
          >::: List.map
                 (fun (expected_bool, tuple) ->
                   "" >:: fun _ ->
-                  let result =
-                    OurRational.equal (OurRational.of_intfraction (2, 42)) (OurRational.of_intfraction tuple)
-                  in
+                  let result = OurRational.equal (of_intfraction (2, 42)) (of_intfraction tuple) in
                   assert_equal_bool expected_bool result)
                 [ (true, (2, 42)); (false, (2, 43)); (false, (3, 42)); (false, (0, 43)) ];
          "to_string"
          >::: List.map
                 (fun (expected_string, tuple) ->
                   "" >:: fun _ ->
-                  let result = OurRational.to_string (OurRational.of_intfraction tuple) in
+                  let result = OurRational.to_string (of_intfraction tuple) in
                   assert_equal_string expected_string result)
                 [
                   ("-1/21", (-2, 42));
@@ -35,8 +35,7 @@ let tests =
                 (fun (expected_string, tuple1, tuple2) ->
                   "" >:: fun _ ->
                   let result =
-                    OurRational.mul (OurRational.of_intfraction tuple1) (OurRational.of_intfraction tuple2)
-                    |> OurRational.to_string
+                    OurRational.mul (of_intfraction tuple1) (of_intfraction tuple2) |> OurRational.to_string
                   in
                   assert_equal_string expected_string result)
                 [
@@ -55,8 +54,7 @@ let tests =
                 (fun (expected_string, tuple1, tuple2) ->
                   "" >:: fun _ ->
                   let result =
-                    OurRational.add (OurRational.of_intfraction tuple1) (OurRational.of_intfraction tuple2)
-                    |> OurRational.to_string
+                    OurRational.add (of_intfraction tuple1) (of_intfraction tuple2) |> OurRational.to_string
                   in
                   assert_equal_string expected_string result)
                 [
@@ -74,7 +72,7 @@ let tests =
          >::: List.map
                 (fun (expected_bool, tuple) ->
                   "" >:: fun _ ->
-                  let result = OurRational.(OurRational.of_intfraction tuple < zero) in
+                  let result = OurRational.(of_intfraction tuple < zero) in
                   assert_equal_bool expected_bool result)
                 [
                   (true, (-2, 42));
@@ -89,10 +87,7 @@ let tests =
          >::: List.map
                 (fun (expected_int, tuple1, tuple2) ->
                   "" >:: fun _ ->
-                  let result =
-                    OurRational.compare (OurRational.of_intfraction tuple1)
-                      (OurRational.of_intfraction tuple2)
-                  in
+                  let result = OurRational.compare (of_intfraction tuple1) (of_intfraction tuple2) in
                   assert_equal_int expected_int result)
                 [
                   (-1, (0, 42), (5, 3));
@@ -126,9 +121,7 @@ let tests =
          >::: List.map
                 (fun (expected_string, tuple1, exp) ->
                   "" >:: fun _ ->
-                  let result =
-                    OurRational.pow (OurRational.of_intfraction tuple1) exp |> OurRational.to_string
-                  in
+                  let result = OurRational.pow (of_intfraction tuple1) exp |> OurRational.to_string in
                   assert_equal_string expected_string result)
                 [
                   ("1", (1, 1), 1);
@@ -145,14 +138,14 @@ let tests =
          >::: List.map
                 (fun (expected_string, tuple) ->
                   "" >:: fun _ ->
-                  let result = OurRational.ceil (OurRational.of_intfraction tuple) |> OurInt.to_string in
+                  let result = OurRational.ceil (of_intfraction tuple) |> OurInt.to_string in
                   assert_equal_string expected_string result)
                 [ ("1", (3, 5)); ("0", (-3, 5)); ("7", (49, 7)) ];
          "floor"
          >::: List.map
                 (fun (expected_string, tuple) ->
                   "" >:: fun _ ->
-                  let result = OurRational.floor (OurRational.of_intfraction tuple) |> OurInt.to_string in
+                  let result = OurRational.floor (of_intfraction tuple) |> OurInt.to_string in
                   assert_equal_string expected_string result)
                 [ ("0", (3, 5)); ("-1", (-3, 5)); ("7", (49, 7)) ];
        ]
