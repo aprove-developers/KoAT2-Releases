@@ -47,11 +47,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)
 
 
-  type twn_loop = SimpleCycle.twn_loop
+  type loop = SimpleCycle.loop
 
-  let handled_transitions ((cycle, _) : twn_loop) = TransitionSet.of_list cycle
+  let handled_transitions ((cycle, _) : loop) = TransitionSet.of_list cycle
 
-  let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds (loop : twn_loop) =
+  let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds (loop : loop) =
     let loop_transitions, entries = loop in
     let loop_transitions = TransitionSet.of_list loop_transitions in
     let contributors = EliminateNonContributors.compute_contributors loop_transitions in
@@ -60,14 +60,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         Bound.is_finite timebound && Set.for_all contributors ~f:(Bound.is_finite % get_sizebound))
 
 
-  let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : twn_loop) =
+  let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : loop) =
     finite_bound_possible_if_terminating_with_combined_bounds
       ~get_combined_bounds:(fun t -> (get_timebound t, get_sizebound t))
       loop
 
 
   let find_all_possible_loops_for_scc requirement_for_cycle scc program :
-      SimpleCycle.twn_loop ProofOutput.LocalProofOutput.with_proof List.t =
+      SimpleCycle.loop ProofOutput.LocalProofOutput.with_proof List.t =
     let open! OurBase in
     let create_proof trans =
       let twn_proofs = ProofOutput.LocalProofOutput.create () in
@@ -91,8 +91,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     loop scc
 
 
-  let to_unlifted_bounds ?(unsolvable = false) (twn_loop : twn_loop ProofOutput.LocalProofOutput.with_proof) =
-    let twn_proofs, (cycle, loops) = ProofOutput.LocalProofOutput.(proof twn_loop, result twn_loop) in
+  let to_unlifted_bounds ?(unsolvable = false) (loop : loop ProofOutput.LocalProofOutput.with_proof) =
+    let twn_proofs, (cycle, loops) = ProofOutput.LocalProofOutput.(proof loop, result loop) in
     let cycle_set = TransitionSet.of_list cycle in
     let local_bounds =
       List.map

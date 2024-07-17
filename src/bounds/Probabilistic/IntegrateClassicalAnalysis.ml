@@ -3,7 +3,7 @@ open Bounds
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
 module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (NonProbOverappr)
-module TWN = TWN.Make (Bound) (NonProbOverappr)
+module LoopHandler = LoopHandler.Make (Bound) (NonProbOverappr)
 module UnliftedBound = UnliftedBounds.UnliftedTimeBound.Make (NonProbOverappr) (Bound)
 open OverapprDirections
 
@@ -164,7 +164,7 @@ let improve_with_mprfs depth program scc (class_appr, appr) =
 (** We want to compare TWN Loops by the set of their handed transitions *)
 module TWNLoopWithProof = struct
   module Inner = struct
-    type t = TWN.twn_loop ProofOutput.LocalProofOutput.with_proof
+    type t = LoopHandler.loop ProofOutput.LocalProofOutput.with_proof
 
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
@@ -213,7 +213,7 @@ let initial_twn_state program scc =
   let class_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
   let scc_nonprob = gts_to_nonprob_transs scc in
   let module Check_TWN = Check_TWN.Make (Bound) (NonProbOverappr) in
-  let all_loops = TWN.find_all_possible_loops_for_scc Check_TWN.check_twn scc_nonprob class_program in
+  let all_loops = LoopHandler.find_all_possible_loops_for_scc Check_TWN.check_twn scc_nonprob class_program in
   {
     bounds_from_twn_loops = Map.empty (module Transition);
     remaining_twn_loops = Set.of_list (module TWNLoopWithProof) all_loops;
@@ -221,9 +221,10 @@ let initial_twn_state program scc =
 
 
 (** At this point we cannot distinguish between variables that occur linearly or non-linearly in the resulting bound.
-    This is however not unsound, as [TWN.finite_bound_possible_if_terminating_with_combined_bounds] only uses the provided [get_combined_bounds] as a heuristic and does not perform any substitution/overapproximation whatsoever. *)
+    This is however not unsound, as [LoopHandler.finite_bound_possible_if_terminating_with_combined_bounds] only uses the provided [get_combined_bounds] as a heuristic and does not perform any substitution/overapproximation whatsoever. *)
 let twn_heuristic apprs twn_loop =
-  TWN.finite_bound_possible_if_terminating_with_combined_bounds twn_loop ~get_combined_bounds:(fun t ->
+  LoopHandler.finite_bound_possible_if_terminating_with_combined_bounds twn_loop
+    ~get_combined_bounds:(fun t ->
       let timebound, get_sizebound, _ = get_combined_bounds_both_directions apprs t in
       (timebound, get_sizebound))
 
@@ -295,12 +296,12 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound
 (** Compute timebound for transition from single twn loop *)
 let compute_timebounds_from_loop_with_proof twn_state apprs loop_with_proof =
   let all_handled_trans =
-    TWN.handled_transitions (ProofOutput.LocalProofOutput.result loop_with_proof)
+    LoopHandler.handled_transitions (ProofOutput.LocalProofOutput.result loop_with_proof)
     |> TransitionSet.map ~f:nonprob_trans_to_prob_trans
   in
   let newly_handled_trans = Set.diff all_handled_trans (all_already_bounded_trans !twn_state) in
   if not (Set.is_empty newly_handled_trans) then
-    let unlifted = TWN.to_unlifted_bounds loop_with_proof in
+    let unlifted = LoopHandler.to_unlifted_bounds loop_with_proof in
     let time_and_size_proofs = ProofOutput.LocalProofOutput.create () in
     let get_timebound, get_sizebound =
       get_time_and_size_bounds_for_unlifted_twn_bounds ~proof:time_and_size_proofs apprs unlifted

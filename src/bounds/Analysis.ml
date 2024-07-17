@@ -53,7 +53,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module SizeBounds = SizeBounds.Make (PM)
   module TWNSizeBounds = TWNSizeBounds.Make (PM)
   module SolvableSizeBounds = SolvableSizeBounds.Make (PM)
-  module TWN = TWN.Make (Bound) (PM)
+  module LoopHandler = LoopHandler.Make (Bound) (PM)
 
   type allowed_local_conf_type = (PM.program_modules_t, Bound.t) local_configuration
   type appr = Approximation.t
@@ -134,10 +134,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   (* We initially compute all possible twn loops.
      Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
-  type loop_state = { remaining_loops : TWN.twn_loop ProofOutput.LocalProofOutput.with_proof List.t }
+  type loop_state = { remaining_loops : LoopHandler.loop ProofOutput.LocalProofOutput.with_proof List.t }
 
   let initial_loop_state requirement_for_cycle program scc =
-    let all_loops = TWN.find_all_possible_loops_for_scc requirement_for_cycle scc program in
+    let all_loops = LoopHandler.find_all_possible_loops_for_scc requirement_for_cycle scc program in
     { remaining_loops = all_loops }
 
 
@@ -145,7 +145,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let improve_with_twn ~(conf : allowed_local_conf_type) program scc loop_state appr =
     let not_all_trans_bounded loop =
-      TWN.handled_transitions (ProofOutput.LocalProofOutput.result loop)
+      LoopHandler.handled_transitions (ProofOutput.LocalProofOutput.result loop)
       |> Set.exists ~f:(not % Approximation.is_time_bounded appr)
     in
     let remaining_loops, appr_mc =
@@ -161,12 +161,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 | Complexity -> Approximation.sizebound
                 | Termination -> fun _ _ _ -> Bound.one
               in
-              TWN.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
+              LoopHandler.finite_bound_possible_if_terminating ~get_timebound:(Approximation.timebound appr)
                 ~get_sizebound:(heuristic_size_bounds conf.goal appr)
                 loop_res
             then
               (* Compute a new global time bound *)
-              let unlifted_bound = TWN.to_unlifted_bounds ~unsolvable:conf.unsolvable loop in
+              let unlifted_bound = LoopHandler.to_unlifted_bounds ~unsolvable:conf.unsolvable loop in
               let new_appr_mc =
                 MaybeChanged.flat_map
                   (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
