@@ -248,13 +248,22 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       in
       let x = Var.fresh_id Int () in
       let candidate_loop = Loop.substition_unsolvable loop q x |> Loop.eliminate_non_contributors in
-      if Check_TWN.check_twn candidate_loop then
+      if Check_TWN.check_twn candidate_loop then (
+        Logger.log logger Logger.INFO (fun () ->
+            ( "unsolvable-loops",
+              [ ("original", Loop.to_string loop); ("transformed", Loop.to_string candidate_loop) ] ));
+        ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+            FormattedString.(
+              mk_str_line ("  original loop: " ^ Loop.to_string loop)
+              <> mk_str_line
+                   ("  transformed loop: " ^ Loop.to_string candidate_loop ^ " with "
+                  ^ Polynomial.to_string_pretty q)));
         ( candidate_loop,
           fun v ->
             if Var.equal x v then
               Bound.of_intpoly q
             else
-              Bound.of_var v )
+              Bound.of_var v ))
       else
         raise Check_TWN.NOT_TWN
 
