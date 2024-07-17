@@ -32,7 +32,7 @@ let print_result = function
   | `PrintAllBounds -> print_all_bounds
 
 
-type classic_local = [ `MPRF | `TWN ]
+type classic_local = [ `MPRF | `TWN | `UNSOLVABLE ]
 
 type params = {
   input : string; [@aka [ "i" ]]
@@ -44,8 +44,8 @@ type params = {
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   classic_local : classic_local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
-      (** Choose methods to compute local runtime-bounds: mprf, twn *)
+      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("unsolvable", `UNSOLVABLE) ]] [@default [ `MPRF ]] [@sep ',']
+      (** Choose methods to compute local runtime-bounds: mprf, twn, or unsolvable *)
   closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   preprocessing_strategy : Preprocessor.strategy;
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
@@ -103,6 +103,7 @@ let run (params : params) =
          else
            None);
       twn = List.exists ~f:(( == ) `TWN) params.classic_local;
+      unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.classic_local;
       closed_form_size_bounds = Analysis.NoClosedFormSizeBounds;
       (* TODO *)
       goal = Analysis.Complexity;

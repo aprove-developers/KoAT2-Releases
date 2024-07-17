@@ -118,11 +118,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       entries
 
 
-  type twn_loop = Transition.t list * (Transition.t * Loop.t) list
+  type loop = Transition.t list * (Transition.t * Loop.t) list
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_all_loops twn_proofs ?(relevant_vars = None) choose_circle program scc (l, t, l') :
-      twn_loop ProofOutput.LocalProofOutput.with_proof List.t =
+      loop ProofOutput.LocalProofOutput.with_proof List.t =
     let updated_trans = TransitionLabel.relax_guard ~non_static:VarSet.empty t in
     let handle_scc = List.map (Tuple3.map2 (TransitionLabel.relax_guard ~non_static:VarSet.empty)) in
     let merged_trans =
@@ -150,7 +150,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           let handled_transitions = handled_transitions cycle in
           TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions
             (Program.entry_transitions_with_logger logger program handled_transitions);
-          let loop : twn_loop = (handled_transitions, chained_cycle) in
+          let loop : loop = (handled_transitions, chained_cycle) in
           Some ProofOutput.LocalProofOutput.{ result = loop; proof = twn_proofs })
         else
           None)

@@ -19,7 +19,8 @@ let tests =
                   program >:: fun _ ->
                   let program = Readers.read_program_simple program in
                   let result =
-                    Check_TWN.check_twn_ (program |> Program.sccs |> List.hd_exn |> Set.choose_exn)
+                    Check_TWN.check_twn
+                      (program |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second |> Loop.mk)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -182,8 +183,9 @@ let tests =
                   "" >:: fun _ ->
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
-                    TWN_Complexity.complexity_ twn_proofs
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn)
+                    TWN_Complexity.complexity twn_proofs
+                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
+                     |> Tuple3.second |> Loop.mk)
                   in
                   let error_msg =
                     "Asymptotic Complexity "

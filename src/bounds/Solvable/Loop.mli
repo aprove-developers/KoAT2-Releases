@@ -21,4 +21,5 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ?relevant_vars:VarSet.t option -> t -> Formula.t * UpdateElement.t ProgramTypes.VarMap.t
 
   val compute_bound_n_iterations : t -> Var.t -> int -> Bound.t
+  val substition_unsolvable : t -> Polynomial.t -> Var.t -> t
 end

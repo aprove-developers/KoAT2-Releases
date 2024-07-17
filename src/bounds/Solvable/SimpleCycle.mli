@@ -7,7 +7,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
   open PM
 
-  type twn_loop = Transition.t list * (Transition.t * Loop.t) list
+  type loop = Transition.t list * (Transition.t * Loop.t) list
 
   val find_all_loops :
     ProofOutput.LocalProofOutput.t ->
@@ -16,7 +16,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Program.t ->
     (Transition.t, 'a) Base.Set.t ->
     Transition.t ->
-    twn_loop ProofOutput.LocalProofOutput.with_proof list
+    loop ProofOutput.LocalProofOutput.with_proof list
   (** copies the proof output for all elements of the result list *)
 
   val find_loop :

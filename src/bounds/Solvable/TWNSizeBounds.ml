@@ -86,7 +86,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop
               in
               (* We first compute for var (with a closed form) a local size bound *)
-              let order = Check_TWN.check_triangular loop_red in
+              let order = Check_TWN.(unwrap_twn @@ check_triangular loop_red) in
               if List.is_empty order then
                 None
               else

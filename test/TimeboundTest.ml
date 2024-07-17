@@ -25,6 +25,14 @@ let twn_conf =
     { default_configuration with local_configuration = { default_local_configuration with twn = true } }
 
 
+let unsolvable_conf =
+  Analysis.
+    {
+      default_configuration with
+      local_configuration = { default_local_configuration with unsolvable = true };
+    }
+
+
 module Analysis = Analysis.Classical (Bounds.Bound)
 
 (** Returns an overall costbound for the given program. *)
@@ -178,6 +186,14 @@ let tests =
              ( LogarithmicPolynomial (1, 0),
                "a(x,y) -> b(x,y), b(x,y) -> b(2*x, 3*y) :|: x >= y && y >= 1",
                twn_conf );
+             ( Inf,
+               "a(a,b,c,d) -> b(a,b,c,d), b(a,b,c,d) -> b(a,-2*b,c + c^2 + a^2,-4*c + 2*c^2 + 3*d + a^2) :|: \
+                b != 0 && b^2 - a^5 < 2*c - d",
+               twn_conf );
+             ( LogarithmicPolynomial (1, 0),
+               "a(a,b,c,d) -> b(a,b,c,d), b(a,b,c,d) -> b(a,-2*b,c + c^2 + a^2,-4*c + 2*c^2 + 3*d + a^2) :|: \
+                b != 0 && b^2 - a^5 < 2*c - d",
+               unsolvable_conf );
              ( LogarithmicPolynomial (0, 0),
                "a(x,y,z) -> b(1,y,z), b(x,y,z) -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b(x,y,z) -> c(1,z,z), \
                 c(x,y,z) -> c(2*x, 3*y, z) :|: x >= y && y >= 1",

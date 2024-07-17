@@ -51,7 +51,7 @@ let print_result = function
   | `PrintAllBounds -> print_all_bounds
 
 
-type local = [ `MPRF | `TWN ]
+type local = [ `MPRF | `TWN | `UNSOLVABLE ]
 type cfr = [ `PartialEvaluation | `Chaining ]
 
 type params = {
@@ -108,8 +108,9 @@ type params = {
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
       [@default Preprocessor.process_till_fixpoint]
       (** The strategy which should be used to apply the preprocessors. *)
-  local : local list; [@enum [ ("mprf", `MPRF); ("twn", `TWN) ]] [@default [ `MPRF ]] [@sep ',']
-      (** Choose methods to compute local runtime-bounds: mprf, twn *)
+  local : local list;
+      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("unsolvable", `UNSOLVABLE) ]] [@default [ `MPRF ]] [@sep ',']
+      (** Choose methods to compute local runtime-bounds: mprf, twn, or unsolvable *)
   closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
@@ -171,6 +172,7 @@ let program_to_formatted_string prog = function
 let local_to_string = function
   | `MPRF -> "MPRF"
   | `TWN -> "TWN"
+  | `UNSOLVABLE -> "unsolvable loops"
 
 
 module MakeAnalysis (Bound : BoundType.Bound) = struct
@@ -247,6 +249,7 @@ let run (params : params) =
                else
                  None);
             twn = List.exists ~f:(( == ) `TWN) params.local;
+            unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.local;
             closed_form_size_bounds;
             goal;
           };
