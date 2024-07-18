@@ -52,6 +52,7 @@ let print_result = function
 
 
 type local = [ `MPRF | `TWN | `UNSOLVABLE ]
+type size = [ `CLOSED ]
 type cfr = [ `PartialEvaluation | `Chaining ]
 
 type params = {
@@ -111,7 +112,8 @@ type params = {
   local : local list;
       [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("unsolvable", `UNSOLVABLE) ]] [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn, or unsolvable *)
-  closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
+  size : size list; [@enum [ ("closed", `CLOSED) ]] [@default []] [@sep ',']
+      (** Choose methods to compute size bounds (additionally to TOPLAS'16): closed-form size bounds *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
   mprf_depth : int; [@default 1] [@aka [ "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
@@ -282,7 +284,7 @@ let run (params : params) =
       let module AnalysisComplexity = MakeAnalysis (Bounds.Bound) in
       let goal = Analysis.Complexity in
       let closed_form_size_bounds =
-        if params.closed_form_size_bounds then
+        if List.exists ~f:(( == ) `CLOSED) params.size then
           Analysis.ComputeClosedFormSizeBounds
         else
           Analysis.NoClosedFormSizeBounds
