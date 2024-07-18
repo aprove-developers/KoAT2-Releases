@@ -51,7 +51,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
-  module TWNSizeBounds = TWNSizeBounds.Make (PM)
   module SolvableSizeBounds = SolvableSizeBounds.Make (PM)
   module LoopHandler = LoopHandler.Make (Bound) (PM)
 
@@ -251,9 +250,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (appr : Approximation.t) =
       match conf.closed_form_size_bounds with
       | NoClosedFormSizeBounds -> appr
-      | ComputeClosedFormSizeBounds ->
-          TWNSizeBounds.improve program ~scc:(Option.some scc) appr
-          |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
+      | ComputeClosedFormSizeBounds -> SolvableSizeBounds.improve program ~scc:(Option.some scc) appr
     in
     match conf.goal with
     | Termination -> identity
@@ -292,7 +289,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let reset_all_caches () =
     (* TODO: Get rid of implicit caching in the following modules. Write a record to group all explicit caches *)
-    TWNSizeBounds.reset_cfr ();
     SolvableSizeBounds.reset_cfr ()
 
 
