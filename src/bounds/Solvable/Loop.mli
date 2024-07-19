@@ -22,4 +22,5 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val compute_bound_n_iterations : t -> Var.t -> int -> Bound.t
   val substition_unsolvable : t -> Polynomial.t -> Var.t -> t
+  val commuting : t -> t -> bool
 end

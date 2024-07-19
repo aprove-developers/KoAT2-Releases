@@ -83,4 +83,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Map.add_exn (update loop) ~key:x ~data:(Polynomial.substitute_f (update_var loop) q |> substition q)
     in
     (new_guard, new_update)
+
+
+  let commuting loop1 loop2 =
+    Map.equal Polynomial.equal (update @@ append loop1 loop2) (update @@ append loop2 loop1)
 end

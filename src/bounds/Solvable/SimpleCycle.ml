@@ -207,13 +207,65 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions
               (Program.entry_transitions_with_logger logger program handled_transitions);
             Option.some
-              ( loop,
+              ( loop_red,
                 List.map
                   (fun entry -> (entry, traverse_cycle cycle (Transition.src entry) l))
                   (Program.entry_transitions_with_logger logger program handled_transitions) ))
           else
             None)
         cycles
+    else
+      None
+
+
+  (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
+  let find_commuting_loops twn_proofs ?(relevant_vars = None) f appr program scc (l, t, l') =
+    if not @@ TransitionLabel.has_tmp_vars t then
+      let merged_trans =
+        Util.group
+          (fun (l1, t, l1') (l2, t', l2') ->
+            Location.equal l1 l2 && Location.equal l1' l2' && TransitionLabel.equivalent_update t t')
+          (Base.Set.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+        |> List.map (fun xs ->
+               ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
+      in
+      let outgoing_l = List.filter (Location.equal l % Tuple3.first) merged_trans in
+      let cycles =
+        List.filter_map
+          (fun cycle ->
+            let loop = contract_cycle cycle l in
+            let loop_red = Loop.eliminate_non_contributors ~relevant_vars loop in
+            if f appr program loop_red then
+              let handled_transitions = handled_transitions cycle in
+              Option.some
+                ( loop,
+                  handled_transitions,
+                  traverse_cycle cycle (Tuple3.first (List.first cycle)) (Tuple3.first (List.last cycle)) )
+            else
+              None)
+          (List.flatten @@ List.map (cycles_with_t merged_trans) outgoing_l)
+      in
+      let opt = List.find_opt (List.exists (Transition.equal (l, t, l')) % Tuple3.second) cycles in
+      if Option.is_none opt then
+        None
+      else
+        let loop_t, _, partial_evaluation = Option.get opt in
+        let loops, handled_transitions =
+          List.filter_map
+            (fun (loop, handled_transitions, _) ->
+              if
+                Loop.commuting loop_t loop
+                && List.for_all
+                     (not % Approximation.is_size_bounded program appr)
+                     (List.filter (Location.equal l % Tuple3.third) handled_transitions)
+              then
+                Option.some (loop, handled_transitions)
+              else
+                None)
+            cycles
+          |> OurBase.List.unzip |> Tuple2.map2 List.flatten
+        in
+        Option.some (loops, handled_transitions, partial_evaluation)
     else
       None
 end

@@ -84,21 +84,19 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           in
           if Option.is_some loops_opt then (
             let loop, entries_traversal = Option.value_exn loops_opt in
-            let loop_red =
-              Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop
-            in
-            let closed_forms = Check_Solvable.compute_closed_form loop_red
+
+            let closed_forms = Check_Solvable.compute_closed_form loop
             and time_bound = MultiphaseRankingFunction.time_bound loop 5 in
             ProofOutput.LocalProofOutput.add_to_proof twn_proofs
               FormattedString.(
                 fun () ->
-                  mk_str_line @@ "loop: " ^ Loop.to_string loop_red
+                  mk_str_line @@ "loop: " ^ Loop.to_string loop
                   <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
             List.iter
               ~f:(fun (var, pe) ->
                 let local_bound =
                   Bound.max
-                    (Loop.compute_bound_n_iterations loop_red var
+                    (Loop.compute_bound_n_iterations loop var
                        (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
                     (PolyExponential.ComplexPE.to_bound pe)
                 in
@@ -120,7 +118,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                 SizeBoundTable.add size_bound_table (t, var) res)
               (Option.value_exn closed_forms);
             ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs);
-            Set.fold (Loop.vars loop_red) ~init:appr ~f:lift_var)
+            Set.fold (Loop.vars loop) ~init:appr ~f:lift_var)
           else
             appr)
         else
