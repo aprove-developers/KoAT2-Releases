@@ -165,8 +165,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let improve_t ?(commuting = false) program trans t appr =
-    Printf.printf "%B" commuting;
-
     let lift_var appr var =
       let twn_proofs = ProofOutput.LocalProofOutput.create () in
       let lifted_bound = lift twn_proofs appr t var (SizeBoundTable.find size_bound_table (t, var)) in
