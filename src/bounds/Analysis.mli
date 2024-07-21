@@ -14,6 +14,7 @@ type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
   twn : bool;
   unsolvable : bool;
+  commuting : bool;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
   goal : 'bound goal;
 }

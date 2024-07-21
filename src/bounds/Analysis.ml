@@ -13,6 +13,7 @@ type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
   twn : bool;
   unsolvable : bool;
+  commuting : bool;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
   goal : 'bound goal;
 }
@@ -33,6 +34,7 @@ let default_local_configuration : ('a, Bounds.Bound.t) local_configuration =
     run_mprf_depth = Some 1;
     twn = false;
     unsolvable = false;
+    commuting = false;
     goal = Complexity;
     closed_form_size_bounds = NoClosedFormSizeBounds;
   }
@@ -246,18 +248,24 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let improve_size_bounds ~(conf : allowed_local_conf_type) program rvg_with_sccs scc lsb_table =
-    let twn_size_bounds ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) (program : Program.t)
-        (appr : Approximation.t) =
+    let closed_form_size_bounds ~(conf : allowed_local_conf_type) (scc : TransitionSet.t)
+        (program : Program.t) (appr : Approximation.t) =
       match conf.closed_form_size_bounds with
       | NoClosedFormSizeBounds -> appr
-      | ComputeClosedFormSizeBounds -> SolvableSizeBounds.improve program ~scc:(Option.some scc) appr
+      | ComputeClosedFormSizeBounds ->
+          SolvableSizeBounds.improve program ~scc:(Option.some scc) appr
+          |>
+          if conf.commuting then
+            SolvableSizeBounds.improve ~commuting:true program ~scc:(Option.some scc)
+          else
+            identity
     in
     match conf.goal with
     | Termination -> identity
     | Complexity ->
         fun (appr : Approximation.t) ->
           SizeBounds.improve program (Lazy.force rvg_with_sccs) (Map.find @@ Lazy.force lsb_table) appr
-          |> twn_size_bounds ~conf scc program
+          |> closed_form_size_bounds ~conf scc program
 
 
   let compute_lsbs program scc_locs =

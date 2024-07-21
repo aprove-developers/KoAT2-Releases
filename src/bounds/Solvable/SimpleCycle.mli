@@ -31,11 +31,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val find_commuting_loops :
     ProofOutput.LocalProofOutput.t ->
-    ?relevant_vars:VarSet.t option ->
     (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    (Loop.t list * Transition.t list * Polynomial.t VarMap.t) option
+    ((Loop.t * Transition.t list) list * Polynomial.t VarMap.t) option
 end
