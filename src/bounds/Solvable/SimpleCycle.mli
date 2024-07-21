@@ -28,4 +28,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     TransitionSet.t ->
     Transition.t ->
     (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
+
+  val find_commuting_loops :
+    ProofOutput.LocalProofOutput.t ->
+    (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
+    Approximation.t ->
+    Program.t ->
+    TransitionSet.t ->
+    Transition.t ->
+    ((Loop.t * Transition.t list) list * Polynomial.t VarMap.t) option
 end

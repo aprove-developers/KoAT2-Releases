@@ -103,6 +103,7 @@ let run (params : params) =
          else
            None);
       twn = List.exists ~f:(( == ) `TWN) params.classic_local;
+      commuting = false;
       unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.classic_local;
       closed_form_size_bounds = Analysis.NoClosedFormSizeBounds;
       (* TODO *)
