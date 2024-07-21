@@ -234,8 +234,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         List.filter_map
           (fun cycle ->
             let loop = contract_cycle cycle l in
-            let loop_red = loop in
-            if f appr program loop_red then
+            if f appr program loop then
               let handled_transitions = handled_transitions cycle in
               Option.some
                 ( loop,

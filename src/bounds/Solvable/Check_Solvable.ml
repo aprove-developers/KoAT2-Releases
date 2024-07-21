@@ -40,19 +40,28 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (* For all blocks, all variable pairs (x,y) in such a block: The update of x only depends linearly on y. *)
     then
       (* Sort blocks w.r.t. twn-order. *)
-      let compare block1 block2 =
-        let condition block1 block2 =
-          Set.are_disjoint (VarSet.of_list block1)
-            (VarSet.union_list @@ List.map ~f:(Polynomial.vars % Loop.update_var t) block2)
-        in
-        if condition block1 block2 then
-          1
-        else if condition block2 block1 then
-          -1
-        else
-          0
+      let map =
+        Map.of_alist_exn (module Var) (List.map blocks ~f:(fun block -> (Var.fresh_id Int (), block)))
       in
-      Option.some (List.sort blocks ~compare)
+      let dependency_graph =
+        Map.fold map
+          ~f:(fun ~key:x ~data:block1 graph ->
+            Map.fold map
+              ~f:(fun ~key:y ~data:block2 graph ->
+                if
+                  Var.equal x y
+                  || not
+                     @@ Set.are_disjoint (VarSet.of_list block1)
+                          (VarSet.union_list @@ List.map ~f:(Polynomial.vars % Loop.update_var t) block2)
+                then
+                  DG.add_edge graph y x
+                else
+                  graph)
+              ~init:graph)
+          ~init:DG.empty
+      in
+      let module Topological = Graph.Topological.Make (DG) in
+      Option.some @@ List.map (Topological.fold List.cons dependency_graph []) ~f:(Map.find_exn map)
     else
       None
 

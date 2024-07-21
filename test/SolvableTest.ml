@@ -29,24 +29,26 @@ let tests =
                      |> Base.Set.choose_exn)
                   in
                   assert_equal_string expected_string (to_string result))
-                [ (* ("solvable: [[Arg_0]]", "l0(x) -> l1(x), l1(x) -> l1(x)");
-                     ("not solvable", "l0(x) -> l1(x), l1(x) -> l1(x^2)");
-                     ("not solvable", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(y^2,x^2)");
-                     ("solvable: [[Arg_1; Arg_0]]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,x + y)");
-                     ("solvable: [[Arg_1]; [Arg_0]]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y^2,y)");
-                     (* Note that there might be multiple ways to define the blocks of a solvable loop. *)
-                     ("not solvable", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y + y^2,x + y)");
-                     ( "solvable: [[Arg_0]; [Arg_1]; [Arg_2]]",
-                       "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2, z + y^2)" );
-                     ( "solvable: [[Arg_0]; [Arg_1]; [Arg_2]]",
-                       "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2, z + y^2)" );
-                     ("not solvable", "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2 + z, z + y^2)");
-                     ( "not solvable",
-                       "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z^2, z + y, z)" );
-                     ( "solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_3]]",
-                       "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z, z + y, q + z)" );
-                     ( "solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_3]]",
-                       "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z, z + y, q + z*z)" ); *) ];
+                [
+                  ("solvable: [[Arg_0]]", "l0(x) -> l1(x), l1(x) -> l1(x)");
+                  ("not solvable", "l0(x) -> l1(x), l1(x) -> l1(x^2)");
+                  ("not solvable", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(y^2,x^2)");
+                  ("solvable: [[Arg_1; Arg_0]]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,x + y)");
+                  ("solvable: [[Arg_1]; [Arg_0]]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y^2,y)");
+                  (* Note that there might be multiple ways to define the blocks of a solvable loop. *)
+                  ("not solvable", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y + y^2,x + y)");
+                  ( "solvable: [[Arg_0]; [Arg_1]; [Arg_2]]",
+                    "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2, z + y^2)" );
+                  ( "solvable: [[Arg_0]; [Arg_1]; [Arg_2]]",
+                    "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2, z + y^2)" );
+                  ("not solvable", "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + 5,y + x^2 + z, z + y^2)");
+                  ( "not solvable",
+                    "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z^2, z + y, z)" );
+                  ( "solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_3]]",
+                    "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z, z + y, q + z)" );
+                  ( "solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_3]]",
+                    "l0(x,y,z,q) -> l1(x,y,z,q), l1(x,y,z,q) -> l1(x + 5 + y,y + x + z, z + y, q + z*z)" );
+                ];
          "closed_form"
          >::: List.map
                 ~f:(fun (expected_str, program) ->
@@ -88,5 +90,7 @@ let tests =
                      n^2 + (Arg_0*Arg_1^2+2*Arg_0^3*Arg_1+2/3*Arg_0^5) * n^1 + Arg_2]",
                     "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x,y - 2 * x * x,z + y * y * x)" );
                   ("[Arg_0; 1+Arg_0 * n^1 + Arg_1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x + y + 1)");
+                  ( "[2*Arg_1 * n^1 + Arg_0; Arg_1; Arg_1; 2*Arg_1 * n^1 + (Arg_0-Arg_1); -1 * n^1 + Arg_4]",
+                    "l0(a,b,c,d,e) -> l1(a,b,c,d,e), l1(a,b,c,d,e) -> l1(a+2*b,b,b,a+b,e-1) :|: 1 <= e" );
                 ];
        ]
