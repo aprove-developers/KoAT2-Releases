@@ -112,7 +112,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         FormattedString.mk_str_header_big @@ "Commutive Solv. Size Bound: " ^ Transition.to_id_string_pretty t);
     let loops_opt = SimpleCycle.find_commuting_loops twn_proofs heuristic_for_cycle appr program trans t in
     if Option.is_some loops_opt then (
-      let loops, _partial_evaluation = Option.value_exn loops_opt in
+      let loops, handled_transitions, partial_evaluation = Option.value_exn loops_opt in
       let bound =
         List.fold
           ~init:(List.map ~f:(fun var -> (var, Bound.of_var var)) (Set.to_list @@ Program.vars program))
@@ -144,19 +144,28 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             in
             List.map
               ~f:(Tuple2.map2 @@ Bound.substitute_all @@ Map.of_alist_exn (module Var) new_substitution)
-              substitution)
+              substitution
+            |> List.map
+                 ~f:
+                   (Tuple2.map2
+                   @@ Bound.substitute_f (fun var ->
+                          Bound.of_poly @@ (Map.find partial_evaluation var |? Polynomial.of_var var))))
       in
       (ProofOutput.LocalProofOutput.add_to_proof twn_proofs
       @@ FormattedString.(
            fun () ->
              mk_header_small @@ mk_str @@ "Resulting size bounds for " ^ Transition.to_id_string_pretty t));
 
-      List.fold bound ~init:appr ~f:(fun appr (var, bound) ->
+      List.fold bound ~init:appr ~f:(fun appr (var, local_bound) ->
           (ProofOutput.LocalProofOutput.add_to_proof twn_proofs
           @@ FormattedString.(
                fun () ->
                  mk_str_line @@ "Var: " ^ Var.to_string ~pretty:true var ^ " yields bound: "
-                 ^ Bound.to_string ~pretty:true bound));
+                 ^ Bound.to_string ~pretty:true local_bound));
+          let entries = Program.entry_transitions program handled_transitions in
+          let bound =
+            lift twn_proofs appr t var (Option.some @@ List.map entries ~f:(fun entry -> (entry, local_bound)))
+          in
           Approximation.add_sizebound bound t var appr)
       |> tap (fun _ ->
              ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)))

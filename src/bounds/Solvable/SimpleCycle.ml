@@ -263,7 +263,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 None)
             cycles
         in
-        Option.some (loops_handled_transitions, partial_evaluation)
+        if List.is_empty loops_handled_transitions then
+          None
+        else
+          Option.some
+            ( loops_handled_transitions,
+              List.flatten @@ List.map Tuple2.second loops_handled_transitions,
+              partial_evaluation )
     else
       None
 end
