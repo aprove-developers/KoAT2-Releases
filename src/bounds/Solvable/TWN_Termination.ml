@@ -12,7 +12,6 @@ let logger = Logging.(get Twn)
 module SMTSolver = SMT.Z3Solver
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
   module Check_TWN = Check_TWN.Make (Bound) (PM)
   module Loop = Loop.Make (Bound) (PM)
 
@@ -41,24 +40,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
 
 
-  let check_update_invariant (loop : Loop.t) atom =
-    let poly = Atom.poly_lt atom in
-    let poly_updated = Polynomial.substitute_f (Loop.update_var loop) poly in
-    let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
-    SMTSolver.tautology Formula.(implies (mk [ atom ]) (mk [ atom_updated ]))
-
-
   module Valuation = Valuation.Make (OurInt)
 
   let termination_ twn_proofs ?(entry = None) ((guard, update) : Loop.t) varmap =
-    let self_impl =
-      if Option.is_some entry then
-        List.filter
-          (check_update_invariant (guard, update))
-          (TransitionLabel.guard @@ (Tuple3.second % Option.get) entry)
-      else
-        Constraint.mk_true
-    in
     let formula =
       Formula.any
         (List.map
@@ -76,8 +60,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                (constr |> List.unique ~eq:Atom.equal)
                Formula.mk_true)
            (Formula.constraints guard))
+      |> Formula.simplify
     in
-    let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
+    let model = SMTSolver.get_model formula in
     Option.is_none model
     |> tap (fun bool ->
            Logger.log logger Logger.INFO (fun () ->
