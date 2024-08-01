@@ -567,35 +567,40 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   type t_loop = { rank : Polynomial.t list; depth : int }
 
   (* Computes a MPRF for a loop (with cost 1). *)
-  let find_for_loop loop depth =
+  let find_for_loop loop ?(non_increasing = None) depth =
     let template_table = Array.init depth (fun _ -> ranking_template None None (Loop.vars loop)) in
     let template_i i = Tuple2.first @@ Array.get template_table (i - 1) in
     let res = ref Formula.mk_true in
-    List.iter
-      (fun guard ->
-        for i = 1 to depth - 1 do
-          res :=
-            transition_constraint_i_ (`Time, `Decreasing)
-              (Loop.update loop, guard, Polynomial.one)
-              (template_i i)
-              (template_i (i + 1))
-              (template_i (i + 1))
-            |> Formula.mk_and !res
-        done;
+    let constraint_of_guard measurement loop guard =
+      for i = 1 to depth - 1 do
         res :=
-          transition_constraint_1_ (`Time, `Decreasing)
+          transition_constraint_i_ (`Time, measurement)
             (Loop.update loop, guard, Polynomial.one)
-            (template_i 1) (template_i 1)
-          |> Formula.mk_and !res;
-        if depth > 1 then
-          res :=
-            transition_constraint_d_ ParameterPolynomial.zero (`Time, `Decreasing) guard (template_i depth)
-            |> Formula.mk_and !res
-        else
-          res :=
-            transition_constraint_d_ ParameterPolynomial.one (`Time, `Decreasing) guard (template_i depth)
-            |> Formula.mk_and !res)
-      (Loop.guard loop |> Formula.constraints);
+            (template_i i)
+            (template_i (i + 1))
+            (template_i (i + 1))
+          |> Formula.mk_and !res
+      done;
+      res :=
+        transition_constraint_1_ (`Time, measurement)
+          (Loop.update loop, guard, Polynomial.one)
+          (template_i 1) (template_i 1)
+        |> Formula.mk_and !res;
+      if depth > 1 then
+        res :=
+          transition_constraint_d_ ParameterPolynomial.zero (`Time, measurement) guard (template_i depth)
+          |> Formula.mk_and !res
+      else
+        res :=
+          transition_constraint_d_ ParameterPolynomial.one (`Time, measurement) guard (template_i depth)
+          |> Formula.mk_and !res
+    in
+    List.iter (constraint_of_guard `Decreasing loop) (Loop.guard loop |> Formula.constraints);
+    if Option.is_some non_increasing then
+      List.iter
+        (fun loop ->
+          List.iter (constraint_of_guard `Non_Increasing loop) (Loop.guard loop |> Formula.constraints))
+        (Option.get non_increasing);
     let model = SMT.Z3Solver.get_model !res in
     if Option.is_some model then
       Option.some
@@ -607,10 +612,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       None
 
 
-  let time_bound loop max_depth =
+  let time_bound loop ?(non_increasing = None) max_depth =
     let rankfuncs =
       Enum.seq 1 (( + ) 1) (( > ) (max_depth + 1))
-      |> Enum.map (find_for_loop loop)
+      |> Enum.map (find_for_loop loop ~non_increasing)
       |> Enum.peek % Enum.filter Option.is_some
       |? None
     in

@@ -112,51 +112,56 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         FormattedString.mk_str_header_big @@ "Commutive Solv. Size Bound: " ^ Transition.to_id_string_pretty t);
     let loops_opt = SimpleCycle.find_commuting_loops twn_proofs heuristic_for_cycle appr program trans t in
     if Option.is_some loops_opt then (
-      let loops, handled_transitions, partial_evaluation = Option.value_exn loops_opt in
+      let loops, loop_trans, handled_transitions, partial_evaluation = Option.value_exn loops_opt in
+      let loop_vars =
+        Set.inter (Program.vars program)
+          (Set.union_list (module Var) (List.map ~f:(Loop.vars % Tuple2.first) loops))
+      in
+      let initial_substitution =
+        Map.of_alist_exn
+          (module Var)
+          (List.zip_exn (Set.to_list loop_vars) (Set.to_list loop_vars |> List.map ~f:Bound.of_var))
+      in
       let bound =
-        List.fold
-          ~init:(List.map ~f:(fun var -> (var, Bound.of_var var)) (Set.to_list @@ Program.vars program))
-          loops
-          ~f:(fun substitution (loop, handled_transitions) ->
+        List.fold ~init:initial_substitution loops ~f:(fun substitution (loop, handled_transitions) ->
             (ProofOutput.LocalProofOutput.add_to_proof twn_proofs
             @@ FormattedString.(fun () -> mk_header_smaller (mk_str @@ "loop: " ^ Loop.to_string loop)));
             let closed_forms = Option.value_exn @@ Check_Solvable.compute_closed_form loop in
             let time_bound =
-              List.fold ~init:Bound.zero ~f:Bound.max
-              @@ List.map handled_transitions ~f:(Approximation.timebound appr)
+              MultiphaseRankingFunction.time_bound loop
+                ~non_increasing:(Option.some @@ List.map loops ~f:Tuple2.first)
+                5
             in
             let new_substitution =
-              List.map closed_forms ~f:(fun (var, pe) ->
-                  ( var,
-                    let local_bound =
-                      Bound.max
-                        (Loop.compute_bound_n_iterations loop var
-                           (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
-                        (PolyExponential.ComplexPE.to_bound pe)
-                      |> Bound.substitute (Var.of_string "n") ~replacement:time_bound
-                    in
-                    ProofOutput.LocalProofOutput.add_to_proof twn_proofs
-                      FormattedString.(
-                        fun () ->
-                          mk_str_line @@ "overappr. closed-form for " ^ Var.to_string var ^ ": "
-                          ^ Bound.to_string ~pretty:true local_bound);
-                    local_bound ))
+              List.map closed_forms
+                ~f:
+                  (Tuple2.map2 (fun pe ->
+                       let local_bound =
+                         Bound.max
+                           (Loop.compute_bound_n_iterations loop var
+                              (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
+                           (PolyExponential.ComplexPE.to_bound pe)
+                         |> Bound.substitute (Var.of_string "n") ~replacement:time_bound
+                       in
+                       ProofOutput.LocalProofOutput.add_to_proof twn_proofs
+                         FormattedString.(
+                           fun () ->
+                             mk_str_line @@ "overappr. closed-form for " ^ Var.to_string var ^ ": "
+                             ^ Bound.to_string ~pretty:true local_bound);
+                       local_bound))
             in
-            List.map
-              ~f:(Tuple2.map2 @@ Bound.substitute_all @@ Map.of_alist_exn (module Var) new_substitution)
-              substitution
-            |> List.map
+            Map.map ~f:(Bound.substitute_all @@ Map.of_alist_exn (module Var) new_substitution) substitution
+            |> Map.map
                  ~f:
-                   (Tuple2.map2
-                   @@ Bound.substitute_f (fun var ->
-                          Bound.of_poly @@ (Map.find partial_evaluation var |? Polynomial.of_var var))))
+                   (Bound.substitute_f (fun var ->
+                        Bound.of_poly @@ (Map.find partial_evaluation var |? Polynomial.of_var var))))
       in
       (ProofOutput.LocalProofOutput.add_to_proof twn_proofs
       @@ FormattedString.(
            fun () ->
              mk_header_small @@ mk_str @@ "Resulting size bounds for " ^ Transition.to_id_string_pretty t));
 
-      List.fold bound ~init:appr ~f:(fun appr (var, local_bound) ->
+      Map.fold bound ~init:appr ~f:(fun ~key:var ~data:local_bound appr ->
           (ProofOutput.LocalProofOutput.add_to_proof twn_proofs
           @@ FormattedString.(
                fun () ->
@@ -166,9 +171,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           let bound =
             lift twn_proofs appr t var (Option.some @@ List.map entries ~f:(fun entry -> (entry, local_bound)))
           in
-          Approximation.add_sizebound bound t var appr)
-      |> tap (fun _ ->
-             ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)))
+          List.fold loop_trans ~init:appr ~f:(fun appr t -> Approximation.add_sizebound bound t var appr)))
     else
       appr
 
@@ -190,7 +193,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           && (not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var)
         then
           lift_var appr var
-        else if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then
+        else if not @@ Bound.is_linear @@ Approximation.sizebound appr t var then
           if commuting then
             improve_commutive twn_proofs appr program trans t var
           else
@@ -202,6 +205,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let improve ?(commuting = false) program ?(scc = None) appr =
-    let trans = scc |? Set.filter ~f:(Approximation.is_time_bounded appr) @@ Program.transitions program in
+    let trans = scc |? Program.transitions program in
     Set.fold ~f:(flip @@ improve_t ~commuting program trans) trans ~init:appr
 end

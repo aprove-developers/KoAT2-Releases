@@ -36,5 +36,5 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    ((Loop.t * Transition.t list) list * Transition.t list * Polynomial.t VarMap.t) option
+    ((Loop.t * Transition.t list) list * Transition.t list * Transition.t list * Polynomial.t VarMap.t) option
 end

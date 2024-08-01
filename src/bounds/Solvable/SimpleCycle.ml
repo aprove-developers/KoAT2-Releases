@@ -248,7 +248,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       if Option.is_none opt then
         None
       else
-        let loop_t, _, partial_evaluation = Option.get opt in
+        let loop_t, loop_trans, partial_evaluation = Option.get opt in
         let loops_handled_transitions =
           List.filter_map
             (fun (loop, handled_transitions, _) ->
@@ -268,6 +268,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         else
           Option.some
             ( loops_handled_transitions,
+              loop_trans,
               List.flatten @@ List.map Tuple2.second loops_handled_transitions,
               partial_evaluation )
     else

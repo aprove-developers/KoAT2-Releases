@@ -61,7 +61,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   module Loop : module type of Loop.Make (Bound) (PM)
 
-  val time_bound : Loop.t -> int -> Bound.t
+  val time_bound : Loop.t -> ?non_increasing:Loop.t list option -> int -> Bound.t
 end
 
 include module type of Make (Bounds.Bound) (ProgramModules) (* TODO Bounds *)
