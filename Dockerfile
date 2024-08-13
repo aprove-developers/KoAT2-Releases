@@ -93,7 +93,7 @@ RUN git clone https://github.com/aprove-developers/SMTPushdown.git && \
 FROM ubuntu:20.04
 
 RUN apt-get -y update && \
-    apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 glibc-source git python3-sympy
+    apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 glibc-source git
 
 RUN mkdir /koat2
 WORKDIR /koat2
@@ -101,9 +101,6 @@ WORKDIR /koat2
 
 COPY examples/Complexity_ITS ./examples/Complexity_ITS
 COPY examples/Complexity_C_Integer ./examples/Complexity_C_Integer
-
-# COPY source code for sympy python script
-COPY python/SizeBoundSolvable.py ./python/SizeBoundSolvable.py
 
 COPY --from=koat2_c_utils /llvm2kittel/build/llvm2kittel bin/llvm2kittel
 COPY --from=koat2_c_utils /clang bin/clang
