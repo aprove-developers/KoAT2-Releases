@@ -154,7 +154,8 @@ struct
     | EliminateNonContributors ->
         let module ENC = EliminateNonContributors.Make (PM) in
         ENC.eliminate subject
-    | EliminateTempVars -> EliminateTempVars.eliminate_tmp_vars subject
+    | EliminateTempVars ->
+        MaybeChanged.(EliminateTempVars.eliminate_tmp_vars subject >>= EliminateTempVars.tmp_vars_to_nondet)
     | InvariantGeneration ->
         let module IG = InvariantGeneration.Make (CPM) in
         Type_equal.(

@@ -1,10 +1,9 @@
 open! OurBase
 open ProgramModules
 
-(** Implemenation of a preprocessor which eliminates tmp variables u(x) = T :|: T <= p(x) && T >= p(x). This is in particular useful for twn-loops. *)
-
 let logger = Logging.(get Preprocessor)
 
+(** Implemenation of a preprocessor which eliminates tmp variables u(x) = T :|: T <= p(x) && T >= p(x). This is in particular useful for twn-loops. *)
 let eliminate_tmp_vars program =
   let trans = Set.to_list @@ Program.transitions program in
   let result =
@@ -29,5 +28,44 @@ let eliminate_tmp_vars program =
   if MaybeChanged.has_changed result then
     MaybeChanged.changed
     @@ Program.from_sequence (Program.start program) (Set.to_sequence @@ MaybeChanged.unpack result)
+  else
+    MaybeChanged.same program
+
+
+(** Implemenation of a preprocessor which eliminates tmp variables u(x) = T where x never occurs in an update. This is in particular useful for twn-loops. *)
+let tmp_vars_to_nondet program =
+  let trans = Set.to_list @@ Program.transitions program in
+  let unnecessary_vars =
+    Set.filter (Program.input_vars program) ~f:(fun x ->
+        List.for_all trans ~f:(fun (_, t, _) ->
+            let update_x = TransitionLabel.update t x in
+            if Option.is_none update_x then
+              true
+            else
+              let update_x_opt = Option.value_exn update_x in
+              (* update: x' = x *)
+              (UpdateElement.is_indeterminate update_x_opt && Set.mem (UpdateElement.vars update_x_opt) x)
+              (* update: x' = T *)
+              || Set.is_subset (UpdateElement.vars update_x_opt) ~of_:(TransitionLabel.tmp_vars t)
+                 (* x not in costs *)
+                 && (not @@ Set.mem (UpdateElement.vars @@ TransitionLabel.cost t) x)
+                 (* x not in other update *)
+                 && not
+                    @@ Set.exists (TransitionLabel.input_vars t) ~f:(fun y ->
+                           if Var.equal x y then
+                             false
+                           else
+                             let update_y = TransitionLabel.update t y in
+                             if Option.is_none update_y then
+                               false
+                             else
+                               let update_y_opt = Option.value_exn update_y in
+                               Set.mem (UpdateElement.vars update_y_opt) x)))
+  in
+  if not @@ Set.is_empty unnecessary_vars then (
+    Logger.(
+      log logger INFO (fun () ->
+          ("TransformTmpVarsToNonDet", [ ("removed vars", VarSet.to_string unnecessary_vars) ])));
+    MaybeChanged.changed @@ Program.remove_non_contributors unnecessary_vars program)
   else
     MaybeChanged.same program
