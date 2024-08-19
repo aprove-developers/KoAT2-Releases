@@ -128,9 +128,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             @@ FormattedString.(fun () -> mk_header_smaller (mk_str @@ "loop: " ^ Loop.to_string loop)));
             let closed_forms = Option.value_exn @@ Check_Solvable.compute_closed_form loop in
             let time_bound =
-              MultiphaseRankingFunction.time_bound loop
-                ~non_increasing:(Option.some @@ List.map loops ~f:Tuple2.first)
-                5
+              Bound.sum_list (List.map handled_transitions ~f:(Approximation.timebound appr))
             in
             let new_substitution =
               List.map closed_forms
