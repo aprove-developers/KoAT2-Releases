@@ -180,7 +180,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
-  let find_loop twn_proofs ?(relevant_vars = None) f appr program scc (l, t, l') =
+  let find_loop ?(relevant_vars = None) f appr program scc (l, t, l') =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans =
         Util.group
@@ -202,15 +202,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (fun cycle ->
           let loop = contract_cycle cycle l in
           let loop_red = Loop.eliminate_non_contributors ~relevant_vars loop in
-          if f appr program loop_red then (
+          if f appr program loop_red then
             let handled_transitions = handled_transitions cycle in
-            TWN_Proofs.add_to_proof_graph twn_proofs program handled_transitions
-              (Program.entry_transitions_with_logger logger program handled_transitions);
             Option.some
               ( loop,
                 List.map
                   (fun entry -> (entry, traverse_cycle cycle (Transition.src entry) l))
-                  (Program.entry_transitions_with_logger logger program handled_transitions) ))
+                  (Program.entry_transitions_with_logger logger program handled_transitions) )
           else
             None)
         cycles
@@ -219,7 +217,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
-  let find_commuting_loops twn_proofs f appr program scc (l, t, l') =
+  let find_commuting_loops f appr program scc (l, t, l') =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans =
         Util.group

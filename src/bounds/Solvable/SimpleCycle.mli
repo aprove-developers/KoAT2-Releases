@@ -20,7 +20,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** copies the proof output for all elements of the result list *)
 
   val find_loop :
-    ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
     (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->
@@ -30,7 +29,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
 
   val find_commuting_loops :
-    ProofOutput.LocalProofOutput.t ->
     (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->
     Program.t ->
