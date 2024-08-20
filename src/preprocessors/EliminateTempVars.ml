@@ -43,24 +43,23 @@ let tmp_vars_to_nondet program =
               true
             else
               let update_x_opt = Option.value_exn update_x in
-              (* update: x' = x *)
-              (UpdateElement.is_indeterminate update_x_opt && Set.mem (UpdateElement.vars update_x_opt) x)
+              ((* update: x' = x *)
+               (UpdateElement.is_indeterminate update_x_opt && Set.mem (UpdateElement.vars update_x_opt) x)
               (* update: x' = T *)
-              || Set.is_subset (UpdateElement.vars update_x_opt) ~of_:(TransitionLabel.tmp_vars t)
-                 (* x not in costs *)
-                 && (not @@ Set.mem (UpdateElement.vars @@ TransitionLabel.cost t) x)
-                 (* x not in other update *)
-                 && not
-                    @@ Set.exists (TransitionLabel.input_vars t) ~f:(fun y ->
-                           if Var.equal x y then
-                             false
-                           else
-                             let update_y = TransitionLabel.update t y in
-                             if Option.is_none update_y then
-                               false
-                             else
-                               let update_y_opt = Option.value_exn update_y in
-                               Set.mem (UpdateElement.vars update_y_opt) x)))
+              || Set.is_subset (UpdateElement.vars update_x_opt) ~of_:(TransitionLabel.tmp_vars t))
+              (* x not in costs *)
+              && (not @@ Set.mem (UpdateElement.vars @@ TransitionLabel.cost t) x)
+              (* x not in another update *)
+              && Set.for_all (TransitionLabel.input_vars t) ~f:(fun y ->
+                     if Var.equal x y then
+                       true
+                     else
+                       let update_y = TransitionLabel.update t y in
+                       if Option.is_none update_y then
+                         true
+                       else
+                         let update_y_opt = Option.value_exn update_y in
+                         not @@ Set.mem (UpdateElement.vars update_y_opt) x)))
   in
   if not @@ Set.is_empty unnecessary_vars then (
     Logger.(
