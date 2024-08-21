@@ -51,7 +51,7 @@ let print_result = function
   | `PrintAllBounds -> print_all_bounds
 
 
-type local = [ `MPRF | `TWN | `UNSOLVABLE ]
+type local = [ `MPRF | `TWN | `TWNLOG | `UNSOLVABLE ]
 type size = [ `CLOSED | `COMMUTING ]
 type cfr = [ `PartialEvaluation | `Chaining ]
 
@@ -110,8 +110,10 @@ type params = {
       [@default Preprocessor.process_till_fixpoint]
       (** The strategy which should be used to apply the preprocessors. *)
   local : local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("unsolvable", `UNSOLVABLE) ]] [@default [ `MPRF ]] [@sep ',']
-      (** Choose methods to compute local runtime-bounds: mprf, twn, or unsolvable *)
+      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("twnlog", `TWNLOG); ("unsolvable", `UNSOLVABLE) ]]
+      [@default [ `MPRF ]]
+      [@sep ',']
+      (** Choose methods to compute local runtime-bounds: mprf, twn, twnlog, or unsolvable *)
   size : size list; [@enum [ ("closed", `CLOSED); ("commuting", `COMMUTING) ]] [@default []] [@sep ',']
       (** Choose methods to compute size bounds (additionally to TOPLAS'16): closed-form size bounds *)
   rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
@@ -251,6 +253,7 @@ let run (params : params) =
                else
                  None);
             twn = List.exists ~f:(( == ) `TWN) params.local;
+            twnlog = List.exists ~f:(( == ) `TWNLOG) params.local;
             commuting = List.exists ~f:(( == ) `COMMUTING) params.size;
             unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.local;
             closed_form_size_bounds;

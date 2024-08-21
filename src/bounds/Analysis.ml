@@ -12,6 +12,7 @@ type (!'prog_modules_t, !'bound) closed_form_size_bounds =
 type (!'prog_modules_t, !'bound) local_configuration = {
   run_mprf_depth : int option;
   twn : bool;
+  twnlog : bool;
   unsolvable : bool;
   commuting : bool;
   closed_form_size_bounds : ('prog_modules_t, 'bound) closed_form_size_bounds;
@@ -33,6 +34,7 @@ let default_local_configuration : ('a, Bounds.Bound.t) local_configuration =
   {
     run_mprf_depth = Some 1;
     twn = false;
+    twnlog = false;
     unsolvable = false;
     commuting = false;
     goal = Complexity;
@@ -167,7 +169,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 loop_res
             then
               (* Compute a new global time bound *)
-              let unlifted_bound = LoopHandler.to_unlifted_bounds ~unsolvable:conf.unsolvable loop in
+              let unlifted_bound =
+                LoopHandler.to_unlifted_bounds ~twnlog:conf.twnlog ~unsolvable:conf.unsolvable loop
+              in
               let new_appr_mc =
                 MaybeChanged.flat_map
                   (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)

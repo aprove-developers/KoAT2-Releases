@@ -195,7 +195,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                            ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
-  let get_bound twn_proofs ((guard, update) : Loop.t) order npe varmap =
+  let get_bound twn_proofs ?(twnlog = false) ((guard, update) : Loop.t) order npe varmap =
     let bound, max_con =
       List.fold_right
         (fun atom (bound, const) ->
@@ -215,7 +215,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                    (c, RationalPolynomial.normalize p, d |> OurInt.of_int, OurRational.to_ourint b))
           in
           let max_const = OurInt.max const (RationalPE.max_const sub_poly) in
-          if is_sorted @@ List.map Tuple4.fourth sub_poly_n then
+          if twnlog && (is_sorted @@ List.map Tuple4.fourth sub_poly_n) then
             (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
           else
             (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
@@ -268,7 +268,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         raise Check_TWN.NOT_TWN
 
 
-  let complexity twn_proofs ?(entry = None) ?(termination = true) ?(unsolvable = false) (loop : Loop.t) =
+  let complexity twn_proofs ?(entry = None) ?(termination = true) ?(twnlog = false) ?(unsolvable = false)
+      (loop : Loop.t) =
     try
       let loop, var_replacement =
         if not @@ Check_TWN.check_twn loop then
@@ -330,7 +331,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       if not terminating then
         Bound.infinity
       else
-        let f = get_bound twn_proofs t_ order npe varmap |> Bound.substitute_f var_replacement in
+        let f = get_bound twn_proofs ~twnlog t_ order npe varmap |> Bound.substitute_f var_replacement in
         if was_negative then
           Bound.(f + f + one)
         else

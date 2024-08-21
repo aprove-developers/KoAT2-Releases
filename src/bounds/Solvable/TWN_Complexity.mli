@@ -8,6 +8,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ProofOutput.LocalProofOutput.t ->
     ?entry:PM.Transition.t option ->
     ?termination:bool ->
+    ?twnlog:bool ->
     ?unsolvable:bool ->
     Loop.t ->
     Bound.t

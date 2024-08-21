@@ -91,13 +91,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     loop scc
 
 
-  let to_unlifted_bounds ?(unsolvable = false) (loop : loop ProofOutput.LocalProofOutput.with_proof) =
+  let to_unlifted_bounds ?(twnlog = false) ?(unsolvable = false)
+      (loop : loop ProofOutput.LocalProofOutput.with_proof) =
     let twn_proofs, (cycle, loops) = ProofOutput.LocalProofOutput.(proof loop, result loop) in
     let cycle_set = TransitionSet.of_list cycle in
     let local_bounds =
       List.map
         ~f:(fun (entry, loop) ->
-          (entry, TWN_Complexity.complexity ~unsolvable twn_proofs ~entry:(Option.some entry) loop))
+          (entry, TWN_Complexity.complexity ~twnlog ~unsolvable twn_proofs ~entry:(Option.some entry) loop))
         loops
     in
     let complete_proofs = complete_proofs twn_proofs cycle_set in

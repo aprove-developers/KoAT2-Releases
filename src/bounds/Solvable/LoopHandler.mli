@@ -23,6 +23,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** Similar to [finite_bound_possible_if_twn_terminates] but allows for more choice when obtaining the bounds. *)
 
   val to_unlifted_bounds :
+    ?twnlog:bool ->
     ?unsolvable:bool ->
     loop ProofOutput.LocalProofOutput.with_proof ->
     ( Transition.t,
