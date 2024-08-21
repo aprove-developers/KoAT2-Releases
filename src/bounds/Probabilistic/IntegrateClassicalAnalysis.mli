@@ -9,7 +9,7 @@ val initial_twn_state : Program.t -> GeneralTransitionSet.t (** The scc to be an
 val twn_state_to_string : twn_state -> string
 
 val improve :
-  twn:twn_state ref * bool
+  twn:twn_state ref * bool * bool * bool
     (** The twn state will be modified during the execution of this method! Always pass on the same ref to avoid duplicated work *) ->
   mprf_depth:int Option.t ->
   Program.t (** The program *) ->

@@ -144,7 +144,10 @@ let improve_scc_probabilistically ~conf program program_vars scc_locs apprs : Ex
     |> ELCBMap.of_sequence_exn
   in
   let twn_state =
-    (ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc, conf.classical_local.twn)
+    ( ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc,
+      conf.classical_local.twn,
+      conf.classical_local.twnlog,
+      conf.classical_local.unsolvable )
   in
   let improve_scc_ appr =
     let open MaybeChanged.Monad in

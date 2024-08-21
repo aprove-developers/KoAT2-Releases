@@ -22,14 +22,17 @@ let mprf5_conf =
 
 let twn_conf =
   Analysis.
-    { default_configuration with local_configuration = { default_local_configuration with twn = true } }
+    {
+      default_configuration with
+      local_configuration = { default_local_configuration with twn = true; twnlog = true };
+    }
 
 
 let unsolvable_conf =
   Analysis.
     {
       default_configuration with
-      local_configuration = { default_local_configuration with unsolvable = true };
+      local_configuration = { default_local_configuration with twn = true; twnlog = true; unsolvable = true };
     }
 
 

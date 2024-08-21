@@ -294,14 +294,15 @@ let get_time_and_size_bounds_for_unlifted_twn_bounds ?proof apprs unlifted_bound
 
 
 (** Compute timebound for transition from single twn loop *)
-let compute_timebounds_from_loop_with_proof twn_state apprs loop_with_proof =
+let compute_timebounds_from_loop_with_proof ?(twnlog = false) ?(unsolvable = false) twn_state apprs
+    loop_with_proof =
   let all_handled_trans =
     LoopHandler.handled_transitions (ProofOutput.LocalProofOutput.result loop_with_proof)
     |> TransitionSet.map ~f:nonprob_trans_to_prob_trans
   in
   let newly_handled_trans = Set.diff all_handled_trans (all_already_bounded_trans !twn_state) in
   if not (Set.is_empty newly_handled_trans) then
-    let unlifted = LoopHandler.to_unlifted_bounds loop_with_proof in
+    let unlifted = LoopHandler.to_unlifted_bounds ~twnlog ~unsolvable loop_with_proof in
     let time_and_size_proofs = ProofOutput.LocalProofOutput.create () in
     let get_timebound, get_sizebound =
       get_time_and_size_bounds_for_unlifted_twn_bounds ~proof:time_and_size_proofs apprs unlifted
@@ -319,8 +320,10 @@ let compute_timebounds_from_loop_with_proof twn_state apprs loop_with_proof =
       twn_state := { !twn_state with bounds_from_twn_loops }
 
 
-let improve_with_twn_loops twn_state (class_appr, appr) unbounded_gts loops_with_proofs =
-  List.iter loops_with_proofs ~f:(compute_timebounds_from_loop_with_proof twn_state (class_appr, appr));
+let improve_with_twn_loops ?(twnlog = false) ?(unsolvable = false) twn_state (class_appr, appr) unbounded_gts
+    loops_with_proofs =
+  List.iter loops_with_proofs
+    ~f:(compute_timebounds_from_loop_with_proof ~twnlog ~unsolvable twn_state (class_appr, appr));
   Set.to_sequence unbounded_gts
   |> Sequence.filter_map ~f:(fun gt ->
          let open OptionMonad in
@@ -351,7 +354,7 @@ let improve_with_twn_loops twn_state (class_appr, appr) unbounded_gts loops_with
          MaybeChanged.changed @@ ExpApproximation.add_timebound b gt appr)
 
 
-let improve_with_twn twn_state scc (class_appr, appr) =
+let improve_with_twn ?(twnlog = false) ?(unsolvable = false) twn_state scc (class_appr, appr) =
   let improve_step appr =
     let unbounded_gts = Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc in
     let unbounded_gt_to_twn_loops_map =
@@ -394,7 +397,10 @@ let improve_with_twn twn_state scc (class_appr, appr) =
     match gt_to_improve_with_loops with
     | None -> MaybeChanged.same appr
     | Some (gt, loops_with_proofs) ->
-        let appr_mc = improve_with_twn_loops twn_state (class_appr, appr) unbounded_gts loops_with_proofs in
+        let appr_mc =
+          improve_with_twn_loops ~twnlog ~unsolvable twn_state (class_appr, appr) unbounded_gts
+            loops_with_proofs
+        in
         let remaining_twn_loops =
           let all_considered_cycles = Set.of_list (module TWNLoopWithProof) loops_with_proofs in
           let all_twn_loops_in_map =
@@ -412,7 +418,7 @@ let improve_with_twn twn_state scc (class_appr, appr) =
   Util.find_fixpoint_mc improve_step appr
 
 
-let improve ~twn:(twn_state, twn) ~mprf_depth program scc (class_appr, appr) =
+let improve ~twn:(twn_state, twn, twnlog, unsolvable) ~mprf_depth program scc (class_appr, appr) =
   let open MaybeChanged.Monad in
   (* improve with multiphase ranking functions if requested *)
   let appr =
@@ -424,7 +430,7 @@ let improve ~twn:(twn_state, twn) ~mprf_depth program scc (class_appr, appr) =
   let appr =
     if twn then
       let* appr = appr in
-      improve_with_twn twn_state scc (class_appr, appr)
+      improve_with_twn ~twnlog ~unsolvable twn_state scc (class_appr, appr)
     else
       appr
   in

@@ -11,7 +11,8 @@ let enable_mprf5 conf =
 
 
 let enable_twn conf =
-  ProbabilisticAnalysis.{ conf with classical_local = { conf.classical_local with twn = true } }
+  ProbabilisticAnalysis.
+    { conf with classical_local = { conf.classical_local with twn = true; twnlog = true } }
 
 
 let enable_cfr_default conf =
