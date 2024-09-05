@@ -104,7 +104,9 @@ let run (params : params) =
            Some params.mprf_depth
          else
            None);
-      twn = List.exists ~f:(( == ) `TWN) params.classic_local || List.exists ~f:(( == ) `TWNLOG) params.classic_local;
+      twn =
+        List.exists ~f:(( == ) `TWN) params.classic_local
+        || List.exists ~f:(( == ) `TWNLOG) params.classic_local;
       twnlog = List.exists ~f:(( == ) `TWNLOG) params.classic_local;
       commuting = false;
       unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.classic_local;
