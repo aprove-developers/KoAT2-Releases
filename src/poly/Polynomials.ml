@@ -200,8 +200,9 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
   let to_string poly = to_string_simplified poly
   let to_string_pretty poly = to_string_simplified ~pretty:true poly
   let to_string_to_file poly = to_string_simplified ~to_file:true poly
+  let monomials poly = scaled_monomials poly |> List.map ~f:ScaledMonomial_.monomial
 
-  let monomials poly =
+  let non_constant_monomials poly =
     scaled_monomials poly |> List.map ~f:ScaledMonomial_.monomial
     |> List.filter ~f:(not % Monomial_.equal Monomial_.one)
 

@@ -55,7 +55,7 @@ module GenericAtomHelperOver (P : PolyTypes.Polynomial) = struct
 
 
     let vars (poly, _) = P.vars poly
-    let monomials (poly, _) = P.monomials poly
+    let non_constant_monomials (poly, _) = P.non_constant_monomials poly
     let rename (poly, comp) varmapping = (P.rename varmapping poly, comp)
 
     let fold ~subject ~le ~lt (poly, comp) =
@@ -119,7 +119,7 @@ module Atom = struct
     let flip_comp t = mk_ge t Polynomial.zero
     let neg t = mk_gt t Polynomial.zero
     let vars = Polynomial.vars
-    let monomials = Polynomial.monomials % poly
+    let non_constant_monomials = Polynomial.non_constant_monomials % poly
     let rename = flip Polynomial.rename
     let is_linear = Polynomial.is_linear
     let fold ~subject ~le ~lt t = le (subject t) (subject Polynomial.zero)

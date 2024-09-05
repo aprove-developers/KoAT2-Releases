@@ -483,6 +483,9 @@ module type Polynomial = sig
   val monomials : t -> monomial list
   (** Returns the monomials of the polynomial without the empty monomial. *)
 
+  val non_constant_monomials : t -> monomial list
+  (** Returns the (non-constant) monomials of the polynomial without the empty monomial. *)
+
   val scaled_monomials : t -> scaled_monomial list
   (** Returns the scaled monomials of the polynomial without the empty monomial. *)
 

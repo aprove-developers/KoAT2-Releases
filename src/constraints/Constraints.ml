@@ -51,8 +51,12 @@ struct
 
 
   let vars constr = constr |> List.map ~f:A.vars |> List.fold_left ~f:Set.union ~init:VarSet.empty
-  let monomials constr = List.map ~f:A.monomials constr |> Set.of_list (module M) % List.join
-  let monomials_of_atom atom = A.monomials atom |> Set.of_list (module M)
+
+  let non_constant_monomials constr =
+    List.map ~f:A.non_constant_monomials constr |> Set.of_list (module M) % List.join
+
+
+  let monomials_of_atom atom = A.non_constant_monomials atom |> Set.of_list (module M)
 
   let to_string ?(to_file = false) ?(pretty = false) ?(conj = " && ") constr =
     String.concat
@@ -162,10 +166,12 @@ struct
     (* Remove strict comparisons in constraints by replacing them with their non-strict counterparts *)
     let constr, param_atom = (remove_strict constr, A.remove_strict param_atom) in
 
-    let monomials = Set.union (monomials constr) (monomials_of_atom param_atom) |> Set.to_list in
-    let a_matrix = get_matrix monomials constr in
+    let non_constant_monomials =
+      Set.union (non_constant_monomials constr) (monomials_of_atom param_atom) |> Set.to_list
+    in
+    let a_matrix = get_matrix non_constant_monomials constr in
     let b_right = get_constant_vector constr in
-    let c_left = List.map ~f:(flip A.get_coefficient param_atom) monomials in
+    let c_left = List.map ~f:(flip A.get_coefficient param_atom) non_constant_monomials in
     let d_right = A.get_constant param_atom in
     apply_farkas a_matrix b_right c_left d_right
 end

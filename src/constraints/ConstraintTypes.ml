@@ -55,8 +55,8 @@ module type Atom = sig
   val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
   (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
 
-  val monomials : t -> monomial List.t
-  (** Returns the set of monomials that make up the atom *)
+  val non_constant_monomials : t -> monomial List.t
+  (** Returns the set of non-constant monomials that make up the atom *)
 
   val vars : t -> VarSet.t
   (** Returns the set of variables which are active in the atom.
@@ -159,8 +159,8 @@ module type Constraint = sig
   val compare : t -> t -> int
   (** Stable structural compare, but not an actual compare *)
 
-  val monomials : t -> (monomial, monomial_comparator_witness) Set.t
-  (** Returns the set of monomials that make up the constraint *)
+  val non_constant_monomials : t -> (monomial, monomial_comparator_witness) Set.t
+  (** Returns the set of non-constant monomials that make up the constraint *)
 
   val vars : t -> VarSet.t
   (** Returns the set of variables which are active in the constraint.
