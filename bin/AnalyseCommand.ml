@@ -252,7 +252,7 @@ let run (params : params) =
                  Some params.mprf_depth
                else
                  None);
-            twn = List.exists ~f:(( == ) `TWN) params.local;
+            twn = List.exists ~f:(( == ) `TWN) params.local || List.exists ~f:(( == ) `TWNLOG) params.local;
             twnlog = List.exists ~f:(( == ) `TWNLOG) params.local;
             commuting = List.exists ~f:(( == ) `COMMUTING) params.size;
             unsolvable = List.exists ~f:(( == ) `UNSOLVABLE) params.local;
