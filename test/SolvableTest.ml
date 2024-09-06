@@ -83,13 +83,13 @@ let tests =
                   ("[Arg_0; Arg_0^3 * n^1 + Arg_1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x*x*x + y)");
                   ("[Arg_0; 42*Arg_0^3 * n^1 + Arg_1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,y + 42*x*x*x)");
                   ("[Arg_0; (Arg_0+Arg_1) * (2)^n + -Arg_0]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x + 2*y)");
-                  ("[2 * n^1 + Arg_0; 2 * n^1 + Arg_0-1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + 2,x + 1)");
+                  ("[2 * n^1 + Arg_0; 2 * n^1 + (Arg_0-1)]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + 2,x + 1)");
                   ( "[2; (1/2*Arg_0+Arg_1-1/3) * (4)^n + -2/3]",
                     "l0(x,y) -> l1(x,y), l1(x,y) -> l1(2,2*x+4*y-2)" );
                   ( "[Arg_0; -2*Arg_0^2 * n^1 + Arg_1; 4/3*Arg_0^5 * n^3 + (-2*Arg_0^3*Arg_1-2*Arg_0^5) * \
                      n^2 + (Arg_0*Arg_1^2+2*Arg_0^3*Arg_1+2/3*Arg_0^5) * n^1 + Arg_2]",
                     "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x,y - 2 * x * x,z + y * y * x)" );
-                  ("[Arg_0; 1+Arg_0 * n^1 + Arg_1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x + y + 1)");
+                  ("[Arg_0; (1+Arg_0) * n^1 + Arg_1]", "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x + y + 1)");
                   ( "[2*Arg_1 * n^1 + Arg_0; Arg_1; Arg_1; 2*Arg_1 * n^1 + (Arg_0-Arg_1); -1 * n^1 + Arg_4]",
                     "l0(a,b,c,d,e) -> l1(a,b,c,d,e), l1(a,b,c,d,e) -> l1(a+2*b,b,b,a+b,e-1) :|: 1 <= e" );
                 ];
