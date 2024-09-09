@@ -103,7 +103,6 @@ type params = {
             CutUnreachableLocations;
             EliminateNonContributors;
             EliminateTempVars;
-            ChainingConservative;
           ]]
       (** The preprocessors which should be applied before running the actual algorithm. *)
   preprocessing_strategy : Preprocessor.strategy;

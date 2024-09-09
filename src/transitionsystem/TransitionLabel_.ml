@@ -402,7 +402,12 @@ module Inner = struct
       List.filter ~f:(Set.mem (Set.diff (input_vars t) non_contributors)) (Set.to_list @@ input_vars t)
     in
     let assignments = List.map ~f:(Map.find_exn t.update) patterns in
-    mk ~cost:t.cost ~assignments ~patterns ~guard:t.guard ~id:None
+    let guard_ =
+      List.filter
+        ~f:(fun atom -> Set.are_disjoint non_contributors (Polynomial.vars @@ Atom.poly atom))
+        (Guard.atom_list t.guard)
+    in
+    mk ~cost:t.cost ~assignments ~patterns ~guard:guard_ ~id:None
 
 
   (* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
