@@ -8,7 +8,6 @@ Reimplementation of KoAT (see [here](https://koat.verify.rwth-aachen.de/) for mo
 1. Make sure [opam](https://opam.ocaml.org/) is installed
 1. Use `opam init https://github.com/aprove-developers/opam-repository.git` and follow the instructions to set up Opam and install OCaml if necessary
 2. `opam install -j$(nproc) . --deps-only`
-      * requires the _gmp_ and _mpfr_ libraries
 3. Run `dune build` to build KoAT2
 
 ### Build [Docker](https://www.docker.com/) image
@@ -27,7 +26,7 @@ To get a statically linked binary, please execute the script `compile_static_bin
   For further information run ./koat2 commandname --help
   The main command proceeding a full analysis is the "analyse" command.
 3. The project can be built and run by dune directly with the command `dune exec koat2 --`, or you may `export PATH=$PATH:"path-to-koat/_build/install/default/bin"` (with the substituted path) into your .bashrc file to use `koat2` directly.
-4. For size bound technique based on closed forms, install [SymPy](https://www.sympy.org/en/index.html) on your system and use the flag `--closed-form-size-bounds`.`
+4. For size bound technique based on closed forms, use the flag `--closed-form-size-bounds`.`
 
 ## Formatting with `ocamlformat`
 We use `ocamlformat` for formatting purposes.
