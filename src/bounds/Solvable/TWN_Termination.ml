@@ -49,14 +49,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (fun constr ->
              List.fold_right
                (fun atom formula ->
-                 let poly = Atom.poly atom in
-                 let sub_poly =
-                   RationalPE.substitute varmap (RationalPolynomial.of_intpoly poly)
-                   |> RationalPE.remove_frac
-                   |> List.map (RationalPolynomial.normalize % Tuple4.second)
-                 in
-                 let formula_poly = red_le sub_poly in
-                 Formula.mk_and formula formula_poly |> Formula.simplify)
+                 if Loop.check_update_invariant (guard, update) atom then
+                   Formula.mk_and formula (Formula.lift @@ [ Constraint.lift atom ]) |> Formula.simplify
+                 else
+                   let poly = Atom.poly atom in
+                   let sub_poly =
+                     RationalPE.substitute varmap (RationalPolynomial.of_intpoly poly)
+                     |> RationalPE.remove_frac
+                     |> List.map (RationalPolynomial.normalize % Tuple4.second)
+                   in
+                   let formula_poly = red_le sub_poly in
+                   Formula.mk_and formula formula_poly |> Formula.simplify)
                (constr |> List.unique ~eq:Atom.equal)
                Formula.mk_true)
            (Formula.constraints guard))

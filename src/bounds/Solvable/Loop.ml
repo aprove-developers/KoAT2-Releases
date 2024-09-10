@@ -87,4 +87,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let commuting loop1 loop2 =
     Map.equal Polynomial.equal (update @@ append loop1 loop2) (update @@ append loop2 loop1)
+
+
+  let check_update_invariant (loop : t) atom =
+    let open Atoms in
+    let module SMTSolver = SMT.Z3Solver in
+    let poly = Atom.poly_lt atom in
+    let poly_updated = Polynomial.substitute_f (update_var loop) poly in
+    let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
+    SMTSolver.tautology Formula.(implies (mk [ atom ]) (mk [ atom_updated ]))
 end
