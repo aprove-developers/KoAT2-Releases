@@ -43,7 +43,9 @@ let tmp_vars_to_nondet program =
               false
             else
               let update_x_opt = Option.value_exn update_x in
-              Set.is_subset (UpdateElement.vars update_x_opt) ~of_:(TransitionLabel.tmp_vars t))
+              (not @@ Set.is_empty (UpdateElement.vars update_x_opt))
+              && Set.is_subset (UpdateElement.vars update_x_opt)
+                   ~of_:(Set.diff (TransitionLabel.tmp_vars t) (Guard.vars (TransitionLabel.guard t))))
         && List.for_all trans ~f:(fun (_, t, _) ->
                let update_x = TransitionLabel.update t x in
                if Option.is_none update_x then
@@ -52,8 +54,10 @@ let tmp_vars_to_nondet program =
                  let update_x_opt = Option.value_exn update_x in
                  ((* update: x' = x *)
                   (UpdateElement.is_indeterminate update_x_opt && Set.mem (UpdateElement.vars update_x_opt) x)
-                 (* update: x' = T *)
-                 || Set.is_subset (UpdateElement.vars update_x_opt) ~of_:(TransitionLabel.tmp_vars t))
+                 (* update: x' = T and T not in guard *)
+                 || (not @@ Set.is_empty (UpdateElement.vars update_x_opt))
+                    && Set.is_subset (UpdateElement.vars update_x_opt)
+                         ~of_:(Set.diff (TransitionLabel.tmp_vars t) (Guard.vars (TransitionLabel.guard t))))
                  (* x not in costs *)
                  && (not @@ Set.mem (UpdateElement.vars @@ TransitionLabel.cost t) x)
                  (* x not in another update *)

@@ -6,7 +6,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val complexity :
     ProofOutput.LocalProofOutput.t ->
-    ?entry:PM.Transition.t option ->
     ?termination:bool ->
     ?twnlog:bool ->
     ?unsolvable:bool ->

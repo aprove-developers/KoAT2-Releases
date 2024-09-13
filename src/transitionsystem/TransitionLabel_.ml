@@ -434,7 +434,8 @@ module Inner = struct
           Atom.is_le atom1 && Atom.is_le atom2
           && Atom.equal atom1 (Atom.flip_comp atom2)
           && Set.mem (Atom.vars atom1) var
-          && Polynomial.var_only_linear var (Atom.poly atom1))
+          && Polynomial.var_only_linear var (Atom.poly atom1)
+          && OurInt.(one == abs @@ Polynomial.coeff_of_indeterminate var (Atom.poly atom1)))
         (List.cartesian_product atoms atoms)
     in
     let opt = occurs_in_equality var t in

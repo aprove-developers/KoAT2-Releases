@@ -53,5 +53,5 @@ val from_com_transitions : ?termination:bool -> Transition_.t list list -> Locat
 val rename : t -> t
 (** TODO doc *)
 
-val to_file : t -> string -> unit
+val to_file : ?file:string option -> t -> unit
 (** Creates a file (if it does not already exist) and writes the program into it. *)

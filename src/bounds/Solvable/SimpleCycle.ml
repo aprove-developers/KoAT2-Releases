@@ -100,7 +100,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let contract_cycle (cycle : path) start =
     let pre, post = List.span (fun (l, _, _) -> not @@ Location.equal start l) cycle in
     let merge (_, ts, _) =
-      ( List.map (Formula.mk % TransitionLabel.guard_without_inv) ts |> Formula.any,
+      ( List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any,
+        List.map (Formula.mk % TransitionLabel.guard_without_inv) ts |> Formula.any,
         List.first ts |> TransitionLabel.update_map )
     in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
@@ -206,6 +207,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             let handled_transitions = handled_transitions cycle in
             Option.some
               ( loop,
+                handled_transitions,
                 List.map
                   (fun entry -> (entry, traverse_cycle cycle (Transition.src entry) l))
                   (Program.entry_transitions_with_logger logger program handled_transitions) )

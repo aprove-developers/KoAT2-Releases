@@ -257,12 +257,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       match conf.closed_form_size_bounds with
       | NoClosedFormSizeBounds -> appr
       | ComputeClosedFormSizeBounds ->
-          SolvableSizeBounds.improve program ~scc:(Option.some scc) appr
-          |>
-          if conf.commuting then
-            SolvableSizeBounds.improve ~commuting:true program ~scc:(Option.some scc)
-          else
-            identity
+          SolvableSizeBounds.improve ~commuting:conf.commuting program ~scc:(Option.some scc) appr
     in
     match conf.goal with
     | Termination -> identity

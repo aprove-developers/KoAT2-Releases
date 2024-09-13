@@ -42,14 +42,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   module Valuation = Valuation.Make (OurInt)
 
-  let termination_ twn_proofs ?(entry = None) ((guard, update) : Loop.t) varmap =
+  let termination_ twn_proofs ((guard_and_inv, guard, update) : Loop.t) varmap =
     let formula =
       Formula.any
         (List.map
            (fun constr ->
              List.fold_right
                (fun atom formula ->
-                 if Loop.check_update_invariant (guard, update) atom then
+                 if Loop.check_update_invariant (guard_and_inv, guard, update) atom then
                    Formula.mk_and formula (Formula.lift @@ [ Constraint.lift atom ]) |> Formula.simplify
                  else
                    let poly = Atom.poly atom in
@@ -62,7 +62,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                    Formula.mk_and formula formula_poly |> Formula.simplify)
                (constr |> List.unique ~eq:Atom.equal)
                Formula.mk_true)
-           (Formula.constraints guard))
+           (Formula.constraints guard_and_inv))
       |> Formula.simplify
     in
     let model = SMTSolver.get_model formula in
@@ -84,9 +84,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   (* Counterpart to TWN_Complexity.complexity *)
-  let termination twn_proofs ?(entry = None) loop =
+  let termination twn_proofs loop =
     let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
-    let t_ =
+    let loop =
       if Check_TWN.check_weakly_negativitiy loop then
         Loop.chain loop
         |> tap (fun loop ->
@@ -103,7 +103,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       RationalPE.compute_closed_form
         (List.map
            (fun var ->
-             let update_var = RationalPolynomial.of_intpoly @@ Loop.update_var t_ var in
+             let update_var = RationalPolynomial.of_intpoly @@ Loop.update_var loop var in
              (var, update_var))
            order)
     in
@@ -122,5 +122,5 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ( "constrained-free closed-form",
           List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    termination_ twn_proofs t_ ~entry varmap
+    termination_ twn_proofs loop varmap
 end

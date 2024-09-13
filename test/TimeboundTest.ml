@@ -28,6 +28,20 @@ let twn_conf =
     }
 
 
+let twn_size_conf =
+  Analysis.
+    {
+      default_configuration with
+      local_configuration =
+        {
+          default_local_configuration with
+          twn = true;
+          twnlog = true;
+          closed_form_size_bounds = ComputeClosedFormSizeBounds;
+        };
+    }
+
+
 let unsolvable_conf =
   Analysis.
     {
@@ -197,6 +211,10 @@ let tests =
                "a(a,b,c,d) -> b(a,b,c,d), b(a,b,c,d) -> b(a,-2*b,c + c^2 + a^2,-4*c + 2*c^2 + 3*d + a^2) :|: \
                 b != 0 && b^2 - a^5 < 2*c - d",
                unsolvable_conf );
+             ( LogarithmicPolynomial (0, 6),
+               "a(a,b,c) -> b(a,b,c) :|: c < 0,b(a,b,c) ->b(a - b^2,b + c^2,c) :|: a > 0,b(a,b,c) -> \
+                c(a,b,c) :|: a <= 0,c(a,b,c) -> c(a,b - 1,c) :|: b > 0",
+               twn_size_conf );
              ( LogarithmicPolynomial (0, 0),
                "a(x,y,z) -> b(1,y,z), b(x,y,z) -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b(x,y,z) -> c(1,z,z), \
                 c(x,y,z) -> c(2*x, 3*y, z) :|: x >= y && y >= 1",

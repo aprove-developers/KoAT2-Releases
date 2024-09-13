@@ -1,4 +1,3 @@
-open Formulas
 open Polynomials
 open ProgramTypes
 
@@ -12,7 +11,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   val find_all_loops :
     ProofOutput.LocalProofOutput.t ->
     ?relevant_vars:VarSet.t option ->
-    (Formula.t * Polynomial.t VarMap.t -> Transition.t -> bool) ->
+    (Loop.t -> Transition.t -> bool) ->
     Program.t ->
     (Transition.t, 'a) Base.Set.t ->
     Transition.t ->
@@ -21,15 +20,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   val find_loop :
     ?relevant_vars:VarSet.t option ->
-    (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
+    (Approximation.t -> Program.t -> Loop.t -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
+    (Loop.t * Transition.t list * (Transition.t * Polynomial.t VarMap.t) list) option
 
   val find_commuting_loops :
-    (Approximation.t -> Program.t -> Formula.t * Polynomial.t VarMap.t -> bool) ->
+    (Approximation.t -> Program.t -> Loop.t -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->

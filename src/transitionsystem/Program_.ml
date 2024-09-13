@@ -359,12 +359,20 @@ let rename program =
 
 
 (* Prints the program to the file "file.koat" *)
-let to_file program file =
-  let oc = Stdio.Out_channel.create file in
-  Stdio.Out_channel.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
-    (Location.to_string (start program))
-    (Set.fold ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ~init:"")
-    (TransitionGraph_.fold_edges_e
-       (fun t str -> str ^ " " ^ Transition_.to_file_string t ^ "\n")
-       program.graph "");
-  Stdio.Out_channel.close oc
+let to_file ?(file = None) program =
+  if Option.is_some file then (
+    let oc = Stdio.Out_channel.create (Option.value_exn file) in
+    Stdio.Out_channel.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+      (Location.to_string (start program))
+      (Set.fold ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ~init:"")
+      (TransitionGraph_.fold_edges_e
+         (fun t str -> str ^ " " ^ Transition_.to_file_string t ^ "\n")
+         program.graph "");
+    Stdio.Out_channel.close oc)
+  else
+    Printf.printf "\n(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)\n"
+      (Location.to_string (start program))
+      (Set.fold ~f:(fun str var -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ~init:"")
+      (TransitionGraph_.fold_edges_e
+         (fun t str -> str ^ " " ^ Transition_.to_file_string t ^ "\n")
+         program.graph "")

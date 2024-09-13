@@ -195,7 +195,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                            ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
-  let get_bound twn_proofs ?(twnlog = false) ((guard, update) : Loop.t) order npe varmap =
+  let get_bound twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap =
     let bound, max_con =
       List.fold_right
         (fun atom (bound, const) ->
@@ -219,7 +219,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
           else
             (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
-        (guard |> Formula.atoms |> List.unique ~eq:Atom.equal)
+        (Loop.guard loop |> Formula.atoms |> List.unique ~eq:Atom.equal
+        |> List.filter (not % Loop.check_update_invariant loop))
         (Bound.one, OurInt.zero)
     in
     Logger.log logger Logger.INFO (fun () ->
@@ -235,7 +236,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let candidates_for_substition =
       List.filter
         (fun atom -> OurBase.Set.is_subset defective_vars ~of_:(Atom.vars atom))
-        (Formula.atoms @@ Loop.guard loop)
+        (Formula.atoms @@ Loop.guard_without_inv loop)
     in
     if List.is_empty candidates_for_substition then
       raise Check_TWN.NOT_TWN
@@ -268,8 +269,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         raise Check_TWN.NOT_TWN
 
 
-  let complexity twn_proofs ?(entry = None) ?(termination = true) ?(twnlog = false) ?(unsolvable = false)
-      (loop : Loop.t) =
+  let complexity twn_proofs ?(termination = true) ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
     try
       let loop, var_replacement =
         if not @@ Check_TWN.check_twn loop then
@@ -326,7 +326,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         if not termination then
           true
         else
-          TWN_Termination.termination_ twn_proofs t_ ~entry varmap
+          TWN_Termination.termination_ twn_proofs t_ varmap
       in
       if not terminating then
         Bound.infinity

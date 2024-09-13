@@ -42,34 +42,43 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         ~relevant_vars:(Option.some @@ VarSet.singleton var)
         heuristic_for_cycle appr program trans t
     in
-    if Option.is_some loops_opt then (
-      let loop, entries_traversal = Option.value_exn loops_opt in
+    if Option.is_some loops_opt then
+      let loop, handled_transitions, entries_traversal = Option.value_exn loops_opt in
       let loop_red =
         Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop
       in
       let closed_forms = Check_Solvable.compute_closed_form loop_red
-      and time_bound = MultiphaseRankingFunction.time_bound loop 5 in
-      List.iter
-        ~f:(fun (var, pe) ->
-          let local_bound =
-            Bound.max
-              (Loop.compute_bound_n_iterations loop_red var
-                 (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
-              (PolyExponential.ComplexPE.to_bound pe)
-          in
-          let res =
-            List.map
-              ~f:(fun (entry, traversal) ->
-                ( entry,
-                  Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
-                  |> Bound.substitute_f (fun var ->
-                         Bound.of_poly @@ (Map.find traversal var |? Polynomial.of_var var)) ))
-              entries_traversal
-            |> Option.some
-          in
-          SizeBoundTable.add size_bound_table (t, var) res)
-        (Option.value_exn closed_forms);
-      Set.fold (Loop.vars loop_red) ~init:appr ~f:lift_var)
+      and time_bound =
+        let global_bound = Bound.sum_list (List.map handled_transitions ~f:(Approximation.timebound appr)) in
+        if Bound.is_linear global_bound then
+          global_bound
+        else
+          Bound.min_asy global_bound (MultiphaseRankingFunction.time_bound loop 5)
+      in
+      if Bound.is_finite time_bound then (
+        List.iter
+          ~f:(fun (var, pe) ->
+            let local_bound =
+              Bound.max
+                (Loop.compute_bound_n_iterations loop_red var
+                   (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
+                (PolyExponential.ComplexPE.to_bound pe)
+            in
+            let res =
+              List.map
+                ~f:(fun (entry, traversal) ->
+                  ( entry,
+                    Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
+                    |> Bound.substitute_f (fun var ->
+                           Bound.of_poly @@ (Map.find traversal var |? Polynomial.of_var var)) ))
+                entries_traversal
+              |> Option.some
+            in
+            SizeBoundTable.add size_bound_table (t, var) res)
+          (Option.value_exn closed_forms);
+        Set.fold (Loop.vars loop_red) ~init:appr ~f:lift_var)
+      else
+        appr
     else
       appr
 

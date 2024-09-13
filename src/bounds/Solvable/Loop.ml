@@ -5,15 +5,21 @@ open Polynomials
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  type t = Formula.t * Polynomial.t ProgramTypes.VarMap.t
-  (** A loop is a 2-tuple (guard,update) *)
+  type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
+  (** A loop is a 3-tuple (guard_and_inv, guard, update) *)
 
-  let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.update_map t)
-  let id formula = (formula, Map.empty (module Var))
-  let guard = Tuple2.first
-  let update = Tuple2.second
-  let update_opt (_, update) var = Map.find update var
-  let update_var (_, update) var = Map.find update var |? Polynomial.of_var var
+  let mk t =
+    ( Formula.mk (TransitionLabel.guard t),
+      Formula.mk (TransitionLabel.guard_without_inv t),
+      TransitionLabel.update_map t )
+
+
+  let id formula = (formula, formula, Map.empty (module Var))
+  let guard = Tuple3.first
+  let guard_without_inv = Tuple3.second
+  let update = Tuple3.third
+  let update_opt (_, _, update) var = Map.find update var
+  let update_var (_, _, update) var = Map.find update var |? Polynomial.of_var var
   let updated_vars t = Map.keys @@ update t |> VarSet.of_list
 
   let vars t =
@@ -22,7 +28,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     |> Set.union (updated_vars t)
 
 
-  let to_string ((guard, update) : t) =
+  let to_string ((guard_inv, _, update) : t) =
     let update_str =
       update |> Map.to_alist
       |> List.map ~f:(fun (var, poly) -> (Var.to_string ~pretty:true var, Polynomial.to_string_pretty poly))
@@ -30,29 +36,34 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       |> fun (xs, ys) -> "(" ^ String.concat ~sep:"," xs ^ ") -> (" ^ String.concat ~sep:"," ys ^ ")"
     in
     "("
-    ^ (if Formula.is_true guard then
+    ^ (if Formula.is_true guard_inv then
          "true"
        else
-         Formula.to_string ~pretty:true guard)
+         Formula.to_string ~pretty:true guard_inv)
     ^ "," ^ update_str ^ ")"
 
 
   (** Appends two loops. *)
-  let append ((guard, update) : t) ((guard', update') : t) =
+  let append ((guard_inv, guard, update) : t) ((guard_inv', guard', update') : t) =
     let substitution update_map var = Map.find update_map var |? Polynomial.of_var var in
     let new_update = Map.map ~f:(Polynomial.substitute_f (substitution update)) update'
     and new_guard =
       Formula.Infix.(guard && Formula.map_polynomial (Polynomial.substitute_f (substitution update)) guard')
+    and new_guard_inv =
+      Formula.Infix.(
+        guard_inv && Formula.map_polynomial (Polynomial.substitute_f (substitution update)) guard_inv')
     in
-    (new_guard, new_update)
+    (new_guard_inv, new_guard, new_update)
 
 
   let chain t = append t t
 
   let eliminate_non_contributors ?(relevant_vars = None) (loop : t) =
-    let f loop non_contributors = (guard loop, Set.fold ~f:Map.remove non_contributors ~init:(update loop)) in
+    let f loop non_contributors =
+      (guard loop, guard_without_inv loop, Set.fold ~f:Map.remove non_contributors ~init:(update loop))
+    in
     EliminateNonContributors.eliminate_t (updated_vars loop)
-      (relevant_vars |? Formula.vars @@ guard loop)
+      (relevant_vars |? Formula.vars @@ guard_without_inv loop)
       (update_opt loop) (f loop)
 
 
@@ -78,11 +89,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           - mult_with_const (OurRational.num common_factor) q
           + (mult_with_const (OurRational.num common_factor) @@ of_var x))
     in
-    let new_guard = Formula.map_polynomial (substition q) (guard loop) in
+    let new_guard = Formula.map_polynomial (substition q) (guard_without_inv loop) in
+    let new_guard_inv = Formula.map_polynomial (substition q) (guard loop) in
     let new_update =
       Map.add_exn (update loop) ~key:x ~data:(Polynomial.substitute_f (update_var loop) q |> substition q)
     in
-    (new_guard, new_update)
+    (new_guard_inv, new_guard, new_update)
 
 
   let commuting loop1 loop2 =
