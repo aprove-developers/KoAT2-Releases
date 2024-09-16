@@ -214,7 +214,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         @@ Option.value_exn
         @@ Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
       in
-      Set.to_array unbounded_transitions |> Parmap.array_parmap compute_function |> Array.to_sequence
+      Set.to_array unbounded_transitions |> Array.map ~f:compute_function |> Array.to_sequence
       |> Sequence.filter_opt
     in
     (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
