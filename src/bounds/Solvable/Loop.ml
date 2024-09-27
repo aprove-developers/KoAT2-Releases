@@ -59,10 +59,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let chain t = append t t
 
   let eliminate_non_contributors ?(relevant_vars = None) (loop : t) =
+    let logger = Logging.(get Twn) in
     let f loop non_contributors =
       (guard loop, guard_without_inv loop, Set.fold ~f:Map.remove non_contributors ~init:(update loop))
     in
-    EliminateNonContributors.eliminate_t (updated_vars loop)
+    EliminateNonContributors.eliminate_t logger (updated_vars loop)
       (relevant_vars |? Formula.vars @@ guard_without_inv loop)
       (update_opt loop) (f loop)
 

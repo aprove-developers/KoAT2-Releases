@@ -153,7 +153,7 @@ struct
           subject
     | EliminateNonContributors ->
         let module ENC = EliminateNonContributors.Make (PM) in
-        ENC.eliminate subject
+        ENC.eliminate logger subject
     | EliminateTempVars ->
         MaybeChanged.(EliminateTempVars.eliminate_tmp_vars subject >>= EliminateTempVars.tmp_vars_to_nondet)
     | InvariantGeneration ->

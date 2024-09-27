@@ -7,8 +7,6 @@ open Polynomials
 module Make (M : ProgramTypes.ProgramModules) = struct
   open M
 
-  let logger = Logging.(get Preprocessor)
-
   let depends var label =
     Set.exists ~f:(fun x ->
         TransitionLabel.update label x |? UpdateElement.zero |> UpdateElement.vars |> flip Set.mem var
@@ -66,7 +64,7 @@ module Make (M : ProgramTypes.ProgramModules) = struct
 
   let eliminate_ program = compute_contributors_ (Program.transitions program)
 
-  let eliminate_t vars vars_guard get_update remove_non_contributors =
+  let eliminate_t logger vars vars_guard get_update remove_non_contributors =
     let init_contr = vars_guard in
     let init_non_contr = Set.diff vars init_contr in
     Logger.(
@@ -81,7 +79,7 @@ module Make (M : ProgramTypes.ProgramModules) = struct
     remove_non_contributors non_contributors
 
 
-  let eliminate program =
+  let eliminate logger program =
     let vars = Program.vars program in
     let vars_guard =
       Set.fold
