@@ -262,6 +262,9 @@ struct
                    |> Sequence.of_list
                    |> Util.sequence_to_string ~f:(fun (loc, ver) ->
                           Location.to_string loc ^ ": " ^ Version.to_string_pretty ver) );
+                 ("component", TransitionSet.to_id_string component);
+                 ("entry_transitions", TransitionSet.to_id_string entry_transitions);
+                 ("exit_transitions", TransitionSet.to_id_string exit_transitions);
                ]))
 
 

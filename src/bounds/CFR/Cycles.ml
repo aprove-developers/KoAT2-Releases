@@ -1,6 +1,6 @@
 open! OurBase
 
-let cfr_logger = Logging.(get Program)
+let cfr_logger = Logging.(get CFR)
 
 (** This module computes all cycles in a graph. *)
 module Cycles (PM : ProgramTypes.ProgramModules) = struct
@@ -223,5 +223,8 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
       List.max_elt ~compare:(fun a b -> Int.compare (num_of_pre_trans a) (num_of_pre_trans b)) cycle
       |> Option.value_exn
     in
-    List.map ~f:cycle_head_from_cycle cycles |> LocationSet.of_list
+    let heads = List.map ~f:cycle_head_from_cycle cycles |> LocationSet.of_list in
+    Logging.log ~level:Logger.INFO cfr_logger "loop_heads" (fun () ->
+        [ ("loop_heads", LocationSet.to_string heads) ]);
+    heads
 end
