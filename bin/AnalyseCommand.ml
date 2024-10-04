@@ -121,7 +121,7 @@ type params = {
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
   cfr : cfr list; [@enum [ ("pe", `PartialEvaluation); ("chain", `Chaining) ]] [@default []] [@sep ',']
       (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
-  no_pe_fvs : bool; [@default false]
+  pe_fvs : bool; [@default false]
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
@@ -268,10 +268,10 @@ let run (params : params) =
                     Abstraction.
                       {
                         abstract =
-                          (if params.no_pe_fvs then
-                             `LoopHeads
+                          (if params.pe_fvs then
+                             `FVS
                            else
-                             `FVS);
+                             `LoopHeads);
                       }
                   in
                   CFR.pe pe_config)

@@ -76,7 +76,7 @@ type params = {
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
   pe : bool;  (** Enable partial evaluation *)
-  no_pe_fvs : bool; [@default false]
+  pe_fvs : bool; [@default false]
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
   timeout : float; [@default 0.]
@@ -124,10 +124,10 @@ let run (params : params) =
             Abstraction.
               {
                 abstract =
-                  (if params.no_pe_fvs then
-                     `LoopHeads
+                  (if params.pe_fvs then
+                     `FVS
                    else
-                     `FVS);
+                     `LoopHeads);
               };
         ]
       else
