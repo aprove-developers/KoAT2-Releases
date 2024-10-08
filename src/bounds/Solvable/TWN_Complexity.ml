@@ -232,53 +232,65 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let preprocess_unsolvable twn_proofs loop =
-    let defective_vars = VarSet.of_list Check_TWN.(defective_vars @@ check_weakly_monotonicity loop) in
-    let candidates_for_substition =
-      List.filter
-        (fun atom -> OurBase.Set.is_subset defective_vars ~of_:(Atom.vars atom))
-        (Formula.atoms @@ Loop.guard_without_inv loop)
-    in
-    if List.is_empty candidates_for_substition then
-      raise Check_TWN.NOT_TWN
-    else
-      let q =
-        List.hd candidates_for_substition |> Atom.poly |> Polynomial.monomials_with_coeffs
-        |> List.filter (fun (_, mon) -> not @@ OurBase.Set.are_disjoint defective_vars (Monomial.vars mon))
-        |> List.map (uncurry ScaledMonomial.make)
-        |> Polynomial.make
-      in
-      let x = Var.fresh_id Int () in
-      let candidate_loop = Loop.substition_unsolvable loop q x |> Loop.eliminate_non_contributors in
-      if Check_TWN.check_twn candidate_loop then (
-        Logger.log logger Logger.INFO (fun () ->
-            ( "unsolvable-loops",
-              [ ("original", Loop.to_string loop); ("transformed", Loop.to_string candidate_loop) ] ));
+    let rec preprocess_unsolvable_ twn_proofs loop result =
+      if Check_TWN.check_twn loop then (
         ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
             FormattedString.(
               mk_str_line ("  original loop: " ^ Loop.to_string loop)
-              <> mk_str_line
-                   ("  transformed loop: " ^ Loop.to_string candidate_loop ^ " with "
-                  ^ Polynomial.to_string_pretty q)));
-        ( candidate_loop,
-          fun v ->
-            if Var.equal x v then
-              Bound.of_intpoly q
-            else
-              Bound.of_var v ))
+              <> mk_str_line ("  transformed loop: " ^ Loop.to_string loop)));
+        (loop, result))
       else
-        raise Check_TWN.NOT_TWN
+        let defective_vars = VarSet.of_list Check_TWN.(defective_vars @@ check_weakly_monotonicity loop) in
+        let candidates_for_substition =
+          List.filter
+            (fun atom -> OurBase.Set.length (OurBase.Set.inter defective_vars (Atom.vars atom)) >= 2)
+            (Formula.atoms @@ Loop.guard_without_inv loop)
+        in
+        if List.is_empty candidates_for_substition then
+          raise Check_TWN.NOT_TWN
+        else
+          let q =
+            List.hd candidates_for_substition |> Atom.poly |> Polynomial.monomials_with_coeffs
+            |> List.filter (fun (_, mon) ->
+                   not @@ OurBase.Set.are_disjoint defective_vars (Monomial.vars mon))
+            |> List.map (uncurry ScaledMonomial.make)
+            |> Polynomial.make
+          in
+          let x = Var.fresh_id Int () in
+          let candidate_loop = Loop.substition_unsolvable loop q x |> Loop.eliminate_non_contributors in
+          let defective_vars_new_loop =
+            VarSet.of_list Check_TWN.(defective_vars @@ check_weakly_monotonicity candidate_loop)
+          in
+          if OurBase.Set.length defective_vars_new_loop < OurBase.Set.length defective_vars then (
+            Logger.log logger Logger.INFO (fun () ->
+                ( "unsolvable-loops",
+                  [
+                    ("original", Loop.to_string loop);
+                    ("transformed", Loop.to_string candidate_loop);
+                    ("q", Polynomial.to_string q);
+                  ] ));
+            preprocess_unsolvable_ twn_proofs candidate_loop
+              ((fun v ->
+                 if Var.equal x v then
+                   Bound.of_intpoly q
+                 else
+                   Bound.of_var v)
+              :: result))
+          else
+            raise Check_TWN.NOT_TWN
+    in
+    preprocess_unsolvable_ twn_proofs loop []
 
 
   let complexity twn_proofs ?(termination = true) ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
     try
       let loop, var_replacement =
-        if not @@ Check_TWN.check_twn loop then
-          if unsolvable then
-            preprocess_unsolvable twn_proofs loop
-          else
-            raise Check_TWN.NOT_TWN
+        if unsolvable then
+          preprocess_unsolvable twn_proofs loop
+        else if Check_TWN.check_twn loop then
+          (loop, [])
         else
-          (loop, Bound.of_var)
+          raise Check_TWN.NOT_TWN
       in
       let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
       let t_, was_negative =
@@ -331,7 +343,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       if not terminating then
         Bound.infinity
       else
-        let f = get_bound twn_proofs ~twnlog t_ order npe varmap |> Bound.substitute_f var_replacement in
+        let f =
+          List.fold
+            (fun bound replace -> Bound.substitute_f replace bound)
+            (get_bound twn_proofs ~twnlog t_ order npe varmap)
+            var_replacement
+        in
         if was_negative then
           Bound.(f + f + one)
         else
