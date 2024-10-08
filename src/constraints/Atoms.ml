@@ -65,6 +65,10 @@ module GenericAtomHelperOver (P : PolyTypes.Polynomial) = struct
         lt (subject poly) (subject P.zero)
 
 
+    let map_var ~subject =
+      Tuple2.map1 (P.fold ~const:P.of_constant ~indeterminate:subject ~plus:P.add ~times:P.mul ~pow:P.pow)
+
+
     let is_linear (poly, comp) = P.is_linear poly
 
     let is_lt (_, comp) =
@@ -123,6 +127,12 @@ module Atom = struct
     let rename = flip Polynomial.rename
     let is_linear = Polynomial.is_linear
     let fold ~subject ~le ~lt t = le (subject t) (subject Polynomial.zero)
+
+    let map_var ~subject =
+      Polynomial.fold ~const:Polynomial.of_constant ~indeterminate:subject ~plus:Polynomial.add
+        ~times:Polynomial.mul ~pow:Polynomial.pow
+
+
     let is_le _ = true
     let is_lt _ = false
     let get_constant = OurInt.neg % Polynomial.get_constant

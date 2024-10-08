@@ -70,6 +70,9 @@ module type Atom = sig
   val fold : subject:(polynomial -> 'b) -> le:('b -> 'b -> 'c) -> lt:('b -> 'b -> 'c) -> t -> 'c
   (** Replaces all operations by new constructors. *)
 
+  val map_var : subject:(Var.t -> polynomial) -> t -> t
+  (** Replace all variables by the respective polynomial *)
+
   val is_linear : t -> bool
   (** Returns if both polynomials are linear. *)
 
@@ -106,6 +109,9 @@ module type Constraint = sig
 
   val mk_and : t -> t -> t
   (** Creates a new constraint as the conjunction of the atoms from two given constraints. *)
+
+  val map_var : subject:(Var.t -> polynomial) -> t -> t
+  (** Replace all variables by the respective polynomial *)
 
   val map_polynomial : (polynomial -> polynomial) -> t -> t
   (** TODO doc *)

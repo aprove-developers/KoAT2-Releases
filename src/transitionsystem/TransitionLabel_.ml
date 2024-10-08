@@ -449,21 +449,30 @@ module Inner = struct
           Polynomial.neg
           @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
       in
-      if Set.are_disjoint (Polynomial.vars replacement) (tmp_vars t) then
-        let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
-        let guard' =
-          List.filter
-            ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-            (Guard.atom_list @@ t.guard)
-          |> Guard.map_polynomial (Polynomial.substitute var ~replacement)
-        in
-        let inv' =
-          List.filter
-            ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-            (Invariant.atom_list @@ t.invariant)
-          |> Invariant.map_polynomial (Polynomial.substitute var ~replacement)
-        in
-        MaybeChanged.changed { t with guard = guard'; invariant = inv'; update = update' }
+      let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
+      let guard' =
+        List.filter
+          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
+          (Guard.atom_list @@ t.guard)
+        |> Guard.map_var ~subject:(fun x ->
+               if Var.equal var x then
+                 replacement
+               else
+                 Polynomial.of_var x)
+      in
+      let inv' =
+        List.filter
+          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
+          (Invariant.atom_list @@ t.invariant)
+        |> Invariant.map_var ~subject:(fun x ->
+               if Var.equal var x then
+                 replacement
+               else
+                 Polynomial.of_var x)
+      in
+      let t' = { t with guard = guard'; invariant = inv'; update = update' } in
+      if Set.length (tmp_vars t') < Set.length (tmp_vars t) then
+        MaybeChanged.changed t'
       else
         MaybeChanged.same t
     else

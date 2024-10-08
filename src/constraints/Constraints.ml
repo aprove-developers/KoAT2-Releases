@@ -76,6 +76,7 @@ struct
     List.fold_left ~f:(fun c atom -> conj c (A.fold ~subject ~le ~lt atom)) ~init:correct
 
 
+  let map_var ~subject = List.map ~f:(A.map_var ~subject)
   let map_polynomial f = fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and
   let drop_nonlinear constr = List.filter ~f:A.is_linear constr
   let is_linear = List.for_all ~f:A.is_linear
