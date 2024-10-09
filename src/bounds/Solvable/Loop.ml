@@ -64,7 +64,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (guard loop, guard_without_inv loop, Set.fold ~f:Map.remove non_contributors ~init:(update loop))
     in
     EliminateNonContributors.eliminate_t logger (updated_vars loop)
-      (relevant_vars |? Formula.vars @@ guard_without_inv loop)
+      (relevant_vars |? Formula.vars @@ guard loop)
       (update_opt loop) (f loop)
 
 

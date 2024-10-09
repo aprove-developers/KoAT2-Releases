@@ -215,7 +215,7 @@ let tests =
                "a(a,b,c) -> b(a,b,c) :|: c < 0,b(a,b,c) ->b(a - b^2,b + c^2,c) :|: a > 0,b(a,b,c) -> \
                 c(a,b,c) :|: a <= 0,c(a,b,c) -> c(a,b - 1,c) :|: b > 0",
                twn_size_conf );
-             ( LogarithmicPolynomial (0, 0),
+             ( LogarithmicPolynomial (1, 0),
                "a(x,y,z) -> b(1,y,z), b(x,y,z) -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b(x,y,z) -> c(1,z,z), \
                 c(x,y,z) -> c(2*x, 3*y, z) :|: x >= y && y >= 1",
                twn_conf );
