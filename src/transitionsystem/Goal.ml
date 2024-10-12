@@ -7,13 +7,17 @@ type _ goal =
   | ExactRuntime : classical goal
   | ExpectedComplexity : probabilistic goal
   | ExpectedSize : Var.t -> probabilistic goal
+  | AlmostSureTermination : probabilistic goal
   | Unknown : 'a goal
 
-let supported_analyse_goals = [ "COMPLEXITY"; "EXPECTEDCOMPLEXITY"; "EXACTRUNTIME"; "EXPECTEDSIZE" ]
+let supported_analyse_goals =
+  [ "COMPLEXITY"; "EXPECTEDCOMPLEXITY"; "EXACTRUNTIME"; "EXPECTEDSIZE"; "ALMOSTSURETERMINATION" ]
+
 
 let to_string : type a. a goal -> string = function
   | Complexity -> "COMPLEXITY"
   | ExactRuntime -> "EXACTRUNTIME"
   | ExpectedComplexity -> "ExpectedComplexity"
   | ExpectedSize v -> "EXPECTEDSIZE " ^ Var.to_string v
+  | AlmostSureTermination -> "ALMOSTSURETERMINATION"
   | Unknown -> "Unknown"
