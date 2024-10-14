@@ -4,6 +4,7 @@ open Koat2
 open! OurBase
 open ProbabilisticProgramModules
 module OverapprAnalysis = Analysis.Make (Bounds.Bound) (NonProbOverappr)
+module ProbabilisticAnalysis = ProbabilisticAnalysis.Make (BoundPair.PAST)
 open Approximation.Probabilistic (BoundPair.PAST)
 open Bounds
 
@@ -157,7 +158,7 @@ let run (params : params) =
       print_string
         "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n")
     (fun () ->
-      let program, apprs = ProbabilisticAnalysis.perform_analysis conf program in
+      let program, apprs = ProbabilisticAnalysis.perform_analysis ~conf program in
       ProofOutput.add_to_proof
         FormattedString.(
           fun () ->

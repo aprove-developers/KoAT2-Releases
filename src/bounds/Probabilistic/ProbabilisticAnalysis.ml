@@ -1,8 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 
-module Make = struct
-  module BP = BoundPair.PAST
+module Make (BP : BoundPair.T) = struct
   module TrivialTimeBounds = TrivialTimeBounds.Probabilistic (BP)
   module CFR = CFR.Probabilistic (BP)
   module PlrfBounds = PlrfBounds.Make (BP)
@@ -13,6 +12,25 @@ module Make = struct
     classical_local : (NonProbOverappr.program_modules_t, BP.ClassBound.t) Analysis.local_configuration;
     cfrs : CFR.cfr List.t;
   }
+
+  let default_configuration : configuration =
+    {
+      cfrs = [];
+      classical_local =
+        {
+          run_mprf_depth = Some 1;
+          twn = false;
+          twnlog = false;
+          unsolvable = false;
+          commuting = false;
+          goal =
+            (match BP.kind with
+            | BoundPair.AST -> Analysis.Termination
+            | BoundPair.PAST -> Analysis.Complexity);
+          closed_form_size_bounds = NoClosedFormSizeBounds;
+        };
+    }
+
 
   let rvts_from_gts gts =
     Set.to_sequence gts
@@ -300,7 +318,7 @@ module Make = struct
         { apprs with appr = ExpApproximation.add_costbound new_bound gt apprs.appr })
 
 
-  let perform_analysis conf program =
+  let perform_analysis ?(conf = default_configuration) program =
     let program_vars = Program.input_vars program in
     let sccs = Program.sccs_locs program in
 
@@ -316,8 +334,3 @@ module Make = struct
 
     (program, apprs)
 end
-
-include Make
-
-let default_configuration : configuration =
-  { cfrs = []; classical_local = Analysis.default_local_configuration }
