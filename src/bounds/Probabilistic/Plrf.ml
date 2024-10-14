@@ -403,33 +403,26 @@ let find program =
   |> Sequence.filter_opt % Sequence.map ~f:Tuple2.second
 
 
-module ProofComputer (BP : BoundPair.T) = struct
-  let compute_proof t bound program format =
-    let module GP = GraphPrint.ProbabilisticGraphPrint in
-    let non_incr_transs = GeneralTransitionSet.all_transitions t.non_increasing in
-    let decreasing_trans = GeneralTransition.transitions t.decreasing in
-    let color_map =
-      Set.fold ~f:(fun cmap t -> Map.set ~key:t ~data:GP.Blue cmap) non_incr_transs ~init:GP.empty_color_map
-      |> fun cmap ->
-      Set.fold
-        ~f:(fun cmap decr_trans -> Map.set ~key:decr_trans ~data:GP.Red cmap)
-        decreasing_trans ~init:cmap
-    in
-    let locations = TransitionSet.locations non_incr_transs |> Set.to_list in
-    FormattedString.(
-      mk_header_small
-        (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
-      <> mk_paragraph
-           (mk_str "new bound:" <> mk_newline
-           <> mk_paragraph (mk_str (BP.ProbBound.to_string ~pretty:true bound)))
-      <> mk_str "PLRF:" <> mk_newline
-      <> mk_paragraph
-           (locations
-           |> List.map ~f:(fun l ->
-                  "• " ^ Location.to_string l ^ ": " ^ RationalPolynomial.to_string_pretty (t.rank l))
-           |> List.map ~f:mk_str_line |> mappend)
-      <>
-      match format with
-      | Formatter.Html -> FormattedString.mk_raw_str (GP.print_system_pretty_html ~color_map program)
-      | _ -> FormattedString.Empty)
-end
+let compute_proof t bound_str program format =
+  let module GP = GraphPrint.ProbabilisticGraphPrint in
+  let non_incr_transs = GeneralTransitionSet.all_transitions t.non_increasing in
+  let decreasing_trans = GeneralTransition.transitions t.decreasing in
+  let color_map =
+    Set.fold ~f:(fun cmap t -> Map.set ~key:t ~data:GP.Blue cmap) non_incr_transs ~init:GP.empty_color_map
+    |> fun cmap ->
+    Set.fold ~f:(fun cmap decr_trans -> Map.set ~key:decr_trans ~data:GP.Red cmap) decreasing_trans ~init:cmap
+  in
+  let locations = TransitionSet.locations non_incr_transs |> Set.to_list in
+  FormattedString.(
+    mk_header_small (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
+    <> mk_paragraph (mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str bound_str))
+    <> mk_str "PLRF:" <> mk_newline
+    <> mk_paragraph
+         (locations
+         |> List.map ~f:(fun l ->
+                "• " ^ Location.to_string l ^ ": " ^ RationalPolynomial.to_string_pretty (t.rank l))
+         |> List.map ~f:mk_str_line |> mappend)
+    <>
+    match format with
+    | Formatter.Html -> FormattedString.mk_raw_str (GP.print_system_pretty_html ~color_map program)
+    | _ -> FormattedString.Empty)

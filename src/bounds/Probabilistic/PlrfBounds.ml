@@ -1,9 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 
-module Make = struct
-  module BP = BoundPair.PAST
-  module ProofComputer = Plrf.ProofComputer (BP)
+module Make (BP : BoundPair.T) = struct
   open Approximation.Probabilistic (BP)
 
   let logger = Logging.(get ExpTime)
@@ -79,7 +77,9 @@ module Make = struct
           let rank_at_loc = Plrf.rank rank entry_loc in
 
           (* Here we assume that rank_at_loc is linear as is always the case for PLRFs *)
-          let rank_bounded = BP.ProbBound.substitute_f rank_size_bound (BP.ProbBound.of_poly rank_at_loc) in
+          let rank_bounded =
+            BP.ProbBound.substitute_f rank_size_bound (BP.prob_bound_of_rational_poly rank_at_loc)
+          in
           let inc_timebound = get_timebound (gt, entry_loc) in
 
           BP.ProbBound.(inc_timebound * rank_bounded))
@@ -92,7 +92,7 @@ module Make = struct
       ProofOutput.add_to_proof_with_format
         FormattedString.(
           fun fmt ->
-            ProofComputer.compute_proof rank new_bound program fmt
+            Plrf.compute_proof rank (BP.ProbBound.to_string ~pretty:true new_bound) program fmt
             <> mk_block (ProofOutput.LocalProofOutput.get_proof entry_time_and_size_bound_proofs fmt));
       MaybeChanged.changed (ExpApproximation.add_timebound new_bound (Plrf.decreasing rank) appr))
     else
@@ -103,8 +103,11 @@ module Make = struct
     let get_timebound, get_sizebound = get_timebound_and_sizebound_both_directions (class_appr, appr) in
     let is_exptime_bounded = BP.ProbBound.is_finite % get_timebound in
     let unbounded_vars (gt, l) =
-      Program.input_vars program
-      |> Set.filter ~f:(BP.ProbBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
+      match BP.kind with
+      | BoundPair.AST -> VarSet.empty
+      | BoundPair.PAST ->
+          Program.input_vars program
+          |> Set.filter ~f:(BP.ProbBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
     in
     let find_plrfs =
       Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc

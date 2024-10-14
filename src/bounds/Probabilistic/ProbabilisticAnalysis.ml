@@ -5,7 +5,7 @@ module Make = struct
   module BP = BoundPair.PAST
   module TrivialTimeBounds = TrivialTimeBounds.Probabilistic (BP)
   module CFR = CFR.Probabilistic (BP)
-  module PlrfBounds = PlrfBounds.Make
+  module PlrfBounds = PlrfBounds.Make (BP)
   module IntegrateClassicalAnalysis = IntegrateClassicalAnalysis.Make (BP)
   open Approximation.Probabilistic (BP)
 
