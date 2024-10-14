@@ -1,8 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 
-module Make = struct
-  module BP = BoundPair.PAST
+module Make (BP : BoundPair.T) = struct
   open Approximation.Probabilistic (BP)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (BP.ClassBound) (NonProbOverappr)
   module LoopHandler = LoopHandler.Make (BP.ClassBound) (NonProbOverappr)
@@ -260,9 +259,12 @@ module Make = struct
           if BP.ClassBound.is_finite classtime_bound then
             let get_expsize = get_sizebound `ExpSize apprs key in
             let get_classsize = get_sizebound `ClassSize apprs key in
-            let get_size =
-              BoundsHelper.SubstHelper.substitute_bound_with_exp_and_class_sizes_get_size
-                ~proof:size_subst_proof ~exp_subst:get_expsize ~class_subst:get_classsize data
+            let get_size : Var.t -> BP.ClassBound.t =
+              match BP.kind with
+              | BoundPair.AST -> fun var -> Bounds.BinaryBound.one
+              | BoundPair.PAST ->
+                  BoundsHelper.SubstHelper.substitute_bound_with_exp_and_class_sizes_get_size
+                    ~proof:size_subst_proof ~exp_subst:get_expsize ~class_subst:get_classsize data
             in
             Map.add_exn t_and_s_map ~key
               ~data:(classtime_bound, get_size, (`ClassTimeExpSize, size_subst_proof))

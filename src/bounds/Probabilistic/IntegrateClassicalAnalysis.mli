@@ -1,8 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 
-module Make : sig
-  module BP : module type of BoundPair.PAST
+module Make (BP : BoundPair.T) : sig
   open Approximation.Probabilistic(BP)
 
   type twn_state

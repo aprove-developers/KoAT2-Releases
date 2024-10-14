@@ -6,7 +6,7 @@ module Make = struct
   module TrivialTimeBounds = TrivialTimeBounds.Probabilistic (BP)
   module CFR = CFR.Probabilistic (BP)
   module PlrfBounds = PlrfBounds.Make
-  module IntegrateClassicalAnalysis = IntegrateClassicalAnalysis.Make
+  module IntegrateClassicalAnalysis = IntegrateClassicalAnalysis.Make (BP)
   open Approximation.Probabilistic (BP)
 
   type configuration = {
@@ -91,10 +91,13 @@ module Make = struct
 
 
   let improve_sizebounds program program_vars scc (rvts_scc, grvs_in_and_out) elcbs apprs =
-    ProbabilisticSizeBounds.trivial_sizebounds program ~grvs_in_and_out elcbs apprs.class_appr apprs.appr
-    |> ProbabilisticSizeBounds.nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs
-         apprs.class_appr
-    |> ProbabilisticSizeBounds.propagate_sizes program ~program_vars ~rvts_scc apprs.class_appr
+    match BP.kind with
+    | BoundPair.AST -> apprs.appr
+    | BoundPair.PAST ->
+        ProbabilisticSizeBounds.trivial_sizebounds program ~grvs_in_and_out elcbs apprs.class_appr apprs.appr
+        |> ProbabilisticSizeBounds.nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs
+             apprs.class_appr
+        |> ProbabilisticSizeBounds.propagate_sizes program ~program_vars ~rvts_scc apprs.class_appr
 
 
   module ELCBMap = MakeMapCreators1 (GRV)
@@ -286,7 +289,10 @@ module Make = struct
           |> Sequence.map ~f:(fun (_, label, _) ->
                  let cbound = BP.ProbBound.of_intpoly (TransitionLabel.cost label) in
                  BP.ProbBound.substitute_f
-                   (ProbabilisticSizeBounds.get_pre_size_classical program apprs.class_appr gt)
+                   (match BP.kind with
+                   | BoundPair.AST -> fun var -> Bounds.BinaryBound.one
+                   | BoundPair.PAST ->
+                       ProbabilisticSizeBounds.get_pre_size_classical program apprs.class_appr gt)
                    cbound)
           |> BP.ProbBound.sum
         in
