@@ -75,8 +75,6 @@ KoAT2 makes use of the following external tools and libraries.
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
-KoAT uses SymPy for some linear algebra calculations. If you want to use it, please install it on your system. SymPy is already included in the Docker image.
-
 To generate an image of the graph of an integer program, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system.
 Note that when building the Docker image, the current Ubuntu binaries of [Graphviz](https://graphviz.org/) are installed.
 Thus, the resulting image already contains [Graphviz](https://graphviz.org/).
