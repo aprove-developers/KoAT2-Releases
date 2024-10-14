@@ -17,7 +17,7 @@ module Classical (Bound : BoundType.Bound) : sig
       Also computes trivial time bounds *)
 end
 
-module Probabilistic : sig
+module Probabilistic (BP : BoundPair.T) : sig
   include
     CFRTypes.CFR
       with type program = ProbabilisticProgramModules.Program.t
@@ -26,7 +26,7 @@ module Probabilistic : sig
        and type cfr = ProbabilisticProgramModules.program_modules_t cfr_
 
   val create_new_apprs :
-    program -> program -> Approximation.Probabilistic.apprs -> Approximation.Probabilistic.apprs
+    program -> program -> Approximation.Probabilistic(BP).apprs -> Approximation.Probabilistic(BP).apprs
   (** The call [create_new_appr program program_cfr apprs] generates the approximations for the new program_cfr from the those of the original program ([apprs]).
       Also computes trivial time bounds *)
 end

@@ -150,9 +150,9 @@ module Classical (Bound : BoundType.Bound) = struct
     |> TrivialTimeBounds.compute program_cfr
 end
 
-module Probabilistic = struct
+module Probabilistic (BP : BoundPair.T) = struct
   open ProbabilisticProgramModules
-  open Approximation.Probabilistic
+  open Approximation.Probabilistic (BP)
 
   let create_new_appr_classical program program_cfr class_appr =
     let common_trans = Set.inter (Program.transitions program) (Program.transitions program_cfr) in
@@ -167,14 +167,15 @@ module Probabilistic = struct
 
 
   let create_new_apprs program program_cfr apprs =
-    TrivialTimeBounds.Probabilistic.compute program_cfr
+    let module TrivialTimeBounds = TrivialTimeBounds.Probabilistic (BP) in
+    TrivialTimeBounds.compute program_cfr
       {
         class_appr = create_new_appr_classical program program_cfr apprs.class_appr;
         appr = create_new_appr program program_cfr apprs.appr;
       }
 
 
-  include Make (ProbabilisticProgramModules) (Bounds.RationalBound)
+  include Make (ProbabilisticProgramModules) (BP.ProbBound)
 end
 
 let chaining =

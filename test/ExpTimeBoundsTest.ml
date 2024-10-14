@@ -2,7 +2,7 @@ open OUnit2
 open Koat2
 open! OurBase
 open Bounds
-open Approximation.Probabilistic
+open Approximation.Probabilistic (BoundPair.PAST)
 
 let default_conf = ProbabilisticAnalysis.default_configuration
 
@@ -36,7 +36,7 @@ let tests =
                 ~f:(fun (name, complexity_exp, prog_dir, conf) ->
                   (fun f -> name >: test_case ~length:test_len f) @@ fun _ ->
                   let prog = Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat") |> preprocess in
-                  let prog, apprs = ProbabilisticAnalysis.perform_analysis ~conf prog in
+                  let prog, apprs = ProbabilisticAnalysis.perform_analysis conf prog in
 
                   let bound = ExpApproximation.program_timebound apprs.appr prog in
                   let complexity = RationalBound.asymptotic_complexity bound in

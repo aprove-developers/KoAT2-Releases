@@ -89,17 +89,17 @@ module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.Program
 
 include module type of MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
-module Probabilistic : sig
+module Probabilistic (BP : BoundPair.T) : sig
   module NonProbOverapprApproximation :
-      module type of MakeForClassicalAnalysis (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr)
+      module type of MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules.NonProbOverappr)
 
   module ClassicalApproximation :
-      module type of MakeWithDefaultTransition (Bounds.Bound) (ProbabilisticProgramModules)
+      module type of MakeWithDefaultTransition (BP.ClassBound) (ProbabilisticProgramModules)
 
   module ExpApproximation :
       module type of
         Make
-          (Bounds.RationalBound)
+          (BP.ProbBound)
           (struct
             include ProbabilisticProgramModules
             module RV = GRV

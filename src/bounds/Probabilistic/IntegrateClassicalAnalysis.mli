@@ -1,19 +1,23 @@
 open! OurBase
 open ProbabilisticProgramModules
-open Approximation.Probabilistic
 
-type twn_state
+module Make : sig
+  module BP : module type of BoundPair.PAST
+  open Approximation.Probabilistic(BP)
 
-val empty_twn_state : twn_state
-val initial_twn_state : Program.t -> GeneralTransitionSet.t (** The scc to be analysed *) -> twn_state
-val twn_state_to_string : twn_state -> string
+  type twn_state
 
-val improve :
-  twn:twn_state ref * bool * bool * bool
-    (** The twn state will be modified during the execution of this method! Always pass on the same ref to avoid duplicated work *) ->
-  mprf_depth:int Option.t ->
-  Program.t (** The program *) ->
-  GeneralTransitionSet.t (** The scc to be analysed *) ->
-  ClassicalApproximation.t * ExpApproximation.t ->
-  ExpApproximation.t MaybeChanged.t
-(** Perform a timebound analysis step by lifting classical analysis methods *)
+  val empty_twn_state : twn_state
+  val initial_twn_state : Program.t -> GeneralTransitionSet.t (** The scc to be analysed *) -> twn_state
+  val twn_state_to_string : twn_state -> string
+
+  val improve :
+    twn:twn_state ref * bool * bool * bool
+      (** The twn state will be modified during the execution of this method! Always pass on the same ref to avoid duplicated work *) ->
+    mprf_depth:int Option.t ->
+    Program.t (** The program *) ->
+    GeneralTransitionSet.t (** The scc to be analysed *) ->
+    ClassicalApproximation.t * ExpApproximation.t ->
+    ExpApproximation.t MaybeChanged.t
+  (** Perform a timebound analysis step by lifting classical analysis methods *)
+end

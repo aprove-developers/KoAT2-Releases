@@ -1,7 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 open Bounds
-open Approximation.Probabilistic
+open Approximation.Probabilistic(BoundPair.PAST)
 
 type elcb_map = (GRV.t, RationalBound.t, GRV.comparator_witness) Map.t
 

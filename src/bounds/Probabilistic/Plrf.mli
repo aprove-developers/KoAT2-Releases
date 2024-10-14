@@ -27,5 +27,7 @@ val find : Program.t -> t Sequence.t
 
 val to_string : t -> string
 
-val compute_proof : t -> Bounds.RationalBound.t -> Program.t -> Formatter.format -> FormattedString.t
-(** This function computes an explanation for the given PRF and the given resulting bound *)
+module ProofComputer (BP : BoundPair.T) : sig
+  val compute_proof : t -> BP.ProbBound.t -> Program.t -> Formatter.format -> FormattedString.t
+  (** This function computes an explanation for the given PRF and the given resulting bound *)
+end

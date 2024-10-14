@@ -168,15 +168,15 @@ end
 
 include MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
-module Probabilistic = struct
+module Probabilistic (BP : BoundPair.T) = struct
   module NonProbOverapprApproximation =
-    MakeForClassicalAnalysis (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr)
+    MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules.NonProbOverappr)
 
-  module ClassicalApproximation = MakeWithDefaultTransition (Bounds.Bound) (ProbabilisticProgramModules)
+  module ClassicalApproximation = MakeWithDefaultTransition (BP.ClassBound) (ProbabilisticProgramModules)
 
   module ExpApproximation =
     Make
-      (Bounds.RationalBound)
+      (BP.ProbBound)
       (struct
         include ProbabilisticProgramModules
         module RV = GRV
@@ -197,7 +197,7 @@ module Probabilistic = struct
   let coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
       =
     let module M =
-      Coerce (Bounds.Bound) (ProbabilisticProgramModules.NonProbOverappr) (ProbabilisticProgramModules)
+      Coerce (BP.ClassBound) (ProbabilisticProgramModules.NonProbOverappr) (ProbabilisticProgramModules)
         (ProbabilisticPrograms.Equalities)
     in
     M.coerce
@@ -205,7 +205,7 @@ module Probabilistic = struct
 
   let coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t =
     let module M =
-      Coerce (Bounds.Bound) (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
+      Coerce (BP.ClassBound) (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
         (struct
           open Type_equal
           module E = ProbabilisticPrograms.Equalities
