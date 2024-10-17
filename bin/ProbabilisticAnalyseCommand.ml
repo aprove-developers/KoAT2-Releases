@@ -57,6 +57,8 @@ type params = {
   pe_update_invariants : bool; [@default true]
   timeout : float; [@default 0.]
       (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
+  goal : Goal.probabilistic Goal.goal option;
+      [@enum [ ("PAST", Goal.ExpectedComplexity); ("AST", Goal.AlmostSureTermination) ]]
 }
 [@@deriving cmdliner]
 
@@ -172,7 +174,12 @@ let run (params : params) =
   let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
 
-  let program, goal = Readers.read_probabilistic_prog_goal_file params.input in
+  let program, default_goal = Readers.read_probabilistic_prog_goal_file params.input in
+  let goal =
+    match params.goal with
+    | Some goal -> goal
+    | None -> default_goal
+  in
 
   let (module BP) = bound_pair_for_goal goal in
 
