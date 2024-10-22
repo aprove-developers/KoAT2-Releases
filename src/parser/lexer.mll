@@ -38,11 +38,11 @@ rule read =
   | "ALMOSTSURETERMINATION" { P.ALMOSTSURETERMINATION }
   (*| "EXACTRUNTIME"         { P.EXACTRUNTIME }
   | "EXPECTEDSIZE"    { P.EXPECTEDSIZE } *)
-  (* | "BERNOULLI"       { P.BERNOULLI }
+  | "BERNOULLI"       { P.BERNOULLI }
   | "BINOMIAL"        { P.BINOMIAL }
   | "GEOMETRIC"       { P.GEOMETRIC }
   | "HYPERGEOMETRIC"  { P.HYPERGEOMETRIC }
-  | "UNIFORM"         { P.UNIFORM } *)
+  | "UNIFORM"         { P.UNIFORM }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
@@ -50,7 +50,7 @@ rule read =
   | "inf"             { P.INFINITY }
   | "log"             { P.LOG }
   | int               { P.UINT (Lexing.lexeme lexbuf) }
-  (* | float             { P.UFLOAT (Lexing.lexeme lexbuf) } *)
+  | float             { P.UFLOAT (Lexing.lexeme lexbuf) }
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }
@@ -74,8 +74,8 @@ rule read =
   | "/\\"             { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
-  (* | ":+:"             { P.PROBDIV } *)
-  (* | ":"               { P.COLON } *)
+  | ":+:"             { P.PROBDIV }
+  | ":"               { P.COLON }
   | ','               { P.COMMA }
   | eof               { P.EOF }
   | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }

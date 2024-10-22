@@ -24,7 +24,7 @@ module type Adapter = sig
   type grouped_transition
   type grouped_transition_cmp_wit
   type program
-  type approx = update_element * Guard.t
+  type approx = Polynomials.Polynomial.t * Guard.t
 
   val overapprox_indeterminates : update_element -> approx
   val outgoing_grouped_transitions : transition_graph -> Location.t -> grouped_transition Sequence.t

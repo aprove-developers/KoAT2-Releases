@@ -35,12 +35,12 @@ type program_modules_t =
 (** Trivial implementation of overapproxmation in classical programs *)
 module ClassicAdapter :
   GenericProgram_.Adapter
-    with type update_element = UpdateElementNonRec.t
+    with type update_element = UpdateElement.t
      and type transition = Transition.t
      and type transition_graph = TransitionGraph.t
      and type program = Program.t = struct
-  type update_element = UpdateElementNonRec.t
-  type approx = update_element * Guard.t
+  type update_element = UpdateElement.t
+  type approx = UpdateElementNonRec.t * Guard.t
   type transition = Transition.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
@@ -48,7 +48,7 @@ module ClassicAdapter :
   type grouped_transition_cmp_wit = Transition.comparator_witness
 
   (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
-  let overapprox_indeterminates poly = (poly, Guard.mk_true)
+  let overapprox_indeterminates poly = (UpdateElement.to_poly poly, Guard.mk_true)
 
   let outgoing_grouped_transitions trans_graph location =
     TransitionGraph.succ_e trans_graph location |> Sequence.of_list

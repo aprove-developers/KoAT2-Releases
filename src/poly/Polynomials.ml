@@ -474,6 +474,9 @@ module Polynomial = struct
         None
     with
     | NO_COMMON_FACTOR -> None
+
+
+  let of_poly = identity
 end
 
 module RationalPolynomial = struct

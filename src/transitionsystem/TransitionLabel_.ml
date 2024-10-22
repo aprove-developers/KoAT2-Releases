@@ -378,128 +378,6 @@ module TransitionLabelNonRec_ = struct
     }
 
 
-  let overapprox_nonlinear_updates t =
-    let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
-    let overapprox_poly orig_var poly (guard, update) =
-      if Polynomial.is_linear poly then
-        (guard, update)
-      else
-        let handle_monom (coeff, mon) =
-          if Monomial.is_univariate_linear mon then
-            (Guard.mk_true, Polynomial.mul (Polynomial.of_constant coeff) (Polynomial.of_monomial mon))
-          else
-            let new_var = Var.fresh_id Var.Int () in
-            let new_var_poly = Polynomial.of_var new_var in
-            let new_var_poly_with_coeff = Polynomial.mul (Polynomial.of_constant coeff) new_var_poly in
-            (* check if update is quadratic, ^4, ^6, ... *)
-            let vars = Monomial.vars mon in
-            if Set.length vars = 1 then
-              let var = Set.choose_exn vars in
-              if Monomial.degree_variable var mon mod 2 = 0 then
-                let var_poly = Polynomial.of_var var in
-                (* check if term will increase. drop nonlinear to ensure fast termination of SMT call *)
-                let formula =
-                  Formula.mk_and
-                    (Formula.mk_and
-                       (Formula.mk_lt var_poly (Polynomial.of_int 2))
-                       (Formula.mk_gt var_poly (Polynomial.of_int (-2))))
-                    (Formula.mk @@ Guard.drop_nonlinear orig_guard_and_invariants)
-                in
-                if SMT.Z3Solver.unsatisfiable formula then
-                  (* The update will increase the variable (disregarding factor) *)
-                  ( Guard.mk_and (Guard.mk_gt new_var_poly var_poly)
-                      (Guard.mk_ge new_var_poly (Polynomial.of_int 4)),
-                    new_var_poly_with_coeff )
-                else
-                  (* check if term can be zero. drop nonlinear to ensure fast termination of SMT call *)
-                  let formula =
-                    Formula.mk_and
-                      (Formula.mk_eq var_poly (Polynomial.of_int 0))
-                      (Formula.mk @@ Guard.drop_nonlinear orig_guard_and_invariants)
-                  in
-                  if SMT.Z3Solver.unsatisfiable formula then
-                    (* updated variable will be positive (disregarding factor) *)
-                    ( Guard.mk_and
-                        (Guard.mk_gt new_var_poly Polynomial.zero)
-                        (Guard.mk_ge new_var_poly var_poly),
-                      new_var_poly_with_coeff )
-                  else
-                    (* updated variable will be non-negative (disregarding factor) *)
-                    (Guard.mk_ge new_var_poly Polynomial.zero, new_var_poly_with_coeff)
-              else
-                (Guard.mk_true, new_var_poly_with_coeff)
-            else
-              (Guard.mk_true, new_var_poly_with_coeff)
-        in
-        let final_guard, final_upd_poly =
-          List.map ~f:handle_monom (Polynomial.monomials_with_coeffs poly)
-          |> List.fold_left
-               ~f:(fun (g, p) (g', p') -> (Guard.mk_and g g', Polynomial.add p p'))
-               ~init:(guard, Polynomial.zero)
-        in
-        (final_guard, Map.set update ~key:orig_var ~data:final_upd_poly)
-    in
-
-    let guard', update' =
-      Map.fold t.update ~f:(fun ~key ~data a -> overapprox_poly key data a) ~init:(t.guard, t.update)
-    in
-    { t with guard = guard'; update = update' }
-
-
-  let eliminate_tmp_var var t =
-    let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
-    let occurs_in_equality var label =
-      let atoms = Guard.atom_list orig_guard_and_invariants in
-      List.find
-        ~f:(fun (atom1, atom2) ->
-          Atom.is_le atom1 && Atom.is_le atom2
-          && Atom.equal atom1 (Atom.flip_comp atom2)
-          && Set.mem (Atom.vars atom1) var
-          && Polynomial.var_only_linear var (Atom.poly atom1)
-          && OurInt.(one == abs @@ Polynomial.coeff_of_indeterminate var (Atom.poly atom1)))
-        (List.cartesian_product atoms atoms)
-    in
-    let opt = occurs_in_equality var t in
-    if Option.is_some opt then
-      let atom1, atom2 = Option.value_exn opt in
-      let replacement =
-        let coeff_of_var = Polynomial.coeff_of_indeterminate var (Atom.poly atom1) in
-        if OurInt.(coeff_of_var < zero) then
-          Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
-        else
-          Polynomial.neg
-          @@ Polynomial.add (Atom.poly atom1) (Polynomial.of_coeff_list [ Z.neg coeff_of_var ] [ var ])
-      in
-      let update' = Map.map ~f:(Polynomial.substitute var ~replacement) t.update in
-      let guard' =
-        List.filter
-          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-          (Guard.atom_list @@ t.guard)
-        |> Guard.map_var ~subject:(fun x ->
-               if Var.equal var x then
-                 replacement
-               else
-                 Polynomial.of_var x)
-      in
-      let inv' =
-        List.filter
-          ~f:(fun atom -> not (Atom.equal atom1 atom || Atom.equal atom2 atom))
-          (Invariant.atom_list @@ t.invariant)
-        |> Invariant.map_var ~subject:(fun x ->
-               if Var.equal var x then
-                 replacement
-               else
-                 Polynomial.of_var x)
-      in
-      let t' = { t with guard = guard'; invariant = inv'; update = update' } in
-      if Set.length (tmp_vars t') < Set.length (tmp_vars t) then
-        MaybeChanged.changed t'
-      else
-        MaybeChanged.same t
-    else
-      MaybeChanged.same t
-
-
   let chain_guards t1 t2 = guard (append t1 t2)
 end
 
@@ -644,3 +522,22 @@ let to_non_rec t =
   else
     TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
       ~update:(Map.map (update_map t) ~f:PolyRec.to_poly)
+
+
+let chain_guards t1 t2 =
+  let nondet_vars = Hashtbl.create ~size:3 (module Var) in
+  let substitution update_map var =
+    Map.find update_map var
+    |? PolyRec.of_var
+         (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
+         (Hashtbl.find nondet_vars var
+         |> Option.value_or_thunk ~default:(fun () ->
+                let nondet_var = Var.fresh_id Var.Int () in
+                Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+                nondet_var))
+    |> PolyRec.to_poly (* TODO Overappr rec -> tmp *)
+  in
+  Guard.Infix.(
+    guard t1 && invariant t1
+    && Guard.map_polynomial (Polynomial.substitute_f (substitution @@ update_map t1)) (guard t2)
+    && Guard.map_polynomial (Polynomial.substitute_f (substitution @@ update_map t1)) (invariant t2))

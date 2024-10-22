@@ -92,20 +92,20 @@ module MakeDefaultLabelPrint (PM : ProgramTypes.ProgramModules) = struct
   let print_label = print_label_from_fields % all_default_fields_as_strings
 end
 
-(* module ProbabilisticLabelPrint = struct
-     include MakeDefaultLabelPrint (ProbabilisticProgramModules)
-     open ProbabilisticProgramModules
+module ProbabilisticLabelPrint = struct
+  include MakeDefaultLabelPrint (ProbabilisticProgramModules)
+  open ProbabilisticProgramModules
 
-     let all_fields l =
-       let classical_fields = all_default_fields_as_strings l in
-       let prob_field =
-         "p = " ^ Polynomials.RationalLaurentPolynomial.to_string (TransitionLabel.probability l)
-       in
-       prob_field :: classical_fields
+  let all_fields l =
+    let classical_fields = all_default_fields_as_strings l in
+    let prob_field =
+      "p = " ^ Polynomials.RationalLaurentPolynomial.to_string (TransitionLabel.probability l)
+    in
+    prob_field :: classical_fields
 
 
-     let print_label = print_label_from_fields % all_fields
-   end *)
+  let print_label = print_label_from_fields % all_fields
+end
 
 module Make
     (PM : ProgramTypes.ProgramModules)
@@ -197,7 +197,7 @@ struct
 end
 
 module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) = Make (PM) (MakeDefaultLabelPrint (PM))
-(* module ProbabilisticGraphPrint = Make (ProbabilisticProgramModules) (ProbabilisticLabelPrint)  *)
+module ProbabilisticGraphPrint = Make (ProbabilisticProgramModules) (ProbabilisticLabelPrint)
 
 (** RVGs are only defined for classical programs, since otherwise we do not know the local size bounds *)
 module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = struct

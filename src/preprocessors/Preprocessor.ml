@@ -5,7 +5,7 @@ let logger = Logging.(get Preprocessor)
 
 (* The ordering of contructors below influences the order of the resulting Set.t *)
 type _ t =
-  (* | CutZeroProbTransitions : ProbabilisticPrograms.ProbabilisticProgram.t t TODO Nils *)
+  | CutZeroProbTransitions : ProbabilisticPrograms.ProbabilisticProgram.t t
   | CutUnreachableLocations : 'p t
   | CutUnsatisfiableTransitions : 'p t
   | EliminateNonContributors : 'p t
@@ -15,7 +15,7 @@ type _ t =
   | InvariantGeneration : 'p t
 
 let show : type p. p t -> string = function
-  (* | CutZeroProbTransitions -> "zeroprobtransitions" TODO Nils *)
+  | CutZeroProbTransitions -> "zeroprobtransitions"
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
@@ -26,7 +26,7 @@ let show : type p. p t -> string = function
 
 
 let affects : type p. p t -> p t list = function
-  (* | CutZeroProbTransitions -> [] TODO Nils *)
+  | CutZeroProbTransitions -> []
   | CutUnreachableLocations -> [ EliminateNonContributors ]
   | InvariantGeneration -> [ CutUnsatisfiableTransitions ]
   | CutUnsatisfiableTransitions -> [ CutUnreachableLocations; EliminateNonContributors ]
@@ -70,14 +70,15 @@ let all_classical : Program.t t list =
   ]
 
 
-(* let all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list =
-   [
-     CutZeroProbTransitions;
-     CutUnreachableLocations;
-     CutUnsatisfiableTransitions;
-     EliminateNonContributors;
-     InvariantGeneration;
-   ] *)
+let all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list =
+  [
+    CutZeroProbTransitions;
+    CutUnreachableLocations;
+    CutUnsatisfiableTransitions;
+    EliminateNonContributors;
+    InvariantGeneration;
+  ]
+
 
 let all_generic : 'a. 'a t list =
   [ CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration ]
@@ -145,7 +146,7 @@ struct
     | CutUnsatisfiableTransitions ->
         let module CUT = CutUnsatisfiableTransitions.Make (PM) in
         CUT.transform_program subject
-    (* | CutZeroProbTransitions -> CutZeroProbTransitions.transform_program subject *)
+    | CutZeroProbTransitions -> CutZeroProbTransitions.transform_program subject
     | Chaining -> (MaybeChanged.map normalise_temp_vars % lift_to_program Chaining.transform_graph) subject
     | ChainingConservative ->
         (MaybeChanged.map normalise_temp_vars % lift_to_program (Chaining.transform_graph ~conservative:true))
@@ -184,9 +185,8 @@ end
 
 module StandardProgram = MakeForClassicalProgramModules (ProgramModules)
 
-(*
-   module ProbabilisticWithOverappr =
-     Make (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
-       (struct
-         let eq = ProbabilisticPrograms.Equalities.program_equalities
-       end) *)
+module ProbabilisticWithOverappr =
+  Make (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
+    (struct
+      let eq = ProbabilisticPrograms.Equalities.program_equalities
+    end)

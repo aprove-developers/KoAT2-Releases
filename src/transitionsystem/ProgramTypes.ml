@@ -128,36 +128,26 @@ module type TransitionLabel = sig
   val sexp_of_t : t -> Sexp.t
 end
 
-module type ClassicalTransitionLabelNonRec = sig
-  include TransitionLabel with type update_element = Polynomial.t
-
-  val append : t -> t -> t
-
-  val map_guard : (Guard.t -> Guard.t) -> t -> t
-  (** Apply function to guard *)
-
-  val relax_guard :
-    deterministic:VarSet.t -> t -> t (* TODO Nils rename this static -> deterministic and move*)
-  (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
-
-  val overapprox_nonlinear_updates : t -> t
-  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
-
-  val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t
-
-  val chain_guards : t -> t -> Guard.t
-  (** Guard that is true if both transitions can be executed one after another *)
-end
-
-module type ClassicalTransitionLabel = sig
-  include TransitionLabel with type update_element = PolyRec.PolyRec.t
-  module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
+module type DefaultTransitionLabel = sig
+  include TransitionLabel
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
 
   val relax_guard : deterministic:VarSet.t -> t -> t
   (** Keeps only the atoms of the guard whose variables are deterministic *)
+
+  val chain_guards : t -> t -> Guard.t
+  (** Guard that is true if both transitions can be executed one after another *)
+end
+
+module type ClassicalTransitionLabelNonRec = sig
+  include DefaultTransitionLabel with type update_element = Polynomial.t
+end
+
+module type ClassicalTransitionLabel = sig
+  include DefaultTransitionLabel with type update_element = PolyRec.PolyRec.t
+  module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)

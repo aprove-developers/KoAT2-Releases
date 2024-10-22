@@ -5,7 +5,7 @@ open Formulas
 exception RecursionNotSupported
 
 module Make
-    (TL : ProgramTypes.ClassicalTransitionLabel)
+    (TL : ProgramTypes.DefaultTransitionLabel)
     (T : ProgramTypes.Transition
            with type transition_label = TL.t
             and type transition_label_comparator_witness = TL.comparator_witness)
@@ -121,12 +121,8 @@ struct
     |> G.pred_e (graph program)
     |> Sequence.of_list
     |> Sequence.filter ~f:(fun (_, t', _) ->
-           if TL.has_rec_calls t || TL.has_rec_calls t' then
-             true
-           else
-             let t = TL.to_non_rec t and t' = TL.to_non_rec t' in
-             TL.TransitionLabelNonRec.chain_guards t' t
-             |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*))
+           TL.chain_guards t' t
+           |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*))
 
 
   let pre_lazy program trans =

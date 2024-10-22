@@ -2,7 +2,6 @@ open! OurBase
 
 module Polyhedrons = struct
   open Constraints
-  open Polynomials
 
   (*
     For an abstract domain `'a` there is a manager `'a Manager.t` handling the library stuff underneath.
@@ -75,7 +74,9 @@ module Polyhedrons = struct
 
   let update_polyh am update polyh =
     let vars_in_update =
-      Map.fold ~f:(fun ~key:_ ~data:poly -> Set.union (Polynomial.vars poly)) update ~init:VarSet.empty
+      Map.fold
+        ~f:(fun ~key:_ ~data:poly -> Set.union (Polynomials.Polynomial.vars poly))
+        update ~init:VarSet.empty
       |> Set.union (VarSet.of_list @@ Map.keys update)
     in
     let polyh_with_new_vars = add_vars_to_polyh am vars_in_update polyh in

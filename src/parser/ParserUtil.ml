@@ -112,64 +112,65 @@ let ourfloat_of_decimal_or_fraction_string (str : string) : OurRational.t =
     in
     OurRational.(leading + fractional)
 
-(* Probabilistic Programs TODO Nils *)
-(* open ProbabilisticProgramModules
 
-   let embed_probabilistic_transition_label lhs (probability, (com_kind, targets)) =
-     let start_loc, patterns = Tuple2.map2 (List.map ~f:Var.of_string) lhs in
+(* Probabilistic Programs *)
+open ProbabilisticProgramModules
 
-     check_arity (Location.of_string start_loc) (List.length patterns);
-     List.iter
-       ~f:(fun (loc, assignments) -> check_arity (Location.of_string loc) (List.length assignments))
-       targets;
+let embed_probabilistic_transition_label lhs (probability, (com_kind, targets)) =
+  let start_loc, patterns = Tuple2.map2 (List.map ~f:Var.of_string) lhs in
 
-     let com_nr = get_com_kind_from_com_str com_kind in
-     (com_nr, List.map ~f:(fun (loc, assignments) -> (probability, assignments, loc)) targets)
+  check_arity (Location.of_string start_loc) (List.length patterns);
+  List.iter
+    ~f:(fun (loc, assignments) -> check_arity (Location.of_string loc) (List.length assignments))
+    targets;
 
-
-   let mk_general_transitions
-       (gts :
-         ((string * string list)
-         * Polynomial.t
-         * (int * (RationalLaurentPolynomial.t * UpdateElement.t list * string) list) list
-         * Formula.t)
-         list) =
-     let lhs_locations = Set.of_list (module String) @@ List.map ~f:(fun ((loc, _), _, _, _) -> loc) gts in
-     let cleaned_com_k_transitions =
-       List.map
-         ~f:
-           (Tuple4.map3
-           @@ List.map ~f:(fun (com_kind, t) ->
-                  if com_kind <> List.length t then
-                    raise ComKindAndTargetsMismatch;
-                  let cleaned = List.filter ~f:(fun (_, _, target) -> Set.mem lhs_locations target) t in
-                  if List.length cleaned > 1 then
-                    raise Program_.RecursionNotSupported
-                  else
-                    List.hd_exn (cleaned @ t)))
-         gts
-     in
-     let number_patterns =
-       List.map ~f:(fun ((_, patterns), _, _, _) -> List.length patterns) gts
-       |> List.max_elt ~compare:Int.compare |> Option.value ~default:0
-     in
-     let mk_general_transition
-         ( (start_loc, patterns),
-           cost,
-           (rhss : (RationalLaurentPolynomial.t * UpdateElement.t list * string) list),
-           formula ) =
-       Sequence.of_list (Formula.constraints formula)
-       |> Sequence.map ~f:(fun guard ->
-              GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns
-                ~patterns:(List.map ~f:Var.of_string patterns)
-                ~cost
-                  (* Create the labels in a delayed fashion to ensure unique ids in the presence of disjunction / multiple constraints*)
-                ~rhss:(List.map ~f:(Tuple3.map3 Location.of_string) rhss)
-                ~guard)
-     in
-     Sequence.of_list cleaned_com_k_transitions
-     |> Sequence.map ~f:mk_general_transition
-     |> Sequence.join |> GeneralTransitionSet.of_sequence
+  let com_nr = get_com_kind_from_com_str com_kind in
+  (com_nr, List.map ~f:(fun (loc, assignments) -> (probability, assignments, loc)) targets)
 
 
-   let mk_probabilistic_program start general_transitions = Program.from_gts start general_transitions *)
+let mk_general_transitions
+    (gts :
+      ((string * string list)
+      * Polynomial.t
+      * (int * (RationalLaurentPolynomial.t * UpdateElement.t list * string) list) list
+      * Formula.t)
+      list) =
+  let lhs_locations = Set.of_list (module String) @@ List.map ~f:(fun ((loc, _), _, _, _) -> loc) gts in
+  let cleaned_com_k_transitions =
+    List.map
+      ~f:
+        (Tuple4.map3
+        @@ List.map ~f:(fun (com_kind, t) ->
+               if com_kind <> List.length t then
+                 raise ComKindAndTargetsMismatch;
+               let cleaned = List.filter ~f:(fun (_, _, target) -> Set.mem lhs_locations target) t in
+               if List.length cleaned > 1 then
+                 raise Program_.RecursionNotSupported
+               else
+                 List.hd_exn (cleaned @ t)))
+      gts
+  in
+  let number_patterns =
+    List.map ~f:(fun ((_, patterns), _, _, _) -> List.length patterns) gts
+    |> List.max_elt ~compare:Int.compare |> Option.value ~default:0
+  in
+  let mk_general_transition
+      ( (start_loc, patterns),
+        cost,
+        (rhss : (RationalLaurentPolynomial.t * UpdateElement.t list * string) list),
+        formula ) =
+    Sequence.of_list (Formula.constraints formula)
+    |> Sequence.map ~f:(fun guard ->
+           GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns
+             ~patterns:(List.map ~f:Var.of_string patterns)
+             ~cost
+               (* Create the labels in a delayed fashion to ensure unique ids in the presence of disjunction / multiple constraints*)
+             ~rhss:(List.map ~f:(Tuple3.map3 Location.of_string) rhss)
+             ~guard)
+  in
+  Sequence.of_list cleaned_com_k_transitions
+  |> Sequence.map ~f:mk_general_transition
+  |> Sequence.join |> GeneralTransitionSet.of_sequence
+
+
+let mk_probabilistic_program start general_transitions = Program.from_gts start general_transitions

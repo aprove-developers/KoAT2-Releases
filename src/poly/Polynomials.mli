@@ -57,6 +57,7 @@ module Polynomial : sig
   (** TODO doc *)
 
   val find_common_factor : t -> t -> OurRational.t option
+  val of_poly : t -> t
 end
 
 (** Provides default implementation of polynomials ranged over [OurRational]. *)

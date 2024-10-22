@@ -2,7 +2,7 @@ open! OurBase
 
 let cfr_logger = Logging.(get CFR)
 
-module FVS (PM : ProgramTypes.ClassicalProgramModules) = struct
+module FVS (PM : ProgramTypes.ProgramModules) = struct
   module Cycles = Cycles.Cycles (PM)
   open PM
 

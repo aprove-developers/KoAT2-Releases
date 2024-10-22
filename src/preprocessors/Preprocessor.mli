@@ -5,7 +5,7 @@ open ProgramModules
 
 (** Type of preprocessor. *)
 type _ t =
-  (* | CutZeroProbTransitions : ProbabilisticPrograms.ProbabilisticProgram.t t *)
+  | CutZeroProbTransitions : ProbabilisticPrograms.ProbabilisticProgram.t t
   | CutUnreachableLocations : 'p t  (** Removes all unreachable locations. *)
   | CutUnsatisfiableTransitions : 'p t  (** Removes all unsatisfiable transitions. *)
   | EliminateNonContributors : 'p t
@@ -22,7 +22,7 @@ val show : 'p t -> string
 val all_classical : Program.t t list
 (** Returns all available classical preprocessors. *)
 
-(* val all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list *)
+val all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list
 (** Returns all available probabilistic preprocessors. *)
 
 val all_generic : 'a t list
@@ -67,10 +67,10 @@ module MakeForClassicalProgramModules (CPM : ProgramTypes.ClassicalProgramModule
 end
 
 module StandardProgram : module type of MakeForClassicalProgramModules (ProgramModules)
-(*
+
 module ProbabilisticWithOverappr :
     module type of
       Make (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
         (struct
           let eq = ProbabilisticPrograms.Equalities.program_equalities
-        end) *)
+        end)

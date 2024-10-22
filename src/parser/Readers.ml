@@ -30,16 +30,14 @@ let read rule str = read_ rule (Lexing.from_string str)
 let read_program = read Parser.onlyProgram
 let read_program_simple = read Parser.onlyProgram_simple
 let read_formula = read Parser.onlyFormula
-
-(* let read_general_transitions = read Parser.general_transitions *)
+let read_general_transitions = read Parser.general_transitions
 let read_constraint = read Parser.onlyConstraints
-
-(* let read_probability_distribution = read Parser.onlyProbabilityDistribution *)
-(* let read_update_element = read Parser.onlyUpdateElement *)
+let read_probability_distribution = read Parser.onlyProbabilityDistribution
+let read_update_element = read Parser.onlyUpdateElement
 let read_atom = read Parser.onlyAtom
 let read_polynomial str = read Parser.onlyPolynomial str
 let read_bound = read Parser.onlyBound
-(* let read_prob str = read Parser.onlyProb str *)
+let read_prob str = read Parser.onlyProb str
 
 let read_input ?(termination = false) ?(rename = false) simple program_str =
   if simple then
@@ -72,5 +70,6 @@ let read_prog_goal_file ?(rename = false) path =
         else
           identity)
 
-(* let read_probabilistic_program = read_target_from_file_ Parser.onlyProbabilisticProgram *)
-(* let read_probabilistic_prog_goal_file = read_target_from_file_ Parser.probabilisticProgramAndGoal *)
+
+let read_probabilistic_program = read_target_from_file_ Parser.onlyProbabilisticProgram
+let read_probabilistic_prog_goal_file = read_target_from_file_ Parser.probabilisticProgramAndGoal

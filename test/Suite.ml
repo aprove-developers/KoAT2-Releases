@@ -20,12 +20,12 @@ let suite =
          OurRationalTest.tests;
          TWNTest.tests;
          SolvableTest.tests;
-         (* ProbabilityDistributionTest.tests;
-            UpdateElementTest.tests;
-            ExpectedLocalChangeBoundTest.tests;
-            ExpTimeBoundsTest.tests; *)
+         ProbabilityDistributionTest.tests;
+         UpdateElementTest.tests;
+         ExpectedLocalChangeBoundTest.tests;
+         ExpTimeBoundsTest.tests;
          MatrixTest.tests;
-         (* PlrfTest.tests; *)
+         PlrfTest.tests;
        ]
 
 

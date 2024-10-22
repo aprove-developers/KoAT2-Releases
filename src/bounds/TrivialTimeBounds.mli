@@ -3,7 +3,7 @@ open! OurBase
 module Classical (Bound : BoundType.Bound) : sig
   open ProgramModules
 
-  type appr = Approximation.MakeForClassicalAnalysis(Bound)(ProgramModules).t
+  type appr = Approximation.MakeWithDefaultTransition(Bound)(ProgramModules).t
 
   val compute : Program.t -> appr -> appr
   (** This function infers for all transitions which are not part of an scc a time bound of one.

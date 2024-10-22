@@ -8,7 +8,6 @@ module Make
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
     (T : TransitionApproximationType.ApproximableTransition with type program = PM.Program.t) : sig
-  (* type t = (T.t,Bound.t,PM.RV.t,T.comparator_witness,PM.RV.RVTuple_.comparator_witness) approximation_t *)
   type t = (T.t, B.t, PM.RV.t, T.comparator_witness, PM.RV.comparator_witness) approximation_t
 
   val empty : t
@@ -81,7 +80,7 @@ module Make
   (** Returns true iff. all size bounds of a given transition are bounded and not infinity. *)
 end
 
-module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) :
+module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
     module type of Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
 
 module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) :
@@ -107,16 +106,16 @@ module Probabilistic (BP : BoundPair.T) : sig
           (struct
             open ProbabilisticProgramModules
 
-               type program = Program.t
+            type program = Program.t
 
-               include GeneralTransition
+            include GeneralTransition
 
-               let id = gt_id
-               let all_from_program = Set.to_sequence % Program.gts
-             end)
+            let id = gt_id
+            let all_from_program = Set.to_sequence % Program.gts
+          end)
 
-     val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
-     val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t
+  val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
+  val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t
 
      type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
    end

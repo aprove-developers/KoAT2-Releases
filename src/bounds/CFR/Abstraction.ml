@@ -27,9 +27,9 @@ module type Abstraction = sig
 end
 
 module PropertyBasedAbstraction
-    (PM : ProgramTypes.ClassicalProgramModules)
+    (PM : ProgramTypes.ProgramModules)
     (A : GenericProgram_.Adapter
-           with type update_element = PM.UpdateElementNonRec.t
+           with type update_element = PM.UpdateElement.t
             and type transition = PM.Transition.t) : sig
   include Abstraction
 
@@ -97,11 +97,7 @@ end = struct
 
     let pr_c incoming_transition =
       let (label : TransitionLabel.t) = PM.Transition.label incoming_transition in
-      let update_approx, guard_approx =
-        (* PM.TransitionLabel.(TransitionLabelNonRec.update_map (to_non_rec label)) |> overapprox_update TODO NL Ask EM *)
-        ( PM.TransitionLabel.(TransitionLabelNonRec.update_map @@ to_non_rec label),
-          TransitionLabel.guard label )
-      in
+      let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
       Polyhedrons.update_guard am update_approx guard
       |> Polyhedrons.project_constraint am program_variables
@@ -110,11 +106,8 @@ end = struct
 
     let pr_cv incoming_transition =
       let label = PM.Transition.label incoming_transition in
-      let update_approx, guard_approx =
-        (* PM.TransitionLabel.(TransitionLabelNonRec.update_map (to_non_rec label)) |> overapprox_update TODO NL Ask EM *)
-        ( PM.TransitionLabel.(TransitionLabelNonRec.update_map @@ to_non_rec label),
-          TransitionLabel.guard label )
-      in
+      let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
+
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
       ApronInterface.Koat2Apron.constraint_to_polyh am guard
       |> Polyhedrons.project_polyh am program_variables
@@ -132,10 +125,7 @@ end = struct
                 ("PROPS", Guard.to_string ~pretty:true combined);
               ]);
           let label = PM.Transition.label transition in
-          let update_approx, update_guard =
-            (* PM.TransitionLabel.(TransitionLabelNonRec.update_map (to_non_rec label)) |> overapprox_update TODO NL Ask EM *)
-            ( PM.TransitionLabel.(TransitionLabelNonRec.update_map @@ to_non_rec label),
-              TransitionLabel.guard label )
+          let update_approx, update_guard = PM.TransitionLabel.update_map label |> overapprox_update
           and constr = PM.TransitionLabel.guard label in
           Constraint.Infix.(
             constr && update_guard

@@ -87,11 +87,14 @@ end
 
 include module type of Make (PolyRec.PolyRec)
 include ProgramTypes.ClassicalTransitionLabel with type t := t
+
+val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t
+
 module TransitionLabelNonRec = TransitionLabelNonRec_
 module UpdateElementNonRec = Polynomials.Polynomial
 
-val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t
 val overapprox_nonlinear_updates : t -> t
 val has_rec_calls : t -> bool
 val of_non_rec : TransitionLabelNonRec.t -> t
 val to_non_rec : t -> TransitionLabelNonRec.t
+val chain_guards : t -> t -> Guard.t
