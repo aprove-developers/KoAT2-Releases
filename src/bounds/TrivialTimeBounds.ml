@@ -29,17 +29,17 @@ module Classical (Bound : BoundType.Bound) = struct
   include Make (Bound) (ProgramModules)
 end
 
-module Probabilistic = struct
-  module TrivialTimeBoundsProbabilistic = Make (Bounds.Bound) (ProbabilisticProgramModules)
+module Probabilistic (BP : BoundPair.T) = struct
+  module TrivialTimeBoundsProbabilistic = Make (BP.ClassBound) (ProbabilisticProgramModules)
 
-  let compute program (apprs : Approximation.Probabilistic.apprs) =
-    let open Approximation.Probabilistic in
+  let compute program (apprs : Approximation.Probabilistic(BP).apprs) =
+    let open Approximation.Probabilistic (BP) in
     let trivial_transitions = TrivialTimeBoundsProbabilistic.all_trivial_transitions program in
 
     let class_appr =
       Set.fold
         ~f:(fun class_appr trivial_transition ->
-          ClassicalApproximation.add_timebound Bounds.Bound.one trivial_transition class_appr)
+          ClassicalApproximation.add_timebound BP.ClassBound.one trivial_transition class_appr)
         ~init:apprs.class_appr trivial_transitions
     in
 
@@ -50,7 +50,7 @@ module Probabilistic = struct
         |> Set.filter ~f:(fun gt -> Set.is_subset (GeneralTransition.transitions gt) ~of_:trivial_transitions)
       in
       Set.fold
-        ~f:(fun appr trivial_gt -> ExpApproximation.add_timebound Bounds.RationalBound.one trivial_gt appr)
+        ~f:(fun appr trivial_gt -> ExpApproximation.add_timebound BP.ProbBound.one trivial_gt appr)
         ~init:apprs.appr trivial_gts
     in
 

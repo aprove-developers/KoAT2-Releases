@@ -10,10 +10,10 @@ module Classical (Bound : BoundType.Bound) : sig
       Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
 end
 
-module Probabilistic : sig
+module Probabilistic (BP : BoundPair.T) : sig
   open ProbabilisticProgramModules
 
-  val compute : Program.t -> Approximation.Probabilistic.apprs -> Approximation.Probabilistic.apprs
+  val compute : Program.t -> Approximation.Probabilistic(BP).apprs -> Approximation.Probabilistic(BP).apprs
 end
 
 include module type of Classical (Bounds.Bound)

@@ -403,7 +403,7 @@ let find program =
   |> Sequence.filter_opt % Sequence.map ~f:Tuple2.second
 
 
-let compute_proof t bound program format =
+let compute_proof t bound_str program format =
   let module GP = GraphPrint.ProbabilisticGraphPrint in
   let non_incr_transs = GeneralTransitionSet.all_transitions t.non_increasing in
   let decreasing_trans = GeneralTransition.transitions t.decreasing in
@@ -415,9 +415,7 @@ let compute_proof t bound program format =
   let locations = TransitionSet.locations non_incr_transs |> Set.to_list in
   FormattedString.(
     mk_header_small (mk_str ("Plrf for transition " ^ GeneralTransition.to_string_pretty t.decreasing ^ ":"))
-    <> mk_paragraph
-         (mk_str "new bound:" <> mk_newline
-         <> mk_paragraph (mk_str (Bounds.RationalBound.to_string ~pretty:true bound)))
+    <> mk_paragraph (mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str bound_str))
     <> mk_str "PLRF:" <> mk_newline
     <> mk_paragraph
          (locations

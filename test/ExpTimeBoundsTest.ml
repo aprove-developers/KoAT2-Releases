@@ -2,7 +2,8 @@ open OUnit2
 open Koat2
 open! OurBase
 open Bounds
-open Approximation.Probabilistic
+open Approximation.Probabilistic (BoundPair.PAST)
+module ProbabilisticAnalysis = ProbabilisticAnalysis.Make (BoundPair.PAST)
 
 let default_conf = ProbabilisticAnalysis.default_configuration
 

@@ -1,7 +1,7 @@
 open! OurBase
 open ProbabilisticProgramModules
 open Bounds
-open Approximation.Probabilistic
+open Approximation.Probabilistic (BoundPair.PAST)
 
 let size_logger = Logging.(get ExpSize)
 
