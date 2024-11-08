@@ -16,31 +16,31 @@ type 'overappr_update_type label_without_backlink = {
 
 type 'a ptr = 'a Option.t ref
 
-type ('overappr_update_type, 'trans_label_cmp) transition_label_ = {
+type ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_label_ = {
   id : int;
-  gt : ('overappr_update_type, 'trans_label_cmp) general_transition_ ptr;
+  gt : ('overappr_update_type_gt, 'trans_label_cmp_gt) general_transition_ ptr;
   properties : 'overappr_update_type label_without_backlink;
 }
 
-and ('overappr_update_type, 'trans_label_cmp) transition_ =
-  Location.t * ('overappr_update_type, 'trans_label_cmp) transition_label_ * Location.t
+and ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_ =
+  Location.t * ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_label_ * Location.t
 
-and 'trans_label_cmp trans_comparator_ = 'trans_label_cmp TransitionComparator.comparator_witness
+and 'trans_label_cmp_gt trans_comparator_ = 'trans_label_cmp_gt TransitionComparator.comparator_witness
 
-and ('overappr_update_type, 'trans_label_cmp) general_transition_ = {
+and ('overappr_update_type_gt, 'trans_label_cmp_gt) general_transition_ = {
   gt_id : int;
   guard : Guard.t;
   invariant : Invariant.t;
   cost : Polynomial.t;
   transitions :
-    (('overappr_update_type, 'trans_label_cmp) transition_, 'trans_label_cmp trans_comparator_) Set.t;
+    (('overappr_update_type_gt, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_, 'trans_label_cmp_gt trans_comparator_) Set.t;
 }
 
 module LabelComparator (POverAppr : sig
   type t
 end) =
 Comparator.Make1 (struct
-  type 'trans_label_cmp t = (POverAppr.t, 'trans_label_cmp) transition_label_
+  type 'trans_label_cmp_gt t = (POverAppr.t, PolyRec.PolyRec.t, 'trans_label_cmp_gt) transition_label_
 
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
   let compare label1 label2 = Int.compare label1.id label2.id
@@ -50,8 +50,8 @@ module MakeTransitionTypes (POverAppr : sig
   type t
 end) =
 struct
-  type transition_label = (POverAppr.t, LabelComparator(POverAppr).comparator_witness) transition_label_
-  type general_transition = (POverAppr.t, LabelComparator(POverAppr).comparator_witness) general_transition_
+  type transition_label = (POverAppr.t, PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) transition_label_
+  type general_transition = (PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) general_transition_
 end
 
 module RecursiveClassicalUpdateTransitionTypes = MakeTransitionTypes (PolyRec.PolyRec)
@@ -150,6 +150,9 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
   (** Similar to [mk] but higher level*)
   let mk_2 properties = { id = Unique.unique (); gt = ref None; properties }
 
+  (* Care when using this function since it detroys cyclic dependency! *)
+  let mk_2_with_gt properties gt = let t = mk_2 properties in t.gt := Some gt; t
+
   module LabelComparator = LabelComparator (POverAppr)
 
   let comparator = LabelComparator.comparator
@@ -217,7 +220,7 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
 
 
   let to_string ue_to_string ue_to_string_pretty get_update get_guard ?(pretty = false)
-      (t : (POverAppr.t, comparator_witness) transition_label_) : string =
+      (t : t) : string =
     let guard =
       if Guard.is_true (get_guard t) then
         ""
@@ -558,30 +561,21 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   exception Rec_Vars of string
 
-  let to_non_rec t =
+  let to_non_rec t:TransitionLabelNonRec.t =
     if has_rec_calls t then
       raise (Rec_Vars ("Recursive: " ^ to_id_string t))
     else
       let overappr_nonprob_update = Map.map ~f:PolyRec.PolyRec.to_poly t.properties.overappr_nonprob_update in
-      TransitionLabelNonRec.mk_2
+      TransitionLabelNonRec.mk_2_with_gt
         {
           probability = t.properties.probability;
           overappr_guard = t.properties.overappr_guard;
           update = t.properties.update;
           overappr_nonprob_update;
         }
+      (gt t)
 
-
-  let of_non_rec t =
-    let overappr_nonprob_update = Map.map ~f:PolyRec.PolyRec.of_poly t.properties.overappr_nonprob_update in
-    TransitionLabelNonRec.mk_2
-      {
-        probability = t.properties.probability;
-        overappr_guard = t.properties.overappr_guard;
-        update = t.properties.update;
-        overappr_nonprob_update;
-      }
-
+  let of_non_rec t = (gt t).transitions |> Set.find_exn ~f:(fun (_,t',_) -> Int.equal t.id t'.id) |> Tuple3.second
 
   let chain_guards t1 t2 =
     let nondet_vars = Hashtbl.create ~size:3 (module Var) in
