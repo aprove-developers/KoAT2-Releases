@@ -8,7 +8,8 @@
 %token          EOF
 %token          OR
 %token          AND
-%token          ARROW WITH PROBDIV LBRACK RBRACK
+%token          LRARROW RLARROW WITH PROBDIV LBRACK RBRACK
+%token          BAR
 %token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token          COMMA COLON
 %token          INFINITY
@@ -141,9 +142,13 @@ probabilisticGoal:
   | LPAR GOAL ALMOSTSURETERMINATION RPAR
     { Goal.AlmostSureTermination }
 
+location:
+  | loc = ID
+    { Location.of_string loc }
+
 start:
-  | LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-    { Location.of_string start } ;
+  | LPAR STARTTERM LPAR FUNCTIONSYMBOLS loc = location RPAR RPAR
+    { loc } ;
 
 transitions:
   | LPAR RULES transition = list(transition) RPAR
@@ -176,7 +181,7 @@ cost:
     { ub }
   | MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
     { ub }
-  | ARROW
+  | LRARROW
     { Polynomial.one };
 
 transition_lhs:
@@ -317,6 +322,10 @@ variable:
   | v = ID
     { Var.of_string v } ;
 
+variableRec:
+  | start = location; LBRACK; result = variable; BAR; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR); RLARROW; LPAR targets = separated_nonempty_list(COMMA, polynomial) RPAR RBRACK;
+    { VarRec.mk_rec start result (List.map Var.of_string patterns) targets } ;
+
 our_float:
   | float_string = UFLOAT
     { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string } ;
@@ -340,6 +349,8 @@ polynomial:
     { Polynomial.pow (Polynomial.of_var v) (int_of_string c) } ;
 
 polynomialRec:
+  | v = variableRec
+    { PolyRec.of_varrec v }
   | v = variable
     { PolyRec.of_var v }
   | c = our_int

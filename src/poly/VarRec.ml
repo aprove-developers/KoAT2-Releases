@@ -1,4 +1,5 @@
 open! OurBase
+open Polynomials
 
 module Inner = struct
   type sort = Real | Int [@@deriving eq, ord, sexp]
@@ -7,7 +8,7 @@ module Inner = struct
     | Var of String.t
     | Helper of sort * int
     | Argument of int
-    | Recursion of Location.t * String.t * Polynomials.Polynomial.t
+    | Recursion of Location.t * Var.t * VarMapPoly.map_type
   [@@deriving eq, ord, sexp]
 
   let ( =~= ) = equal
@@ -35,24 +36,24 @@ module Inner = struct
       | Helper (Real, i) -> "TempReal" ^ Int.to_string i
       | Helper (Int, i) -> "TempInt" ^ Int.to_string i
       | Argument i -> "Arg" ^ Int.to_string i
-      | Recursion (loc, var, polynom) ->
-          "Rec" ^ Location.to_string loc ^ "_" ^ var ^ "_" ^ Polynomials.Polynomial.to_string polynom
+      | Recursion (loc, var, map) ->
+          Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
     else if pretty then
       function
       | Var str -> str
       | Helper (Real, i) -> "Temp_Real" ^ Util.natural_to_subscript i
       | Helper (Int, i) -> "Temp_Int" ^ Util.natural_to_subscript i
       | Argument i -> "X" ^ Util.natural_to_subscript i
-      | Recursion (loc, var, polynom) ->
-          "Rec" ^ Location.to_string loc ^ "_" ^ var ^ "_" ^ Polynomials.Polynomial.to_string polynom
+      | Recursion (loc, var, map) ->
+          Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
     else
       function
       | Var str -> str
       | Helper (Real, i) -> "Temp_Real_" ^ Int.to_string i
       | Helper (Int, i) -> "Temp_Int_" ^ Int.to_string i
       | Argument i -> "Arg_" ^ Int.to_string i
-      | Recursion (loc, var, polynom) ->
-          "Rec_" ^ Location.to_string loc ^ "_" ^ var ^ "_" ^ Polynomials.Polynomial.to_string polynom
+      | Recursion (loc, var, map) ->
+          Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
 
 
   let counter = ref 0
@@ -121,6 +122,24 @@ let vars var =
   match var with
   | Recursion _ -> VarSet.empty
   | x -> VarSet.singleton (to_var x)
+
+
+let mk_rec start result patterns target =
+  let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
+  let fill_up_update_arg_vars_up_to_num n update =
+    let missing_args =
+      Set.diff (VarSet.of_sequence @@ Sequence.take Var.args n) (VarSet.of_list @@ Map.keys update)
+    in
+    Set.fold ~f:(fun vmap v -> Map.add_exn vmap ~key:v ~data:(Polynomial.of_var v)) missing_args ~init:update
+  in
+  let update =
+    Sequence.of_list target
+    |> Sequence.map ~f:(Polynomial.rename map_to_arg_vars)
+    |> Sequence.zip Var.args
+    |> Map.of_sequence_exn (module Var)
+    |> fill_up_update_arg_vars_up_to_num (List.length patterns)
+  in
+  Recursion (start, result, update)
 
 
 include Comparator.Make (Inner)

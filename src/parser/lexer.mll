@@ -63,7 +63,8 @@ rule read =
   | '-'               { P.MINUS }
   | '^'               { P.POW }
   | "**"              { P.POW }
-  | "->"              { P.ARROW }
+  | "->"              { P.LRARROW }
+  | "<-"              { P.RLARROW }
   | "="               { P.EQUAL }
   | "!="              { P.UNEQUAL }
   | "<="              { P.LESSEQUAL }
@@ -73,6 +74,7 @@ rule read =
   | "&&"              { P.AND }
   | "/\\"             { P.AND }
   | "||"              { P.OR }
+  | "|"               { P.BAR }
   | ":|:"             { P.WITH }
   | ":+:"             { P.PROBDIV }
   | ":"               { P.COLON }

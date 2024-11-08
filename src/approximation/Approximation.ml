@@ -210,11 +210,11 @@ module Probabilistic (BP : BoundPair.T) = struct
           open Type_equal
           module E = ProbabilisticPrograms.Equalities
 
-             let trans_eq = sym E.trans_eq
-             let rvtuple__eq = sym E.rvtuple__eq
-             let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
-             let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
-           end)
-       in
-       M.coerce
-   end
+          let trans_eq = sym E.trans_eq
+          let rvtuple__eq = sym E.rvtuple__eq
+          let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
+          let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
+        end)
+    in
+    M.coerce
+end

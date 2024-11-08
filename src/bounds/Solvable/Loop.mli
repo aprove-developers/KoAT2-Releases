@@ -15,10 +15,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
   val to_string : t -> string
   val append : t -> t -> t
   val chain : t -> t
-
-  val eliminate_non_contributors :
-    ?relevant_vars:VarSet.t option -> t -> t
-
+  val eliminate_non_contributors : ?relevant_vars:VarSet.t option -> t -> t
   val compute_bound_n_iterations : t -> Var.t -> int -> Bound.t
   val substition_unsolvable : t -> Polynomial.t -> Var.t -> t
   val commuting : t -> t -> bool

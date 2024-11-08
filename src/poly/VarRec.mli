@@ -13,7 +13,7 @@ type t =
       (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort * int
   | Argument of int
-  | Recursion of Location.t * String.t * Polynomials.Polynomial.t
+  | Recursion of Location.t * Var.t * VarMapPoly.map_type
 
 include Comparator.S with type t := t
 
@@ -32,7 +32,7 @@ val ( =~= ) : t -> t -> bool
 val of_string : string -> t
 (** Creates a variable from a string. *)
 
-val to_string : ?pretty:bool -> ?to_file:bool -> t -> Batteries.String.t
+val to_string : ?pretty:bool -> ?to_file:bool -> t -> String.t
 (** Returns a string representing the variable([Temp_Int_] for integer variables, [Temp_Real_] for real variables and [Arg_ ] for argument variables). Parameter {i to_file} is used to get a representation with less special characters. *)
 
 val args : t Sequence.t
@@ -61,3 +61,4 @@ val rename : RenameMap.t -> t -> t
 val vars : t -> VarSet.t
 val of_var : Var.t -> t
 val to_var : t -> Var.t
+val mk_rec : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t

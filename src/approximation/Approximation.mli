@@ -117,5 +117,5 @@ module Probabilistic (BP : BoundPair.T) : sig
   val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
   val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t
 
-     type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
-   end
+  type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
+end

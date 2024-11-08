@@ -31,6 +31,7 @@ end
 
 module Probabilistic (BP : BoundPair.T) = struct
   module TrivialTimeBoundsProbabilistic = Make (BP.ClassBound) (ProbabilisticProgramModules)
+
   let compute program (apprs : Approximation.Probabilistic(BP).apprs) =
     let open Approximation.Probabilistic (BP) in
     let trivial_transitions = TrivialTimeBoundsProbabilistic.all_trivial_transitions program in
