@@ -116,7 +116,17 @@ let of_var = function
   | Var.Argument i -> Argument i
 
 
-let rename m v = of_var (RenameMap.find (to_var v) m ~default:(to_var v))
+let rename m v =
+  let f v = RenameMap.find v m ~default:v in
+  match v with
+  | Recursion (l, v, map) ->
+      Recursion
+        ( l,
+          f v,
+          Map.map map ~f:(Polynomial.rename m) |> VarMapPoly.map_keys_exn ~f:(VarIndeterminate.rename m) )
+  | Var v -> of_var @@ f (Var.of_string v)
+  | v -> v
+
 
 let vars var =
   match var with
