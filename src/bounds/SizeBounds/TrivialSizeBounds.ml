@@ -25,7 +25,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         lsb
       else
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
-        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.sum
+        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.max_seq
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
