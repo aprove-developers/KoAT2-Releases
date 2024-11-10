@@ -96,20 +96,30 @@ struct
 
   let tmp_vars program = Set.diff (vars program) (input_vars program)
 
-  let from_graph start graph =
+  let from_graph start ?(return_locations = None) graph =
     try
       if G.is_empty graph || List.is_empty (G.pred_e graph start) then
-        { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T) }
+        {
+          start;
+          graph;
+          return_locations;
+          pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
+        }
       else
         raise (Failure "Transition leading back to the initial location.")
     with
     | Invalid_argument _ ->
         (* G.pred_e throws it if start location does not occur on left side.*)
         let graph = G.empty in
-        { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T) }
+        {
+          start;
+          graph;
+          return_locations;
+          pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
+        }
 
 
-  let from_sequence start = from_graph start % G.mk
+  let from_sequence start ?(return_locations = None) = from_graph start ~return_locations % G.mk
 
   let compute_pre program (l, t, l') =
     let is_satisfiable f =
@@ -266,7 +276,7 @@ end
 open GenericProgram_
 include ClassicalProgram
 
-let from_com_transitions ?(termination = false) com_transitions start =
+let from_com_transitions ?(termination = false) ?(return_locations = None) com_transitions start =
   let all_trans = List.join com_transitions in
   let start_locs = Set.of_list (module Location) @@ List.map ~f:Transition_.src all_trans in
 
@@ -328,7 +338,7 @@ let from_com_transitions ?(termination = false) com_transitions start =
         in
         List.map ~f:(Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
       in
-      from_sequence start (Sequence.of_list transs)
+      from_sequence start ~return_locations (Sequence.of_list transs)
 
 
 let rename program =
@@ -349,9 +359,11 @@ let rename program =
     |> Location.of_string
   in
   let new_start = name program.start in
+  let new_return_locations = Option.map ~f:(List.map ~f:name) program.return_locations in
   {
     graph = TransitionGraph_.map_vertex name program.graph;
     start = new_start;
+    return_locations = new_return_locations;
     pre_cache =
       Atomically.create
       @@ Hashtbl.create ~size:(TransitionGraph_.nb_vertex program.graph) (module Transition_);

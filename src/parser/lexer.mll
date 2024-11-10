@@ -47,6 +47,7 @@ rule read =
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
   | "VAR"             { P.VAR }
+  | "RETURNLOCATIONS" { P.RETURNLOCATIONS }
   | "inf"             { P.INFINITY }
   | "log"             { P.LOG }
   | int               { P.UINT (Lexing.lexeme lexbuf) }

@@ -13,6 +13,7 @@ type (!'trans_label, !'trans_label_cmp_wit) pre_cache =
 type (!'trans_label, !'trans_label_cmp_wit, !'graph) t = {
   start : Location.t;
   graph : 'graph;
+  return_locations : Location.t list Option.t;
   pre_cache : ('trans_label, 'trans_label_cmp_wit) pre_cache Atomically.t;
 }
 

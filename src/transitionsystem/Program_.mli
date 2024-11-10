@@ -18,7 +18,7 @@ module Make
        and type transition_label_comparator_witness = TL.comparator_witness
        and type transition_graph = G.t
 
-  val from_sequence : Location.t -> T.t Sequence.t -> t
+  val from_sequence : Location.t -> ?return_locations:Location.t list Option.t -> T.t Sequence.t -> t
   val remove_transition : t -> transition -> t
   val map_graph : (transition_graph -> transition_graph) -> t -> t
 
@@ -37,14 +37,19 @@ module ClassicalProgram : sig
        and type transition_graph = TransitionGraph_.t
 
   val map_graph : (transition_graph -> transition_graph) -> t -> t
-  val from_sequence : Location.t -> transition Sequence.t -> t
-  val from_graph : Location.t -> transition_graph -> t
+  val from_sequence : Location.t -> ?return_locations:Location.t list Option.t -> transition Sequence.t -> t
+  val from_graph : Location.t -> ?return_locations:Location.t list Option.t -> transition_graph -> t
   val remove_transition : t -> transition -> t
 end
 
 include module type of ClassicalProgram
 
-val from_com_transitions : ?termination:bool -> Transition_.t list list -> Location.t -> t
+val from_com_transitions :
+  ?termination:bool ->
+  ?return_locations:Location.t list Option.t ->
+  Transition_.t list list ->
+  Location.t ->
+  t
 (** Creates a program from a list of transitions and a (start) location.
      A list of k transitions makes up a Com_k transition
      Since KoAT currently does not support recursion we try to eliminate it.

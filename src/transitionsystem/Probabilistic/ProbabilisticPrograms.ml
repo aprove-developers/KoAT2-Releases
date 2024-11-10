@@ -23,7 +23,9 @@ type ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) tran
 }
 
 and ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_ =
-  Location.t * ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_label_ * Location.t
+  Location.t
+  * ('overappr_update_type, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_label_
+  * Location.t
 
 and 'trans_label_cmp_gt trans_comparator_ = 'trans_label_cmp_gt TransitionComparator.comparator_witness
 
@@ -33,7 +35,9 @@ and ('overappr_update_type_gt, 'trans_label_cmp_gt) general_transition_ = {
   invariant : Invariant.t;
   cost : Polynomial.t;
   transitions :
-    (('overappr_update_type_gt, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_, 'trans_label_cmp_gt trans_comparator_) Set.t;
+    ( ('overappr_update_type_gt, 'overappr_update_type_gt, 'trans_label_cmp_gt) transition_,
+      'trans_label_cmp_gt trans_comparator_ )
+    Set.t;
 }
 
 module LabelComparator (POverAppr : sig
@@ -50,8 +54,11 @@ module MakeTransitionTypes (POverAppr : sig
   type t
 end) =
 struct
-  type transition_label = (POverAppr.t, PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) transition_label_
-  type general_transition = (PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) general_transition_
+  type transition_label =
+    (POverAppr.t, PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) transition_label_
+
+  type general_transition =
+    (PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) general_transition_
 end
 
 module RecursiveClassicalUpdateTransitionTypes = MakeTransitionTypes (PolyRec.PolyRec)
@@ -151,7 +158,11 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
   let mk_2 properties = { id = Unique.unique (); gt = ref None; properties }
 
   (* Care when using this function since it detroys cyclic dependency! *)
-  let mk_2_with_gt properties gt = let t = mk_2 properties in t.gt := Some gt; t
+  let mk_2_with_gt properties gt =
+    let t = mk_2 properties in
+    t.gt := Some gt;
+    t
+
 
   module LabelComparator = LabelComparator (POverAppr)
 
@@ -219,8 +230,7 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
       |> fun (xs, ys) -> "(" ^ String.concat ~sep:"," xs ^ ") -> (" ^ String.concat ~sep:"," ys ^ ")"
 
 
-  let to_string ue_to_string ue_to_string_pretty get_update get_guard ?(pretty = false)
-      (t : t) : string =
+  let to_string ue_to_string ue_to_string_pretty get_update get_guard ?(pretty = false) (t : t) : string =
     let guard =
       if Guard.is_true (get_guard t) then
         ""
@@ -561,7 +571,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   exception Rec_Vars of string
 
-  let to_non_rec t:TransitionLabelNonRec.t =
+  let to_non_rec t : TransitionLabelNonRec.t =
     if has_rec_calls t then
       raise (Rec_Vars ("Recursive: " ^ to_id_string t))
     else
@@ -573,9 +583,12 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
           update = t.properties.update;
           overappr_nonprob_update;
         }
-      (gt t)
+        (gt t)
 
-  let of_non_rec t = (gt t).transitions |> Set.find_exn ~f:(fun (_,t',_) -> Int.equal t.id t'.id) |> Tuple3.second
+
+  let of_non_rec t =
+    (gt t).transitions |> Set.find_exn ~f:(fun (_, t', _) -> Int.equal t.id t'.id) |> Tuple3.second
+
 
   let chain_guards t1 t2 =
     let nondet_vars = Hashtbl.create ~size:3 (module Var) in

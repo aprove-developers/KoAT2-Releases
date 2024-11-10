@@ -10,7 +10,7 @@
 %token          AND
 %token          LRARROW RLARROW WITH PROBDIV LBRACK RBRACK
 %token          BAR
-%token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
+%token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR RETURNLOCATIONS
 %token          COMMA COLON
 %token          INFINITY
 %token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE ALMOSTSURETERMINATION
@@ -96,11 +96,23 @@ programAndGoal:
     start = start
     variables = variables
     transitions = transitions; EOF
+    { Program.from_com_transitions (transitions variables) start, g }
+  | g = goal
+    start = start
+    return_locations = return_locations
+    variables = variables
+    transitions = transitions; EOF
     { Program.from_com_transitions (transitions variables) start, g } ;
 
 programAndGoalTermination:
   | g = goal
     start = start
+    variables = variables
+    transitions = transitions; EOF
+    { Program.from_com_transitions ~termination:true (transitions variables) start, g }
+  | g = goal
+    start = start
+    return_locations = return_locations
     variables = variables
     transitions = transitions; EOF
     { Program.from_com_transitions ~termination:true (transitions variables) start, g } ;
@@ -149,6 +161,10 @@ location:
 start:
   | LPAR STARTTERM LPAR FUNCTIONSYMBOLS loc = location RPAR RPAR
     { loc } ;
+
+return_locations:
+  | LPAR RETURNLOCATIONS LPAR FUNCTIONSYMBOLS locations = list(location) RPAR RPAR
+  { locations };
 
 transitions:
   | LPAR RULES transition = list(transition) RPAR
