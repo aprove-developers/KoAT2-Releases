@@ -437,7 +437,7 @@ module Classical (Bound : BoundType.Bound) = struct
     CFR.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
     let program, appr =
-      program |> Program.sccs_locs
+      program |> Program.sccs_locs_dependency_graph
       |> List.fold_left
            ~f:(fun (program, appr) scc_locs ->
              Logger.log logger Logger.INFO (fun () ->

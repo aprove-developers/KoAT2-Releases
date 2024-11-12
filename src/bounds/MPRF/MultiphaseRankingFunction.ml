@@ -184,7 +184,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       ~compute_proof:
         (Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> compute_proof t (Some bound) program)
       program
-      (fun (_, _, l') -> Bound.of_intpoly @@ evaluated_rank_for_entry_loc l')
+      (fun ((_, _, l') as t') ->
+        if
+          OurBase.Set.exists
+            ~f:(fun v -> Location.equal (VarRec.return_loc v) (Transition.src t.decreasing))
+            (Transition.rec_vars t')
+        then
+          Bound.one
+        else
+          Bound.of_intpoly @@ evaluated_rank_for_entry_loc l')
 
 
   (* We do not minimise the coefficients for now *)
@@ -305,7 +313,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (* use all three functions above combined*)
   let transition_constraint_ cache (depth, measure, constraint_type, (l, (t : TransitionLabel.t), l')) :
       Formula.t =
-    let t_non_rec = TransitionLabel.to_non_rec t in
+    let t_non_rec = TransitionLabel.overapprox_rec_updates t in
     let res = ref Formula.mk_true in
     for i = 1 to depth - 1 do
       res :=
@@ -531,25 +539,38 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let find_scc measure program is_time_bounded unbounded_vars scc depth make_decreasing =
     let cache = new_cache depth in
-    let mprf_problem =
-      {
-        program;
-        measure;
-        make_non_increasing = Base.Set.to_array scc;
-        make_decreasing;
-        unbounded_vars;
-        find_depth = depth;
-        is_time_bounded;
-      }
+    let scc =
+      OurBase.Set.filter
+        ~f:(fun t ->
+          not
+          @@ OurBase.Set.exists
+               ~f:(fun v -> Location.equal (VarRec.return_loc v) (Transition.src make_decreasing))
+               (Transition.rec_vars t))
+        scc
     in
-    let execute () =
-      compute_scc cache program mprf_problem;
-      !(cache.rank_func)
-    in
-    Logger.with_log logger Logger.DEBUG
-      (fun () -> ("find_scc", [ ("measure", show_measure measure); ("scc", TransitionSet.to_id_string scc) ]))
-      ~result:(Util.enum_to_string to_string % Option.enum)
-      execute
+    if OurBase.Set.is_empty scc then
+      None
+    else
+      let mprf_problem =
+        {
+          program;
+          measure;
+          make_non_increasing = Base.Set.to_array scc;
+          make_decreasing;
+          unbounded_vars;
+          find_depth = depth;
+          is_time_bounded;
+        }
+      in
+      let execute () =
+        compute_scc cache program mprf_problem;
+        !(cache.rank_func)
+      in
+      Logger.with_log logger Logger.DEBUG
+        (fun () ->
+          ("find_scc", [ ("measure", show_measure measure); ("scc", TransitionSet.to_id_string scc) ]))
+        ~result:(Util.enum_to_string to_string % Option.enum)
+        execute
 
 
   let find measure program depth =

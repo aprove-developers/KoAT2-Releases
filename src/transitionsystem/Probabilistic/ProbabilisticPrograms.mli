@@ -183,7 +183,7 @@ module ProbabilisticTransitionGraphNonProbOverappr :
 
 module ProbabilisticProgramNonProbOverappr : sig
   include
-    ProgramTypes.Program
+    ProgramTypes.ClassicProgram
       with type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
        and type transition_label_comparator_witness =
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness

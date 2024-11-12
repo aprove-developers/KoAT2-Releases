@@ -1,4 +1,4 @@
-# Jump to f where B is set to 42 -> Size of B is A*B. This size bound is important for the loop at l2.
+# Jump to f without changing B -> Size of B is A*B. So, in contrast to `rec_size_02.koat`, we add the value of B A times.
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
 (RETURNLOCATIONS (FUNCTIONSYMBOLS f))

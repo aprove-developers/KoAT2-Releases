@@ -2,6 +2,7 @@ open! OurBase
 (** Modules used to infer size-bounds for trivial components. *)
 
 open Bounds
+open PolyRec
 
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'.*)
@@ -46,7 +47,32 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let incoming_bound_lifted_update program get_sizebound upd t v =
     let pre_transitions = Set.to_sequence (Program.pre program t) in
-    incoming_bound pre_transitions get_sizebound (Bound.of_poly upd) t v
+    incoming_bound pre_transitions get_sizebound upd t v
+
+
+  let subRecSize program get_sizebound rec_v v =
+    let open VarRec in
+    match rec_v with
+    | Recursion (loc, var, map) ->
+        let transitions_ending_return_locations =
+          Set.diff (Program.reachable_locations program loc) (Program.return_locations program)
+          |> Set.to_list
+          |> List.map ~f:(Program.ending_in_loc program)
+          |> List.map ~f:Set.to_list |> List.concat |> TransitionSet.of_list |> Set.to_list
+        in
+        let lsb_return =
+          Bound.max_seq
+            (Sequence.of_list @@ List.map ~f:(fun t -> get_sizebound t v) transitions_ending_return_locations)
+        in
+        let lsb_jump =
+          if Set.mem (Program.return_locations program) loc then
+            Bound.of_poly @@ Map.find_exn map var
+          else
+            Bound.zero
+        in
+        Bound.max lsb_return lsb_jump
+    | Var x -> Bound.of_var (Var x)
+    | _ -> Bound.infinity
 
 
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
@@ -58,13 +84,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         if Program.is_initial program t then
           let res_from_lsb = lsb_as_bound in
           let res_from_update =
-            let tlabel = TransitionLabel.to_non_rec (Transition.label t) in
-            let+ update = TransitionLabel.TransitionLabelNonRec.update tlabel v in
-            if
-              Set.is_subset (Polynomials.Polynomial.vars update)
-                ~of_:(TransitionLabel.TransitionLabelNonRec.input_vars tlabel)
-            then
-              Bound.of_poly update
+            let+ update = TransitionLabel.update (Transition.label t) v in
+            if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t)) then
+              PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+                ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
+                update
             else
               Bound.infinity
           in
@@ -74,13 +98,14 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
           in
           let res_from_update =
-            let tlabel = TransitionLabel.to_non_rec (Transition.label t) in
-            let+ update = TransitionLabel.TransitionLabelNonRec.update tlabel v in
-            if
-              Set.is_subset (Polynomials.Polynomial.vars update)
-                ~of_:(TransitionLabel.TransitionLabelNonRec.input_vars tlabel)
-            then
-              incoming_bound_lifted_update program get_sizebound update t v
+            let+ update = TransitionLabel.update (Transition.label t) v in
+            if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t)) then
+              let lsb =
+                PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+                  ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
+                  update
+              in
+              incoming_bound_lifted_update program get_sizebound lsb t v
             else
               Bound.infinity
           in

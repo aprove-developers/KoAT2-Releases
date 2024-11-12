@@ -4,7 +4,30 @@ open! OurBase
 open Constraints
 open Polynomials
 
-module Make (M : ProgramTypes.ProgramModules) = struct
+module type Adapter = sig
+  type transition
+
+  val vars_with_rec_calls : transition -> VarSet.t
+end
+
+module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
+  open M
+
+  type transition = Transition.t
+
+  let vars_with_rec_calls (_, t, _) =
+    TransitionLabel.input_vars t
+    |> Set.filter ~f:(fun x ->
+           TransitionLabel.update t x |? PolyRec.PolyRec.of_var x |> PolyRec.PolyRec.has_recvars)
+end
+
+module DefaultAdapter = struct
+  type transition
+
+  let vars_with_rec_calls t = VarSet.empty
+end
+
+module Make (M : ProgramTypes.ProgramModules) (A : Adapter with type transition := M.Transition.t) = struct
   open M
 
   let depends var label =
@@ -59,7 +82,9 @@ module Make (M : ProgramTypes.ProgramModules) = struct
       |> List.map ~f:(Constraint.vars % TransitionLabel.guard % Transition.label)
       |> VarSet.union_list
     in
-    compute_contributors_ transitionset vars_guard (Set.diff all_vars vars_guard)
+    let vars_with_rec = List.map ~f:A.vars_with_rec_calls (Set.to_list transitionset) |> VarSet.union_list in
+    let vars = Set.union vars_with_rec vars_guard in
+    compute_contributors_ transitionset vars (Set.diff all_vars vars)
 
 
   let eliminate_ program = compute_contributors_ (Program.transitions program)
@@ -90,7 +115,10 @@ module Make (M : ProgramTypes.ProgramModules) = struct
         ~f:(fun xs (l, t, l') -> Set.union (Polynomial.vars (TransitionLabel.cost t)) xs)
         (Program.transitions program) ~init:VarSet.empty
     in
-    let init_contr = Set.union vars_guard vars_cost in
+    let vars_with_rec =
+      List.map ~f:A.vars_with_rec_calls (Set.to_list @@ Program.transitions program) |> VarSet.union_list
+    in
+    let init_contr = VarSet.union_list [ vars_with_rec; vars_guard; vars_cost ] in
     Logger.(
       log logger INFO (fun () ->
           ( "EliminateNonContributors",
@@ -115,4 +143,4 @@ module Make (M : ProgramTypes.ProgramModules) = struct
       MaybeChanged.changed program_
 end
 
-include Make (ProgramModules)
+include Make (ProgramModules) (ClassicAdapter (ProgramModules))

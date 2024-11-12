@@ -569,6 +569,13 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   let has_rec_calls t = Map.exists (update_map t) ~f:PolyRec.PolyRec.has_recvars
 
+  let rec_vars t =
+    Map.to_alist (update_map t)
+    |> List.map ~f:(PolyRec.PolyRec.rec_vars % Tuple2.second)
+    |> List.concat
+    |> Set.of_list (module VarRec)
+
+
   exception Rec_Vars of string
 
   let to_non_rec t : TransitionLabelNonRec.t =
@@ -584,6 +591,24 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
           overappr_nonprob_update;
         }
         (gt t)
+
+
+  let overapprox_rec_updates (t : t) : TransitionLabelNonRec.t =
+    let overappr_nonprob_update =
+      Map.map
+        ~f:
+          PolyRec.(
+            PolyRec.to_poly % PolyRec.substitute_varrec_f (const @@ PolyRec.of_var (Var.fresh_id Var.Int ())))
+        t.properties.overappr_nonprob_update
+    in
+    TransitionLabelNonRec.mk_2_with_gt
+      {
+        probability = t.properties.probability;
+        overappr_guard = t.properties.overappr_guard;
+        update = t.properties.update;
+        overappr_nonprob_update;
+      }
+      (gt t)
 
 
   let of_non_rec t =
@@ -784,6 +809,7 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
   let has_rec_calls = GenericClassical.has_rec_calls
+  let rec_vars = GenericClassical.rec_vars
 end
 
 module GeneralTransition = struct
@@ -1134,9 +1160,26 @@ module ProbabilisticTransitionGraph = struct
     |> GeneralTransitionSet.of_sequence
 end
 
+module ProbabilisticDependencyGraphAdapter = struct
+  type transition_label = ProbabilisticTransitionLabel.t
+  type transition_graph = ProbabilisticTransitionGraph.t
+
+  let mk_from_graph graph =
+    let open DependencyGraph in
+    ProbabilisticTransitionGraph.fold_edges_e
+      (fun (l, t, l') g -> DependencyGraph.add_edge g l l')
+      graph DependencyGraph.empty
+end
+
 module ProbabilisticProgram = struct
+  module PreAdapter =
+    PreAdapter.PreAdapterNonRec (ProbabilisticTransitionLabel) (ProbabilisticTransition)
+      (ProbabilisticTransitionGraph)
+
   include
     Program_.Make (ProbabilisticTransitionLabel) (ProbabilisticTransition) (ProbabilisticTransitionGraph)
+      (PreAdapter)
+      (ProbabilisticDependencyGraphAdapter)
 
   let pre_gt t gt =
     (* All transitions in a gt have the same guard and hence the same pre transitions *)
@@ -1245,13 +1288,24 @@ module ProbabilisticTransitionGraphNonProbOverappr = struct
 end
 
 module ProbabilisticProgramNonProbOverappr = struct
+  module PreAdapter =
+    PreAdapter.PreAdapterNonRec
+      (ProbabilisticTransitionLabelNonProbOverappr)
+      (ProbabilisticTransitionNonProbOverappr)
+      (ProbabilisticTransitionGraphNonProbOverappr)
+
   include
     Program_.Make (ProbabilisticTransitionLabelNonProbOverappr) (ProbabilisticTransitionNonProbOverappr)
       (ProbabilisticTransitionGraphNonProbOverappr)
+      (PreAdapter)
+      (ProbabilisticDependencyGraphAdapter)
 
   let add_invariant = ProbabilisticProgram.add_invariant
   let simplify_all_guards = ProbabilisticProgram.simplify_all_guards
   let remove_unsatisfiable_transitions = ProbabilisticProgram.remove_unsatisfiable_transitions
+  let pre_without_rec = pre
+  let entry_transitions_without_rec = entry_transitions
+  let entry_transitions_without_rec_with_logger = entry_transitions_with_logger
 end
 
 module GRV = struct

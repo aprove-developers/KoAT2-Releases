@@ -1,6 +1,5 @@
 open! OurBase
-open Constraints
-open Formulas
+open PreAdapter
 
 exception RecursionNotSupported
 
@@ -11,30 +10,31 @@ module Make
             and type transition_label_comparator_witness = TL.comparator_witness)
     (G : ProgramTypes.TransitionGraph
            with type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness) =
+            and type transition_label_comparator_witness = TL.comparator_witness)
+    (P : ProgramTypes.PreAdapter
+           with type transition_label = TL.t
+            and type transition_label_comparator_witness = TL.comparator_witness
+            and type transition = Location.t * TL.t * Location.t
+            and type transition_comparator_witness = T.comparator_witness
+            and type transition_graph = G.t)
+    (A : DependencyGraphAdapter.Adapter with type transition_label = TL.t and type transition_graph = G.t) =
 struct
-  type transition_label = TL.t
-  type transition_label_comparator_witness = TL.comparator_witness
-  type transition = Location.t * TL.t * Location.t
-  type transition_comparator_witness = T.comparator_witness
-  type transition_set = (transition, transition_comparator_witness) Set.t
-  type transition_graph = G.t
-
   module TransitionSet = Transition_.TransitionSetOver (T)
   open GenericProgram_
-
-  type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
+  include P
 
   let start program = program.start
+  let return_locations program = program.return_locations
   let graph g = g.graph
+  let dependency_graph g = g.dependency_graph
   let transitions_from_location program loc = G.succ_e program.graph loc |> TransitionSet.of_list
+  let reachable_locations program = G.reachable_locations program.graph
 
   let equal equal_graph (program1 : t) (program2 : t) =
     equal_graph program1.graph program2.graph && Location.equal program1.start program2.start
 
 
   let equivalent : t -> t -> bool = equal G.equivalent
-  let with_pre_cache program = Atomically.run_atomically program.pre_cache
   let map_pre_cache program = Atomically.map_atomically program.pre_cache
 
   let invalidate_pre_cache_for_transs invalidate_transs program =
@@ -96,13 +96,15 @@ struct
 
   let tmp_vars program = Set.diff (vars program) (input_vars program)
 
-  let from_graph start ?(return_locations = None) graph =
+  let from_graph start ?(return_locations = LocationSet.empty) ?(rec_locations = LocationSet.empty) graph =
     try
       if G.is_empty graph || List.is_empty (G.pred_e graph start) then
+        let graph = G.add_locations (Set.to_sequence rec_locations) graph in
         {
           start;
           graph;
           return_locations;
+          dependency_graph = A.mk_from_graph graph;
           pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
         }
       else
@@ -115,41 +117,13 @@ struct
           start;
           graph;
           return_locations;
+          dependency_graph = A.mk_from_graph graph;
           pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
         }
 
 
-  let from_sequence start ?(return_locations = None) = from_graph start ~return_locations % G.mk
-
-  let compute_pre program (l, t, l') =
-    let is_satisfiable f =
-      try SMT.Z3Solver.satisfiable f with
-      | SMT.SMTFailure _ ->
-          true (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
-    in
-    l
-    |> G.pred_e (graph program)
-    |> Sequence.of_list
-    |> Sequence.filter ~f:(fun (_, t', _) ->
-           TL.chain_guards t' t
-           |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*))
-
-
-  let pre_lazy program trans =
-    let res = with_pre_cache program @@ fun pre_cache -> Hashtbl.find pre_cache trans in
-    match res with
-    | Some tset -> Set.to_sequence tset
-    | None -> compute_pre program trans
-
-
-  let pre program trans =
-    with_pre_cache program @@ fun pre_cache ->
-    match Hashtbl.find pre_cache trans with
-    | Some tset -> tset
-    | None ->
-        let tset = Set.of_sequence (module T) (compute_pre program trans) in
-        Hashtbl.add_exn pre_cache ~key:trans ~data:tset;
-        tset
+  let from_sequence start ?(return_locations = LocationSet.empty) ?(rec_locations = LocationSet.empty) =
+    from_graph start ~return_locations ~rec_locations % G.mk
 
 
   let succ program (l, t, l') =
@@ -159,6 +133,11 @@ struct
 
 
   let sccs_locs program = G.sccs_locs program.graph |> List.rev
+
+  let sccs_locs_dependency_graph program =
+    DependencyGraph.DependencyGraph.sccs_locs program.dependency_graph |> List.rev
+
+
   let scc_transitions_from_locs program scc_locs = G.loc_transitions program.graph (Set.to_list scc_locs)
 
   let scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs =
@@ -166,9 +145,12 @@ struct
     let in_and_out =
       Set.to_list scc_locs
       |> List.map ~f:(fun loc ->
-             let outgoing = G.succ_e program.graph loc in
-             let incoming = G.pred_e program.graph loc in
-             Set.union (TransitionSet.of_list outgoing) (TransitionSet.of_list incoming))
+             if Set.mem (G.locations program.graph) loc then
+               let outgoing = G.succ_e program.graph loc in
+               let incoming = G.pred_e program.graph loc in
+               Set.union (TransitionSet.of_list outgoing) (TransitionSet.of_list incoming)
+             else
+               TransitionSet.empty)
       |> TransitionSet.union_list
     in
     Set.union scc_transitions in_and_out
@@ -221,23 +203,6 @@ struct
   let to_string = FormattedString.render_string % to_formatted_string
   let to_simple_string program = G.fold_edges_e (fun t str -> str ^ ", " ^ T.to_string t) program.graph ""
 
-  let entry_transitions program transitions =
-    let transitions_set = TransitionSet.of_list transitions in
-    let all_possible_pre_transitions = transitions |> List.map ~f:(pre program) |> TransitionSet.union_list in
-    Set.diff all_possible_pre_transitions transitions_set |> Set.to_list
-
-
-  (** All entry transitions of the given transitions.
-      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  let entry_transitions_with_logger logger (program : t) (transitions : T.t list) : T.t List.t =
-    entry_transitions program transitions
-    |> tap (fun transitions ->
-           Logger.log logger Logger.DEBUG (fun () ->
-               ( "entry_transitions",
-                 [ ("result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string) ]
-               )))
-
-
   (** All outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately after one of the transitions, but are not themselves part of the given transitions. *)
   let outgoing_transitions logger (program : t) (rank_transitions : T.t list) : T.t List.t =
@@ -251,16 +216,26 @@ struct
                )))
 
 
+  let ending_in_loc program l = G.pred_e program.graph l |> TransitionSet.of_list
   let remove_non_contributors vset = map_labels (TL.remove_non_contributors vset)
 
   module InternalTest = struct
-    let get_pre_cache program = with_pre_cache program @@ fun pre_cache -> Hashtbl.copy pre_cache
+    let get_pre_cache program =
+      Atomically.run_atomically program.pre_cache @@ fun pre_cache -> Hashtbl.copy pre_cache
+
+
     let compute_pre = compute_pre
   end
 end
 
 module ClassicalProgram = struct
-  include Make (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_)) (TransitionGraph_)
+  module PreAdapterNonRec =
+    PreAdapterNonRec (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_)) (TransitionGraph_)
+
+  include
+    Make (TransitionLabel_) (Transition_.MakeClassical (TransitionLabel_)) (TransitionGraph_) (PreAdapter)
+      (DependencyGraphAdapter.ClassicAdapter)
+
   module Transition = Transition_.MakeClassical (TransitionLabel_)
   module TransitionGraph = TransitionGraph_
 
@@ -271,12 +246,16 @@ module ClassicalProgram = struct
 
 
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
+  let pre_without_rec = PreAdapterNonRec.pre
+  let entry_transitions_without_rec = PreAdapterNonRec.entry_transitions
+  let entry_transitions_without_rec_with_logger = PreAdapterNonRec.entry_transitions_with_logger
 end
 
 open GenericProgram_
 include ClassicalProgram
 
-let from_com_transitions ?(termination = false) ?(return_locations = None) com_transitions start =
+let from_com_transitions ?(termination = false) ?(return_locations = LocationSet.empty) com_transitions start
+    =
   let all_trans = List.join com_transitions in
   let start_locs = Set.of_list (module Location) @@ List.map ~f:Transition_.src all_trans in
 
@@ -338,7 +317,11 @@ let from_com_transitions ?(termination = false) ?(return_locations = None) com_t
         in
         List.map ~f:(Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
       in
-      from_sequence start ~return_locations (Sequence.of_list transs)
+      let rec_locations =
+        List.map transs ~f:(LocationSet.map ~f:VarRec.return_loc % Transition_.rec_vars)
+        |> LocationSet.union_list
+      in
+      from_sequence start ~return_locations ~rec_locations (Sequence.of_list transs)
 
 
 let rename program =
@@ -358,12 +341,14 @@ let rename program =
            new_name)
     |> Location.of_string
   in
-  let new_start = name program.start in
-  let new_return_locations = Option.map ~f:(List.map ~f:name) program.return_locations in
+  let new_start = name program.start
+  and new_return_locations = LocationSet.map ~f:name program.return_locations
+  and graph = TransitionGraph_.map_vertex name program.graph in
   {
-    graph = TransitionGraph_.map_vertex name program.graph;
+    graph;
     start = new_start;
     return_locations = new_return_locations;
+    dependency_graph = DependencyGraphAdapter.ClassicAdapter.mk_from_graph graph;
     pre_cache =
       Atomically.create
       @@ Hashtbl.create ~size:(TransitionGraph_.nb_vertex program.graph) (module Transition_);

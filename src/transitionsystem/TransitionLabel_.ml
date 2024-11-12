@@ -504,6 +504,13 @@ module TransitionLabelNonRec = TransitionLabelNonRec_
 
 let has_rec_calls t = Map.exists t.update ~f:PolyRec.has_recvars
 
+let rec_vars t =
+  Map.to_alist t.update
+  |> List.map ~f:(PolyRec.rec_vars % Tuple2.second)
+  |> List.concat
+  |> Set.of_list (module VarRec)
+
+
 let of_non_rec t =
   {
     id = Unique.unique ();
@@ -522,6 +529,21 @@ let to_non_rec t =
   else
     TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
       ~update:(Map.map (update_map t) ~f:PolyRec.to_poly)
+
+
+let overapprox_rec_updates t =
+  TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
+    ~update:
+      (Map.map (update_map t)
+         ~f:
+           (PolyRec.to_poly
+           % PolyRec.substitute_varrec_f (fun v ->
+                 PolyRec.of_var
+                 @@
+                 if VarRec.is_rec v then
+                   Var.fresh_id Var.Int ()
+                 else
+                   VarRec.to_var v)))
 
 
 let chain_guards t1 t2 =

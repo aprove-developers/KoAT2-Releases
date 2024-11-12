@@ -105,6 +105,11 @@ module Inner = struct
     | Helper (Int, i) -> Var.Helper (Int, i)
     | Argument i -> Var.Argument i
     | Recursion (_, _, _) -> raise (Invalid_argument "Recursive variable cannot be converted to Var.t")
+
+
+  let return_loc = function
+    | Recursion (l, _, _) -> l
+    | _ -> raise (invalid_arg "Non recursive variable do not have return location.")
 end
 
 include Inner

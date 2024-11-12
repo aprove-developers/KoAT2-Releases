@@ -1,4 +1,4 @@
-open Polynomials
+open PolyRec
 open Bounds
 open OurBase
 
@@ -69,7 +69,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   ( entry,
                     Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
                     |> Bound.substitute_f (fun var ->
-                           Bound.of_poly @@ (Map.find traversal var |? Polynomial.of_var var)) ))
+                           Bound.of_poly @@ (Map.find traversal var |? PolyRec.of_var var |> PolyRec.to_poly))
+                  ))
                 entries_traversal
               |> Option.some
             in
@@ -118,7 +119,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             |> Map.map
                  ~f:
                    (Bound.substitute_f (fun var ->
-                        Bound.of_poly @@ (Map.find partial_evaluation var |? Polynomial.of_var var))))
+                        Bound.of_poly
+                        @@ (Map.find partial_evaluation var |? PolyRec.of_var var |> PolyRec.to_poly))))
       in
       Map.fold bound ~init:appr ~f:(fun ~key:var ~data:local_bound appr ->
           let entries = PM.Program.entry_transitions program handled_transitions in

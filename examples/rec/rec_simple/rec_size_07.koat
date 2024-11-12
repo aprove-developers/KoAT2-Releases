@@ -1,7 +1,7 @@
-# Jump to f where B is set to 42 -> Size of B is 10 (as we consider the return location g). This size bound is important for the loop at l2.
+# Jump to f where B is set to 42 -> Size of B is max(42,10) (as we consider the return locations f and g). This size bound is important for the loop at l2.
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
-(RETURNLOCATIONS (FUNCTIONSYMBOLS g))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f g))
 (VAR A B)
 (RULES
   l0(A,B) -> l1(A,B)

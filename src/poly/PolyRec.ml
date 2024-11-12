@@ -15,7 +15,12 @@ module PolyRec = struct
       ~plus:add ~times:mul ~pow
 
 
+  let substitute_varrec_f substitution =
+    fold ~const:of_constant ~indeterminate:substitution ~plus:add ~times:mul ~pow
+
+
   let has_recvars = List.exists ~f:VarRec.is_rec % indeterminates
+  let rec_vars = List.filter ~f:VarRec.is_rec % indeterminates
 
   exception Rec_Vars of string
 

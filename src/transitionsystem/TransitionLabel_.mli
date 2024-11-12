@@ -97,4 +97,5 @@ val overapprox_nonlinear_updates : t -> t
 val has_rec_calls : t -> bool
 val of_non_rec : TransitionLabelNonRec.t -> t
 val to_non_rec : t -> TransitionLabelNonRec.t
+val overapprox_rec_updates : t -> TransitionLabelNonRec.t
 val chain_guards : t -> t -> Guard.t

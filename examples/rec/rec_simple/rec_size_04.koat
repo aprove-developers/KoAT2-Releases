@@ -1,11 +1,10 @@
-# Jump to f where B is set to 42 -> Size of B is 42. This size bound is important for the loop at l2.
+# Jump to f without changing B. However, here, f is not a return location.
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
-(RETURNLOCATIONS (FUNCTIONSYMBOLS f))
 (VAR A B)
 (RULES
   l0(A,B) -> l1(A,B)
-  l1(A,B) -> l1(A - 1,f[B|(A,B) <- (A,42)]) :|: A > 0
+  l1(A,B) -> l1(A - 1,f[B|(A,B) <- (A,B)]) :|: A > 0
   l1(A,B) -> l2(A,B) :|: A <= 0
   l2(A,B) -> l2(A,B - 1) :|: B > 0
 )

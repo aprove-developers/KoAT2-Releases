@@ -6,7 +6,10 @@ let logger = Logging.(get Twn)
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
-  module EliminateNonContributors = EliminateNonContributors.Make (PM)
+
+  module EliminateNonContributors =
+    EliminateNonContributors.Make (PM) (EliminateNonContributors.DefaultAdapter)
+
   module TWN_Complexity = TWN_Complexity.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
   module SimpleCycle = SimpleCycle.Make (Bound) (PM)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)

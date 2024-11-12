@@ -81,7 +81,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (* all updates of var in the path *)
         let updates var =
           OurBase.List.filter_opt
-          @@ List.map (flip (TL.TransitionLabelNonRec.update % TL.to_non_rec) var) labels
+          @@ List.map (flip (TL.TransitionLabelNonRec.update % TL.overapprox_rec_updates) var) labels
         in
         let deterministic_update var = List.for_all update_is_deterministic @@ updates var in
         let new_deterministic var = not (deterministic_update var || Hashtbl.mem static_dep_table var) in
@@ -106,7 +106,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let merge (_, ts, _) =
       ( List.map (Formula.mk % TL.guard) ts |> Formula.any,
         List.map (Formula.mk % TL.guard_without_inv) ts |> Formula.any,
-        List.first ts |> TL.to_non_rec |> TL.TransitionLabelNonRec.update_map )
+        List.first ts |> TL.overapprox_rec_updates |> TL.TransitionLabelNonRec.update_map )
     in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post @ merge_pre)
@@ -164,7 +164,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** Computes update_n * ... * update_i where update_n is the update of a transition (_,_,target) and resp. update_i for (start,_,_). *)
   let traverse_cycle (cycle : path) start target =
     if Location.equal start target then
-      TL.TransitionLabelNonRec.update_map @@ TL.to_non_rec @@ List.first @@ Tuple3.second (List.first cycle)
+      TL.update_map @@ List.first @@ Tuple3.second (List.first cycle)
     else
       let target_t = List.find (Location.equal target % Tuple3.third) cycle in
       let traversal =
@@ -173,13 +173,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         |> List.take_while (not % Location.equal target % Tuple3.third)
         |> List.rev |> ( @ ) [ target_t ]
       in
-      let substitution update_map var = Base.Map.find update_map var |? Polynomial.of_var var in
+      let substitution update_map var = Base.Map.find update_map var |? PolyRec.PolyRec.of_var var in
       List.fold
         (fun map (_, ts, _) ->
           Base.Map.map
-            ~f:
-              (Polynomial.substitute_f
-                 (substitution (TL.TransitionLabelNonRec.update_map @@ TL.to_non_rec @@ List.first ts)))
+            ~f:(PolyRec.PolyRec.substitute_var_f (substitution (TL.update_map @@ List.first ts)))
             map)
         (Base.Map.empty (module Var))
         traversal

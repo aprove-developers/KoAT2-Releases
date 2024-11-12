@@ -10,12 +10,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ProgramModules) = struc
 
   type appr = Approximation.t
 
-  module SCC = Graph.Components.Make (TransitionGraph)
-  (** Transition graph represents scc. *)
-
   let all_trivial_transitions program =
     let graph = Program.graph program in
-    let _, scc_number = SCC.scc graph in
+    let _, scc_number = DependencyGraph.DependencyGraph.sccs (Program.dependency_graph program) in
     let same_scc l1 l2 = scc_number l1 = scc_number l2 in
     TransitionGraph.transitions graph |> Base.Set.filter ~f:(fun (l, t, l') -> not (same_scc l l'))
 
