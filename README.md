@@ -71,7 +71,6 @@ KoAT2 makes use of the following external tools and libraries.
 - [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
-- [SymPy](https://www.sympy.org/en/index.html)
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
