@@ -9,7 +9,7 @@ homepage: "https://github.com/aprove-developers/Koat2"
 bug-reports: "https://github.com/aprove-developers/Koat2/issues"
 depends: [
   "apron"
-  "base" {= "v0.16.3"}
+  "base" {= "v0.17.1"}
   "stdio"
   "batteries"
   "cmdliner"
