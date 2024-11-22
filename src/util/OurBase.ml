@@ -339,4 +339,6 @@ module MakeMapCreators1 (M : Comparator.S) :
   let of_list_with_key_multi l ~get_key = Map.of_list_with_key_multi (module M) l ~get_key
   let of_list_with_key_exn l ~get_key = Map.of_list_with_key_exn (module M) l ~get_key
   let of_list_with_key_or_error l ~get_key = Map.of_list_with_key_or_error (module M) l ~get_key
+  let of_list_with_key_fold l ~get_key = Map.of_list_with_key_fold (module M) l ~get_key
+  let of_list_with_key_reduce l ~get_key = Map.of_list_with_key_reduce (module M) l ~get_key
 end

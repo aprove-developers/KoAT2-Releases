@@ -1,5 +1,5 @@
 open! OurBase
-open Caml.Lexing
+open Lexing
 
 let position_string lexbuf =
   let pos = lexbuf.lex_curr_p in
@@ -8,7 +8,7 @@ let position_string lexbuf =
     (lexeme lexbuf)
 
 
-let read_ rule (lexbuf : Caml.Lexing.lexbuf) =
+let read_ rule (lexbuf : Lexing.lexbuf) =
   ParserUtil.empty_cache ();
   try rule Lexer.read lexbuf with
   | Lexer.SyntaxError msg -> raise (ParserUtil.Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
