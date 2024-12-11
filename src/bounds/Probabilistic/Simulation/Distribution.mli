@@ -3,6 +3,7 @@ type 'a t
 val pure : 'a -> 'a t
 val map : ('a -> 'b) -> 'a t -> 'b t
 val bind : 'a t -> ('a -> 'b t) -> 'b t
+val choice : OurRational.t -> (unit -> 'a t) -> (unit -> 'a t) -> 'a t
 
 val of_tuples : (OurRational.t * 'a) list -> 'a t
 (** Creates a new distribution from a list of tuples, where each tuple (p, x) represents:

@@ -13,6 +13,9 @@ module Inner = struct
     match a with
     | Leaf a -> f a
     | Choice (p, l, r) -> Choice (p, Lazy.map (fun x -> bind x f) l, Lazy.map (fun x -> bind x f) r)
+
+
+  let choice p a b = Choice (p, Lazy.from_fun a, Lazy.from_fun b)
 end
 
 include Inner
