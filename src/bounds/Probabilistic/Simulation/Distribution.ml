@@ -20,13 +20,18 @@ end
 
 include Inner
 module Monad = Monad.Make (Inner)
+open OurBase
 
 let of_tuples values =
   let open OurRational in
-  let rec aux p = function
-    | [] -> failwith ""
-    | [ (p', x) ] -> Leaf x
-    | (p', x) :: xs -> Choice (p' / p, lazy (Leaf x), lazy (aux OurRational.(one - p') xs))
+  let rec aux p seq =
+    match Sequence.length seq with
+    | 0 -> failwith "Empty sequence"
+    | 1 -> Leaf (Sequence.hd_exn seq |> snd)
+    | _ ->
+        let p', x = Sequence.hd_exn seq in
+        let tail = Sequence.tl_eagerly_exn seq in
+        choice (p' / p) (fun _ -> pure x) (fun _ -> aux (one - p') tail)
   in
   aux one values
 
