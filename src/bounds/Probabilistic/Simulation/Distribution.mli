@@ -30,6 +30,13 @@ val geo : OurRational.t -> OurInt.t t
 val binomial : OurInt.t -> OurRational.t -> OurInt.t t
 (** [binomial n p] creates a binomial distribution with [n] trials and success probability [p]. *)
 
+val to_list : 'a t -> ('a * Q.t) list
+(** [to_list dist] converts [dist] into a list of pairs, where each pair represents a leaf in the distribution tree with its value and the probability of reaching that leaf. *)
+
+val to_grouped_list : 'a t -> cmp:('a -> 'a -> int) -> ('a * Q.t) list
+(** Similar to [to_list], but groups tuples based on the comparison function [cmp].
+    Combines probabilities for equivalent values, so each tuple [(a, p)] associates the value [a] with the total probability of reaching a leaf with value [a]. *)
+
 val to_string : f:('a -> string) -> 'a t -> string
 
 module Monad : MonadType.Monad with type 'a t := 'a t

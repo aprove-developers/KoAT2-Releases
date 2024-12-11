@@ -95,3 +95,23 @@ let iter_n n ~f =
           aux (n - 1) f OurRational.(p * (one - p')) right)
   in
   aux n f (OurRational.of_int 1)
+
+
+let to_list dist =
+  let open OurRational in
+  let rec aux p dist =
+    match dist with
+    | Leaf u -> [ (u, p) ]
+    | Choice (p', (lazy left), (lazy right)) -> List.append (aux (p * p') left) (aux (p * (one - p')) right)
+  in
+  aux one dist
+
+
+let to_grouped_list dist ~cmp =
+  let open OurRational in
+  to_list dist
+  |> List.sort_and_group ~compare:(fun (x1, _) (x2, _) -> cmp x1 x2)
+  |> List.map ~f:(fun lst ->
+         List.fold lst
+           ~init:(List.nth_exn lst 0 |> fst, zero)
+           ~f:(fun (acc_x, acc_p) (x, p) -> (x, acc_p + p)))
