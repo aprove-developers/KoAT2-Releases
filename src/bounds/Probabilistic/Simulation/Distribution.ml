@@ -36,6 +36,31 @@ let of_tuples values =
   aux one values
 
 
+let uniform values =
+  let rec aux n = function
+    | [] -> failwith ""
+    | [ x ] -> Leaf x
+    | x :: xs -> Choice (OurRational.(one / n), lazy (Leaf x), lazy (aux OurRational.(n - one) xs))
+  in
+  let n = List.length values |> OurRational.of_int in
+  aux n values
+
+
+let uniform_from_to a b =
+  if a > b then
+    invalid_arg "uniform_from_to: lower bound a must be less than or equal to upper bound b"
+  else
+    let values =
+      Base.List.init (OurInt.(b - a) |> OurInt.to_int |> ( + ) 1) ~f:(fun x -> OurInt.(a + OurInt.of_int x))
+    in
+    uniform values
+
+
+let rec geo p =
+  let open OurInt in
+  choice p (fun () -> pure one) (fun () -> map (( + ) one) (geo p))
+
+
 let rec to_string ~f dist =
   match dist with
   | Leaf a -> Printf.sprintf "Leaf (%s)" (f a)
