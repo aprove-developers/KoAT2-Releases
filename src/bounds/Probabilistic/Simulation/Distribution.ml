@@ -21,6 +21,7 @@ end
 include Inner
 module Monad = Monad.Make (Inner)
 open OurBase
+open Monad
 
 let of_tuples values =
   let open OurRational in
@@ -34,6 +35,14 @@ let of_tuples values =
         choice (p' / p) (fun _ -> pure x) (fun _ -> aux (one - p') tail)
   in
   aux one values
+
+
+let rec replicateM n m =
+  let open OurInt in
+  if n <= zero then
+    pure Fn.id
+  else
+    m >>= fun f -> map (fun acc x -> acc (f x)) (replicateM (n - one) m)
 
 
 let uniform values =
@@ -59,6 +68,11 @@ let uniform_from_to a b =
 let rec geo p =
   let open OurInt in
   choice p (fun () -> pure one) (fun () -> map (( + ) one) (geo p))
+
+
+let binomial n p =
+  let open OurInt in
+  replicateM n (choice p (fun () -> pure (( + ) one)) (fun () -> pure (( + ) zero))) |> map (fun f -> f zero)
 
 
 let rec to_string ~f dist =

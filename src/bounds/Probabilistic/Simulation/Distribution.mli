@@ -27,6 +27,9 @@ val uniform_from_to : OurInt.t -> OurInt.t -> OurInt.t t
 val geo : OurRational.t -> OurInt.t t
 (** [geo p] creates a geometric distribution with success probability [p]. *)
 
+val binomial : OurInt.t -> OurRational.t -> OurInt.t t
+(** [binomial n p] creates a binomial distribution with [n] trials and success probability [p]. *)
+
 val to_string : f:('a -> string) -> 'a t -> string
 
 module Monad : MonadType.Monad with type 'a t := 'a t
