@@ -75,6 +75,20 @@ let binomial n p =
   replicateM n (choice p (fun () -> pure (( + ) one)) (fun () -> pure (( + ) zero))) |> map (fun f -> f zero)
 
 
+let hyper_geometric bigN k (n : OurInt.t) : OurInt.t t =
+  let open OurInt in
+  let rec aux (bigN : OurInt.t) (k : OurInt.t) (n : OurInt.t) (x : OurInt.t) =
+    if n <= one then
+      choice OurRational.(of_ourint k / of_ourint bigN) (fun _ -> pure (x + one)) (fun _ -> pure x)
+    else
+      choice
+        OurRational.(of_ourint k / of_ourint bigN)
+        (fun _ -> aux (bigN - one) (k - one) (n - one) (x + one))
+        (fun _ -> aux (bigN - one) k (n - one) x)
+  in
+  aux bigN k n zero
+
+
 let rec to_string ~f dist =
   match dist with
   | Leaf a -> Printf.sprintf "Leaf (%s)" (f a)

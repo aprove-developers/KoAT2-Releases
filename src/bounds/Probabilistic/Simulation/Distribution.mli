@@ -30,6 +30,9 @@ val geo : OurRational.t -> OurInt.t t
 val binomial : OurInt.t -> OurRational.t -> OurInt.t t
 (** [binomial n p] creates a binomial distribution with [n] trials and success probability [p]. *)
 
+val hyper_geometric : OurInt.t -> OurInt.t -> OurInt.t -> OurInt.t t
+(** [hyper_geometric bigN k n] creates a hypergeometric distribution. *)
+
 val to_list : 'a t -> ('a * Q.t) list
 (** [to_list dist] converts [dist] into a list of pairs, where each pair represents a leaf in the distribution tree with its value and the probability of reaching that leaf. *)
 
