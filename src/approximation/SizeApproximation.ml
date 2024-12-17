@@ -6,6 +6,8 @@ type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) size_approximation_t =
 module Make (B : BoundType.Bound) (RV : ProgramTypes.RV) = struct
   let logger = Logging.(get Approximation)
 
+  type bound = B.t
+  type rv = RV.t
   type t = (RV.t, B.t, RV.comparator_witness) size_approximation_t
 
   let filter_rvs f = Map.filter_keys ~f

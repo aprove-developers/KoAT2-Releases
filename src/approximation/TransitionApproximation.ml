@@ -3,19 +3,6 @@ open! OurBase
 type ('trans, 'bound, 'trans_cmp_wit) transition_approximation_t =
   string * ('trans, 'bound, 'trans_cmp_wit) Map.t
 
-module type ApproximableTransition = sig
-  type program
-  type t
-
-  val id : t -> int
-  val to_id_string : t -> string
-  val compare : t -> t -> int
-  val all_from_program : program -> t Sequence.t
-  val ids_to_string : ?pretty:bool -> t -> string
-
-  include Comparator.S with type t := t
-end
-
 module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) = struct
   type program = PM.Program.t
 
@@ -26,8 +13,12 @@ module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) = st
   let ids_to_string ?(pretty = false) = PM.TransitionLabel.ids_to_string ~pretty % PM.Transition.label
 end
 
-module Make (B : BoundType.Bound) (T : ApproximableTransition) = struct
+module Make (B : BoundType.Bound) (T : ApproximationTypes.ApproximableTransitionType) = struct
   let logger = Logging.(get Approximation)
+
+  type bound = B.t
+  type transition = T.t
+  type program = T.program
 
   type t = (T.t, B.t, T.comparator_witness) transition_approximation_t
   (** TODO improve type safety by making a hash table over transitions *)

@@ -7,7 +7,7 @@ type ('trans, 'bound, 'rv, 'trans_cmp_wit, 'rv_comp_wit) approximation_t
 module Make
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
-    (T : TransitionApproximationType.ApproximableTransition with type program = PM.Program.t) : sig
+    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t) : sig
   type t = (T.t, B.t, PM.RV.t, T.comparator_witness, PM.RV.comparator_witness) approximation_t
 
   val empty : t
@@ -81,7 +81,7 @@ module Make
 end
 
 module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
-    module type of Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
+    module type of Make (B) (PM) (TransitionApproximation.MakeDefaultApproximableTransition (PM))
 
 module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) :
     module type of MakeWithDefaultTransition (B) (PM)

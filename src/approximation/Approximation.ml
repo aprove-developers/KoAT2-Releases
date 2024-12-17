@@ -3,20 +3,20 @@ open FormattedString
 open Lens.Infix
 
 type ('trans, 'bound, 'rv, 'trans_cmp_wit, 'rv_comp_wit) approximation_t = {
-  time : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximationType.transition_approximation_t;
-  size : ('rv, 'bound, 'rv_comp_wit) SizeApproximationType.size_approximation_t;
-  cost : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximationType.transition_approximation_t;
+  time : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximation.transition_approximation_t;
+  size : ('rv, 'bound, 'rv_comp_wit) SizeApproximation.size_approximation_t;
+  cost : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximation.transition_approximation_t;
 }
 [@@deriving lens { submodule = true }]
 
 module Make
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
-    (T : TransitionApproximationType.ApproximableTransition with type program = PM.Program.t) =
+    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t) =
 struct
   open PM
-  module TransitionApproximation = TransitionApproximationType.Make (B) (T)
-  module SizeApproximation = SizeApproximationType.Make (B) (RV)
+  module TransitionApproximation = TransitionApproximation.Make (B) (T)
+  module SizeApproximation = SizeApproximation.Make (B) (RV)
 
   type t = (T.t, B.t, RV.t, T.comparator_witness, RV.comparator_witness) approximation_t
 
@@ -121,7 +121,7 @@ end
 
 (* TODO clean-up. *)
 module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
-  Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
+  Make (B) (PM) (TransitionApproximation.MakeDefaultApproximableTransition (PM))
 
 module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) =
   MakeWithDefaultTransition (B) (PM)
@@ -143,7 +143,7 @@ struct
   let trans_appr_proof =
     let module L = Type_equal.Lift3 (struct
       type ('trans, 'bound, 'trans_cmp_wit) t =
-        ('trans, 'bound, 'trans_cmp_wit) TransitionApproximationType.transition_approximation_t
+        ('trans, 'bound, 'trans_cmp_wit) TransitionApproximation.transition_approximation_t
     end) in
     L.lift E.trans_eq Type_equal.refl E.trans_cmp_wit_eq
 
@@ -151,7 +151,7 @@ struct
   let size_appr_proof =
     let module L = Type_equal.Lift3 (struct
       type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) t =
-        ('rvtuple_, 'bound, 'rvtuple__cmp_wit) SizeApproximationType.size_approximation_t
+        ('rvtuple_, 'bound, 'rvtuple__cmp_wit) SizeApproximation.size_approximation_t
     end) in
     L.lift E.rvtuple__eq Type_equal.refl E.rvtuple__cmp_wit_eq
 
