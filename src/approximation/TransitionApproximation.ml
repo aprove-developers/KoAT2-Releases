@@ -13,6 +13,17 @@ module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) = st
   let ids_to_string ?(pretty = false) = PM.TransitionLabel.ids_to_string ~pretty % PM.Transition.label
 end
 
+module ApproximableGeneralTransition = struct
+  open ProbabilisticProgramModules
+
+  type program = Program.t
+
+  include GeneralTransition
+
+  let id = gt_id
+  let all_from_program = Set.to_sequence % Program.gts
+end
+
 module Make (B : BoundType.Bound) (T : ApproximationTypes.ApproximableTransitionType) = struct
   let logger = Logging.(get Approximation)
 

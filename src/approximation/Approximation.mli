@@ -1,14 +1,20 @@
 open! OurBase
 (** Implementation of approximations containing time, size and cost-bounds. *)
 
-type ('trans, 'bound, 'rv, 'trans_cmp_wit, 'rv_comp_wit) approximation_t
+type ('trans_appr_type, 'size_appr_type) approximation_t
 
 (** Provides default implementations of an approximation *)
 module Make
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
-    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t) : sig
-  type t = (T.t, B.t, PM.RV.t, T.comparator_witness, PM.RV.comparator_witness) approximation_t
+    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t)
+    (TransitionApproximation :
+      ApproximationTypes.TransitionApproximationType
+        with type program = PM.Program.t
+         and type bound = B.t
+         and type transition = T.t)
+    (SizeApproximation : ApproximationTypes.SizeApproximationType with type bound = B.t and type rv = PM.RV.t) : sig
+  type t = (TransitionApproximation.t, SizeApproximation.t) approximation_t
 
   val empty : t
   (** Returns an empty approximation that does not contain any non-trivial information.
@@ -80,11 +86,11 @@ module Make
   (** Returns true iff. all size bounds of a given transition are bounded and not infinity. *)
 end
 
-module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
-    module type of Make (B) (PM) (TransitionApproximation.MakeDefaultApproximableTransition (PM))
-
-module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) :
-    module type of MakeWithDefaultTransition (B) (PM)
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) :
+    module type of
+      Make (B) (PM) (TransitionApproximation.MakeDefaultApproximableTransition (PM))
+        (TransitionApproximation.Make (B) (TransitionApproximation.MakeDefaultApproximableTransition (PM)))
+        (SizeApproximation.Make (B) (PM.RV))
 
 include module type of MakeForClassicalAnalysis (Bounds.Bound) (ProgramModules)
 
@@ -93,7 +99,7 @@ module Probabilistic (BP : BoundPair.T) : sig
       module type of MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules.NonProbOverappr)
 
   module ClassicalApproximation :
-      module type of MakeWithDefaultTransition (BP.ClassBound) (ProbabilisticProgramModules)
+      module type of MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules)
 
   module ExpApproximation :
       module type of
@@ -103,16 +109,9 @@ module Probabilistic (BP : BoundPair.T) : sig
             include ProbabilisticProgramModules
             module RV = GRV
           end)
-          (struct
-            open ProbabilisticProgramModules
-
-            type program = Program.t
-
-            include GeneralTransition
-
-            let id = gt_id
-            let all_from_program = Set.to_sequence % Program.gts
-          end)
+          (TransitionApproximation.ApproximableGeneralTransition)
+          (TransitionApproximation.Make (BP.ProbBound) (TransitionApproximation.ApproximableGeneralTransition))
+          (SizeApproximation.Make (BP.ProbBound) (ProbabilisticProgramModules.GRV))
 
   val coerce_from_nonprob_overappr_approximation : NonProbOverapprApproximation.t -> ClassicalApproximation.t
   val coerce_from_classical_approximation : ClassicalApproximation.t -> NonProbOverapprApproximation.t

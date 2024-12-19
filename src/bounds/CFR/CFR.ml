@@ -31,7 +31,7 @@ let time_cfr = ref 180.
 
 module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
   open PM
-  module Approximation = Approximation.MakeWithDefaultTransition (Bound) (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
   type program = Program.t
   type transition = Transition.t

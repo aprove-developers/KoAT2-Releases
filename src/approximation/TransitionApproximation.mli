@@ -6,6 +6,12 @@ module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) :
      and type t = PM.Transition.t
      and type comparator_witness = PM.Transition.comparator_witness
 
+module ApproximableGeneralTransition :
+  ApproximationTypes.ApproximableTransitionType
+    with type program = ProbabilisticProgramModules.Program.t
+     and type t = ProbabilisticProgramModules.GeneralTransition.t
+     and type comparator_witness = ProbabilisticProgramModules.GeneralTransition.comparator_witness
+
 type ('trans, 'bound, 'trans_cmp_wit) transition_approximation_t
 (** The type of transition approximations *)
 

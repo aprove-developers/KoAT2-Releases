@@ -2,23 +2,27 @@ open! OurBase
 open FormattedString
 open Lens.Infix
 
-type ('trans, 'bound, 'rv, 'trans_cmp_wit, 'rv_comp_wit) approximation_t = {
-  time : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximation.transition_approximation_t;
-  size : ('rv, 'bound, 'rv_comp_wit) SizeApproximation.size_approximation_t;
-  cost : ('trans, 'bound, 'trans_cmp_wit) TransitionApproximation.transition_approximation_t;
+type ('trans_appr_type, 'size_appr_type) approximation_t = {
+  time : 'trans_appr_type;
+  size : 'size_appr_type;
+  cost : 'trans_appr_type;
 }
 [@@deriving lens { submodule = true }]
 
 module Make
     (B : BoundType.Bound)
     (PM : ProgramTypes.ProgramModules)
-    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t) =
+    (T : ApproximationTypes.ApproximableTransitionType with type program = PM.Program.t)
+    (TransitionApproximation :
+      ApproximationTypes.TransitionApproximationType
+        with type bound = B.t
+         and type transition = T.t
+         and type program = PM.Program.t)
+    (SizeApproximation : ApproximationTypes.SizeApproximationType with type bound = B.t and type rv = PM.RV.t) =
 struct
   open PM
-  module TransitionApproximation = TransitionApproximation.Make (B) (T)
-  module SizeApproximation = SizeApproximation.Make (B) (RV)
 
-  type t = (T.t, B.t, RV.t, T.comparator_witness, RV.comparator_witness) approximation_t
+  type t = (TransitionApproximation.t, SizeApproximation.t) approximation_t
 
   let empty =
     {
@@ -119,12 +123,10 @@ struct
     FormattedString.render_string @@ to_formatted ~show_initial:true ~pretty ~termination_only program appr
 end
 
-(* TODO clean-up. *)
-module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
   Make (B) (PM) (TransitionApproximation.MakeDefaultApproximableTransition (PM))
-
-module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) =
-  MakeWithDefaultTransition (B) (PM)
+    (TransitionApproximation.Make (B) (TransitionApproximation.MakeDefaultApproximableTransition (PM)))
+    (SizeApproximation.Make (B) (PM.RV))
 
 module Coerce
     (B : BoundType.Bound)
@@ -156,7 +158,7 @@ struct
     L.lift E.rvtuple__eq Type_equal.refl E.rvtuple__cmp_wit_eq
 
 
-  let coerce : MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t =
+  let coerce : MakeForClassicalAnalysis(B)(PM).t -> MakeForClassicalAnalysis(B)(PM').t =
    fun appr ->
     Type_equal.
       {
@@ -172,7 +174,7 @@ module Probabilistic (BP : BoundPair.T) = struct
   module NonProbOverapprApproximation =
     MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules.NonProbOverappr)
 
-  module ClassicalApproximation = MakeWithDefaultTransition (BP.ClassBound) (ProbabilisticProgramModules)
+  module ClassicalApproximation = MakeForClassicalAnalysis (BP.ClassBound) (ProbabilisticProgramModules)
 
   module ExpApproximation =
     Make
@@ -181,16 +183,9 @@ module Probabilistic (BP : BoundPair.T) = struct
         include ProbabilisticProgramModules
         module RV = GRV
       end)
-      (struct
-        open ProbabilisticProgramModules
-
-        type program = Program.t
-
-        include GeneralTransition
-
-        let id = gt_id
-        let all_from_program = Set.to_sequence % Program.gts
-      end)
+      (TransitionApproximation.ApproximableGeneralTransition)
+      (TransitionApproximation.Make (BP.ProbBound) (TransitionApproximation.ApproximableGeneralTransition))
+      (SizeApproximation.Make (BP.ProbBound) (ProbabilisticProgramModules.GRV))
 
   type apprs = { appr : ExpApproximation.t; class_appr : ClassicalApproximation.t }
 

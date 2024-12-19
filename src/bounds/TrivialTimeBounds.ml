@@ -6,7 +6,7 @@ open! OurBase
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ProgramModules) = struct
   open PM
-  module Approximation = Approximation.MakeWithDefaultTransition (Bound) (PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
   type appr = Approximation.t
 

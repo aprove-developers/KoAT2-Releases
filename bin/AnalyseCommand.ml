@@ -10,11 +10,8 @@ let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
 type 'bound approximation_t =
-  ( Transition.t,
-    'bound,
-    RV.t,
-    Transition.comparator_witness,
-    RV.comparator_witness )
+  ( (Transition.t, 'bound, Transition.comparator_witness) TransitionApproximation.transition_approximation_t,
+    (RV.t, 'bound, RV.comparator_witness) SizeApproximation.size_approximation_t )
   Approximation.approximation_t
 
 (** Prints the whole resulting approximation to the shell. *)
