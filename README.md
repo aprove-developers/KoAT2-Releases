@@ -18,7 +18,7 @@ Reimplementation of KoAT (see [here](https://koat.verify.rwth-aachen.de/) for mo
 ## Static Binary
 
 To get a statically linked binary, please execute the script `compile_static_binary.sh`.
-This will set up a docker container in which OCaml 4.09.1 for compiling static binaries using musl is installed with all required packages to compile KoAT2.
+This will set up a docker container in which OCaml 5.2.1 for compiling static binaries using musl is installed with all required packages to compile KoAT2.
 Please note that in this case, the used libraries (see below) are linked _statically_ into the resulting binary.
 The code of these libraries can be found when following the given links below.
 
