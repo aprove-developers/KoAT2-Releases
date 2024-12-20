@@ -6,12 +6,14 @@ exception RecursionNotSupported
 
 module Make
     (TL : ProgramTypes.TransitionLabel)
-    (T : ProgramTypes.Transition
-           with type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness)
-    (G : ProgramTypes.TransitionGraph
-           with type transition_label = TL.t
-            and type transition_label_comparator_witness = TL.comparator_witness) : sig
+    (T :
+      ProgramTypes.Transition
+        with type transition_label = TL.t
+         and type transition_label_comparator_witness = TL.comparator_witness)
+    (G :
+      ProgramTypes.TransitionGraph
+        with type transition_label = TL.t
+         and type transition_label_comparator_witness = TL.comparator_witness) : sig
   include
     ProgramTypes.Program
       with type transition_label = TL.t

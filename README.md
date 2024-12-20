@@ -32,7 +32,7 @@ The code of these libraries can be found when following the given links below.
 
 ## Formatting with `ocamlformat`
 We use `ocamlformat` for formatting purposes.
-Currently, we use version 0.26.1 which can be installed with `opam install ocamlformat.0.26.1`.
+Currently, we use version 0.27.0 which can be installed with `opam install ocamlformat.0.27.0`.
 Use `dune build @fmt` to run the formatter, which will output the suggested changes.
 You can accept these changes by executing `dune promote`.
 Alternatively, you can format the code and directly accept all changes with `dune build @fmt --auto-promote`.

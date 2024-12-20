@@ -167,9 +167,9 @@ module type Bound = sig
   (** Needed for Atomizable but not yet implemented. *)
 
   (* Uses a heuristic to keep the 'better' of both bounds.
-     * It first compares the asymptotic complexity,
-     * then the number of occuring variables,
-     * and finally the syntactic complexity
-     * of both bounds. *)
+   * It first compares the asymptotic complexity,
+   * then the number of occuring variables,
+   * and finally the syntactic complexity
+   * of both bounds. *)
   val keep_simpler_bound : t -> t -> t
 end

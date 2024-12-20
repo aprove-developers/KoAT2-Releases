@@ -15102,7 +15102,7 @@ end = struct
   let rec rep_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
       _A
       (Abs_nat_x_idom_x_x_a_rf_poly_prod_list_x_idom_x_x_a_prod_x_x_nat_x_idom_x_x_a_poly_prod_list_x_idom_x_x_a_prod
-        x) =
+         x) =
     x
 
 

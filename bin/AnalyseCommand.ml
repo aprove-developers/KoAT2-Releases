@@ -209,13 +209,12 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
              GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename
                program)
     |> (fun (program, appr) ->
-         if params.no_boundsearch then
-           (program, appr)
-         else if Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program)
-         then
-           (program, appr)
-         else
-           Analysis.improve ~conf:analysis_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr)
+    if params.no_boundsearch then
+      (program, appr)
+    else if Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
+      (program, appr)
+    else
+      Analysis.improve ~conf:analysis_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr)
     |> tap (fun (program, appr) -> print_result params.result (module Bound) program appr)
     |> tap (fun (program, appr) ->
            ProofOutput.add_to_proof (fun () ->

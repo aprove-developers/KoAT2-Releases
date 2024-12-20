@@ -18,7 +18,7 @@ let tests =
                   let fulfiled =
                     result_program |> Program.graph
                     |> (fun graph ->
-                         TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
+                    TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
                     |> List.exists (fun (l, t, l') ->
                            SMT.Z3Solver.tautology
                              Formula.Infix.(

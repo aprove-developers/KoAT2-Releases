@@ -8,9 +8,10 @@ let log ?(level = Logger.INFO) method_name data =
 
 module Unfolding
     (PM : ProgramTypes.ProgramModules)
-    (A : GenericProgram_.Adapter
-           with type update_element = PM.UpdateElement.t
-            and type transition = PM.Transition.t) =
+    (A :
+      GenericProgram_.Adapter
+        with type update_element = PM.UpdateElement.t
+         and type transition = PM.Transition.t) =
 struct
   open GenericProgram_.OverApproximationUtils (A)
   open Polyhedrons
@@ -81,11 +82,12 @@ end
 
 module PartialEvaluation
     (PM : ProgramTypes.ProgramModules)
-    (Adapter : GenericProgram_.Adapter
-                 with type update_element = PM.UpdateElement.t
-                  and type transition = PM.Transition.t
-                  and type program = PM.Program.t
-                  and type transition_graph = PM.TransitionGraph.t) =
+    (Adapter :
+      GenericProgram_.Adapter
+        with type update_element = PM.UpdateElement.t
+         and type transition = PM.Transition.t
+         and type program = PM.Program.t
+         and type transition_graph = PM.TransitionGraph.t) =
 struct
   module Abstraction = Abstraction.PropertyBasedAbstraction (PM) (Adapter)
   module Version = Version.Version (Abstraction)

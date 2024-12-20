@@ -42,7 +42,7 @@
    menhir
    ocamlgraph
    ocaml-lsp-server
-   (ocamlformat (= 0.26.1))
+   (ocamlformat (= 0.27.0))
    odoc
    ounit
    parmap
