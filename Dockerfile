@@ -49,7 +49,8 @@ COPY --chown=opam:opam external ./external
 # Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
 RUN eval $(opam env) && \
-    KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING dune build --release && \
+    sed -i "s/= \"VERSION_STR\"/= \"$KOAT2_VERSION_STRING\"/" src/util/VersionString.ml && \
+    dune build --release && \
     dune runtest --release && \
     strip _build/default/bin/main.exe -o koat2
 

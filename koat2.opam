@@ -17,10 +17,10 @@ depends: [
   "conf-mpfr"
   "conf-ppl"
   "dune" {>= "3.3"}
+  "dune-build-info"
   "fpath"
   "lens"
   "menhir"
-  "metapp"
   "ocamlgraph"
   "ocaml-lsp-server"
   "ocamlformat" {= "0.26.1"}

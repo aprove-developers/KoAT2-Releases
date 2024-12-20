@@ -36,10 +36,10 @@
    conf-mpfr
    conf-ppl
    dune
+   dune-build-info
    fpath
    lens
    menhir
-   metapp
    ocamlgraph
    ocaml-lsp-server
    (ocamlformat (= 0.26.1))

@@ -7,7 +7,6 @@
  (name koat2)
  (preprocess
   (pps
-   metapp.ppx
    ppx_deriving.eq
    lens.ppx_deriving
    ppx_deriving.ord
@@ -17,6 +16,7 @@
   batteries
   base
   cmdliner
+  dune-build-info
   stdio
   z3
   ocamlgraph
