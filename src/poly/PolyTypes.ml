@@ -429,6 +429,9 @@ module type Polynomial = sig
   val make : scaled_monomial list -> t
   (** Creates a polynomial as the sum of a list of scaled monomials. *)
 
+  val of_sequence : (monomial * value) Sequence.t -> t
+  val to_sequence : t -> (monomial * value) Sequence.t
+
   val of_coeff_and_mon_list : (value * monomial) list -> t
   (** Creates a polynomial as the sum of a list of monomials and integer coefficients. *)
 

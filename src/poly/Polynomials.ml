@@ -29,13 +29,15 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
 
   let equal = Map.equal Value.equal
   let compare t1 t2 = Map.compare_direct Value.compare t1 t2
+  let of_sequence seq = MonMap.of_sequence_reduce ~f:Value.add seq |> Map.filter ~f:(not % Value.(equal zero))
+  let to_sequence t = Map.to_sequence ~order:`Increasing_key t
 
   let make l =
-    List.map ~f:(fun sm -> ScaledMonomial_.(monomial sm, coeff sm)) l |> MonMap.of_alist_reduce ~f:Value.add
+    Sequence.of_list l |> Sequence.map ~f:(fun sm -> ScaledMonomial_.(monomial sm, coeff sm)) |> of_sequence
 
 
   let scaled_monomials (t : t) =
-    Map.to_alist ~key_order:`Increasing t |> List.map ~f:(fun (mon, coeff) -> ScaledMonomial_.make coeff mon)
+    to_sequence t |> Sequence.map ~f:(fun (mon, coeff) -> ScaledMonomial_.make coeff mon) |> Sequence.to_list
 
 
   let delete_monomial mon poly = Map.remove poly mon
