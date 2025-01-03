@@ -1,7 +1,7 @@
 #-------------------------------------------
 # Build KoAT
 #-------------------------------------------
-FROM ocaml/opam:alpine@sha256:7bc1fcafcff5c152ef57e23314781e903e5a91ffa13e9e40cd3a478687d958b6 AS koat2_build
+FROM ocaml/opam:alpine@sha256:c8252c887e7f137e73c54f4e704b50583810a3e71015e99a39c21a6010db6cdb AS koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 LABEL author="Nils Lommen"
