@@ -23,12 +23,13 @@ let to_ourint t =
 
 let minus_one = sub zero one
 
-(** [n] must be non-negative. *)
 let pow_ourint b e =
-  if OurInt.is_zero e then
-    one
-  else
-    make (OurInt.pow_ourint b.num e) (OurInt.pow_ourint b.den e)
+  match Z.(compare e zero) with
+  | 0 -> one
+  | -1 ->
+      let e_non_neg = OurInt.abs e in
+      make (OurInt.pow_ourint b.den e_non_neg) (OurInt.pow_ourint b.num e_non_neg)
+  | _ -> make (OurInt.pow_ourint b.num e) (OurInt.pow_ourint b.den e)
 
 
 let pow b e = pow_ourint b Z.(of_int e)
