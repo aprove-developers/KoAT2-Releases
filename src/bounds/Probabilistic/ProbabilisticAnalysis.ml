@@ -44,7 +44,7 @@ module Make (BP : BoundPair.T) = struct
 
 
   let lift_bounds program program_vars gts apprs : ExpApproximation.t =
-    let lift_size_bounds_like view set appr =
+    let lift_bounds_like view set appr =
       let gt_timebound gt =
         Set.to_sequence (GeneralTransition.transitions gt)
         |> Sequence.map ~f:(view apprs.class_appr)
@@ -64,8 +64,8 @@ module Make (BP : BoundPair.T) = struct
            ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (rv_sizebound (rvt, v)) rvt v appr)
            ~init:appr
     in
-    lift_size_bounds_like ClassicalApproximation.timebound ExpApproximation.add_timebound apprs.appr
-    |> lift_size_bounds_like ClassicalApproximation.costbound ExpApproximation.add_costbound
+    lift_bounds_like ClassicalApproximation.timebound ExpApproximation.add_timebound apprs.appr
+    |> lift_bounds_like ClassicalApproximation.costbound ExpApproximation.add_costbound
     |> lift_size_bounds
     |> tap (fun appr ->
            ProofOutput.add_to_proof
