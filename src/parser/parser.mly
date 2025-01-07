@@ -328,8 +328,8 @@ polynomial:
     { Polynomial.neg ex }
   | p1 = polynomial; op = bioperator; p2 = polynomial
     { op p1 p2 }
-  | v = variable; POW; c = UINT
-    { Polynomial.pow (Polynomial.of_var v) (int_of_string c) } ;
+  | p = polynomial; POW; c = UINT
+    { Polynomial.pow p (int_of_string c) } ;
 
 rational_laurent_polynomial:
   | v = variable
