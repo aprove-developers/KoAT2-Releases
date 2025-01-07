@@ -1,7 +1,2 @@
-#use_output "dune ocaml top --profile release";;
-#require "ppx_deriving.eq"
-#require "ppx_deriving.ord"
-#require "ppx_deriving.show"
-
 open Koat2;;
 open OurBase ;;

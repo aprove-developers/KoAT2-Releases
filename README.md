@@ -30,6 +30,9 @@ The code of these libraries can be found when following the given links below.
   The main command proceeding a full analysis is the "analyse" command.
 3. The project can be built and run by dune directly with the command `dune exec koat2 --`, or you may `export PATH=$PATH:"path-to-koat/_build/install/default/bin"` (with the substituted path) into your .bashrc file to use `koat2` directly.
 
+## REPL
+For a REPL (read-eval-print loop) simply run `dune utop`.
+
 ## Formatting with `ocamlformat`
 We use `ocamlformat` for formatting purposes.
 Currently, we use version 0.27.0 which can be installed with `opam install ocamlformat.0.27.0`.
