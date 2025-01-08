@@ -27,6 +27,7 @@ module Logger = Batteries.Logger
 
 let ( % ) = Fn.compose
 let flip = Fn.flip
+let curry f a b = f (a, b)
 let uncurry f (a, b) = f a b
 
 let ite b x y =
