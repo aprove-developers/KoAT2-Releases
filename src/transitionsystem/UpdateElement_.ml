@@ -69,22 +69,93 @@ module UpdateValue = struct
   include Comparator.Make (Inner)
 end
 
-include PolynomialOverIndeterminate (UpdateValue) (OurInt)
-module Monomial_ = Monomials.MakeOverIndeterminate (UpdateValue) (OurInt)
+module type GenericUpdateElementType = sig end
 
-let is_probabilistic = List.exists ~f:UpdateValue.is_dist % indeterminates
-let is_integral _ = true
+module MakeGenericUpdateElement
+    (Coeff : sig
+      include PolyTypes.Ring
 
-let to_polynomial =
-  fold
-    ~const:(Option.some % Polynomial.of_constant)
-    ~indeterminate:(Option.map ~f:Polynomial.of_var % UpdateValue.get_var)
-    ~plus:(OptionMonad.liftM2 Polynomial.add) ~times:(OptionMonad.liftM2 Polynomial.mul)
-    ~pow:(fun p i -> Option.map ~f:(fun p -> Polynomial.pow p i) p)
+      val to_rational : t -> OurRational.t
+    end)
+    (UnderlyingPoly : PolyTypes.Polynomial with type indeterminate = UpdateValue.t and type value = Coeff.t)
+    (UnderlyingMon :
+      PolyTypes.Monomial with type t = UnderlyingPoly.monomial and type indeterminate = UpdateValue.t)
+    (OrdinaryPoly : PolyTypes.Polynomial with type indeterminate = Var.t and type value = Coeff.t) =
+struct
+  include UnderlyingPoly
+
+  let is_probabilistic = List.exists ~f:UpdateValue.is_dist % indeterminates
+  let is_integral _ = true
+
+  let to_polynomial =
+    fold
+      ~const:(Option.some % OrdinaryPoly.of_constant)
+      ~indeterminate:(Option.map ~f:OrdinaryPoly.of_var % UpdateValue.get_var)
+      ~plus:(OptionMonad.liftM2 OrdinaryPoly.add)
+      ~times:(OptionMonad.liftM2 OrdinaryPoly.mul)
+      ~pow:(fun p i -> Option.map ~f:(fun p -> OrdinaryPoly.pow p i) p)
 
 
-let of_poly = Polynomial.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
-let of_dist dist = of_indeterminate (Dist { dist; id = Unique.unique () })
+  let of_poly = OrdinaryPoly.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
+  let of_dist dist = of_indeterminate (Dist { dist; id = Unique.unique () })
+
+  let exp_value_poly (* : t -> RationalPolynomial.t *) =
+   fun t ->
+    Sequence.of_list (monomials_with_coeffs t)
+    |> Sequence.map
+         ~f:
+           (Tuple2.map2
+              (RationalPolynomial.product
+              % Sequence.map ~f:(uncurry UpdateValue.moment_poly)
+              % UnderlyingMon.to_sequence))
+    |> Sequence.map ~f:RationalPolynomial.(fun (c, p) -> mul (of_constant @@ Coeff.to_rational c) p)
+    |> RationalPolynomial.sum
+
+
+  let moment_poly t i = exp_value_poly (pow t i)
+
+  let admissibility_constraint : t -> Guard.t =
+    fold ~const:(const Guard.mk_true) ~indeterminate:UpdateValue.admissibility_constraint ~plus:Guard.mk_and
+      ~times:Guard.mk_and ~pow:const
+
+
+  let restore_legacy_distribution_update_semantics v t =
+    match get_indeterminate t with
+    | Some (Dist d) -> add (of_var v) t
+    | _ -> t
+end
+
+module RationalUpdateElement = struct
+  module UnderlyingPoly = Polynomials.PolynomialOverIndeterminate (UpdateValue) (OurRational)
+  module UnderlyingMon = Monomials.MakeOverIndeterminate (UpdateValue) (OurRational)
+  module OrdinaryPoly = Polynomials.RationalPolynomial
+
+  include
+    MakeGenericUpdateElement
+      (struct
+        include OurRational
+
+        let to_rational = identity
+      end)
+      (UnderlyingPoly)
+      (UnderlyingMon)
+      (OrdinaryPoly)
+end
+
+module UnderlyingPoly = Polynomials.PolynomialOverIndeterminate (UpdateValue) (OurInt)
+module UnderlyingMon = Monomials.MakeOverIndeterminate (UpdateValue) (OurInt)
+module OrdinaryPoly = Polynomials.Polynomial
+
+include
+  MakeGenericUpdateElement
+    (struct
+      include OurInt
+
+      let to_rational = OurRational.of_ourint
+    end)
+    (UnderlyingPoly)
+    (UnderlyingMon)
+    (OrdinaryPoly)
 
 let as_guard ue new_var =
   let replaced_poly, dist_constrs =
@@ -101,32 +172,6 @@ let as_guard ue new_var =
       ue
   in
   Guard.mk_and (Guard.mk_eq (Polynomial.of_var new_var) replaced_poly) dist_constrs
-
-
-let exp_value_poly : t -> RationalPolynomial.t =
- fun t ->
-  Sequence.of_list (monomials_with_coeffs t)
-  |> Sequence.map
-       ~f:
-         (Tuple2.map2
-            (RationalPolynomial.product
-            % Sequence.map ~f:(uncurry UpdateValue.moment_poly)
-            % Monomial_.to_sequence))
-  |> Sequence.map ~f:RationalPolynomial.(fun (c, p) -> mul (of_intconstant c) p)
-  |> RationalPolynomial.sum
-
-
-let moment_poly t i = exp_value_poly (pow t i)
-
-let admissibility_constraint : t -> Guard.t =
-  fold ~const:(const Guard.mk_true) ~indeterminate:UpdateValue.admissibility_constraint ~plus:Guard.mk_and
-    ~times:Guard.mk_and ~pow:const
-
-
-let restore_legacy_distribution_update_semantics v t =
-  match get_indeterminate t with
-  | Some (Dist d) -> add (of_var v) t
-  | _ -> t
 
 
 let as_linear_abstract manager constr t new_var =
@@ -176,7 +221,7 @@ let as_linear_abstract manager constr t new_var =
 
   let multiplicands_repr_map =
     Sequence.of_list (monomials t)
-    |> Sequence.map ~f:Monomial_.to_sequence
+    |> Sequence.map ~f:UnderlyingMon.to_sequence
     |> Set.to_sequence % MultiplicandSet.of_sequence % Sequence.join
     |> Sequence.map ~f:(fun (i, e) ->
            let v =
@@ -243,7 +288,7 @@ let as_linear_abstract manager constr t new_var =
     monomials_with_coeffs t
     |> List.map ~f:(fun (c, m) ->
            ( c,
-             Monomial_.to_sequence m
+             UnderlyingMon.to_sequence m
              |> Sequence.map ~f:(fun (i, e) -> (Map.find_exn multiplicands_repr_map (i, e), 1))
              |> ClassicalMonomial.make % Sequence.to_list ))
     |> Polynomial.of_coeff_and_mon_list
@@ -283,6 +328,6 @@ let exp_value_abs_bound t =
          (Tuple2.map2
             (RationalBound.product
             % Sequence.map ~f:(uncurry UpdateValue.moment_abs_bound)
-            % Monomial_.to_sequence))
+            % UnderlyingMon.to_sequence))
   |> Sequence.map ~f:RationalBound.(fun (c, p) -> mul (of_constant @@ OurRational.of_ourint c) p)
   |> RationalBound.sum

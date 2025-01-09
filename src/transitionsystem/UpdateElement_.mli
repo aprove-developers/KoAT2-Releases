@@ -28,6 +28,12 @@ module UpdateValue : sig
   include Comparator.S with type t := t
 end
 
+module RationalUpdateElement : sig
+  include module type of PolynomialOverIndeterminate (UpdateValue) (OurRational)
+
+  val moment_poly : t -> int -> RationalPolynomial.t
+end
+
 include module type of PolynomialOverIndeterminate (UpdateValue) (OurInt)
 
 val is_probabilistic : t -> bool
