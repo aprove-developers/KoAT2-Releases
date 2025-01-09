@@ -395,14 +395,15 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     substitute_f
       (fun ind -> Option.map ~f:of_constant (Valuation_.eval_opt ind valuation) |? of_indeterminate ind)
       poly
-end
 
-module PolynomialOver (Value : PolyTypes.Ring) = struct
-  include PolynomialOverIndeterminate (VarIndeterminate) (Value)
 
   let substitute_all substitution t =
-    substitute_f (fun var -> Option.value ~default:(of_var var) @@ Map.find substitution var) t
+    substitute_f
+      (fun indet -> Option.value ~default:(of_indeterminate indet) @@ Map.find substitution indet)
+      t
 end
+
+module PolynomialOver (Value : PolyTypes.Ring) = PolynomialOverIndeterminate (VarIndeterminate) (Value)
 
 module Polynomial = struct
   include PolynomialOver (OurInt)
@@ -540,8 +541,8 @@ module CAPolynomial = struct
       ~indeterminate:of_var ~plus:add ~times:mul ~pow
 end
 
-module RationalLaurentPolynomial = struct
-  include PolynomialOver (OurRational)
+module RationalLaurentPolynomialOverIndeterminate (I : PolyTypes.Indeterminate) = struct
+  include PolynomialOverIndeterminate (I) (OurRational)
 
   let overapprox_neg_exponents t =
     let overapprox_mon mon =
@@ -551,6 +552,8 @@ module RationalLaurentPolynomial = struct
     |> List.map ~f:(fun (coeff, mon) -> (coeff, overapprox_mon mon))
     |> of_coeff_and_mon_list
 end
+
+module RationalLaurentPolynomial = RationalLaurentPolynomialOverIndeterminate (VarIndeterminate)
 
 module ParameterPolynomialOver (Value : PolyTypes.Ring) = struct
   module Outer = PolynomialOver (PolynomialOver (Value))

@@ -91,13 +91,16 @@ module CAPolynomial : sig
   val of_intpoly : Polynomial.t -> t
 end
 
-(** Provides default implementation of laurent polynomials ranged over [OurRational]. *)
-module RationalLaurentPolynomial : sig
-  include module type of PolynomialOver (OurRational)
+(* TODO make type t of RationalLaurentPolynomial abstract so that we can't use it interchangingly with polynomials? *)
+module RationalLaurentPolynomialOverIndeterminate (I : PolyTypes.Indeterminate) : sig
+  include module type of PolynomialOverIndeterminate (I) (OurRational)
 
-  val overapprox_neg_exponents : t -> RationalPolynomial.t
+  val overapprox_neg_exponents : t -> PolynomialOverIndeterminate(I)(OurRational).t
   (** Overapproximates variables with negative exponents with 1 *)
 end
+
+module RationalLaurentPolynomial : module type of RationalLaurentPolynomialOverIndeterminate (VarIndeterminate)
+(** Provides default implementation of laurent polynomials ranged over [OurRational]. *)
 
 (** Provides polynomials where the coefficients are polynomials over {i Value}. *)
 module ParameterPolynomialOver (Value : PolyTypes.Ring) : sig
