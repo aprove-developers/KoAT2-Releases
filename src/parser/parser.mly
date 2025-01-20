@@ -102,7 +102,7 @@ programAndGoal:
     return_locations = return_locations
     variables = variables
     transitions = transitions; EOF
-    { Program.from_com_transitions (transitions variables) start, g } ;
+    { Program.from_com_transitions ~return_locations:(LocationSet.of_list return_locations) (transitions variables) start, g } ;
 
 programAndGoalTermination:
   | g = goal
@@ -115,7 +115,7 @@ programAndGoalTermination:
     return_locations = return_locations
     variables = variables
     transitions = transitions; EOF
-    { Program.from_com_transitions ~termination:true (transitions variables) start, g } ;
+    { Program.from_com_transitions ~return_locations:(LocationSet.of_list return_locations) ~termination:true (transitions variables) start, g } ;
 
 probabilisticProgramAndGoal:
   | g = probabilisticGoal

@@ -27,6 +27,8 @@ let eliminate_tmp_vars program =
   in
   if MaybeChanged.has_changed result then
     MaybeChanged.changed
-    @@ Program.from_sequence (Program.start program) (Set.to_sequence @@ MaybeChanged.unpack result)
+    @@ Program.from_sequence ~return_locations:(Program.return_locations program)
+         ~rec_locations:(Program.locations program) (Program.start program)
+         (Set.to_sequence @@ MaybeChanged.unpack result)
   else
     MaybeChanged.same program

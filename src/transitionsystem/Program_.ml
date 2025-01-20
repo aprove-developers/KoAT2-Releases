@@ -185,6 +185,9 @@ struct
     let locations =
       String.concat ~sep:", " (G.fold_vertex (fun l str -> str @ [ Location.to_string l ]) program.graph [])
     in
+    let return_locations =
+      String.concat ~sep:", " @@ List.map ~f:Location.to_string (Set.to_list program.return_locations)
+    in
     FormattedString.format_append
       ([
          "Start:  " ^ Location.to_string program.start;
@@ -193,6 +196,7 @@ struct
          "Temp_Vars:  "
          ^ (tmp_vars program |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ~sep:", ");
          "Locations:  " ^ locations;
+         "Return Locations:  " ^ return_locations;
          "Transitions:";
        ]
       |> List.map ~f:FormattedString.mk_str_line
