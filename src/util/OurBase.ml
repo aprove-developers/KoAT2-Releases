@@ -23,11 +23,18 @@ let sexp_of_string = Base.sexp_of_string
 
 module Logger = Batteries.Logger
 
-(*  TODO Comine with Util? *)
+(*  TODO Combine with Util? *)
 
 let ( % ) = Fn.compose
 let flip = Fn.flip
 let uncurry f (a, b) = f a b
+
+let ite b x y =
+  if b then
+    x
+  else
+    y
+
 
 let ( |? ) opt def =
   match opt with
