@@ -47,4 +47,14 @@ let rec max_list = function
   | x :: xs -> max x (max_list xs)
 
 
+(** [ binomial n k ] computes the binomial coefficient choose(n,k) *)
+let rec binomial n k =
+  if is_gt k n then
+    zero
+  else if equal n k then
+    one
+  else
+    n * binomial (n - one) k / (n - k)
+
+
 let sum_list = List.fold ~f:( + ) ~init:zero
