@@ -16,7 +16,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   type bound =
     | Const of Num.t (* absolute value *)
     | Var of Var.t
-    | Pow of Num.t * bound
+    | Exp of Num.t * bound
     | Sum of bound * bound
     | Product of bound * bound
     | Log of Var.t
@@ -37,7 +37,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     let rec is_constant = function
       | Const _ -> true
       | Var _ -> false
-      | Pow (_, b) -> is_constant b
+      | Exp (_, b) -> is_constant b
       | Sum (b1, b2) -> is_constant b1 && is_constant b2
       | Product (b1, b2) -> is_constant b1 && is_constant b2
       | Log b -> false
@@ -50,7 +50,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     match p with
     | Var v -> var v
     | Const c -> const c
-    | Pow (value, n) -> exp value (fold_ n)
+    | Exp (value, n) -> exp value (fold_ n)
     | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
     | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
     | Log v -> log v
@@ -220,7 +220,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Var v -> Var.to_string ~pretty v
     | Log v -> "log(" ^ Var.to_string ~pretty v ^ ")"
     | Const c -> Num.to_string c
-    | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner ~pretty b ^ ")"
+    | Exp (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner ~pretty b ^ ")"
     | Sum (b1, b2) ->
         (* Order terms by degree*)
         let sum_chain =
@@ -432,15 +432,15 @@ module Make (Num : PolyTypes.OurNumber) = struct
             Const const
           else
             final_sum_chain true
-      (* Simplify terms with pow head *)
-      | Pow (value, exponent) -> (
+      (* Simplify terms with exp head *)
+      | Exp (value, exponent) -> (
           match simplify_bound exponent with
           | exponent when Num.(equal value zero) -> Const Num.zero
           | _ when Num.(equal value one) -> Const Num.one
           | Const c -> Const Num.(pow value (to_int c)) (* TODO Do not use Num.to_int *)
-          | Sum (b1, b2) -> Product (simplify_bound (Pow (value, b1)), simplify_bound (Pow (value, b2)))
+          | Sum (b1, b2) -> Product (simplify_bound (Exp (value, b1)), simplify_bound (Exp (value, b2)))
           | Log v -> Product (Const (Num.log value), bound_of_var v)
-          | exponent -> Pow (value, exponent))
+          | exponent -> Exp (value, exponent))
     in
 
     Logger.with_log logger Logger.DEBUG
@@ -486,7 +486,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   (** Raises an element to the power of an integer value. *)
   let ( ** ) = pow
 
-  let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
+  let exp_bound value b = simplify_bound (Exp (Num.abs value, b))
   let exp value b = simplify @@ Option.map ~f:(exp_bound value) b
   let exp_int value b = Option.map ~f:((exp_bound % Num.of_ourint) value) b
   let infinity = None
@@ -546,7 +546,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Var v -> VarSet.singleton v
     | Log v -> VarSet.singleton v
     | Const _ -> VarSet.empty
-    | Pow (v, b) -> vars_bound b
+    | Exp (v, b) -> vars_bound b
     | Sum (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
     | Product (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
 
