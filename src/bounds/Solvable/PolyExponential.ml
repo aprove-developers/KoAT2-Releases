@@ -348,11 +348,11 @@ module PE (Value : IntSupRing) = struct
 
   let substitute_f f = List.map (Tuple4.map2 @@ Polynomial.substitute_f f)
 
-  let rec binomial n k =
+  let rec binomial_int n k =
     if n = k then
       OurInt.one
     else
-      OurInt.div (OurInt.mul (binomial (n - 1) k) (OurInt.of_int n)) (OurInt.of_int (n - k))
+      OurInt.div (OurInt.mul (binomial_int (n - 1) k) (OurInt.of_int n)) (OurInt.of_int (n - k))
 
 
   (**  Computes for (n - 1)^d the normal-form, i.e., \sum_i=0^d (d choose i) n^i (-1)^{d-i}. *)
@@ -362,7 +362,7 @@ module PE (Value : IntSupRing) = struct
       (fun i p ->
         let coeff =
           let exp = (d - i) mod 2 in
-          OurInt.(pow (of_int (-1)) exp * binomial d i) |> Value.of_ourint
+          OurInt.(pow (of_int (-1)) exp * binomial_int d i) |> Value.of_ourint
         in
         let poly =
           match i with
@@ -407,7 +407,7 @@ module PE (Value : IntSupRing) = struct
                (fun i ->
                  let coeff =
                    let exp = (d - i) mod 2 in
-                   let term = OurInt.(pow (of_int (-1)) exp * binomial d i) |> Value.of_ourint in
+                   let term = OurInt.(pow (of_int (-1)) exp * binomial_int d i) |> Value.of_ourint in
                    Value.div term b
                  in
                  ( ConstantConstraint.mk_and
