@@ -36,6 +36,7 @@ let log x = of_int (Z.log2up x)
 (* Use as [range start ~inc stop. Both ends are inclusive] *)
 let range_from ?(inc = one) start = Sequence.unfold ~init:start ~f:(fun next -> Some (next, next + inc))
 
+(** Generates a range of [ OurInt ]s .Both start and end are inclusive  *)
 let range start ?(inc = one) stop =
   Sequence.unfold ~init:(range_from ~inc start) ~f:(fun range_from ->
       let open OptionMonad in
