@@ -33,9 +33,17 @@ let is_ge = Compare.( >= )
 let is_gt = Compare.( > )
 let log x = of_int (Z.log2up x)
 
-let all_nonnegative =
-  Sequence.unfold_step ~init:zero ~f:(fun s -> Sequence.Step.Yield { value = s; state = add s one })
+(* Use as [range start ~inc stop. Both ends are inclusive] *)
+let range_from ?(inc = one) start = Sequence.unfold ~init:start ~f:(fun next -> Some (next, next + inc))
 
+let range start ?(inc = one) stop =
+  Sequence.unfold ~init:(range_from ~inc start) ~f:(fun range_from ->
+      let open OptionMonad in
+      let* number, rem = Sequence.next range_from in
+      Option.some_if (number <= stop) (number, rem))
+
+
+let all_nonnegative = range_from zero
 
 let rec lcm_list = function
   | [] -> one
