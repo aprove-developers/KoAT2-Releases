@@ -360,7 +360,7 @@ bound:
   | LOG; LPAR; b = bound; RPAR
     { Bound.log_of_bound b }
   | c = our_int b = option(preceded(POW, bound))
-    { Bound.exp c BatOption.(b |? Bound.one) }
+    { Bound.exp (Bound.of_constant c) BatOption.(b |? Bound.one) }
   | v = ID
     { Bound.of_var_string v }
   | b = bound POW c = UINT

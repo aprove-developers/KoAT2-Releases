@@ -53,7 +53,7 @@ module type Bound = sig
   val infinity : t
   (** Returns the infinity bound. *)
 
-  val exp : value -> t -> t
+  val exp : t -> t -> t
   (** Returns for a value i and a bound b the new bound i^b. *)
 
   val exp_int : OurInt.t -> t -> t

@@ -9,7 +9,7 @@ let is_integral t = OurInt.equal OurInt.one t.den
 let sum = Sequence.fold ~f:( + ) ~init:zero
 let list_sum = sum % Sequence.of_list
 let ( =~= ) = equal
-let of_ourint = of_bigint
+let of_ourint = OurInt.to_our_rational
 
 exception NotConvertibleInteger of string
 
@@ -57,3 +57,4 @@ let ceil t =
 
 
 let log x = of_ourint @@ OurInt.log @@ ceil x
+let to_our_rational = identity

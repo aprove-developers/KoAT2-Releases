@@ -22,6 +22,8 @@ let pow_ourint b n =
   helper b n
 
 
+let ceil = identity
+
 include Z
 include Z.Compare
 
@@ -67,3 +69,4 @@ let rec binomial n k =
 
 
 let sum_list = List.fold ~f:( + ) ~init:zero
+let to_our_rational = Q.of_bigint

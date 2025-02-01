@@ -5,7 +5,8 @@ module Make (Num : PolyTypes.OurNumber) : sig
   type bound
 
   type complexity =
-    | LogarithmicPolynomial of int * int  (** Bound is in asymptotic class O(log(n)^i * n^j) *)
+    | LogarithmicPolynomial of OurRational.t * OurRational.t
+        (** Bound is in asymptotic class O(log(n)^i * n^j) *)
     | Exponential of int
     | Inf  (** Bound is infinite. *)
 
@@ -14,7 +15,7 @@ module Make (Num : PolyTypes.OurNumber) : sig
     var:(Var.t -> 'b) ->
     plus:('b -> 'b -> 'b) ->
     times:('b -> 'b -> 'b) ->
-    exp:(Num.t -> 'b -> 'b) ->
+    exp:('b -> 'b -> 'b) ->
     log:(Var.t -> 'b) ->
     inf:'b ->
     t ->
@@ -26,7 +27,7 @@ module Make (Num : PolyTypes.OurNumber) : sig
     var:(Var.t -> 'b) ->
     plus:('b -> 'b -> 'b) ->
     times:('b -> 'b -> 'b) ->
-    exp:(Num.t -> 'b -> 'b) ->
+    exp:('b -> 'b -> 'b) ->
     log:(Var.t -> 'b) ->
     bound ->
     'b
@@ -54,6 +55,12 @@ module RationalBound : sig
 
   val to_intbound : t -> Bound.t
   (** Ceil Floats to Ints *)
+
+  val sqrt : t -> t
+  (** Computes the square root *)
+
+  val mth_root : OurInt.t -> t -> t
+  (** [mth_root m b] Computes the [b]m-th square root of [b], i.e., b^(1/m)*)
 end
 
 module BinaryBound : sig
