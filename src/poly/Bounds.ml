@@ -195,12 +195,18 @@ module Make (Num : PolyTypes.OurNumber) = struct
       bound
 
 
-  let rec get_op_chain_and_apply_to_atoms f t b =
-    match (t, b) with
-    | `Sum, Sum (b1, b2) -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
-    | `Product, Product (b1, b2) ->
-        get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
-    | _, b -> [ f b ]
+  let get_op_chain_and_apply_to_atoms f t =
+    let rec go b =
+      match (t, b) with
+      | `Sum, Sum (b1, b2) -> go b1 @ go b2
+      | `Product, Product (b1, b2) -> go b1 @ go b2
+      | _, b -> (
+          match (t, f b) with
+          | `Sum, Sum (b1, b2) -> go b1 @ go b2
+          | `Product, Product (b1, b2) -> go b1 @ go b2
+          | _, b -> [ f b ])
+    in
+    go
 
 
   let rec show_bound_inner ?(pretty = false) =
