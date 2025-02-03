@@ -35,6 +35,16 @@ let pow_ourint b e =
 let pow b e = pow_ourint b Z.(of_int e)
 let ( ** ) = pow
 
+let root_pow b e =
+  let open OptionMonad in
+  let root_pow_integral_base b e =
+    let* enumpow = OurInt.root_pow b e.num in
+    let res, remain = OurInt.rootrem enumpow (OurInt.to_int e.den) in
+    Option.some_if OurInt.(equal remain zero) res
+  in
+  liftM2 make (root_pow_integral_base b.num e) (root_pow_integral_base b.den e)
+
+
 module Compare = struct
   let ( < ) = ( < )
   let ( <= ) = ( <= )

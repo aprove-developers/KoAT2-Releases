@@ -34,6 +34,9 @@ module type OurNumber = sig
   val minus_one : t
   (** The constant representing -1.
       This is not provided by Number.Numeric but is quite useful *)
+
+  val root_pow : t -> t -> t Option.t
+  (** [rootrem x n] computes the x^n if it exists. *)
 end
 
 (** module type for indeterminates in polynomials and monomials *)
