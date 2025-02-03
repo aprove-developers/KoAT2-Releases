@@ -420,7 +420,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
           (* Get the coefficient of the complete chain by multiplying all of its constant values *)
           let const = List.fold_left ~f:Num.mul ~init:Num.one all_consts in
 
-          let group_exps_by_base product_chain =
+          let group_exps product_chain =
             let exps_wo_const_log, const_logs_exps_and_non_exps =
               List.partition_map product_chain ~f:(function
                 | Exp (Const _, Log _) as b -> Base__.Either0.Second b
@@ -429,15 +429,20 @@ module Make (Num : PolyTypes.OurNumber) = struct
                 | b -> Base__.Either0.Second b)
             in
             let back_to_bound (b, e) =
-              match simplify_bound e with
-              | Const eval when Num.(equal eval one) -> b
-              | e -> Exp (b, e)
+              match (simplify_bound b, simplify_bound e) with
+              | (Const _ as b), (Const _ as e) -> simplify_bound (Exp (b, e))
+              | _, Const c when Num.(equal c one) -> b
+              | b, e -> Exp (b, e)
             in
             let exps_transformed =
               List.fold_left exps_wo_const_log ~init:[] ~f:(fun acc_list (b, e) ->
-                  match List.findi acc_list ~f:(fun _ -> equal_bound b % fst) with
-                  | Some (i, _) -> List.modify_at i acc_list ~f:(fun (b, eprev) -> (b, Sum (eprev, e)))
-                  | None -> List.cons (b, e) acc_list)
+                  match List.findi acc_list ~f:(fun _ (b', e') -> equal_bound b b' || equal_bound e e') with
+                  | Some (i, (b', _)) when equal_bound b b' ->
+                      List.modify_at i acc_list ~f:(fun (b, eprev) -> (b, Sum (eprev, e)))
+                  | Some (i, (_, (Const c as e'))) when equal_bound e e' && Num.(c <> one) ->
+                      (* Here, we only progress with simplification if exponent is not equal to 1, so check for this *)
+                      List.modify_at i acc_list ~f:(fun (bprev, e) -> (Product (bprev, b), e))
+                  | _ -> List.cons (b, e) acc_list)
               |> List.map ~f:back_to_bound
             in
             exps_transformed @ const_logs_exps_and_non_exps
@@ -454,7 +459,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
                      Const const :: l
                    else
                      l)
-            |> List.map ~f:group_exps_by_base
+            |> List.map ~f:group_exps
             |> List.map ~f:(construct_op_chain `Product)
             |> fun l ->
             if Int.(List.length l > 1) then
@@ -476,7 +481,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
           match (simplify_bound base, simplify_bound exponent) with
           | Const value, _ when Num.(equal value zero) -> Const Num.zero
           | Const value, _ when Num.(equal value one) -> Const Num.one
-          | Const value, Const e when Num.is_integral e -> Const Num.(pow value (to_int e))
+          | Const value, Const e ->
+              Option.map (Num.root_pow value e) ~f:(fun r -> Const r) |? Exp (base, exponent)
           | b, Const e when Num.is_integral e ->
               (* TODO Do not use Num.to_int *)
               Util.iterate_n_times (fun b' -> Product (b, b')) (Num.to_int e) (Const Num.one)
