@@ -54,6 +54,6 @@ let tests =
                   (* Log *)
                   ("log(3*x^2+y)", "2*log(x)+log(y)+2");
                   ("2^(log(x) + log(y))", "x*y");
-                  ("3^(log(x) + log(y))", "x*y");
+                  ("3^(log(x) + log(y))", "4*x*y");
                 ];
        ]

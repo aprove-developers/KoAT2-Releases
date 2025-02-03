@@ -433,7 +433,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
           | _ when Num.(equal value one) -> Const Num.one
           | Const c -> Const Num.(pow value (to_int c)) (* TODO Do not use Num.to_int *)
           | Sum (b1, b2) -> Product (simplify_bound (Pow (value, b1)), simplify_bound (Pow (value, b2)))
-          | Log v -> bound_of_var v
+          | Log v -> Product (Const (Num.log value), bound_of_var v)
           | exponent -> Pow (value, exponent))
     in
 
