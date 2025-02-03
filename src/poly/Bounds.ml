@@ -246,11 +246,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
           | b -> "(" ^ show_bound_inner ~pretty b ^ ")"
         in
         to_string_ b ^ "^" ^ to_string_ e
-    | Sum (b1, b2) ->
+    | Sum (_, _) as b ->
         (* Order terms by degree*)
-        let sum_chain =
-          get_op_chain_and_apply_to_atoms identity `Sum b1 @ get_op_chain_and_apply_to_atoms identity `Sum b2
-        in
+        let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b in
         let sorted_chain =
           List.sort
             ~compare:(fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1))
@@ -387,10 +385,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
       | Log v -> Log v
       | Const c -> Const c
       (* Simplify terms with sum head *)
-      | Sum (b1, b2) ->
-          let sum_chain =
-            get_op_chain `Sum b1 @ get_op_chain `Sum b2 |> List.filter ~f:(not % equal_bound (Const Num.zero))
-          in
+      | Sum (_, _) as b ->
+          let sum_chain = get_op_chain `Sum b |> List.filter ~f:(not % equal_bound (Const Num.zero)) in
           (* Merge addends that are a product of the same bound with different coefficients *)
           let combine_chain_elements_with_coeffs =
             let get_coeff_elem = function
@@ -411,18 +407,14 @@ module Make (Num : PolyTypes.OurNumber) = struct
           (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
           construct_op_chain `Sum combine_chain_elements_with_coeffs
       (* Simplify terms with product head *)
-      | Product (b1, b2) ->
-          let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+      | Product (_, _) as b ->
+          let chain = get_op_chain `Product b in
 
           (* Partition the chain in sets of constants and non-constant factors *)
-          let get_const = function
-            | Const c -> Some c
-            | _ -> None
-          in
-          let all_non_consts = List.filter ~f:(Option.is_none % get_const) chain in
-          let all_consts =
-            List.map ~f:(fun o -> Option.value_exn o)
-            @@ List.filter ~f:Option.is_some @@ List.map ~f:get_const chain
+          let all_consts, all_non_consts =
+            List.partition_map chain ~f:(function
+              | Const c -> Base__Either0.First c
+              | b -> Base__Either0.Second b)
           in
 
           (* Get the coefficient of the complete chain by multiplying all of its constant values *)
@@ -491,9 +483,10 @@ module Make (Num : PolyTypes.OurNumber) = struct
               |> simplify_bound
           | Const c, (Sum (_, _) as e) ->
               let logs, non_logs =
-                List.partition_map (get_op_chain `Sum e) ~f:(function
-                  | Log v -> Base__Either0.First (`Log v)
-                  | b -> Base__Either0.Second b)
+                get_op_chain `Sum e
+                |> List.partition_map ~f:(function
+                     | Log v -> Base__Either0.First (`Log v)
+                     | b -> Base__Either0.Second b)
               in
               let exp_logs_transformed = List.map logs ~f:(fun (`Log v) -> Exp (Const c, Log v)) in
               let exp_non_logs_transformed = Exp (Const c, construct_op_chain `Sum non_logs) in
