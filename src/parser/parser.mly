@@ -47,6 +47,8 @@
 
 %start <Bounds.Bound.t> onlyBound
 
+%start <Bounds.RationalBound.t> onlyRationalBound
+
 %start <Program.t * Goal.classical Goal.goal> programAndGoal
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoalTermination
@@ -354,6 +356,9 @@ rational_laurent_polynomial:
 onlyBound:
   | b = bound EOF { b } ;
 
+onlyRationalBound:
+  | b = rationalBound EOF { b } ;
+
 bound:
   | INFINITY
     { Bound.infinity }
@@ -369,6 +374,26 @@ bound:
     { Bound.exp b1 b2 }
   | b1 = bound; op = bound_bioperator; b2 = bound
     { op b1 b2 } ;
+
+rationalBound:
+  | INFINITY
+    { RationalBound.infinity }
+  | LPAR; b = rationalBound; RPAR
+    { b }
+  | LOG; LPAR; b = rationalBound; RPAR
+    { RationalBound.log_of_bound b }
+  | c = our_float
+    { RationalBound.of_constant c }
+  | v = ID
+    { RationalBound.of_var_string v }
+  | b = rationalBound POW e = rationalBound
+    { RationalBound.exp b e }
+  | b1 = rationalBound; op = rational_bound_bioperator; b2 = rationalBound
+    { op b1 b2 } ;
+
+%inline rational_bound_bioperator:
+  | PLUS { RationalBound.add }
+  | TIMES { RationalBound.mul }
 
 %inline bound_bioperator:
   | PLUS { Bound.add }
