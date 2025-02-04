@@ -359,12 +359,12 @@ bound:
     { b }
   | LOG; LPAR; b = bound; RPAR
     { Bound.log_of_bound b }
-  | c = our_int b = option(preceded(POW, bound))
-    { Bound.exp (Bound.of_constant c) BatOption.(b |? Bound.one) }
+  | c = our_int
+    { Bound.of_constant c }
   | v = ID
     { Bound.of_var_string v }
-  | b = bound POW c = UINT
-    { Bound.pow b (int_of_string c) }
+  | b1 = bound POW b2 = bound
+    { Bound.exp b1 b2 }
   | b1 = bound; op = bound_bioperator; b2 = bound
     { op b1 b2 } ;
 
