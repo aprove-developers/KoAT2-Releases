@@ -60,8 +60,7 @@ let from_real_bound context bound =
       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
       ~log:(fun v -> raise SMTNotRepresentable)
-      ~exp:(fun b e ->
-        Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurRational.to_string b) e)
+      ~exp:(fun b e -> Z3.Arithmetic.mk_power context b e)
   in
   match Option.map ~f:from_finite_bound (RationalBound.prove_finiteness bound) with
   | Some b -> b
@@ -88,8 +87,7 @@ let from_bound context bound =
       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
       ~log:(fun v -> raise SMTNotRepresentable)
-      ~exp:(fun b e ->
-        Z3.Arithmetic.mk_power context (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string b) e)
+      ~exp:(fun b e -> Z3.Arithmetic.mk_power context b e)
   in
   match Option.map ~f:from_finite_bound (Bound.prove_finiteness bound) with
   | Some b -> b

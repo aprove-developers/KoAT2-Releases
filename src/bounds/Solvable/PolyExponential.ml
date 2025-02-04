@@ -586,7 +586,7 @@ module RationalPE = struct
       (fun (c, p, d, b) ->
         let bound_p = Bound.of_poly @@ RationalPolynomial.overapprox p
         and bound_d = Bound.pow runtime_bound d
-        and bound_b = Bound.exp (OurRational.ceil b) runtime_bound in
+        and bound_b = Bound.(exp (of_constant @@ OurRational.ceil b) runtime_bound) in
         Bound.(bound_p * bound_d * bound_b))
       t
     |> Bound.sum_list
@@ -602,7 +602,9 @@ module ComplexPE = struct
       (fun (c, p, d, b) ->
         let bound_p = Bound.of_poly @@ CAPolynomial.overapprox p
         and bound_d = Bound.(pow (Bound.of_var n) d)
-        and bound_b = Bound.exp (OurAlgebraic.ceil @@ OurAlgebraicComplex.abs b) (Bound.of_var n) in
+        and bound_b =
+          Bound.(exp (of_constant @@ OurAlgebraic.ceil @@ OurAlgebraicComplex.abs b) (of_var n))
+        in
         Bound.(bound_p * bound_d * bound_b))
       t
     |> Bound.sum_list

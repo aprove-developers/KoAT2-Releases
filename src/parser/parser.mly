@@ -47,6 +47,8 @@
 
 %start <Bounds.Bound.t> onlyBound
 
+%start <Bounds.RationalBound.t> onlyRationalBound
+
 %start <Program.t * Goal.classical Goal.goal> programAndGoal
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoalTermination
@@ -311,7 +313,9 @@ variable:
 
 our_float:
   | float_string = UFLOAT
-    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string } ;
+    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string }
+  | int_string = UINT
+    { OurRational.of_ourint (OurInt.of_string int_string) } ;
 
 our_int:
   | int_string = UINT
@@ -352,6 +356,9 @@ rational_laurent_polynomial:
 onlyBound:
   | b = bound EOF { b } ;
 
+onlyRationalBound:
+  | b = rationalBound EOF { b } ;
+
 bound:
   | INFINITY
     { Bound.infinity }
@@ -359,14 +366,34 @@ bound:
     { b }
   | LOG; LPAR; b = bound; RPAR
     { Bound.log_of_bound b }
-  | c = our_int b = option(preceded(POW, bound))
-    { Bound.exp c BatOption.(b |? Bound.one) }
+  | c = our_int
+    { Bound.of_constant c }
   | v = ID
     { Bound.of_var_string v }
-  | b = bound POW c = UINT
-    { Bound.pow b (int_of_string c) }
+  | b1 = bound POW b2 = bound
+    { Bound.exp b1 b2 }
   | b1 = bound; op = bound_bioperator; b2 = bound
     { op b1 b2 } ;
+
+rationalBound:
+  | INFINITY
+    { RationalBound.infinity }
+  | LPAR; b = rationalBound; RPAR
+    { b }
+  | LOG; LPAR; b = rationalBound; RPAR
+    { RationalBound.log_of_bound b }
+  | c = our_float
+    { RationalBound.of_constant c }
+  | v = ID
+    { RationalBound.of_var_string v }
+  | b = rationalBound POW e = rationalBound
+    { RationalBound.exp b e }
+  | b1 = rationalBound; op = rational_bound_bioperator; b2 = rationalBound
+    { op b1 b2 } ;
+
+%inline rational_bound_bioperator:
+  | PLUS { RationalBound.add }
+  | TIMES { RationalBound.mul }
 
 %inline bound_bioperator:
   | PLUS { Bound.add }

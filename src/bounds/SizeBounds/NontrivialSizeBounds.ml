@@ -94,7 +94,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
              if OurInt.(equal scaling one) then
                Bound.one
              else
-               Bound.exp scaling (get_timebound t))
+               Bound.(exp (of_constant scaling) (get_timebound t)))
       |> Bound.product
     in
 

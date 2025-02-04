@@ -25,6 +25,7 @@ module type OurNumber = sig
   val ( =~= ) : t -> t -> bool
   val pow : t -> int -> t
   val log : t -> t
+  val to_our_rational : t -> OurRational.t
   val max : t -> t -> t
   val min : t -> t -> t
   val is_integral : t -> bool
@@ -33,6 +34,9 @@ module type OurNumber = sig
   val minus_one : t
   (** The constant representing -1.
       This is not provided by Number.Numeric but is quite useful *)
+
+  val root_pow : t -> t -> t Option.t
+  (** [rootrem x n] computes the x^n if it exists. *)
 end
 
 (** module type for indeterminates in polynomials and monomials *)
@@ -491,6 +495,9 @@ module type Polynomial = sig
 
   val monomials_with_coeffs : t -> (value * monomial) list
   (** Returns all monomials and their coefficients of the polynomial. *)
+
+  val monomials_with_coeffs_seq : t -> (value * monomial) Sequence.t
+  (** Returns all monomials and their coefficients of the polynomial as Sequence.t. *)
 
   val get_constant : t -> value
   (** Returns the constant of the polynomial. *)

@@ -35,6 +35,7 @@ let assert_equal_parameter_poly =
 
 
 let assert_equal_bound = assert_equal ~cmp:Bound.( =~= ) ~printer:Bound.to_string
+let assert_equal_rational_bound = assert_equal ~cmp:RationalBound.( =~= ) ~printer:RationalBound.to_string
 
 let assert_equal_bound_option =
   assert_equal ~cmp:(Option.eq ~eq:Bound.( =~= )) ~printer:(Util.option_to_string Bound.to_string)

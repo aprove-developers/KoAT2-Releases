@@ -20,6 +20,7 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 val read_probability_distribution : string -> ProbabilityDistribution.t
 val read_update_element : string -> ProbabilisticProgramModules.UpdateElement.t
 val read_bound : string -> Bound.t
+val read_rational_bound : string -> RationalBound.t
 val read_general_transitions : string -> ProbabilisticProgramModules.GeneralTransitionSet.t
 val read_input : ?termination:bool -> ?rename:bool -> bool -> string -> Program_.t
 val read_prog_goal_file : ?rename:bool -> string -> Program_.t * Goal.classical Goal.goal

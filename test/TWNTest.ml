@@ -197,14 +197,17 @@ let tests =
                   @@ Bound.equal_complexity expected_complexity (Bound.asymptotic_complexity result))
                 Bound.
                   [
-                    (LogarithmicPolynomial (0, 1), "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,y + 1) :|: x < 0");
-                    (LogarithmicPolynomial (0, 0), "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x*x) :|: y < 0");
-                    (LogarithmicPolynomial (0, 0), "l0(x) -> l1(x), l1(x) -> l1(42) :|: x <= 0");
-                    ( LogarithmicPolynomial (0, 0),
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
+                      "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,y + 1) :|: x < 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+                      "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x*x) :|: y < 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+                      "l0(x) -> l1(x), l1(x) -> l1(42) :|: x <= 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
                       "l0(x,y) -> l1(x,y), l1(x,y) -> l1(42,26) :|: x <= 42 && y + x <= 67" );
-                    ( LogarithmicPolynomial (0, 1),
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                       "l0(x,y) -> l1(x,y), l1(x,y) -> l1(2*x,3*y) :|: x >= y && y >= 1" );
-                    ( LogarithmicPolynomial (0, 6),
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 6),
                       "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0"
                     );
                     (Inf, "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x*x,3*y) :|: x >= y && y >= 1");
@@ -231,14 +234,17 @@ let tests =
                   @@ Bound.equal_complexity expected_complexity (Bound.asymptotic_complexity result))
                 Bound.
                   [
-                    (LogarithmicPolynomial (0, 1), "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,y + 1) :|: x < 0");
-                    (LogarithmicPolynomial (0, 0), "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x*x) :|: y < 0");
-                    (LogarithmicPolynomial (0, 0), "l0(x) -> l1(x), l1(x) -> l1(42) :|: x <= 0");
-                    ( LogarithmicPolynomial (0, 0),
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
+                      "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x + y,y + 1) :|: x < 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+                      "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x,x*x) :|: y < 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+                      "l0(x) -> l1(x), l1(x) -> l1(42) :|: x <= 0" );
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
                       "l0(x,y) -> l1(x,y), l1(x,y) -> l1(42,26) :|: x <= 42 && y + x <= 67" );
-                    ( LogarithmicPolynomial (1, 0),
+                    ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 0),
                       "l0(x,y) -> l1(x,y), l1(x,y) -> l1(2*x,3*y) :|: x >= y && y >= 1" );
-                    ( LogarithmicPolynomial (0, 6),
+                    ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 6),
                       "l0(x,y,z) -> l1(x,y,z), l1(x,y,z) -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0"
                     );
                     (Inf, "l0(x,y) -> l1(x,y), l1(x,y) -> l1(x*x,3*y) :|: x >= y && y >= 1");

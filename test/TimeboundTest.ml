@@ -156,21 +156,31 @@ let tests =
            [
              (Inf, "a() -> b(), b() -> b()", default_conf);
              (Inf, "a(x) -> b(x), b(x) -> b(x-1) :|: x>0, b(x) -> b(x+1) :|: x<=0", default_conf);
-             (LogarithmicPolynomial (0, 0), "a() -> b(), b() -> c()", default_conf);
-             (LogarithmicPolynomial (0, 0), "a() -> b(), b() -> c(), a() -> c()", default_conf);
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+               "a() -> b(), b() -> c()",
+               default_conf );
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+               "a() -> b(), b() -> c(), a() -> c()",
+               default_conf );
              (* TODO Problem with constant ranking functions (LogarithmicPolynomial (0,0), "a -> b(x), b -> b(x-x) :|: x>0", default_conf); *)
-             (LogarithmicPolynomial (0, 0), "a(x) -> b(x), b(x) -> b(x-1) :|: x>x", default_conf);
-             (LogarithmicPolynomial (0, 1), "a(x) -> b(x), b(x) -> b(x-1) :|: x>0", default_conf);
-             (LogarithmicPolynomial (0, 1), "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>y", default_conf);
-             ( LogarithmicPolynomial (0, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 0),
+               "a(x) -> b(x), b(x) -> b(x-1) :|: x>x",
+               default_conf );
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
+               "a(x) -> b(x), b(x) -> b(x-1) :|: x>0",
+               default_conf );
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
+               "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>y",
+               default_conf );
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                "a(x,y) -> b(x,y), b(x,y) -> b(x-1,y) :|: x>0, b(x,y) -> c(x,y), c(x,y) -> c(x+1,y) :|: x<y",
                default_conf );
-             ( LogarithmicPolynomial (0, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                "a(x,y) -> b(x,y), b(x,y) -> b(x+1,y-1) :|: y>0, b(x,y) -> c(x,y), c(x,y) -> c(x-1,y) :|: x > \
                 0",
                default_conf );
              (* Non-linear not supported by Z3 (LogarithmicPolynomial (0,2), "a -> b(x), b -> b(x-1) :|: x^2>0", default_conf); *)
-             ( LogarithmicPolynomial (0, 2),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 2),
                "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: y>0, b(x,y) -> c(x,y), c(x,y) -> c(x-1,y) :|: x > \
                 0",
                default_conf );
@@ -184,14 +194,16 @@ let tests =
                default_conf );
              (* MPRF *)
              (Inf, "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: x > 0", default_conf);
-             (LogarithmicPolynomial (0, 1), "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: x > 0", mprf5_conf);
-             ( LogarithmicPolynomial (0, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
+               "a(x,y) -> b(x,y), b(x,y) -> b(x+y,y-1) :|: x > 0",
+               mprf5_conf );
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                "a(x,y,z) -> b(x,y,z), b(x,y,z) -> b(x+y,y+z,z-1) :|: x > 0",
                mprf5_conf );
-             ( LogarithmicPolynomial (0, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                "a(x,y,z,u) -> b(x,y,z,u), b(x,y,z,u) -> b(x+y,y+z,z+u,u-1) :|: x > 0",
                mprf5_conf );
-             ( LogarithmicPolynomial (0, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 1),
                "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> b(x+y,y+z,z+u,u+v,v-1) :|: x > 0",
                mprf5_conf );
              (* This would require depth > 5 *)
@@ -200,35 +212,35 @@ let tests =
                mprf5_conf );
              (* TWN based on twn001 *)
              (Inf, "a(x,y) -> b(x,y), b(x,y) -> b(2*x, 3*y) :|: x >= y && y >= 1", default_conf);
-             ( LogarithmicPolynomial (1, 0),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 0),
                "a(x,y) -> b(x,y), b(x,y) -> b(2*x, 3*y) :|: x >= y && y >= 1",
                twn_conf );
              ( Inf,
                "a(a,b,c,d) -> b(a,b,c,d), b(a,b,c,d) -> b(a,-2*b,c + c^2 + a^2,-4*c + 2*c^2 + 3*d + a^2) :|: \
                 b != 0 && b^2 - a^5 < 2*c - d",
                twn_conf );
-             ( LogarithmicPolynomial (1, 0),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 0),
                "a(a,b,c,d) -> b(a,b,c,d), b(a,b,c,d) -> b(a,-2*b,c + c^2 + a^2,-4*c + 2*c^2 + 3*d + a^2) :|: \
                 b != 0 && b^2 - a^5 < 2*c - d",
                unsolvable_conf );
-             ( LogarithmicPolynomial (0, 6),
+             ( LogarithmicPolynomial (OurRational.of_int 0, OurRational.of_int 6),
                "a(a,b,c) -> b(a,b,c) :|: c < 0,b(a,b,c) ->b(a - b^2,b + c^2,c) :|: a > 0,b(a,b,c) -> \
                 c(a,b,c) :|: a <= 0,c(a,b,c) -> c(a,b - 1,c) :|: b > 0",
                twn_size_conf );
-             ( LogarithmicPolynomial (1, 0),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 0),
                "a(x,y,z) -> b(1,y,z), b(x,y,z) -> b(2*x, 3*y,z) :|: x >= y && y >= 1, b(x,y,z) -> c(1,z,z), \
                 c(x,y,z) -> c(2*x, 3*y, z) :|: x >= y && y >= 1",
                twn_conf );
-             ( LogarithmicPolynomial (1, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 1),
                "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(u,v,z-1,u,v) :|: z > 0, c(x,y,z,u,v) -> \
                 c(2*x,3*y,z,u,v) :|: x >= y && y >= 1, c(x,y,z,u,v) -> b(x,y,z,u,v)",
                twn_conf );
-             ( LogarithmicPolynomial (1, 1),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 1),
                "a(x,y,z) -> b(x,y,z), b(x,y,z) -> c(z,1,z-1) :|: z > 0, c(x,y,z) -> c(2*x,3*y,z) :|: x >= y \
                 && y >= 1, c(x,y,z) -> d(z,1,z), d(x,y,z) -> d(2*x,3*y,z) :|: x>= y && y >= 1, d(x,y,z) -> \
                 b(x,y,z)",
                twn_conf );
-             ( LogarithmicPolynomial (1, 2),
+             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 2),
                "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(x,y,z-1,z,v) :|: z > 0, c(x,y,z,u,v) -> \
                 d(u,v,z,u-1,v) :|: u > 0, d(x,y,z,u,v) -> d(2 * x, 3 * y,z,u,v) :|: x >= y && y >= 1, \
                 d(x,y,z,u,v) -> c(y,y,z,u,v), d(x,y,z,u,v) -> b(x,y,z,u,v)",

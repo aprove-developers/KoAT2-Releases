@@ -212,6 +212,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     |> List.map ~f:(fun mon -> (ScaledMonomial_.coeff mon, ScaledMonomial_.monomial mon))
 
 
+  let monomials_with_coeffs_seq poly = Map.to_sequence poly |> Sequence.map ~f:Tuple2.swap
   let of_monomial mon = lift Value.one mon
   let of_power var n = of_monomial (Monomial_.lift var n)
 

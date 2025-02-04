@@ -56,4 +56,17 @@ let tests =
                   ("2^(log(x) + log(y))", "x*y");
                   ("3^(log(x) + log(y))", "4*x*y");
                 ];
+         "simplify_rational"
+         >::: List.map
+                (fun (expected_bound, bound) ->
+                  bound >:: fun _ ->
+                  assert_equal_rational_bound
+                    (Readers.read_rational_bound expected_bound)
+                    (Readers.read_rational_bound bound))
+                [
+                  (* Roots *)
+                  ("4", "2^0.5 * 8^0.5");
+                  ("2", "2^[1/4] * 8^[1/4]");
+                  ("(x*y)^0.5", "x^0.5 * y^0.5");
+                ];
        ]
