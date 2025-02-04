@@ -311,7 +311,9 @@ variable:
 
 our_float:
   | float_string = UFLOAT
-    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string } ;
+    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string }
+  | int_string = UINT
+    { OurRational.of_ourint (OurInt.of_string int_string) } ;
 
 our_int:
   | int_string = UINT
