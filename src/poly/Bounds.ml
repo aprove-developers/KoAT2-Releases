@@ -241,7 +241,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Exp (b, e) ->
         let to_string_ t =
           match t with
-          | Var v -> Var.to_string v
+          | Var v -> Var.to_string ~pretty v
           | Const c -> Num.to_string c
           | b -> "(" ^ show_bound_inner ~pretty b ^ ")"
         in
