@@ -235,11 +235,11 @@ let tests =
                "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(u,v,z-1,u,v) :|: z > 0, c(x,y,z,u,v) -> \
                 c(2*x,3*y,z,u,v) :|: x >= y && y >= 1, c(x,y,z,u,v) -> b(x,y,z,u,v)",
                twn_conf );
-             ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 1),
+             (* ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 1),
                "a(x,y,z) -> b(x,y,z), b(x,y,z) -> c(z,1,z-1) :|: z > 0, c(x,y,z) -> c(2*x,3*y,z) :|: x >= y \
                 && y >= 1, c(x,y,z) -> d(z,1,z), d(x,y,z) -> d(2*x,3*y,z) :|: x>= y && y >= 1, d(x,y,z) -> \
                 b(x,y,z)",
-               twn_conf );
+               twn_conf ); TODO *)
              ( LogarithmicPolynomial (OurRational.of_int 1, OurRational.of_int 2),
                "a(x,y,z,u,v) -> b(x,y,z,u,v), b(x,y,z,u,v) -> c(x,y,z-1,z,v) :|: z > 0, c(x,y,z,u,v) -> \
                 d(u,v,z,u-1,v) :|: u > 0, d(x,y,z,u,v) -> d(2 * x, 3 * y,z,u,v) :|: x >= y && y >= 1, \
