@@ -516,6 +516,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let add = OptionMonad.liftM2 add_bound
   let mul_bound b1 b2 = simplify_bound (Product (b1, b2))
   let max = add
+  let max_seq bounds = Sequence.reduce ~f:max bounds |> Option.map ~f:simplify |? zero
 
   let mul b1 b2 =
     match (b1, b2) with
@@ -747,6 +748,7 @@ module BinaryBound = struct
     | _ -> Infinite
 
 
+  let max_seq bounds = Sequence.reduce ~f:max bounds |? zero
   let add = max
   let mul = max
 

@@ -15,15 +15,24 @@ let skip_location location graph =
   |> Tuple2.mapn (fun f -> f graph location)
   |> Tuple2.mapn Sequence.of_list |> uncurry Sequence.cartesian_product
   |> Sequence.map ~f:(fun ((l, t, l1), (l'1, t', l')) ->
-         let chained = (l, TransitionLabel.append t t', l') in
-         ProofOutput.add_str_paragraph_to_proof (fun () ->
-             "Chain transitions "
-             ^ Transition.to_id_string_pretty (l, t, l1)
-             ^ " and "
-             ^ Transition.to_id_string_pretty (l'1, t', l')
-             ^ " to "
-             ^ Transition.to_id_string_pretty chained);
-         chained)
+         if TransitionLabel.has_rec_calls t || TransitionLabel.has_rec_calls t' then
+           Sequence.of_list [ (l, t, l1); (l'1, t', l') ]
+         else
+           let t_non_rec = TransitionLabel.to_non_rec t and t'_non_rec = TransitionLabel.to_non_rec t' in
+           let chained =
+             ( l,
+               TransitionLabel.of_non_rec @@ TransitionLabel.TransitionLabelNonRec.append t_non_rec t'_non_rec,
+               l' )
+           in
+           ProofOutput.add_str_paragraph_to_proof (fun () ->
+               "Chain transitions "
+               ^ Transition.to_id_string_pretty (l, t, l1)
+               ^ " and "
+               ^ Transition.to_id_string_pretty (l'1, t', l')
+               ^ " to "
+               ^ Transition.to_id_string_pretty chained);
+           Sequence.of_list [ chained ])
+  |> Sequence.concat
   |> (flip TransitionGraph.add_transitions) graph
 
 

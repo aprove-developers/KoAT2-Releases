@@ -53,6 +53,7 @@ val lift_to_program :
 module Make
     (PM : ProgramTypes.ProgramModules)
     (CPM : ProgramTypes.ClassicalProgramModules)
+    (_ : EliminateNonContributors.Adapter with type transition := PM.Transition.t)
     (_ : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) : sig
@@ -71,6 +72,7 @@ module StandardProgram : module type of MakeForClassicalProgramModules (ProgramM
 module ProbabilisticWithOverappr :
     module type of
       Make (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
+        (EliminateNonContributors.DefaultAdapter)
         (struct
           let eq = ProbabilisticPrograms.Equalities.program_equalities
         end)

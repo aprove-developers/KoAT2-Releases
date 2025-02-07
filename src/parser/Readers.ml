@@ -36,6 +36,7 @@ let read_probability_distribution = read Parser.onlyProbabilityDistribution
 let read_update_element = read Parser.onlyUpdateElement
 let read_atom = read Parser.onlyAtom
 let read_polynomial str = read Parser.onlyPolynomial str
+let read_polynomialRec str = read Parser.onlyPolynomialRec str
 let read_bound = read Parser.onlyBound
 let read_rational_bound = read Parser.onlyRationalBound
 let read_prob str = read Parser.onlyProb str

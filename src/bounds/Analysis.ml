@@ -304,7 +304,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
     let scc = Program.scc_transitions_from_locs program scc_locs in
     let loop_state =
-      let module Check_TWN = Check_TWN.Make (Bound) (PM) in
+      let module Check_TWN = Check_TWN.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec) in
       if conf.unsolvable then
         ref (initial_loop_state (const true) program scc)
       else if conf.twn then
@@ -437,7 +437,7 @@ module Classical (Bound : BoundType.Bound) = struct
     CFR.time_cfr := float_of_int time_cfr;
     let trivial_appr = TrivialTimeBounds.compute program appr in
     let program, appr =
-      program |> Program.sccs_locs
+      program |> Program.sccs_locs_dependency_graph
       |> List.fold_left
            ~f:(fun (program, appr) scc_locs ->
              Logger.log logger Logger.INFO (fun () ->

@@ -2,18 +2,11 @@ open OurBase
 open Formulas
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
-
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
   (** A loop is a 3-tuple (guard_and_inv, guard, update) *)
 
-  let mk t =
-    ( Formula.mk (TransitionLabel.guard t),
-      Formula.mk (TransitionLabel.guard_without_inv t),
-      TransitionLabel.update_map t )
-
-
+  let mk t = (Formula.mk (TL.guard t), Formula.mk (TL.guard_without_inv t), TL.update_map t)
   let id formula = (formula, formula, Map.empty (module Var))
   let guard = Tuple3.first
   let guard_without_inv = Tuple3.second

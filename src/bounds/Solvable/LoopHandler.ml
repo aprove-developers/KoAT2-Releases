@@ -6,11 +6,14 @@ let logger = Logging.(get Twn)
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
-  module EliminateNonContributors = EliminateNonContributors.Make (PM)
-  module TWN_Complexity = TWN_Complexity.Make (Bound) (PM)
+
+  module EliminateNonContributors =
+    EliminateNonContributors.Make (PM) (EliminateNonContributors.DefaultAdapter)
+
+  module TWN_Complexity = TWN_Complexity.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
   module SimpleCycle = SimpleCycle.Make (Bound) (PM)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
-  module Loop = Loop.Make (Bound) (PM)
+  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
 
   let complete_proofs twn_proofs cycle ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry, local_bound) =

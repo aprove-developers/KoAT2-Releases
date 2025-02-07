@@ -31,7 +31,7 @@ let time_cfr = ref 180.
 
 module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struct
   open PM
-  module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
+  module Approximation = Approximation.MakeWithDefaultTransition (Bound) (PM)
 
   type program = Program.t
   type transition = Transition.t
@@ -89,7 +89,6 @@ module Make (PM : ProgramTypes.ProgramModules) (Bound : BoundType.Bound) = struc
               ("timelimit", string_of_float timelimit);
             ] ))
         execute
-        ~result:(Printf.sprintf "obtained refined program: %b" % Option.is_some)
     in
     let rec apply_cfrs = function
       | cfr :: cfrs when !time_cfr > 0. -> (

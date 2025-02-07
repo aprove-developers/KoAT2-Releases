@@ -1,0 +1,11 @@
+# Jump to f without changing B -> Size of B is A*B. So, in contrast to `rec_size_02.koat`, we add the value of B A times.
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l1(A - 1,B + f[B|(A,B) <- (A,B)]) :|: A > 0
+  l1(A,B) -> l2(A,B) :|: A <= 0
+  l2(A,B) -> l2(A,B - 1) :|: B > 0
+)

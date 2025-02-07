@@ -9,6 +9,10 @@ module RV = ProbabilisticPrograms.ProbabilisticRV
 module GeneralTransition = ProbabilisticPrograms.GeneralTransition
 module GeneralTransitionSet = ProbabilisticPrograms.GeneralTransitionSet
 module GRV = ProbabilisticPrograms.GRV
+module UpdateElementNonRec = Polynomials.Polynomial
+
+module TransitionLabelNonRec =
+  ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonRec
 
 type program_modules_t =
   (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t)
@@ -18,7 +22,11 @@ module NonProbOverappr = struct
   module Program = ProbabilisticPrograms.ProbabilisticProgramNonProbOverappr
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
   module Location = Location
-  module UpdateElement = Polynomials.Polynomial
+  module UpdateElement = PolyRec.PolyRec
+  module UpdateElementNonRec = Polynomials.Polynomial
+
+  module TransitionLabelNonRec =
+    ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonRec
 
   module TransitionSet =
     Transition_.TransitionSetOver (ProbabilisticPrograms.ProbabilisticTransitionNonProbOverappr)
@@ -47,11 +55,9 @@ module ProbabilisticAdapter :
   type grouped_transition = GeneralTransition.t
   type grouped_transition_cmp_wit = GeneralTransition.comparator_witness
 
-  module P = Polynomials.Polynomial
-
   let overapprox_indeterminates ue =
     let new_var = Var.fresh_id Var.Int () in
-    (P.of_var new_var, UpdateElement_.as_guard ue new_var)
+    (Polynomials.Polynomial.of_var new_var, UpdateElement_.as_guard ue new_var)
 
 
   let outgoing_grouped_transitions trans_graph location =

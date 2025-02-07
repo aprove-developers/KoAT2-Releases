@@ -28,6 +28,11 @@ struct
   let locations graph = fold_vertex (flip Set.add) graph LocationSet.empty
   let transitions graph = fold_edges_e (flip Set.add) graph TransitionSet.empty
 
+  let reachable_locations graph l =
+    let module Traverse = Graph.Traverse.Bfs (G) in
+    Traverse.fold_component (flip Set.add) LocationSet.empty graph l
+
+
   let map_transitions f t =
     let module MapModule =
       Graph.Gmap.Edge

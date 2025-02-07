@@ -207,28 +207,33 @@ struct
 
 
   let compute_bound program_vars (l, t, l') var =
+    let open PolyRec in
     let execute () =
       let open OptionMonad in
       let* update = TL.update t var in
-      if Set.are_disjoint (Polynomial.vars update) (Guard.vars @@ TL.guard t) then
-        from_update_poly program_vars var update
+      if PolyRec.has_recvars update then
+        None
       else
-        let v' = Var.fresh_id Var.Int () in
-        let update_formula =
-          (* Facilitate SMT call by removing non-linear constraints. *)
-          (* The resulting update_formula is an overapproximation of the original formula *)
-          Formula.mk @@ Constraint.drop_nonlinear
-          @@ Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') update)
-        in
-        let update_vars =
-          Set.union (Polynomial.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
-        in
-        try
-          (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
-          (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-          find_bound (Set.inter program_vars update_vars) v' update_formula (s_range update)
-        with
-        | SMT.SMTFailure _ -> None
+        let update = PolyRec.to_poly update in
+        if Set.are_disjoint (Polynomial.vars update) (Guard.vars @@ TL.guard t) then
+          from_update_poly program_vars var update
+        else
+          let v' = Var.fresh_id Var.Int () in
+          let update_formula =
+            (* Facilitate SMT call by removing non-linear constraints. *)
+            (* The resulting update_formula is an overapproximation of the original formula *)
+            Formula.mk @@ Constraint.drop_nonlinear
+            @@ Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') update)
+          in
+          let update_vars =
+            Set.union (Polynomial.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+          in
+          try
+            (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
+            (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
+            find_bound (Set.inter program_vars update_vars) v' update_formula (s_range update)
+          with
+          | SMT.SMTFailure _ -> None
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->

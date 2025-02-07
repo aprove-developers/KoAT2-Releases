@@ -16,6 +16,17 @@ module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) : sig
     unit
 end
 
+module MakeForDependencyGraph : sig
+  open DependencyGraph
+
+  val print_system : outdir:Fpath.t -> file:string -> DependencyGraph.t -> format:string -> unit
+  (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
+          For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+
+  val print_system_pretty : ?file_format:string -> DependencyGraph.t -> string option
+  val print_system_pretty_html : DependencyGraph.t -> string
+end
+
 module ProbabilisticGraphPrint :
   GraphPrintType.GraphPrint
     with type transition_label = ProbabilisticProgramModules.TransitionLabel.t

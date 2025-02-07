@@ -102,7 +102,7 @@ let tests =
                     ]
                   in
 
-                  let mk_false_guard = Guard.mk_eq UpdateElement.zero UpdateElement.one in
+                  let mk_false_guard = Guard.mk_eq Polynomials.Polynomial.zero Polynomials.Polynomial.one in
 
                   let after_invalidating_guards transition_with_guards_to_invalidate =
                     let program' =

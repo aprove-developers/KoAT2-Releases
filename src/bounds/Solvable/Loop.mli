@@ -1,12 +1,10 @@
 open Formulas
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
-  open PM
-
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
 
-  val mk : TransitionLabel.t -> t
+  val mk : TL.t -> t
   val guard : t -> Formula.t
   val guard_without_inv : t -> Formula.t
   val update : t -> Polynomial.t ProgramTypes.VarMap.t

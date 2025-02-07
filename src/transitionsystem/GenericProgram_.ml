@@ -13,6 +13,8 @@ type (!'trans_label, !'trans_label_cmp_wit) pre_cache =
 type (!'trans_label, !'trans_label_cmp_wit, !'graph) t = {
   start : Location.t;
   graph : 'graph;
+  return_locations : LocationSet.t;
+  dependency_graph : DependencyGraph.DependencyGraph.t;
   pre_cache : ('trans_label, 'trans_label_cmp_wit) pre_cache Atomically.t;
 }
 
@@ -47,12 +49,10 @@ module type Adapter = sig
 end
 
 module OverApproximationUtils (A : Adapter) = struct
-  open A
-
   let overapprox_update update =
     Map.fold
       ~f:(fun ~key:var ~data:ue (new_update, guards) ->
-        let ue_approx, guard = overapprox_indeterminates ue in
+        let ue_approx, guard = A.overapprox_indeterminates ue in
         (Map.add_exn ~key:var ~data:ue_approx new_update, Guard.mk_and guards guard))
       update
       ~init:(Map.empty (module Var), Guard.mk_true)

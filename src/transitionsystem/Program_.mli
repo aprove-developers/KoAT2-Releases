@@ -5,7 +5,7 @@ exception RecursionNotSupported
 (** KoAT does not support recursion yet *)
 
 module Make
-    (TL : ProgramTypes.TransitionLabel)
+    (TL : ProgramTypes.DefaultTransitionLabel)
     (T :
       ProgramTypes.Transition
         with type transition_label = TL.t
@@ -13,14 +13,24 @@ module Make
     (G :
       ProgramTypes.TransitionGraph
         with type transition_label = TL.t
-         and type transition_label_comparator_witness = TL.comparator_witness) : sig
+         and type transition_label_comparator_witness = TL.comparator_witness)
+    (_ :
+      ProgramTypes.PreAdapter
+        with type transition_label = TL.t
+         and type transition_label_comparator_witness = TL.comparator_witness
+         and type transition = Location.t * TL.t * Location.t
+         and type transition_comparator_witness = T.comparator_witness
+         and type transition_graph = G.t)
+    (_ : DependencyGraphAdapter.Adapter with type transition_label = TL.t and type transition_graph = G.t) : sig
   include
     ProgramTypes.Program
       with type transition_label = TL.t
        and type transition_label_comparator_witness = TL.comparator_witness
        and type transition_graph = G.t
 
-  val from_sequence : Location.t -> T.t Sequence.t -> t
+  val from_sequence :
+    Location.t -> ?return_locations:LocationSet.t -> ?rec_locations:LocationSet.t -> T.t Sequence.t -> t
+
   val remove_transition : t -> transition -> t
   val map_graph : (transition_graph -> transition_graph) -> t -> t
 
@@ -33,20 +43,30 @@ end
 
 module ClassicalProgram : sig
   include
-    ProgramTypes.Program
+    ProgramTypes.ClassicProgram
       with type transition_label = TransitionLabel_.t
        and type transition_label_comparator_witness = TransitionLabel_.comparator_witness
        and type transition_graph = TransitionGraph_.t
 
   val map_graph : (transition_graph -> transition_graph) -> t -> t
-  val from_sequence : Location.t -> transition Sequence.t -> t
-  val from_graph : Location.t -> transition_graph -> t
+
+  val from_sequence :
+    Location.t ->
+    ?return_locations:LocationSet.t ->
+    ?rec_locations:LocationSet.t ->
+    transition Sequence.t ->
+    t
+
+  val from_graph :
+    Location.t -> ?return_locations:LocationSet.t -> ?rec_locations:LocationSet.t -> transition_graph -> t
+
   val remove_transition : t -> transition -> t
 end
 
 include module type of ClassicalProgram
 
-val from_com_transitions : ?termination:bool -> Transition_.t list list -> Location.t -> t
+val from_com_transitions :
+  ?termination:bool -> ?return_locations:LocationSet.t -> Transition_.t list list -> Location.t -> t
 (** Creates a program from a list of transitions and a (start) location.
      A list of k transitions makes up a Com_k transition
      Since KoAT currently does not support recursion we try to eliminate it.

@@ -121,9 +121,6 @@ module type TransitionLabel = sig
   val changed_vars : t -> VarSet.t
   (** All input variables where the update is not x' = x.*)
 
-  val chain_guards : t -> t -> Guard.t
-  (** Guard that is true if both transitions can be executed one after another *)
-
   val remove_non_contributors : VarSet.t -> t -> t
 
   include Comparator.S with type t := t
@@ -131,22 +128,35 @@ module type TransitionLabel = sig
   val sexp_of_t : t -> Sexp.t
 end
 
-module type ClassicalTransitionLabel = sig
-  include TransitionLabel with type update_element = Polynomial.t
+module type DefaultTransitionLabel = sig
+  include TransitionLabel
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
 
-  val relax_guard : non_static:VarSet.t -> t -> t
-  (** Keeps only the atoms of the guard whose variables are a subset of non_static *)
+  val relax_guard : deterministic:VarSet.t -> t -> t
+  (** Keeps only the atoms of the guard whose variables are deterministic *)
+
+  val chain_guards : t -> t -> Guard.t
+  (** Guard that is true if both transitions can be executed one after another *)
+end
+
+module type ClassicalTransitionLabelNonRec = sig
+  include DefaultTransitionLabel with type update_element = Polynomial.t
+end
+
+module type ClassicalTransitionLabel = sig
+  include DefaultTransitionLabel with type update_element = PolyRec.PolyRec.t
+  module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 
-  (** Create an equivalent label with new id's, takes gt_id from the provided table and
-      if not available creates and adds a new id_for the general transition to the table.
-      *)
-  (* val copy_rename: (int, int) Hashtbl.t -> t -> t *)
+  val has_rec_calls : t -> bool
+  val rec_vars : t -> (VarRec.t, VarRec.comparator_witness) Base.Set.t
+  val of_non_rec : TransitionLabelNonRec.t -> t
+  val overapprox_rec_updates : t -> TransitionLabelNonRec.t
+  val to_non_rec : t -> TransitionLabelNonRec.t
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -207,8 +217,11 @@ end
 
 module type ClassicalTransition = sig
   include Transition
+  module TransitionLabel : ClassicalTransitionLabel
 
   val overapprox_nonlinear_updates : t -> t
+  val has_rec_calls : t -> bool
+  val rec_vars : t -> (VarRec.t, VarRec.comparator_witness) Base.Set.t
 end
 
 (** This module represents a transition graph. *)
@@ -270,6 +283,45 @@ module type TransitionGraph = sig
 
   val sccs_from_sequence : transition Sequence.t -> transition_set list
   (** Returns the (biggest) strongly connected components of the transitons. *)
+
+  val reachable_locations : t -> Location.t -> LocationSet.t
+  (** Returns all locations which can be reached via transitions for a given locations (we do not consider recursive jumps) *)
+end
+
+module type PreAdapter = sig
+  type transition_label
+  type transition_label_comparator_witness
+  type transition = Location.t * transition_label * Location.t
+
+  type transition_comparator_witness =
+    transition_label_comparator_witness TransitionComparator.comparator_witness
+
+  type transition_set = (transition, transition_comparator_witness) Set.t
+  type transition_graph
+  type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
+
+  val compute_pre : t -> transition -> transition Sequence.t
+
+  (** Type of a program consisting of a program graph and a start location. *)
+  val pre : t -> transition -> transition_set
+  (** Returns a set of all transitions which occur directly before the given transition in the graph.
+      Corresponds to pre(t).
+      Note that the computation involves calls to the SMT solver and is therefore expensive.
+      However, to improve performance they are cached inside the program type [t]. *)
+
+  val pre_lazy : t -> transition -> transition Sequence.t
+  (** Similar to pre but return the pre-transitions as a lazy Sequence.
+      If the result has already been computed and cached in the value of type [t], then we do not recompute the pre-transitions.
+      If however the pre-transitions haven't been computed yet then they are lazily computed when inspecting the returned sequence. These values are *not* added to the cached!
+      This is for instance useful when cutting unsatisfiable transitions since during preprocessing the cache is invalidated many times and it suffices to check whether one pre-transition exists. *)
+
+  val entry_transitions : t -> transition list -> transition Batteries.List.t
+  (** Computes all entry transitions of the given transitions.
+          These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+
+  val entry_transitions_with_logger :
+    Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
+  (** Like [entry_transitions] but logs the results using the given logger *)
 end
 
 module type Program = sig
@@ -304,6 +356,9 @@ module type Program = sig
   val graph : t -> transition_graph
   (** Returns transition graph of a program. *)
 
+  val dependency_graph : t -> DependencyGraph.DependencyGraph.t
+  (** Returns transition dependency graph of a program. *)
+
   val add_invariant : Location.t -> Constraint.t -> t -> t
   (** Adds the invariant to a location of the program.
       The aim is to only store the atoms of the invariant that are not already contained in the guard *)
@@ -325,6 +380,12 @@ module type Program = sig
 
   val succ : t -> transition -> transition_set
   (** Similar to [pre]. Uses [pre] internally, so heavy computation should be memoized. *)
+
+  val ending_in_loc : t -> Location.t -> transition_set
+  (** Returns the set of transitions ending in a specified location. *)
+
+  val reachable_locations : t -> Location.t -> LocationSet.t
+  (** Returns the set of all reachable locations starting in a given location. *)
 
   val is_initial : t -> transition -> bool
   (** Returns true if the given transition is an initial transition. *)
@@ -362,8 +423,13 @@ module type Program = sig
   val start : t -> Location.t
   (** Returns start location. *)
 
+  val return_locations : t -> LocationSet.t
+
   val sccs_locs : t -> LocationSet.t List.t
   (** Returns the (biggest) strongly connected components of the program in topological order. *)
+
+  val sccs_locs_dependency_graph : t -> LocationSet.t List.t
+  (** Returns the (biggest) strongly connected components of the dependency graph of the program in topological order. *)
 
   val scc_transitions_from_locs : t -> LocationSet.t -> transition_set
   (** The transitions that make up the SCC given by the [LocationSet] *)
@@ -386,7 +452,7 @@ module type Program = sig
 
   val entry_transitions_with_logger :
     Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
-  (** Like [entry_transitions] but loggs the results using the given logger *)
+  (** Like [entry_transitions] but logs the results using the given logger *)
 
   val outgoing_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
   (** Computes all outgoing transitions of the given transitions.
@@ -404,6 +470,22 @@ module type Program = sig
     val compute_pre : t -> transition -> transition Sequence.t
     (** Compute pre transitions by ignoring the cache. *)
   end
+end
+
+module type ClassicProgram = sig
+  include Program
+
+  val pre_without_rec : t -> transition -> transition_set
+  (** Returns a set of all transitions which occur directly before the given transition in the graph or recursive calls leading to the given transition.
+      Note that the computation involves calls to the SMT solver and is therefore expensive.
+      However, to improve performance they are cached inside the program type [t]. *)
+
+  val entry_transitions_without_rec : t -> transition list -> transition list
+  (** Computes all entry transitions of the given transitions including recursive calls.
+      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+
+  val entry_transitions_without_rec_with_logger : Logger.log -> t -> transition list -> transition list
+  (** Like [entry_transitions_rec] but logs the results using the given logger *)
 end
 
 module type RV = sig
@@ -471,8 +553,10 @@ end
 module type ClassicalProgramModules = sig
   (* Can we avoid copy/pasting below? *)
 
-  module UpdateElement : module type of Polynomial
+  module UpdateElement : module type of PolyRec.PolyRec
   module TransitionLabel : ClassicalTransitionLabel
+  module UpdateElementNonRec : module type of Polynomial
+  module TransitionLabelNonRec : TransitionLabel with type update_element = UpdateElementNonRec.t
 
   module Transition :
     ClassicalTransition
@@ -492,7 +576,7 @@ module type ClassicalProgramModules = sig
        and type transition = Transition.t
 
   module Program :
-    Program
+    ClassicProgram
       with type transition_label = TransitionLabel.t
        and type transition_label_comparator_witness = TransitionLabel.comparator_witness
        and type transition = Transition.t

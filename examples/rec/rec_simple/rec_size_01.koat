@@ -1,0 +1,9 @@
+# Jump to f without changing B -> Size of B is B. However, this size bound is irrelevant for the runtime complexity.
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l1(A - 1,f[B|(A,B) <- (A,B)]) :|: A > 0
+)

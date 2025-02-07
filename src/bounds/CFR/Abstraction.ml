@@ -97,7 +97,7 @@ end = struct
     in
 
     let pr_c incoming_transition =
-      let label = PM.Transition.label incoming_transition in
+      let (label : TransitionLabel.t) = PM.Transition.label incoming_transition in
       let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
       Polyhedrons.update_guard am update_approx guard
@@ -108,6 +108,7 @@ end = struct
     let pr_cv incoming_transition =
       let label = PM.Transition.label incoming_transition in
       let update_approx, guard_approx = PM.TransitionLabel.update_map label |> overapprox_update in
+
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
       ApronInterface.Koat2Apron.constraint_to_polyh am guard
       |> Polyhedrons.project_polyh am program_variables

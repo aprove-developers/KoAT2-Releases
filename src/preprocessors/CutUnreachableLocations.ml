@@ -9,13 +9,13 @@ module Make (M : ProgramTypes.ProgramModules) = struct
 
   (** Returns a set of all locations which are reachable from the given start location. *)
   let reachable_locations graph start : LocationSet.t =
-    let module Traverse = Graph.Traverse.Bfs (M.TransitionGraph) in
+    let module Traverse = Graph.Traverse.Bfs (DependencyGraph.DependencyGraph) in
     Traverse.fold_component (flip Set.add) LocationSet.empty graph start
 
 
   (** Returns a set of all locations which are unreachable from the given start location. *)
   let unreachable_locations program start : LocationSet.t =
-    let graph = M.Program.graph program in
+    let graph = M.Program.dependency_graph program in
     if Set.is_empty (M.Program.locations program) then
       LocationSet.empty
     else

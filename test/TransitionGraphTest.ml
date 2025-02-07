@@ -97,8 +97,7 @@ let suite =
                  program_str >:: fun _ ->
                  Base.Set.choose_exn (Program.transitions prog)
                  |> TransitionLabel.update_map % Transition.label
-                 |> Base.Map.for_all ~f:(fun u ->
-                        Polynomials.Polynomial.(equal (of_var @@ Var.of_string "Arg_1") u))
+                 |> Base.Map.for_all ~f:(fun u -> PolyRec.PolyRec.(equal (of_var @@ Var.of_string "Arg_1") u))
                  |> assert_bool "Wrongly parsed update");
               ];
        ]

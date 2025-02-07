@@ -1,5 +1,5 @@
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (Bound) (PM)
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
+  module Loop : module type of Loop.Make (Bound) (TL)
 
   type twn = TWN of Var.t list | NOTTRIANGULAR
   type monotonicity = MONOTONIC | DEFECTIVE of Var.t list

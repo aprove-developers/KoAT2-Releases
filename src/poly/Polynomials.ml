@@ -402,8 +402,30 @@ module PolynomialOver (Value : PolyTypes.Ring) = struct
     substitute_f (fun var -> Option.value ~default:(of_var var) @@ Map.find substitution var) t
 end
 
+module Monomial = struct
+  include Monomials.MakeOverIndeterminate (VarIndeterminate) (OurInt)
+
+  let t_of_sexp =
+    of_sequence % Sequence.of_list
+    % List.t_of_sexp
+        (Sexplib0.Sexp_conv.pair_of_sexp
+           (VarIndeterminate.of_string % Sexp.to_string)
+           Sexplib0.Sexp_conv.int_of_sexp)
+
+
+  let sexp_of_t =
+    List.sexp_of_t
+      (Sexplib0.Sexp_conv.sexp_of_pair
+         (Sexplib0.Sexp_conv.sexp_of_string % VarIndeterminate.to_string)
+         Sexplib0.Sexp_conv.sexp_of_int)
+    % Sequence.to_list % to_sequence
+end
+
 module Polynomial = struct
   include PolynomialOver (OurInt)
+
+  let t_of_sexp = Map.m__t_of_sexp (module Monomial) OurInt.t_of_sexp
+  let sexp_of_t = Map.sexp_of_m__t (module Monomial) OurInt.sexp_of_t
 
   let max_of_occurring_constants =
     fold ~const:OurInt.abs
@@ -453,6 +475,9 @@ module Polynomial = struct
         None
     with
     | NO_COMMON_FACTOR -> None
+
+
+  let of_poly = identity
 end
 
 module RationalPolynomial = struct

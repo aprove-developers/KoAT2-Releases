@@ -123,7 +123,7 @@ end
 module MakeWithDefaultTransition (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
   Make (B) (PM) (TransitionApproximationType.MakeDefaultApproximableTransition (PM))
 
-module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ProgramModules) =
+module MakeForClassicalAnalysis (B : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) =
   MakeWithDefaultTransition (B) (PM)
 
 module Coerce

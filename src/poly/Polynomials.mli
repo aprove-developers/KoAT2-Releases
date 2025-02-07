@@ -41,6 +41,9 @@ module Polynomial : sig
 
   include module type of PolynomialOver (OurInt)
 
+  val t_of_sexp : Sexp.t -> t
+  val sexp_of_t : t -> Sexp.t
+
   val primitive_part_content_factorisation : t -> OurInt.t * t
   (** The factorisation is such that the content is never negative *)
 
@@ -54,6 +57,7 @@ module Polynomial : sig
   (** TODO doc *)
 
   val find_common_factor : t -> t -> OurRational.t option
+  val of_poly : t -> t
 end
 
 (** Provides default implementation of polynomials ranged over [OurRational]. *)

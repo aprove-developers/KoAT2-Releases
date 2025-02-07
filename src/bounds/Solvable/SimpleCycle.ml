@@ -4,27 +4,28 @@ open Polynomials
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module Loop = Loop.Make (Bound) (PM)
+  module TL = PM.TransitionLabel
+  module Loop = Loop.Make (Bound) (TL.TransitionLabelNonRec)
   module TWN_Proofs = TWN_Proofs.Make (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
-  type path = (Location.t * TransitionLabel.t list * Location.t) list
+  type path = (Location.t * TL.t list * Location.t) list
   (** A simple cycle l0 ->_{t_11 || ... || t_1m} ... ->_{t_n1 || ... || t_nk} ln with
     - p.w.d locations,
     - no temp vars, and
     - we always consider a list of transitions with the same update. *)
 
-  let _to_string path =
+  let _to_string (path : path) =
     List.map
       (fun (l, ts, l') ->
         "(" ^ Location.to_string l ^ ","
-        ^ List.fold_right (fun t str -> str ^ TransitionLabel.to_string ~pretty:true t ^ " ") ts ""
+        ^ List.fold_right (fun t str -> str ^ TL.to_string ~pretty:true t ^ " ") ts ""
         ^ "," ^ Location.to_string l' ^ ")")
       path
     |> String.concat " -> "
 
 
-  let handled_transitions t =
+  let handled_transitions (t : path) =
     List.flatten (List.map (fun (l, ts, l') -> List.fold_right (fun t res -> (l, t, l') :: res) ts []) t)
 
 
@@ -66,22 +67,25 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let cycles_with_t trans t = compute_cycles trans [ [ t ] ] []
 
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
-  let update_path vars tmp_vars path =
+  let update_path vars tmp_vars (path : path) =
     let varlist = Base.Set.to_list vars in
     let labels = List.map (List.first % Tuple3.second) path in
     (* HashSet where all elements are definitely not static*)
     let static_dep_table = Hashtbl.create 10 in
     Base.Set.iter ~f:(flip (Hashtbl.add static_dep_table) ()) tmp_vars;
-    let non_static_vars =
+    let deterministic =
       let maybe_changed non_statics =
-        let update_is_static u =
-          Base.Set.for_all ~f:(Option.is_none % Hashtbl.find_option static_dep_table) (UpdateElement.vars u)
+        let update_is_deterministic u =
+          Base.Set.for_all ~f:(Option.is_none % Hashtbl.find_option static_dep_table) (Polynomial.vars u)
         in
         (* all updates of var in the path *)
-        let updates var = OurBase.List.filter_opt @@ List.map (flip TransitionLabel.update var) labels in
-        let static_update var = List.for_all update_is_static @@ updates var in
-        let new_non_static var = not (static_update var || Hashtbl.mem static_dep_table var) in
-        List.find_opt new_non_static varlist
+        let updates var =
+          OurBase.List.filter_opt
+          @@ List.map (flip (TL.TransitionLabelNonRec.update % TL.overapprox_rec_updates) var) labels
+        in
+        let deterministic_update var = List.for_all update_is_deterministic @@ updates var in
+        let new_deterministic var = not (deterministic_update var || Hashtbl.mem static_dep_table var) in
+        List.find_opt new_deterministic varlist
         |> Option.map_default
              (* If a var was found we add it to the table and the set*)
              (fun var ->
@@ -91,7 +95,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       in
       Util.find_fixpoint maybe_changed tmp_vars
     in
-    List.map (Tuple3.map2 @@ List.map (TransitionLabel.relax_guard ~non_static:non_static_vars)) path
+    List.map (Tuple3.map2 @@ List.map (TL.relax_guard ~deterministic)) path
 
 
   let logger = Logging.(get Twn)
@@ -100,9 +104,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let contract_cycle (cycle : path) start =
     let pre, post = List.span (fun (l, _, _) -> not @@ Location.equal start l) cycle in
     let merge (_, ts, _) =
-      ( List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any,
-        List.map (Formula.mk % TransitionLabel.guard_without_inv) ts |> Formula.any,
-        List.first ts |> TransitionLabel.update_map )
+      ( List.map (Formula.mk % TL.guard) ts |> Formula.any,
+        List.map (Formula.mk % TL.guard_without_inv) ts |> Formula.any,
+        List.first ts |> TL.overapprox_rec_updates |> TL.TransitionLabelNonRec.update_map )
     in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post @ merge_pre)
@@ -111,25 +115,25 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** This method computes a loop for every entry transition of the cycle.
     Notice that we do not regard costs in the chaining step.
     However, we consider them when we compute the final bound. *)
-  let chain_cycle ?(relevant_vars = None) cycle program =
-    let entries = Program.entry_transitions_with_logger logger program (handled_transitions cycle) in
+  let chain_cycle ?(relevant_vars = None) (cycle : path) program =
+    let entries = PM.Program.entry_transitions_with_logger logger program (handled_transitions cycle) in
     List.map
       (fun entry ->
         (entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars))
       entries
 
 
-  type loop = Transition.t list * (Transition.t * Loop.t) list
+  type loop = PM.Transition.t list * (PM.Transition.t * Loop.t) list
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_all_loops twn_proofs ?(relevant_vars = None) choose_circle program scc (l, t, l') :
       loop ProofOutput.LocalProofOutput.with_proof List.t =
-    let updated_trans = TransitionLabel.relax_guard ~non_static:VarSet.empty t in
-    let handle_scc = List.map (Tuple3.map2 (TransitionLabel.relax_guard ~non_static:VarSet.empty)) in
+    let updated_trans = TL.relax_guard ~deterministic:VarSet.empty t in
+    let handle_scc = List.map (Tuple3.map2 (TL.relax_guard ~deterministic:VarSet.empty)) in
     let merged_trans =
       Util.group
         (fun (l1, t, l1') (l2, t', l2') ->
-          Location.equal l1 l2 && Location.equal l1' l2' && TransitionLabel.equivalent_update t t')
+          Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
         (Base.Set.to_list scc |> handle_scc)
       |> List.map (fun xs ->
              ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
@@ -137,8 +141,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let merged_t =
       List.find_opt
         (fun (l1, ts, l1') ->
-          List.exists (fun t1 -> TransitionLabel.equal updated_trans t1) ts
-          && Location.equal l l1 && Location.equal l' l1')
+          List.exists (fun t1 -> TL.equal updated_trans t1) ts && Location.equal l l1 && Location.equal l' l1')
         merged_trans
     in
     let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
@@ -161,7 +164,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (** Computes update_n * ... * update_i where update_n is the update of a transition (_,_,target) and resp. update_i for (start,_,_). *)
   let traverse_cycle (cycle : path) start target =
     if Location.equal start target then
-      TransitionLabel.update_map @@ List.first @@ Tuple3.second (List.first cycle)
+      TL.update_map @@ List.first @@ Tuple3.second (List.first cycle)
     else
       let target_t = List.find (Location.equal target % Tuple3.third) cycle in
       let traversal =
@@ -170,11 +173,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         |> List.take_while (not % Location.equal target % Tuple3.third)
         |> List.rev |> ( @ ) [ target_t ]
       in
-      let substitution update_map var = Base.Map.find update_map var |? Polynomial.of_var var in
+      let substitution update_map var = Base.Map.find update_map var |? PolyRec.PolyRec.of_var var in
       List.fold
         (fun map (_, ts, _) ->
           Base.Map.map
-            ~f:(Polynomial.substitute_f (substitution (TransitionLabel.update_map @@ List.first ts)))
+            ~f:(PolyRec.PolyRec.substitute_var_f (substitution (TL.update_map @@ List.first ts)))
             map)
         (Base.Map.empty (module Var))
         traversal
@@ -182,20 +185,19 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
   let find_loop ?(relevant_vars = None) f appr program scc (l, t, l') =
-    if not @@ TransitionLabel.has_tmp_vars t then
+    if not @@ TL.has_tmp_vars t then
       let merged_trans =
         Util.group
           (fun (l1, t, l1') (l2, t', l2') ->
-            Location.equal l1 l2 && Location.equal l1' l2' && TransitionLabel.equivalent_update t t')
-          (Base.Set.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+            Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
+          (Base.Set.to_list scc |> List.filter (not % TL.has_tmp_vars % Tuple3.second))
         |> List.map (fun xs ->
                ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
       in
       let merged_t =
         List.find
           (fun (l1, ts, l1') ->
-            List.exists (fun t1 -> TransitionLabel.equal t t1) ts
-            && Location.equal l l1 && Location.equal l' l1')
+            List.exists (fun t1 -> TL.equal t t1) ts && Location.equal l l1 && Location.equal l' l1')
           merged_trans
       in
       let cycles = cycles_with_t merged_trans merged_t in
@@ -220,12 +222,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
   let find_commuting_loops f appr program scc (l, t, l') =
-    if not @@ TransitionLabel.has_tmp_vars t then
+    if not @@ TL.has_tmp_vars t then
       let merged_trans =
         Util.group
           (fun (l1, t, l1') (l2, t', l2') ->
-            Location.equal l1 l2 && Location.equal l1' l2' && TransitionLabel.equivalent_update t t')
-          (Base.Set.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+            Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
+          (Base.Set.to_list scc |> List.filter (not % TL.has_tmp_vars % Tuple3.second))
         |> List.map (fun xs ->
                ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
       in

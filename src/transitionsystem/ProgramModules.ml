@@ -2,8 +2,10 @@ open! OurBase
 
 (** Modules relevant for working with programs *)
 module ProgramModulesOver : ProgramTypes.ClassicalProgramModules = struct
-  module UpdateElement = Polynomials.Polynomial
+  module UpdateElement = PolyRec.PolyRec
   module TransitionLabel = TransitionLabel_
+  module UpdateElementNonRec = Polynomials.Polynomial
+  module TransitionLabelNonRec = TransitionLabel_.TransitionLabelNonRec_
   module Transition = Transition_.MakeClassical (TransitionLabel)
   module TransitionSet = Transition_.TransitionSetOver (Transition)
   module TransitionGraph = TransitionGraph_.TransitionGraph
@@ -17,9 +19,11 @@ end
 
 (* here we can not simply use include ProgramModulesOver(Location) since we rely on the specialized versions *)
 module Program = Program_
-module UpdateElement = Polynomials.Polynomial
+module UpdateElement = PolyRec.PolyRec
+module UpdateElementNonRec = Polynomials.Polynomial
 module TransitionGraph = TransitionGraph_
 module TransitionLabel = TransitionLabel_
+module TransitionLabelNonRec = TransitionLabel_.TransitionLabelNonRec_
 module Transition = Transition_
 module TransitionSet = Transition_.TransitionSetOver (Transition)
 module RV = RVGTypes.MakeRV (TransitionLabel) (Transition)
@@ -36,7 +40,7 @@ module ClassicAdapter :
      and type transition_graph = TransitionGraph.t
      and type program = Program.t = struct
   type update_element = UpdateElement.t
-  type approx = Polynomials.Polynomial.t * Guard.t
+  type approx = UpdateElementNonRec.t * Guard.t
   type transition = Transition.t
   type transition_graph = TransitionGraph.t
   type program = Program.t
@@ -44,7 +48,7 @@ module ClassicAdapter :
   type grouped_transition_cmp_wit = Transition.comparator_witness
 
   (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
-  let overapprox_indeterminates poly = (poly, Guard.mk_true)
+  let overapprox_indeterminates poly = (UpdateElement.to_poly poly, Guard.mk_true)
 
   let outgoing_grouped_transitions trans_graph location =
     TransitionGraph.succ_e trans_graph location |> Sequence.of_list
@@ -55,7 +59,8 @@ module ClassicAdapter :
   let all_grouped_transitions_of_graph = TransitionGraph.transitions
   let grouped_transition_of_transition = identity
 
-  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect ((l, label, l') as transition) =
+  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect
+      (((l : Location.t), (label : TransitionLabel.t), (l' : Location.t)) as transition) =
     let new_label = TransitionLabel.fresh_id label |> flip TransitionLabel.add_invariant add_invariant in
     (new_start, new_label, redirect transition)
 

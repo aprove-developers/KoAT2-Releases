@@ -1,21 +1,21 @@
 open! OurBase
 
-type label_without_backlink = {
+type 'overappr_update_type label_without_backlink = {
   probability : Polynomials.RationalLaurentPolynomial.t;
   overappr_guard : Guard.t;
   update : UpdateElement_.t ProgramTypes.VarMap.t;
-  overappr_nonprob_update : Polynomials.Polynomial.t ProgramTypes.VarMap.t;
+  overappr_nonprob_update : 'overappr_update_type ProgramTypes.VarMap.t;
 }
 
 module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
   val probability : t -> Polynomials.RationalLaurentPolynomial.t
-  val without_backlink : t -> label_without_backlink
+  val without_backlink : t -> PolyRec.PolyRec.t label_without_backlink
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
-  include ProgramTypes.ClassicalTransitionLabel with type update_element = Polynomials.Polynomial.t
+  include ProgramTypes.ClassicalTransitionLabel with type update_element = PolyRec.PolyRec.t
 end
 
 type general_transition
@@ -30,7 +30,7 @@ module ProbabilisticTransition : sig
   val same_gt : t -> t -> bool
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
 
-  val without_backlink : t -> Location.t * label_without_backlink * Location.t
+  val without_backlink : t -> Location.t * PolyRec.PolyRec.t label_without_backlink * Location.t
 
   val gt : t -> general_transition
   (** Obtain the general transition from the program that contains this transition *)
@@ -62,7 +62,7 @@ module GeneralTransition : sig
     guard_without_invariant:Guard.t ->
     invariant:Guard.t ->
     cost:Polynomials.Polynomial.t ->
-    rhss:(label_without_backlink * Location.t) List.t ->
+    rhss:(PolyRec.PolyRec.t label_without_backlink * Location.t) List.t ->
     t
   (** Similar to [mk] but higher-level.
       Note that we assume the provided updates to be {i complete}, i.e., we do not fill up the argument variables *)
@@ -183,7 +183,7 @@ module ProbabilisticTransitionGraphNonProbOverappr :
 
 module ProbabilisticProgramNonProbOverappr : sig
   include
-    ProgramTypes.Program
+    ProgramTypes.ClassicProgram
       with type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
        and type transition_label_comparator_witness =
         ProbabilisticTransitionLabelNonProbOverappr.comparator_witness

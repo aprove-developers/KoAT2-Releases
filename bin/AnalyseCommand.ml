@@ -173,6 +173,12 @@ let program_to_formatted_string prog = function
   | _ -> FormattedString.Empty
 
 
+let dependency_graph_to_formatted_string dg = function
+  | Formatter.Html ->
+      FormattedString.mk_raw_str (GraphPrint.MakeForDependencyGraph.print_system_pretty_html dg)
+  | _ -> FormattedString.Empty
+
+
 let local_to_string = function
   | `MPRF -> "MPRF"
   | `TWN -> "TWN"
@@ -198,7 +204,8 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
            FormattedString.(
              mk_header_big (mk_str "Problem after Preprocessing")
              <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-             <> program_to_formatted_string prog params.proof_format))
+             <> program_to_formatted_string prog params.proof_format
+             <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
     |> tap (fun (program, appr) ->
            if params.print_system then
              GraphPrint.print_system ~format:"png"
@@ -324,7 +331,8 @@ let run (params : params) =
            FormattedString.(
              mk_header_big (mk_str "Initial Problem")
              <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-             <> program_to_formatted_string prog params.proof_format))
+             <> program_to_formatted_string prog params.proof_format
+             <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
   in
   Timeout.timed_run params.timeout
     ~action:(fun () ->

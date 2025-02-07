@@ -8,8 +8,9 @@
 %token          EOF
 %token          OR
 %token          AND
-%token          ARROW WITH PROBDIV LBRACK RBRACK
-%token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
+%token          LRARROW RLARROW WITH PROBDIV LBRACK RBRACK
+%token          BAR
+%token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR RETURNLOCATIONS
 %token          COMMA COLON
 %token          INFINITY
 %token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE ALMOSTSURETERMINATION
@@ -37,6 +38,8 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
+%start <PolyRec.t> onlyPolynomialRec
+
 %start <Polynomials.RationalLaurentPolynomial.t> onlyProb
 
 %start <ProbabilityDistribution.t> onlyProbabilityDistribution
@@ -59,12 +62,15 @@
 
 %type <Polynomials.Polynomial.t> polynomial
 
+%type <PolyRec.t> polynomialRec
+
 %type <Var.t list> variables
 
 %{
   open Constraints
   open Atoms
   open Polynomials
+  open PolyRec
   open Formulas
   open ProgramModules
   open Bounds
@@ -92,14 +98,26 @@ programAndGoal:
     start = start
     variables = variables
     transitions = transitions; EOF
-    { Program.from_com_transitions (transitions variables) start, g } ;
+    { Program.from_com_transitions (transitions variables) start, g }
+  | g = goal
+    start = start
+    return_locations = return_locations
+    variables = variables
+    transitions = transitions; EOF
+    { Program.from_com_transitions ~return_locations:(LocationSet.of_list return_locations) (transitions variables) start, g } ;
 
 programAndGoalTermination:
   | g = goal
     start = start
     variables = variables
     transitions = transitions; EOF
-    { Program.from_com_transitions ~termination:true (transitions variables) start, g } ;
+    { Program.from_com_transitions ~termination:true (transitions variables) start, g }
+  | g = goal
+    start = start
+    return_locations = return_locations
+    variables = variables
+    transitions = transitions; EOF
+    { Program.from_com_transitions ~return_locations:(LocationSet.of_list return_locations) ~termination:true (transitions variables) start, g } ;
 
 probabilisticProgramAndGoal:
   | g = probabilisticGoal
@@ -138,9 +156,17 @@ probabilisticGoal:
   | LPAR GOAL ALMOSTSURETERMINATION RPAR
     { Goal.AlmostSureTermination }
 
+location:
+  | loc = ID
+    { Location.of_string loc }
+
 start:
-  | LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-    { Location.of_string start } ;
+  | LPAR STARTTERM LPAR FUNCTIONSYMBOLS loc = location RPAR RPAR
+    { loc } ;
+
+return_locations:
+  | LPAR RETURNLOCATIONS LPAR FUNCTIONSYMBOLS locations = list(location) RPAR RPAR
+  { locations };
 
 transitions:
   | LPAR RULES transition = list(transition) RPAR
@@ -173,7 +199,7 @@ cost:
     { ub }
   | MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
     { ub }
-  | ARROW
+  | LRARROW
     { Polynomial.one };
 
 transition_lhs:
@@ -187,7 +213,7 @@ transition_rhs:
    { ("Com_1", [target]) } ;
 
 transition_target:
-  | target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
+  | target = ID; LPAR assignments = separated_list(COMMA, polynomialRec) RPAR
     { (target, assignments) } ;
 
 (* TODO: Alternatively parse classical transition here *)
@@ -304,12 +330,19 @@ formula_atom:
 onlyPolynomial:
   | poly = polynomial EOF { poly } ;
 
+onlyPolynomialRec:
+  | poly = polynomialRec EOF { poly } ;
+
 onlyUpdateElement:
   | ue = update_element EOF { ue };
 
 variable:
   | v = ID
     { Var.of_string v } ;
+
+variableRec:
+  | start = location; LBRACK; result = variable; BAR; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR); RLARROW; LPAR targets = separated_nonempty_list(COMMA, polynomial) RPAR RBRACK;
+    { VarRec.mk_rec start result (List.map Var.of_string patterns) targets } ;
 
 our_float:
   | float_string = UFLOAT
@@ -334,6 +367,22 @@ polynomial:
     { op p1 p2 }
   | p = polynomial; POW; c = UINT
     { Polynomial.pow p (int_of_string c) } ;
+
+polynomialRec:
+  | v = variableRec
+    { PolyRec.of_varrec v }
+  | v = variable
+    { PolyRec.of_var v }
+  | c = our_int
+    { PolyRec.of_constant c }
+  | LPAR; ex = polynomialRec; RPAR
+    { ex }
+  | MINUS; ex = polynomialRec
+    { PolyRec.neg ex }
+  | p1 = polynomialRec; op = bioperatorRec; p2 = polynomialRec
+    { op p1 p2 }
+  | v = variable; POW; c = UINT
+    { PolyRec.pow (PolyRec.of_var v) (int_of_string c) } ;
 
 rational_laurent_polynomial:
   | v = variable
@@ -408,6 +457,11 @@ rationalBound:
   | PLUS { Polynomial.add }
   | TIMES { Polynomial.mul }
   | MINUS { Polynomial.sub } ;
+
+%inline bioperatorRec:
+  | PLUS { PolyRec.add }
+  | TIMES { PolyRec.mul }
+  | MINUS { PolyRec.sub } ;
 
 %inline laurent_bioperator:
   | PLUS { RationalLaurentPolynomial.add }

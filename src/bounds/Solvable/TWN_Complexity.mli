@@ -1,5 +1,5 @@
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (Bound) (PM)
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
+  module Loop : module type of Loop.Make (Bound) (TL)
 
   val monotonicity_th_int : int -> int * int -> int * int -> OurInt.t
   (** Computes the monotonicity threshold for k and two tuples (b1,a1) and (b2,a2). *)

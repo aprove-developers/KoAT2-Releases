@@ -10,7 +10,7 @@ module Classical (Bound : BoundType.Bound) : sig
        and type transition_set = ProgramModules.TransitionSet.t
        and type cfr = ProgramModules.program_modules_t cfr_
 
-  type appr = Approximation.MakeForClassicalAnalysis(Bound)(ProgramModules).t
+  type appr = Approximation.MakeWithDefaultTransition(Bound)(ProgramModules).t
 
   val create_new_appr : program -> program -> appr -> appr
   (** The call [create_new_appr program program_cfr appr] generates the approximation for the new program_cfr from the one of the original program ([appr]).

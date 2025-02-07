@@ -6,10 +6,10 @@ open PolyExponential
 
 let logger = Logging.(get Twn)
 
-module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
-  module Check_TWN = Check_TWN.Make (Bound) (PM)
-  module Loop = Loop.Make (Bound) (PM)
-  module TWN_Termination = TWN_Termination.Make (Bound) (PM)
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
+  module Check_TWN = Check_TWN.Make (Bound) (TL)
+  module Loop = Loop.Make (Bound) (TL)
+  module TWN_Termination = TWN_Termination.Make (Bound) (TL)
 
   (* COMPLEXITY: *)
 

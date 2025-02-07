@@ -206,7 +206,7 @@ module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = str
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
 
   (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
-            For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+               For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
   let print_rvg ~label ~outdir ~file program =
     let graph =
       RVG.rvg
@@ -234,3 +234,58 @@ end
 
 include MakeForClassicalAnalysis (ProgramModules)
 include MakeForRVGFromClassical (ProgramModules)
+
+module MakeForDependencyGraph = struct
+  open DependencyGraph
+
+  (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
+          For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+  let print_system ~outdir ~file dg =
+    (* Definition of some graphviz options how it should be layout *)
+    let module Dot = Graph.Graphviz.Dot (struct
+      include DependencyGraph
+
+      let edge_attributes _ = []
+      let default_edge_attributes _ = []
+      let get_subgraph _ = None
+      let vertex_attributes _ = [ `Shape `Box ]
+      let vertex_name v = "\"" ^ Location.to_string v ^ "\""
+      let default_vertex_attributes _ = []
+      let graph_attributes _ = []
+    end) in
+    print_graph outdir (file ^ "_system") dg Dot.output_graph
+
+
+  let print_system_pretty ?(file_format = "pdf") dg =
+    let module DotPretty = Graph.Graphviz.Dot (struct
+      include DependencyGraph
+
+      let edge_attributes _ = []
+      let default_edge_attributes _ = []
+      let get_subgraph _ = None
+      let vertex_attributes _ = [ `Shape `Circle ]
+      let vertex_name v = "\"" ^ Location.to_string v ^ "\""
+      let default_vertex_attributes _ = []
+      let graph_attributes _ = []
+    end) in
+    print_graph_to_string ~format:file_format dg DotPretty.output_graph
+
+
+  let print_system_pretty_html dg =
+    match print_system_pretty ~file_format:"svg" dg with
+    | None -> ""
+    | Some system ->
+        let divid = Unique.unique () in
+        "<button onclick=\"showgraph" ^ string_of_int divid ^ "()\">Show Dependency Graph</button>\n"
+        ^ "<div id=\"graph" ^ string_of_int divid ^ "\" style=\"display:none\">\n" ^ system
+        ^ "</div>\n\n       <script>\n         function showgraph" ^ string_of_int divid
+        ^ "() {\n           var x = document.getElementById(\"graph" ^ string_of_int divid
+        ^ "\");\n\
+          \           if (x.style.display === \"none\") {\n\
+          \             x.style.display = \"block\";\n\
+          \           } else {\n\
+          \             x.style.display = \"none\";\n\
+          \           }\n\
+          \         }\n\
+          \       </script>"
+end

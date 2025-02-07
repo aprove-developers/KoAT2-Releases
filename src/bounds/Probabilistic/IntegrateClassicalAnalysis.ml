@@ -218,7 +218,7 @@ module Make (BP : BoundPair.T) = struct
   let initial_twn_state program scc =
     let class_program = Type_equal.conv ProbabilisticPrograms.Equalities.program_equalities program in
     let scc_nonprob = gts_to_nonprob_transs scc in
-    let module Check_TWN = Check_TWN.Make (BP.ClassBound) (NonProbOverappr) in
+    let module Check_TWN = Check_TWN.Make (BP.ClassBound) (NonProbOverappr.TransitionLabelNonRec) in
     let all_loops =
       LoopHandler.find_all_possible_loops_for_scc Check_TWN.check_twn scc_nonprob class_program
     in

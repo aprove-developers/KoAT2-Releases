@@ -132,6 +132,7 @@ let all_strategies : strategy list = [ process_only_once; process_till_fixpoint 
 module Make
     (PM : ProgramTypes.ProgramModules)
     (CPM : ProgramTypes.ClassicalProgramModules)
+    (A : EliminateNonContributors.Adapter with type transition := PM.Transition.t)
     (Eq : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) =
@@ -152,7 +153,7 @@ struct
         (MaybeChanged.map normalise_temp_vars % lift_to_program (Chaining.transform_graph ~conservative:true))
           subject
     | EliminateNonContributors ->
-        let module ENC = EliminateNonContributors.Make (PM) in
+        let module ENC = EliminateNonContributors.Make (PM) (A) in
         ENC.eliminate logger subject
     | EliminateTempVars -> EliminateTempVars.eliminate_tmp_vars subject
     | InvariantGeneration ->
@@ -177,7 +178,7 @@ end
 
 module MakeForClassicalProgramModules (CPM : ProgramTypes.ClassicalProgramModules) = struct
   include
-    Make (CPM) (CPM)
+    Make (CPM) (CPM) (EliminateNonContributors.ClassicAdapter (CPM))
       (struct
         let eq = Type_equal.refl
       end)
@@ -187,6 +188,7 @@ module StandardProgram = MakeForClassicalProgramModules (ProgramModules)
 
 module ProbabilisticWithOverappr =
   Make (ProbabilisticProgramModules) (ProbabilisticProgramModules.NonProbOverappr)
+    (EliminateNonContributors.DefaultAdapter)
     (struct
       let eq = ProbabilisticPrograms.Equalities.program_equalities
     end)

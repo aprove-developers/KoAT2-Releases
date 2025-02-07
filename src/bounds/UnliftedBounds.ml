@@ -15,7 +15,7 @@ module UnliftedTimeBound = struct
     compute_proof : ('trans, 'bound, 'trans_cmp_wit) compute_proof_;
   }
 
-  module Make (PM : ProgramTypes.ProgramModules) (B : BoundType.Bound) = struct
+  module Make (PM : ProgramTypes.ClassicalProgramModules) (B : BoundType.Bound) = struct
     open PM
 
     let measure_decr_transitions t = t.measure_decr_transitions

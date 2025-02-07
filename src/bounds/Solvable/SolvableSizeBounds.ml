@@ -1,26 +1,25 @@
-open Polynomials
+open PolyRec
 open Bounds
 open OurBase
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  open PM
-  module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (PM)
-  module Loop = Loop.Make (Bounds.Bound) (PM)
+  module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module Loop = Loop.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonRec)
   module SimpleCycle = SimpleCycle.Make (Bounds.Bound) (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (Bounds.Bound) (PM)
 
   let heuristic_for_cycle appr program loop = Option.is_some @@ Check_Solvable.check_solvable loop
 
   module VT = struct
-    type t = Transition.t * Var.t
+    type t = PM.Transition.t * Var.t
 
-    let equal (t1, v1) (t2, v2) = Transition.equal t1 t2 && Var.equal v1 v2
+    let equal (t1, v1) (t2, v2) = PM.Transition.equal t1 t2 && Var.equal v1 v2
     let hash = Hashtbl.hash
   end
 
   module SizeBoundTable = Batteries.Hashtbl.Make (VT)
 
-  let size_bound_table : (Transition.t * Bound.t) list option SizeBoundTable.t = SizeBoundTable.create 10
+  let size_bound_table : (PM.Transition.t * Bound.t) list option SizeBoundTable.t = SizeBoundTable.create 10
 
   (** Internal memoization: The idea is to use this cache if we applied cfr and
     1) delete it and use the original cache if we get a timeout or
@@ -33,7 +32,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | Some xs ->
         List.map xs ~f:(fun (entry, local_size) ->
             Bound.substitute_f (Approximation.sizebound appr entry) local_size)
-        |> Sequence.of_list |> Bound.sum
+        |> Sequence.of_list |> Bound.max_seq
 
 
   let improve_solvable lift_var appr program trans t var =
@@ -70,7 +69,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   ( entry,
                     Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
                     |> Bound.substitute_f (fun var ->
-                           Bound.of_poly @@ (Map.find traversal var |? Polynomial.of_var var)) ))
+                           Bound.of_poly @@ (Map.find traversal var |? PolyRec.of_var var |> PolyRec.to_poly))
+                  ))
                 entries_traversal
               |> Option.some
             in
@@ -88,7 +88,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     if Option.is_some loops_opt then
       let loops, loop_trans, handled_transitions, partial_evaluation = Option.value_exn loops_opt in
       let loop_vars =
-        Set.inter (Program.vars program)
+        Set.inter (PM.Program.vars program)
           (Set.union_list (module Var) (List.map ~f:(Loop.vars % Tuple2.first) loops))
       in
       let initial_substitution =
@@ -119,10 +119,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             |> Map.map
                  ~f:
                    (Bound.substitute_f (fun var ->
-                        Bound.of_poly @@ (Map.find partial_evaluation var |? Polynomial.of_var var))))
+                        Bound.of_poly
+                        @@ (Map.find partial_evaluation var |? PolyRec.of_var var |> PolyRec.to_poly))))
       in
       Map.fold bound ~init:appr ~f:(fun ~key:var ~data:local_bound appr ->
-          let entries = Program.entry_transitions program handled_transitions in
+          let entries = PM.Program.entry_transitions program handled_transitions in
           let bound =
             lift appr t var (Option.some @@ List.map entries ~f:(fun entry -> (entry, local_bound)))
           in
@@ -151,11 +152,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             improve_solvable lift_var appr program trans t var
         else
           appr)
-      (TransitionLabel.input_vars (Transition.label t))
+      (PM.TransitionLabel.input_vars (PM.Transition.label t))
       ~init:appr
 
 
   let improve ?(commuting = false) program ?(scc = None) appr =
-    let trans = scc |? Program.transitions program in
+    let trans = scc |? PM.Program.transitions program in
     Set.fold ~f:(flip @@ improve_t ~commuting program trans) trans ~init:appr
 end
