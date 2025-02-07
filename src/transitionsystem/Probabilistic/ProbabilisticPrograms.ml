@@ -416,13 +416,9 @@ module ProbabilisticTransitionLabel = struct
 
 
   let remove_non_contributors non_contributors t =
-    let update_ = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:(update_map t) in
-    let guard_ =
-      List.filter
-        ~f:(fun atom -> Set.are_disjoint non_contributors (Polynomial.vars @@ Atoms.Atom.poly atom))
-        (Guard.atom_list t.properties.overappr_guard)
-    in
-    { t with properties = { t.properties with update = update_; overappr_guard = guard_ } }
+    let update = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:(update_map t) in
+    let overappr_guard, overappr_nonprob_update = compute_overapproximated_update_and_guard update in
+    { t with properties = { t.properties with update; overappr_guard; overappr_nonprob_update } }
 
 
   let chain_guards t1 t2 =
