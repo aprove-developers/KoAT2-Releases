@@ -131,23 +131,29 @@ end
 module type DefaultTransitionLabel = sig
   include TransitionLabel
 
-  val map_guard : (Guard.t -> Guard.t) -> t -> t
-  (** Apply function to guard *)
-
-  val relax_guard : deterministic:VarSet.t -> t -> t
-  (** Keeps only the atoms of the guard whose variables are deterministic *)
-
   val chain_guards : t -> t -> Guard.t
   (** Guard that is true if both transitions can be executed one after another *)
 end
 
 module type ClassicalTransitionLabelNonRec = sig
   include DefaultTransitionLabel with type update_element = Polynomial.t
+
+  val map_guard : (Guard.t -> Guard.t) -> t -> t
+  (** Apply function to guard *)
+
+  val relax_guard : deterministic:VarSet.t -> t -> t
+  (** Keeps only the atoms of the guard whose variables are deterministic *)
 end
 
 module type ClassicalTransitionLabel = sig
   include DefaultTransitionLabel with type update_element = PolyRec.PolyRec.t
   module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
+
+  val map_guard : (Guard.t -> Guard.t) -> t -> t
+  (** Apply function to guard *)
+
+  val relax_guard : deterministic:VarSet.t -> t -> t
+  (** Keeps only the atoms of the guard whose variables are deterministic *)
 
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
@@ -556,7 +562,9 @@ module type ClassicalProgramModules = sig
   module UpdateElement : module type of PolyRec.PolyRec
   module TransitionLabel : ClassicalTransitionLabel
   module UpdateElementNonRec : module type of Polynomial
-  module TransitionLabelNonRec : TransitionLabel with type update_element = UpdateElementNonRec.t
+
+  module TransitionLabelNonRec :
+    ClassicalTransitionLabelNonRec with type update_element = UpdateElementNonRec.t
 
   module Transition :
     ClassicalTransition

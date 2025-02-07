@@ -446,13 +446,6 @@ module ProbabilisticTransitionLabel = struct
       && Guard.map_polynomial
            (Polynomial.substitute_f (substitution (overappr_nonprob_update t1)))
            (invariant t2))
-
-
-  let map_guard f t = { t with properties = { t.properties with overappr_guard = f (overappr_guard t) } }
-
-  let relax_guard ~deterministic (t : t) =
-    let is_nondet atom = Set.is_subset (Atoms.Atom.vars atom) ~of_:(Set.diff (input_vars t) deterministic) in
-    { t with properties = { t.properties with overappr_guard = List.filter ~f:is_nondet (overappr_guard t) } }
 end
 
 module NonProbTransitionLabel (POverAppr : PolyAdapter.PolyAdapter) = struct
