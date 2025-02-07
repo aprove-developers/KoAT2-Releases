@@ -129,10 +129,11 @@ end
 
 module ParameterConstraintOver
     (Value : PolyTypes.Ring)
-    (Atom : ConstraintTypes.Atom
-              with type value = Value.t
-               and type polynomial = Value.t Polynomials.generic_var_polynomial
-               and type monomial = Monomials.generic_var_monomial)
+    (Atom :
+      ConstraintTypes.Atom
+        with type value = Value.t
+         and type polynomial = Value.t Polynomials.generic_var_polynomial
+         and type monomial = Monomials.generic_var_monomial)
     (ParamAtom : sig
       include
         ConstraintTypes.Atom

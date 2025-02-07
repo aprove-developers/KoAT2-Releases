@@ -1,6 +1,7 @@
 profile = default
-version = 0.26.1
+version = 0.27.0
 let-binding-spacing = sparse
 if-then-else = vertical
 break-cases = all
 margin = 110
+parse-docstrings = false

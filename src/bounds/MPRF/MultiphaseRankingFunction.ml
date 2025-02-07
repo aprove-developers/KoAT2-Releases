@@ -86,7 +86,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
        let coeff_table = cache.coeffs_table in
        List.iter
          (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
-           (fun (v, v') ->
+         (fun (v, v') ->
            CoeffsTable.modify_def VarSet.empty (location, v)
              (Base.Set.union (VarSet.singleton v'))
              coeff_table)
@@ -398,7 +398,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let finalise_mprf cache solver_int non_increasing entry_transitions problem =
     (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
-       * 0. *)
+     * 0. *)
     let entry_trans_grouped_by_loc =
       List.sort (fun (_, _, l'1) (_, _, l'2) -> Location.compare l'1 l'2) (Base.Set.to_list entry_transitions)
       |> List.group_consecutive (fun (_, _, l'1) (_, _, l'2) -> Location.equal l'1 l'2)

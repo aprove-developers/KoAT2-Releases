@@ -2,11 +2,12 @@ open! OurBase
 
 module Make_
     (T : ProgramTypes.Transition)
-    (G : Graph.Sig.P
-           with type V.t = Location.t
-            and type V.label = Location.t
-            and type E.t = Location.t * T.transition_label * Location.t
-            and type E.label = T.transition_label) =
+    (G :
+      Graph.Sig.P
+        with type V.t = Location.t
+         and type V.label = Location.t
+         and type E.t = Location.t * T.transition_label * Location.t
+         and type E.label = T.transition_label) =
 struct
   type transition_label = T.transition_label
   type transition_label_comparator_witness = T.transition_label_comparator_witness

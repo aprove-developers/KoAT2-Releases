@@ -111,8 +111,10 @@ struct
       t.factor > 1 && not (Set.is_empty t.vars)
     then
       false
-    else if (* Trivially holds for identity lsbs *)
-            Set.length t.vars = 1 && Int.equal 0 t.constant then
+    else if
+      (* Trivially holds for identity lsbs *)
+      Set.length t.vars = 1 && Int.equal 0 t.constant
+    then
       true
     else if Formula.is_linear update_formula then (
       let solver = Solver.create ~model:false () in

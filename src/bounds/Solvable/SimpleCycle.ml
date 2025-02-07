@@ -88,7 +88,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         List.find_opt new_deterministic varlist
         |> Option.map_default
              (* If a var was found we add it to the table and the set*)
-               (fun var ->
+             (fun var ->
                Hashtbl.add static_dep_table var ();
                MaybeChanged.changed (Base.Set.add non_statics var))
              (MaybeChanged.same non_statics)
