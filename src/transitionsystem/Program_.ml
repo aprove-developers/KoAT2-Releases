@@ -31,7 +31,9 @@ struct
   let reachable_locations program = G.reachable_locations program.graph
 
   let equal equal_graph (program1 : t) (program2 : t) =
-    equal_graph program1.graph program2.graph && Location.equal program1.start program2.start
+    equal_graph program1.graph program2.graph
+    && Location.equal program1.start program2.start
+    && Set.equal program1.return_locations program2.return_locations
 
 
   let equivalent : t -> t -> bool = equal G.equivalent
@@ -67,13 +69,15 @@ struct
       (* transitions following an outgoing transitions might have store the outgoing transition (now removed)  in their pre-cache. So we remove it *)
       ingress @ outgress @ outgreess_of_out_trans
     in
-    { program with graph = G.remove_vertex program.graph location }
+    let graph = G.remove_vertex program.graph location in
+    { program with graph; dependency_graph = A.mk_from_graph graph }
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
   let remove_transition program transition =
     let affected_transitions = transition :: G.succ_e program.graph (T.target transition) in
-    { program with graph = G.remove_edge_e program.graph transition }
+    let graph = G.remove_edge_e program.graph transition in
+    { program with graph; dependency_graph = A.mk_from_graph graph }
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
