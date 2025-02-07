@@ -598,7 +598,12 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       Map.map
         ~f:
           PolyRec.(
-            PolyRec.to_poly % PolyRec.substitute_varrec_f (const @@ PolyRec.of_var (Var.fresh_id Var.Int ())))
+            PolyRec.to_poly
+            % PolyRec.substitute_varrec_f (fun v ->
+                  if VarRec.is_rec v then
+                    PolyRec.of_var (Var.fresh_id Var.Int ())
+                  else
+                    PolyRec.of_var (VarRec.to_var v)))
         t.properties.overappr_nonprob_update
     in
     TransitionLabelNonRec.mk_2_with_gt
