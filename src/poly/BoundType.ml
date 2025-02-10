@@ -170,10 +170,10 @@ module type Bound = sig
   val of_coeff_list : value list -> Var.t list -> t
   (** Needed for Atomizable but not yet implemented. *)
 
-  (* Uses a heuristic to keep the 'better' of both bounds.
-   * It first compares the asymptotic complexity,
-   * then the number of occuring variables,
-   * and finally the syntactic complexity
-   * of both bounds. *)
   val keep_simpler_bound : t -> t -> t
+  (** Uses a heuristic to keep the 'better' of both bounds.
+    * It first compares the asymptotic complexity,
+    * then the number of occuring variables,
+    * and finally the syntactic complexity
+    * of both bounds. *)
 end
