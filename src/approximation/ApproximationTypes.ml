@@ -14,6 +14,30 @@ module type ApproximableTransitionType = sig
   include Comparator.S with type t := t
 end
 
+(** What Bounds can be approximate? Usually you want to use the bounds from the [Bounds] module *)
+module type ApproximableBoundType = sig
+  type t
+
+  val equal : t -> t -> bool
+
+  val infinity : t
+  (** Returns the infinity bound. *)
+
+  val is_infinity : t -> bool
+  val is_finite : t -> bool
+  val to_string : ?pretty:bool -> ?termination_only:bool -> t -> string
+
+  val sum : t Sequence.t -> t
+  (** Returns the sum of all sequence elements. *)
+
+  val keep_simpler_bound : t -> t -> t
+  (** Uses a heuristic to keep the 'better' of both bounds.
+    * It first compares the asymptotic complexity,
+    * then the number of occuring variables,
+    * and finally the syntactic complexity
+    * of both bounds. *)
+end
+
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
 module type TransitionApproximationType = sig

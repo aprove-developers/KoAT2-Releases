@@ -15,7 +15,9 @@ module ApproximableGeneralTransition :
 type ('trans, 'bound, 'trans_cmp_wit) transition_approximation_t
 (** The type of transition approximations *)
 
-module Make (B : BoundType.Bound) (T : ApproximationTypes.ApproximableTransitionType) :
+module Make
+    (B : ApproximationTypes.ApproximableBoundType)
+    (T : ApproximationTypes.ApproximableTransitionType) :
   ApproximationTypes.TransitionApproximationType
     with type bound = B.t
      and type transition = T.t

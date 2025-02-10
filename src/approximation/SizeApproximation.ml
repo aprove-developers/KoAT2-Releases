@@ -3,7 +3,7 @@ open! OurBase
 type ('rvtuple_, 'bound, 'rvtuple__cmp_wit) size_approximation_t =
   ('rvtuple_, 'bound, 'rvtuple__cmp_wit) Map.t
 
-module Make (B : BoundType.Bound) (RV : ProgramTypes.RV) = struct
+module Make (B : ApproximationTypes.ApproximableBoundType) (RV : ProgramTypes.RV) = struct
   let logger = Logging.(get Approximation)
 
   type bound = B.t

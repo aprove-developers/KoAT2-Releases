@@ -24,7 +24,8 @@ module ApproximableGeneralTransition = struct
   let all_from_program = Set.to_sequence % Program.gts
 end
 
-module Make (B : BoundType.Bound) (T : ApproximationTypes.ApproximableTransitionType) = struct
+module Make (B : ApproximationTypes.ApproximableBoundType) (T : ApproximationTypes.ApproximableTransitionType) =
+struct
   let logger = Logging.(get Approximation)
 
   type bound = B.t
