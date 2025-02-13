@@ -75,14 +75,32 @@ end = struct
   let map_atomically (m, a) f = run_atomically (m, a) f |> fun a' -> (m, a')
 end
 
-module Unique = struct
-  let counter = Atomically.create (ref 0)
+module Unique : sig
+  type t
+  (** type of unique counters *)
 
-  let unique () =
+  val new_counter : unit -> t
+  (** create a new counter *)
+
+  val get_from_counter : t -> int
+  (** Create a new unique counter *)
+
+  val unique : unit -> Int.t
+  (** Get a unique value from the global counter *)
+end = struct
+  type t = int ref Atomically.t
+
+  let new_counter = fun () -> Atomically.create (ref 0)
+  let counter = new_counter ()
+
+  let get_from_counter counter =
     Atomically.run_atomically counter (fun counter ->
         let id = !counter in
         counter := !counter + 1;
         id)
+
+
+  let unique () = get_from_counter counter
 end
 
 module Comparator = struct
