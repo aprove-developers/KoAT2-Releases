@@ -95,9 +95,6 @@ module type Bound = sig
   val max : t -> t -> t
   (** Returns the max of two element. *)
 
-  val max_seq : t Sequence.t -> t
-  (** Returns the max of all sequence elements. *)
-
   val mul : t -> t -> t
   (** Returns product of two element. *)
 
@@ -112,6 +109,9 @@ module type Bound = sig
 
   val product : t Sequence.t -> t
   (** Returns the product of all sequence elements. *)
+
+  val maximum : t Sequence.t -> t
+  (** Returns a bound that bounds all sequence elements. *)
 
   val ( + ) : t -> t -> t
   (** Addition of two elements. *)

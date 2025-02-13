@@ -26,7 +26,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         lsb
       else
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
-        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.max_seq
+        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.maximum
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
@@ -61,7 +61,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           |> List.map ~f:Set.to_list |> List.concat |> TransitionSet.of_list |> Set.to_list
         in
         let lsb_return =
-          Bound.max_seq
+          Bound.maximum
             (Sequence.of_list @@ List.map ~f:(fun t -> get_sizebound t v) transitions_ending_return_locations)
         in
         let lsb_jump =

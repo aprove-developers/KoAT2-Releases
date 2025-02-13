@@ -32,7 +32,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | Some xs ->
         List.map xs ~f:(fun (entry, local_size) ->
             Bound.substitute_f (Approximation.sizebound appr entry) local_size)
-        |> Sequence.of_list |> Bound.max_seq
+        |> Sequence.of_list |> Bound.maximum
 
 
   let improve_solvable lift_var appr program trans t var =
