@@ -32,6 +32,9 @@ module RationalUpdateElement : sig
   include module type of PolynomialOverIndeterminate (UpdateValue) (OurRational)
 
   val moment_poly : t -> int -> RationalPolynomial.t
+
+  val is_probabilistic : t -> bool
+  (** checks whether the update element contains a distribution*)
 end
 
 include module type of PolynomialOverIndeterminate (UpdateValue) (OurInt)
