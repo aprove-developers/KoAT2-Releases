@@ -561,7 +561,7 @@ let chain_guards t1 t2 =
                 let nondet_var = Var.fresh_id Var.Int () in
                 Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                 nondet_var))
-    |> PolyRec.to_poly (* TODO Overappr rec -> tmp *)
+    |> PolyRec.to_poly_overapprox (* All function calls are replaced by TMP vars *)
   in
   Guard.Infix.(
     guard t1 && invariant t1
