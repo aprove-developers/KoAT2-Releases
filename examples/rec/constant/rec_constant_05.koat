@@ -1,7 +1,8 @@
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
-(RETURNLOCATIONS (FUNCTIONSYMBOLS l2 l3))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS l2))
 (VAR A B)
 (RULES
-  l0(A,B) -> l1(l2[A|(A,B) <- (B,A)] + 2*l2[A|(A,B) <- (10,12)] - l3[B|(A,B) <- (A,B)]*l3[B|(A,B) <- (A,B)])
+  l0(A,B) -> l1(l2[A|(A,B) <- (A + B,2*B)],B)
+  l1(A,B) -> l1(A - 1,B) :|: A > 0
 )

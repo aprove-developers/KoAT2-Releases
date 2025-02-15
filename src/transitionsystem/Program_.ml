@@ -84,7 +84,11 @@ struct
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
-  let map_graph f program = invalidate_complete_pre_cache { program with graph = f program.graph }
+  let map_graph f program =
+    let graph = f program.graph in
+    invalidate_complete_pre_cache { program with graph; dependency_graph = A.mk_from_graph graph }
+
+
   let map_transitions f = map_graph (G.map_transitions f)
   let map_labels f = map_transitions (fun (l, t, l') -> (l, f t, l'))
   let locations : t -> LocationSet.t = G.locations % graph

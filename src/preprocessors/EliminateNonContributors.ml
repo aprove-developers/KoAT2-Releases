@@ -6,34 +6,51 @@ open Polynomials
 
 module type Adapter = sig
   type transition
+  type transition_label
 
   val vars_with_rec_calls : transition -> VarSet.t
+  val dependency_rec : transition_label -> Var.t -> Var.t -> bool
 end
 
 module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   open M
 
   type transition = Transition.t
+  type transition_label = TransitionLabel.t
 
+  (* Returns a variables which have arecursive call. We cannot remove them. *)
   let vars_with_rec_calls (_, t, _) =
     TransitionLabel.input_vars t
     |> Set.filter ~f:(fun x ->
            TransitionLabel.update t x |? PolyRec.PolyRec.of_var x |> PolyRec.PolyRec.has_recvars)
+
+
+  (* Returns true iff x depends on y in a recursive call of t. *)
+  let dependency_rec t x y =
+    let rec_vars = TransitionLabel.rec_vars t in
+    Set.exists rec_vars ~f:(fun varrec ->
+        Set.mem (VarRec.dependencies (TransitionLabel.input_vars t) x varrec) y)
 end
 
 module DefaultAdapter = struct
   type transition
+  type transition_label
 
   let vars_with_rec_calls t = VarSet.empty
+  let dependency_rec t x y = false
 end
 
-module Make (M : ProgramTypes.ProgramModules) (A : Adapter with type transition := M.Transition.t) = struct
+module Make
+    (M : ProgramTypes.ProgramModules)
+    (A : Adapter with type transition := M.Transition.t and type transition_label := M.TransitionLabel.t) =
+struct
   open M
 
   let depends var label =
     Set.exists ~f:(fun x ->
         TransitionLabel.update label x |? UpdateElement.zero |> UpdateElement.vars |> flip Set.mem var
-        || TransitionLabel.cost label |> Polynomial.vars |> flip Set.mem var)
+        || TransitionLabel.cost label |> Polynomial.vars |> flip Set.mem var
+        || A.dependency_rec label x var)
 
 
   let rec eliminate_t_ vars get_update contributors non_contributors =

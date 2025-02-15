@@ -132,7 +132,10 @@ let all_strategies : strategy list = [ process_only_once; process_till_fixpoint 
 module Make
     (PM : ProgramTypes.ProgramModules)
     (CPM : ProgramTypes.ClassicalProgramModules)
-    (A : EliminateNonContributors.Adapter with type transition := PM.Transition.t)
+    (A :
+      EliminateNonContributors.Adapter
+        with type transition := PM.Transition.t
+         and type transition_label := PM.TransitionLabel.t)
     (Eq : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) =

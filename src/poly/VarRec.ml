@@ -133,8 +133,7 @@ let rename m v =
   | v -> v
 
 
-let vars var =
-  match var with
+let vars = function
   | Recursion _ -> VarSet.empty
   | x -> VarSet.singleton (to_var x)
 
@@ -155,6 +154,40 @@ let mk_rec start result patterns target =
     |> fill_up_update_arg_vars_up_to_num (List.length patterns)
   in
   Recursion (start, result, update)
+
+
+let dependencies input_vars x = function
+  | Recursion (_, _, map) ->
+      let rec f contributors non_contributors =
+        let xs, ys =
+          Set.fold
+            ~f:(fun (contr, non_contr) y ->
+              if
+                Set.exists
+                  ~f:(fun x -> Polynomial.vars (Map.find map x |? Polynomial.zero) |> flip Set.mem y)
+                  contr
+              then
+                (Set.add contr y, Set.remove non_contr y)
+              else
+                (contr, non_contr))
+            input_vars ~init:(contributors, non_contributors)
+        in
+        if Set.equal non_contributors ys then
+          contributors
+        else
+          f xs ys
+      in
+      f (VarSet.singleton x) (Set.diff input_vars (VarSet.singleton x))
+  | x -> VarSet.empty
+
+
+let remove_non_contributors non_contributors = function
+  | Recursion (l, v, map) ->
+      let vars = Map.keys map in
+      let patterns = List.filter ~f:(Set.mem (Set.diff (VarSet.of_list vars) non_contributors)) vars in
+      let assignments = List.map ~f:(Map.find_exn map) patterns in
+      mk_rec l v patterns assignments
+  | x -> x
 
 
 include Comparator.Make (Inner)

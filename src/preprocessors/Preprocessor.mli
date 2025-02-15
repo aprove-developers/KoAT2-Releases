@@ -53,7 +53,10 @@ val lift_to_program :
 module Make
     (PM : ProgramTypes.ProgramModules)
     (CPM : ProgramTypes.ClassicalProgramModules)
-    (_ : EliminateNonContributors.Adapter with type transition := PM.Transition.t)
+    (_ :
+      EliminateNonContributors.Adapter
+        with type transition := PM.Transition.t
+         and type transition_label := PM.TransitionLabel.t)
     (_ : sig
       val eq : (PM.Program.t, CPM.Program.t) Type_equal.t
     end) : sig

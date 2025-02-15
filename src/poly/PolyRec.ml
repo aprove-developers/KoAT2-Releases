@@ -36,4 +36,8 @@ module PolyRec = struct
 
   let of_poly (var_poly : Polynomials.Polynomial.t) : t =
     var_poly |> Polynomials.Polynomial.fold ~const:of_constant ~plus:add ~times:mul ~pow ~indeterminate:of_var
+
+
+  let remove_non_contributors_in_rec_vars non_contributors =
+    substitute_varrec_f (fun x -> of_varrec @@ VarRec.remove_non_contributors non_contributors x)
 end

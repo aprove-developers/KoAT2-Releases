@@ -322,7 +322,11 @@ module Make (P : PolyTypes.Polynomial) = struct
       let patterns =
         List.filter ~f:(Set.mem (Set.diff (input_vars t) non_contributors)) (Set.to_list @@ input_vars t)
       in
-      let assignments = List.map ~f:(Map.find_exn t.update) patterns in
+      let assignments =
+        List.map
+          ~f:(fun x -> Map.find_exn t.update x |> P.remove_non_contributors_in_rec_vars non_contributors)
+          patterns
+      in
       mk ~cost:t.cost ~assignments ~patterns ~guard:t.guard ~id:None
 
 

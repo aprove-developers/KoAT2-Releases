@@ -590,4 +590,6 @@ module type Polynomial = sig
 
   val pull_out_common_addends : t -> t -> t * (t * t)
   (** "Pulls out" common addends of the two given polynomials, i.e., [ pull_out_common_addends (x) (2*x) ] should result in [ (x,(0,x)) ] *)
+
+  val remove_non_contributors_in_rec_vars : VarSet.t -> t -> t
 end

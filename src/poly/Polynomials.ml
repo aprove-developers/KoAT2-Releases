@@ -401,6 +401,9 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     substitute_f
       (fun indet -> Option.value ~default:(of_indeterminate indet) @@ Map.find substitution indet)
       t
+
+
+  let remove_non_contributors_in_rec_vars non_contributors = identity
 end
 
 module PolynomialOver (Value : PolyTypes.Ring) = PolynomialOverIndeterminate (VarIndeterminate) (Value)
