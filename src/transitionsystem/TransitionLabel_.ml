@@ -440,7 +440,8 @@ let overapprox_nonlinear_updates t =
             (Guard.mk_true, new_var_poly_with_coeff)
       in
       let final_guard, final_upd_poly =
-        List.map ~f:handle_monom (Polynomial.monomials_with_coeffs (PolyRec.to_poly poly))
+        List.map ~f:handle_monom (Polynomial.monomials_with_coeffs (PolyRec.to_poly_overapprox poly))
+        (* All function calls are replaced by TMP vars *)
         |> List.fold_left
              ~f:(fun (g, p) (g', p') -> (Guard.mk_and g g', Polynomial.add p p'))
              ~init:(guard, Polynomial.zero)
