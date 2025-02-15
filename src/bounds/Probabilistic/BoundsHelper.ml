@@ -23,6 +23,16 @@ let entry_locations program of_gts =
   entry_gts_with_locs program of_gts |> Sequence.map ~f:Tuple2.second |> LocationSet.of_sequence
 
 
+let pre_grvts program gt =
+  Program.pre_gt program gt |> Set.to_sequence
+  |> Sequence.filter_map ~f:(fun pre_gt ->
+         let loc = GeneralTransition.src gt in
+         if Set.mem (GeneralTransition.targets pre_gt) loc then
+           Some (pre_gt, loc)
+         else
+           None)
+
+
 (** We use a functor to obtain methods for different bound types *)
 module MakeSubstHelper (Num : PolyTypes.OurNumber) = struct
   module B = Bounds.Make (Num)

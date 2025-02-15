@@ -13,6 +13,9 @@ val entry_gts : Program.t -> GeneralTransitionSet.t -> GeneralTransitionSet.t
 val entry_locations : Program.t -> GeneralTransitionSet.t -> LocationSet.t
 (** Obtain all entry locations of the general transition set *)
 
+val pre_grvts : Program.t -> GeneralTransition.t -> (GeneralTransition.t * Location.t) Sequence.t
+(** Compute all preceeding values of [GRV.transition] *)
+
 (** Helper module to substitute variable in bounds with their expected/classical sizes.
     We use a (sound) heuristic to substitute variables with their expected sizes whenever possible *)
 module SubstHelper : sig
