@@ -207,6 +207,9 @@ module GRV : sig
 
   val gt : t -> GeneralTransition.t
   val to_probabilistic_rvs : t -> ProbabilisticRV.t Sequence.t
+
+  module GTVarTuple : ProgramTypes.RV with type transition = GeneralTransition.t
+  (** Useful for nontrivial Sizebounds *)
 end
 
 module Equalities : sig

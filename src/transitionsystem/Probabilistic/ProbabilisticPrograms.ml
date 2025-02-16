@@ -1347,6 +1347,28 @@ module GRV = struct
     GeneralTransition.transitions gt |> Set.to_sequence
     |> Sequence.filter ~f:(Location.equal loc % ProbabilisticTransition.target)
     |> Sequence.map ~f:(fun t -> (t, v))
+
+
+  module GTVarTuple = struct
+    type transition = GeneralTransition.t
+    type transition_comparator_witness = GeneralTransition.comparator_witness
+    type t = transition * Var.t
+
+    type comparator_witness =
+      (transition_comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
+
+    let comparator = RVComparator.comparator GeneralTransition.comparator Var.comparator
+    let compare = Comparator.compare_of_comparator comparator
+    let equal = Comparator.equal_of_comparator comparator
+    let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
+    let hash (gt, v) = Hashtbl.hash (GeneralTransition.gt_id gt, Var.to_string v)
+    let variable (_, v) = v
+    let transition (t, _) = t
+    let to_id_string (gt, v) = "|" ^ GeneralTransition.to_id_string gt ^ "," ^ Var.to_string v ^ "|"
+
+    let ids_to_string ?(pretty = false) (gt, v) =
+      GeneralTransition.ids_to_string ~pretty gt ^ "," ^ Var.to_string ~pretty v
+  end
 end
 
 module RVTuple_ = struct
