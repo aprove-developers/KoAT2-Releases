@@ -53,6 +53,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module CostBounds = CostBounds.Make (Bound) (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
+  module RRF = RRF.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
   module SizeBounds = SizeBounds.Make (PM)
   module SolvableSizeBounds = SolvableSizeBounds.Make (PM)
@@ -135,6 +136,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     improve_with_unlifted_time_bound measure appr unlifted_bound
 
 
+  let improve_with_rank_rrf measure program appr rank =
+    let unlifted_bound = RRF.to_unlifted_bound program rank in
+    improve_with_unlifted_time_bound measure appr unlifted_bound
+
+
   (* We initially compute all possible twn loops.
      Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
   type loop_state = { remaining_loops : LoopHandler.loop ProofOutput.LocalProofOutput.with_proof List.t }
@@ -190,7 +196,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     appr_mc
 
 
-  let local_rank ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) measure program max_depth appr =
+  let local_rank_mprf ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) measure program max_depth appr
+      =
     let get_unbounded_vars transition =
       match conf.goal with
       | Termination -> VarSet.empty
@@ -229,16 +236,46 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improve_with_rank_mprf measure program)
 
 
+  let local_rank_rrf ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) measure program appr =
+    let get_unbounded_vars transition =
+      match conf.goal with
+      | Termination -> VarSet.empty
+      | Complexity ->
+          program |> Program.input_vars
+          |> Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
+    in
+    let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
+    let unbounded_transitions =
+      scc
+      |> tap (fun scc ->
+             Logger.log logger Logger.INFO (fun () ->
+                 ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
+      |> Set.filter ~f:(not % bounded measure appr)
+    in
+    let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
+    let rankfuncs =
+      let compute_function trans =
+        RRF.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear
+        @@ Option.value_exn
+        @@ Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
+      in
+      Set.to_sequence unbounded_transitions |> Sequence.map ~f:compute_function |> Sequence.filter_opt
+    in
+    rankfuncs |> MaybeChanged.fold_sequence ~init:appr ~f:(improve_with_rank_rrf measure program)
+
+
   let run_local ~(conf : allowed_local_conf_type) (scc : TransitionSet.t) loop_state measure program appr =
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
-      | Some max_depth -> local_rank ~conf scc measure program max_depth appr
-      | None -> MaybeChanged.return appr)
+      | Some max_depth ->
+          local_rank_mprf ~conf scc measure program max_depth appr
+          >>= local_rank_rrf ~conf scc measure program
+      | None -> return appr)
       >>= fun appr ->
       match (measure, conf.twn || conf.unsolvable) with
-      | `Cost, _ -> MaybeChanged.return appr
-      | `Time, false -> MaybeChanged.return appr
+      | `Cost, _ -> return appr
+      | `Time, false -> return appr
       | `Time, true -> improve_with_twn ~conf program scc loop_state appr)
 
 

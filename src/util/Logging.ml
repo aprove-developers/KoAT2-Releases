@@ -11,6 +11,7 @@ type logger =
   | LocalSizeBound  (**  Logger handling local size-bounds  *)
   | PLRF  (** Logger handling probabilistic linear ranking functions *)
   | MPRF  (** Logger handling (multiphase) ranking function creation *)
+  | RRF  (** Logger handling (recursive) ranking function creation *)
   | Preprocessor  (**  Logger handling preprocessors  *)
   | Program  (** Logger handling creation of programs, e.g., possible elimination of recursion *)
   | Size  (** Logger handling size-bounds *)
@@ -25,6 +26,7 @@ let all_available =
     Time;
     PLRF;
     MPRF;
+    RRF;
     Bound;
     LocalSizeBound;
     Program;
@@ -48,6 +50,7 @@ let show_logger = function
   | LocalSizeBound -> "lsb"
   | PLRF -> "plrf"
   | MPRF -> "mprf"
+  | RRF -> "rrf"
   | Preprocessor -> "preprocessor"
   | Program -> "program"
   | Size -> "size"
