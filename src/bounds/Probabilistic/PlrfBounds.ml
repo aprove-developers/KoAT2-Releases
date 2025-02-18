@@ -106,8 +106,7 @@ module Make (BP : BoundPair.T) = struct
       match BP.kind with
       | BoundPair.AST -> VarSet.empty
       | BoundPair.PAST ->
-          Program.input_vars program
-          |> Set.filter ~f:(BP.ProbBound.is_infinity % ExpApproximation.sizebound appr (gt, l))
+          Program.input_vars program |> Set.filter ~f:(BP.ProbBound.is_infinity % get_sizebound (gt, l))
     in
     let find_plrfs =
       Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc
