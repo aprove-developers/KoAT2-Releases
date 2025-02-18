@@ -120,6 +120,11 @@ module Inner = struct
     | _ -> raise (invalid_arg "Non recursive variable do not have return location.")
 
 
+  let return_var = function
+    | Recursion (_, v, _) -> v
+    | _ -> raise (invalid_arg "Non recursive variable do not have return location.")
+
+
   let update = function
     | Recursion (_, _, u) -> u
     | _ -> raise (invalid_arg "Non recursive variable do not have an update.")

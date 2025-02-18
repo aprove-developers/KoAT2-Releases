@@ -5,14 +5,14 @@ let logger = Logging.(get Size)
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
-  module LSB = LocalSizeBound.Make (TransitionLabel) (Transition) (Program)
-  module RV = RVGTypes.MakeRV (TransitionLabel) (Transition)
+  module LSB = LocalSizeBound.Make (TransitionLabel) (Transition) (RV) (Program)
+  module RV = PM.RV
   module RVG = RVGTypes.MakeRVG (PM)
 
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
      *)
   let compute_ (rvg : RVG.t) (get_lsb : RV.t -> LSB.t * bool) (get_timebound : Transition.t -> Bound.t)
-      (get_sizebound : Transition.t -> Var.t -> Bound.t) (scc : RV.t List.t) =
+      (get_sizebound : RV.modifier -> Var.t -> Bound.t) (scc : RV.t List.t) =
     let scc_rvset = Set.of_list (module RV) scc in
     let rvs_equality, rvs_non_equality = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
 
@@ -20,7 +20,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
        Corresponds to T_C in the thesis. *)
     let transitions =
       rvs_non_equality
-      |> List.map ~f:(fun (t, v) -> t)
+      |> List.map ~f:(fun (t, v) -> RV.transition_ t)
       |> TransitionSet.stable_dedup_list
       |> tap (fun transitions ->
              Logger.log logger Logger.DEBUG (fun () ->
@@ -34,7 +34,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     (* Returns all the variables with which the given transition does occur as result variable in the scc. *)
     let get_scc_vars transition =
       rvs_non_equality
-      |> List.filter ~f:(fun (t, v) -> Transition.equal t transition)
+      |> List.filter ~f:(fun (t, v) -> Transition.equal (RV.transition_ t) transition)
       |> List.map ~f:(fun (t, v) -> v)
       |> VarSet.stable_dedup_list
       |> tap (fun scc_vars ->
@@ -70,13 +70,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
     let transition_scaling_factor t =
       let affecting_variables =
-        get_scc_vars t
+        get_scc_vars (RV.transition_ t)
         |> List.map ~f:(fun v -> scc_variables (t, v))
         |> List.map ~f:Sequence.length |> List.max_elt ~compare:Int.compare |? 1
       in
 
       let scaling_explicit =
-        t |> get_scc_vars
+        t |> RV.transition_ |> get_scc_vars
         |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (t, v))
         |> List.map ~f:LSB.factor |> List.max_elt ~compare:Int.compare |? 1
         |> tap (fun result ->
@@ -89,12 +89,13 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
     let loop_scaling =
       Sequence.of_list transitions
+      |> Sequence.map ~f:RV.modifier_of_transition
       |> Sequence.map ~f:(fun t ->
              let scaling = transition_scaling_factor t in
              if OurInt.(equal scaling one) then
                Bound.one
              else
-               Bound.(exp (of_constant scaling) (get_timebound t)))
+               Bound.(exp (of_constant scaling) (get_timebound (RV.transition_ t))))
       |> Bound.product
     in
 
@@ -115,18 +116,20 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       Bound.(rv_constant rv + (Sequence.map ~f:(incoming_constant rv) rv_vars |> sum))
     in
 
-    let transition_effect t = get_scc_vars t |> List.map ~f:(fun v -> rv_effect (t, v)) |> Bound.sum_list in
+    let transition_effect t =
+      get_scc_vars (RV.transition_ t) |> List.map ~f:(fun v -> rv_effect (t, v)) |> Bound.sum_list
+    in
 
     let loop_effect =
       Sequence.of_list transitions
       |> Sequence.map ~f:(fun t ->
              if Bound.is_infinity (get_timebound t) then
-               if Bound.(equal zero (transition_effect t)) then
+               if Bound.(equal zero (transition_effect (RV.modifier_of_transition t))) then
                  Bound.zero
                else
                  Bound.infinity
              else
-               Bound.(get_timebound t * transition_effect t))
+               Bound.(get_timebound t * transition_effect (RV.modifier_of_transition t)))
       |> Bound.sum
     in
 

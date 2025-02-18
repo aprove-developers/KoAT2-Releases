@@ -1,17 +1,17 @@
 open! OurBase
 
 module UnliftedTimeBound : sig
-  type ('trans, 'bound, 'trans_cmp_wit) unlifted_time_bound
+  type ('trans, 'modifier, 'bound, 'trans_cmp_wit) unlifted_time_bound
   (** The abstract type *)
 
   module Make (PM : ProgramTypes.ClassicalProgramModules) (B : BoundType.Bound) : sig
     open PM
 
-    type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound
+    type t = (Transition.t, RV.modifier, B.t, Transition.comparator_witness) unlifted_time_bound
 
     type compute_proof =
       get_timebound:(Transition.t -> B.t) ->
-      get_sizebound:(Transition.t -> Var.t -> B.t) ->
+      get_sizebound:(PM.RV.modifier -> Var.t -> B.t) ->
       (Transition.t, B.t, Transition.comparator_witness) Map.t ->
       B.t ->
       Formatter.format ->
@@ -43,13 +43,14 @@ module UnliftedTimeBound : sig
           Here, the entry transitions are considered to be all transitions that are pre transitions of [handled_transitions] but not contained in [handled_transitions] itself.
           All computed entry transitions are then logged via the provided logger. *)
 
-    val lift : get_sizebound:(Transition.t -> Var.t -> B.t) -> get_timebound:(Transition.t -> B.t) -> t -> B.t
+    val lift :
+      get_sizebound:(PM.RV.modifier -> Var.t -> B.t) -> get_timebound:(Transition.t -> B.t) -> t -> B.t
     (** Lifs the unlifted time bound to global time bound.
           To that end, we overapproximate the measure assigned to all entry locations using corresponding sizebounds and then multiply this with incoming time bounds before summing up all bounds obtained in this manner. *)
 
     val lift_and_get_proof :
       get_timebound:(Transition.t -> B.t) ->
-      get_sizebound:(Transition.t -> Var.t -> B.t) ->
+      get_sizebound:(PM.RV.modifier -> Var.t -> B.t) ->
       t ->
       B.t * (Formatter.format -> FormattedString.t)
     (** Analoguous to [lift] but provides an additional returned value which uses the registered [compute_proof] function in the context of the computation of [lift] to generate a proof.

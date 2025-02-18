@@ -33,7 +33,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               (* Overapproximate the cost by looking at the sizes of incoming transitions *)
               let inc_trans = Set.to_sequence @@ Program.pre program transition in
               let inc_size v =
-                Sequence.map ~f:(fun t -> Approximation.sizebound appr t v) inc_trans |> Bound.sum
+                Sequence.map
+                  ~f:(fun t -> Approximation.sizebound appr (RV.modifier_of_transition t) v)
+                  inc_trans
+                |> Bound.sum
               in
               Bound.of_intpoly (Transition.cost transition) |> Bound.substitute_f inc_size
           in

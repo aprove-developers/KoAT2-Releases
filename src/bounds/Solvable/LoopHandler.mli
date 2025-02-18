@@ -12,10 +12,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     (Loop.t -> bool) -> TransitionSet.t -> Program.t -> loop ProofOutput.LocalProofOutput.with_proof list
 
   val finite_bound_possible_if_terminating :
-    get_timebound:(Transition.t -> Bound.t) ->
-    get_sizebound:(Transition.t -> Var.t -> Bound.t) ->
-    loop ->
-    bool
+    get_timebound:(Transition.t -> Bound.t) -> get_sizebound:(RV.modifier -> Var.t -> Bound.t) -> loop -> bool
   (** Under the assumption that the runtime of the loop itself is bounded would it be possible to compute new global time bounds? *)
 
   val finite_bound_possible_if_terminating_with_combined_bounds :
@@ -27,6 +24,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ?unsolvable:bool ->
     loop ProofOutput.LocalProofOutput.with_proof ->
     ( Transition.t,
+      RV.modifier,
       Bound.t,
       Transition.comparator_witness )
     UnliftedBounds.UnliftedTimeBound.unlifted_time_bound

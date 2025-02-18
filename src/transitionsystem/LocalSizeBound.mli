@@ -10,10 +10,13 @@ val c_range : Formula.t -> int
 
 module Make
     (TL : ProgramTypes.ClassicalTransitionLabel)
-    (T : ProgramTypes.ClassicalTransition with type transition_label = TL.t)
+    (T : ProgramTypes.Transition with type transition_label = TL.t)
+    (RV : ProgramTypes.RV with type transition = T.t)
     (P : ProgramTypes.Program with type transition_label = TL.t) : sig
   type t
   (** LocalSizeBounds are of the form factor * (constant + sum [x1;...;xn]) *)
+
+  type t_rec
 
   val mk : ?s:int -> ?c:int -> string list -> t
   (** Constructs a local size bound with the variables specified as string list*)
@@ -30,10 +33,15 @@ module Make
   val vars : t -> VarSet.t
   (** Returns a set of of variables which affect the local sizebound *)
 
+  val vars_rec : t_rec -> VarRecSet.t
+
   val is_constant : t -> bool
   (** Is the LocalSizeBound constant, i.e. does it contain no variables? *)
 
   val to_string : t -> string
+  (** Converts the templated bound to a string. *)
+
+  val to_string_rec : t_rec -> string
   (** Converts the templated bound to a string. *)
 
   val as_bound : t -> Bound.t
@@ -49,11 +57,14 @@ module Make
   val from_update_poly : VarSet.t -> Var.t -> Polynomial.t -> (t * bool Lazy.t) option
   (** Construct a local size bound directly from the update expression *)
 
-  val compute_bound : VarSet.t -> T.t -> Var.t -> (t * bool Lazy.t) option
+  val from_update_polyrec : VarSet.t -> Var.t -> PolyRec.PolyRec.t -> (t_rec * bool Lazy.t) option
+  (** Construct a local size bound directly from the update expression *)
 
-  val sizebound_local : P.t -> T.t -> Var.t -> t Option.t
+  val compute_bound : VarSet.t -> RV.modifier -> Var.t -> (t * bool Lazy.t) option
+
+  val sizebound_local : P.t -> RV.modifier -> Var.t -> t Option.t
   (** Returns a local sizebound of the specified kind for the variable of the transition.
       A local sizebound is expressed in relation to the values directly before executing the transition. *)
 end
 
-include module type of Make (TransitionLabel_) (Transition_) (Program_)
+include module type of Make (TransitionLabel_) (Transition_) (RVGTypes.RV) (Program_)

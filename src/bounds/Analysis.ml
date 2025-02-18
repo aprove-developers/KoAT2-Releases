@@ -51,7 +51,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
   module TrivialTimeBounds = TrivialTimeBounds.Classical (Bound)
   module CostBounds = CostBounds.Make (Bound) (PM)
-  module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
+  module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.RV) (PM.Program)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make (Bound) (PM)
   module RRF = RRF.Make (Bound) (PM)
   module RVG = RVGTypes.MakeRVG (PM)
@@ -203,7 +203,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | Termination -> VarSet.empty
       | Complexity ->
           program |> Program.input_vars
-          |> Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
+          |> Set.filter
+               ~f:(Bound.is_infinity % Approximation.sizebound appr (RV.modifier_of_transition transition))
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
     let unbounded_transitions =
@@ -242,7 +243,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       | Termination -> VarSet.empty
       | Complexity ->
           program |> Program.input_vars
-          |> Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
+          |> Set.filter
+               ~f:(Bound.is_infinity % Approximation.sizebound appr (RV.modifier_of_transition transition))
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
     let unbounded_transitions =
@@ -314,10 +316,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Sequence.cartesian_product (Set.to_sequence scc_with_in_and_out) (Set.to_sequence input_vars)
         in
         all_rvs_of_scc_and_out
-        |> Sequence.filter_map ~f:(fun ((t, v) as rv) ->
+        |> Sequence.filter_map ~f:(fun (t, v) ->
                let open OptionMonad in
-               let+ lsb = LSB.compute_bound input_vars t v in
-               (rv, lsb))
+               let+ lsb = LSB.compute_bound input_vars (PM.RV.modifier_of_transition t) v in
+               ((RV.modifier_of_transition t, v), lsb))
         |> Map.of_sequence_exn (module RV))
 
 
@@ -327,7 +329,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
         in
         RVG.rvg_from_transitionset_with_sccs
-          (Option.map ~f:(LSB.vars % Tuple2.first) % Map.find (Lazy.force opt_lsbs))
+          (Option.map ~f:(VarRecSet.of_varset % LSB.vars % Tuple2.first) % Map.find (Lazy.force opt_lsbs))
           program scc_transitions_with_out)
 
 

@@ -10,7 +10,7 @@ module ProgramModulesOver : ProgramTypes.ClassicalProgramModules = struct
   module TransitionSet = Transition_.TransitionSetOver (Transition)
   module TransitionGraph = TransitionGraph_.TransitionGraph
   module Program = Program_.ClassicalProgram
-  module RV = RVGTypes.MakeRV (TransitionLabel) (Transition)
+  module RV = RVGTypes.MakeRV (TransitionLabel) (RVGTypes.IdentityAdapter) (Transition)
 
   type program_modules_t =
     (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t)
@@ -26,7 +26,7 @@ module TransitionLabel = TransitionLabel_
 module TransitionLabelNonRec = TransitionLabel_.TransitionLabelNonRec_
 module Transition = Transition_
 module TransitionSet = Transition_.TransitionSetOver (Transition)
-module RV = RVGTypes.MakeRV (TransitionLabel) (Transition)
+module RV = RVGTypes.MakeRV (TransitionLabel) (RVGTypes.IdentityAdapter) (Transition)
 
 type program_modules_t =
   (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t)

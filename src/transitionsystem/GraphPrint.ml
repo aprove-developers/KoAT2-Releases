@@ -203,7 +203,7 @@ module ProbabilisticGraphPrint = Make (ProbabilisticProgramModules) (Probabilist
 module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = struct
   include MakeForClassicalAnalysis (PM)
   module RVG = MakeRVG (PM)
-  module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.Program)
+  module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.RV) (PM.Program)
 
   (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
                For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -211,17 +211,26 @@ module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) = str
     let graph =
       RVG.rvg
         (fun (t, v) ->
-          LSB.compute_bound (PM.Program.input_vars program) t v |> Option.map ~f:(LSB.vars % Tuple2.first))
+          LSB.from_update_polyrec (PM.Program.input_vars program) v (PM.RV.update (t, v) v)
+          |> Option.map ~f:(LSB.vars_rec % Tuple2.first))
         program
     in
     let module C = Graph.Components.Make (RVG) in
     let _, scc_number = C.scc graph in
-    let rv_color (rv : PM.RV.t) = scc_number rv * 424242 in
+    let rv_color rv = scc_number rv * 424242 in
     (* Definition of some graphviz options how it should be layout *)
     let module Dot = Graph.Graphviz.Dot (struct
       include RVG
 
-      let edge_attributes _ = [ `Label ""; `Color 4711 ]
+      let edge_attributes (_, edge, _) =
+        [
+          `Label "";
+          (match edge with
+          | RVGTypes.Edge.NORMAL -> get_color Black
+          | RVGTypes.Edge.RETURN -> get_color Red);
+        ]
+
+
       let default_edge_attributes _ = []
       let get_subgraph _ = None
       let vertex_attributes v = [ `Shape `Box; `Color (rv_color v) ]

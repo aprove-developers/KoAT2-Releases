@@ -1,18 +1,18 @@
 open! OurBase
 
 module UnliftedTimeBound = struct
-  type ('trans, 'bound, 'trans_cmp_wit) compute_proof_ =
+  type ('trans, 'modifier, 'bound, 'trans_cmp_wit) compute_proof_ =
     get_timebound:('trans -> 'bound) ->
-    get_sizebound:('trans -> Var.t -> 'bound) ->
+    get_sizebound:('modifier -> Var.t -> 'bound) ->
     ('trans, 'bound, 'trans_cmp_wit) Map.t ->
     'bound ->
     Formatter.format ->
     FormattedString.t
 
-  type ('trans, 'bound, 'trans_cmp_wit) unlifted_time_bound = {
+  type ('trans, 'modifier, 'bound, 'trans_cmp_wit) unlifted_time_bound = {
     measure_decr_transitions : ('trans, 'trans_cmp_wit) Set.t;
     entry_transitions_measure : ('trans, 'bound, 'trans_cmp_wit) Map.t;
-    compute_proof : ('trans, 'bound, 'trans_cmp_wit) compute_proof_;
+    compute_proof : ('trans, 'modifier, 'bound, 'trans_cmp_wit) compute_proof_;
   }
 
   module Make (PM : ProgramTypes.ClassicalProgramModules) (B : BoundType.Bound) = struct
@@ -20,8 +20,8 @@ module UnliftedTimeBound = struct
 
     let measure_decr_transitions t = t.measure_decr_transitions
 
-    type t = (Transition.t, B.t, Transition.comparator_witness) unlifted_time_bound
-    type compute_proof = (Transition.t, B.t, Transition.comparator_witness) compute_proof_
+    type t = (Transition.t, RV.modifier, B.t, Transition.comparator_witness) unlifted_time_bound
+    type compute_proof = (Transition.t, RV.modifier, B.t, Transition.comparator_witness) compute_proof_
 
     let entry_transitions_measure t = t.entry_transitions_measure
 
@@ -47,7 +47,7 @@ module UnliftedTimeBound = struct
         Map.to_sequence t.entry_transitions_measure
         |> Sequence.map ~f:(fun (t', measure) ->
                let timebound = get_timebound t' in
-               let overappr_measure = B.substitute_f (get_sizebound t') measure in
+               let overappr_measure = B.substitute_f (get_sizebound (RV.modifier_of_transition t')) measure in
                (* TODO, here we have to the same for recursive calls. *)
                B.mul timebound overappr_measure)
         |> B.sum

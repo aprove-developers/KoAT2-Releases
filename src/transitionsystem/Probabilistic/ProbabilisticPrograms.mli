@@ -195,21 +195,36 @@ end
 module ProbabilisticRV :
   ProgramTypes.RV
     with type transition = ProbabilisticTransition.t
-     and type transition_comparator_witness = ProbabilisticTransition.comparator_witness
+     and type modifier = ProbabilisticTransition.t
+     and type comparator_witness_modifier = ProbabilisticTransition.comparator_witness
 
-module ProbabilisticRVNonProbOverappr :
-  ProgramTypes.RV
-    with type transition = ProbabilisticTransitionNonProbOverappr.t
-     and type transition_comparator_witness = ProbabilisticTransitionNonProbOverappr.comparator_witness
+module ProbabilisticRVNonProbOverappr : sig
+  include
+    ProgramTypes.RV
+      with type transition = ProbabilisticTransitionNonProbOverappr.t
+       and type comparator_witness_modifier = ProbabilisticTransitionNonProbOverappr.comparator_witness
+       and type modifier = ProbabilisticTransitionNonProbOverappr.t
+
+  val to_generic_modifier : modifier -> ProbabilisticTransitionNonProbOverappr.t GenericModifier_.modifier_t_
+  val modifier_of_function_call : VarRec.t -> modifier
+  val update : t -> Var.t -> PolyRec.PolyRec.t
+end
 
 module GRV : sig
-  include ProgramTypes.RV with type transition = GeneralTransition.t * Location.t
+  include
+    ProgramTypes.RV
+      with type transition = GeneralTransition.t * Location.t
+       and type modifier = GeneralTransition.t * Location.t
 
   val gt : t -> GeneralTransition.t
   val to_probabilistic_rvs : t -> ProbabilisticRV.t Sequence.t
 
-  module GTVarTuple : ProgramTypes.RV with type transition = GeneralTransition.t
   (** Useful for nontrivial Sizebounds *)
+  module GTVarTuple :
+    ProgramTypes.RV
+      with type transition = GeneralTransition.t
+       and type modifier = GeneralTransition.t
+       and type comparator_witness_modifier = GeneralTransition.comparator_witness
 end
 
 module Equalities : sig

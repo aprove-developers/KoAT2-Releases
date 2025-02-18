@@ -31,7 +31,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     | None -> Bound.infinity
     | Some xs ->
         List.map xs ~f:(fun (entry, local_size) ->
-            Bound.substitute_f (Approximation.sizebound appr entry) local_size)
+            Bound.substitute_f (Approximation.sizebound appr (PM.RV.modifier_of_transition entry)) local_size)
         |> Sequence.of_list |> Bound.maximum
 
 
@@ -127,7 +127,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           let bound =
             lift appr t var (Option.some @@ List.map entries ~f:(fun entry -> (entry, local_bound)))
           in
-          List.fold loop_trans ~init:appr ~f:(fun appr t -> Approximation.add_sizebound bound t var appr))
+          List.fold loop_trans ~init:appr ~f:(fun appr t ->
+              Approximation.add_sizebound bound (PM.RV.modifier_of_transition t) var appr))
     else
       appr
 
@@ -135,17 +136,18 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   let improve_t ?(commuting = false) program trans t appr =
     let lift_var appr var =
       let lifted_bound = lift appr t var (SizeBoundTable.find size_bound_table (t, var)) in
-      Approximation.add_sizebound lifted_bound t var appr
+      Approximation.add_sizebound lifted_bound (PM.RV.modifier_of_transition t) var appr
     in
     Set.fold
       ~f:(fun appr var ->
         if
           (not commuting)
           && SizeBoundTable.mem size_bound_table (t, var)
-          && (not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var)
+          && (not @@ Bound.is_polynomial @@ Approximation.sizebound appr (PM.RV.modifier_of_transition t) var)
         then
           lift_var appr var
-        else if not @@ Bound.is_linear @@ Approximation.sizebound appr t var then
+        else if not @@ Bound.is_linear @@ Approximation.sizebound appr (PM.RV.modifier_of_transition t) var
+        then
           if commuting then
             improve_commutive appr program trans t var
           else

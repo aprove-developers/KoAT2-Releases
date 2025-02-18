@@ -55,21 +55,29 @@ let c_range formula =
 
 module Make
     (TL : ProgramTypes.ClassicalTransitionLabel)
-    (T : ProgramTypes.ClassicalTransition with type transition_label = TL.t)
+    (T : ProgramTypes.Transition with type transition_label = TL.t)
+    (RV : ProgramTypes.RV with type transition = T.t)
     (P : ProgramTypes.Program with type transition_label = TL.t) =
 struct
   type t = { factor : int; constant : int; vars : VarSet.t } [@@deriving eq]
+  type t_rec = { factor_rec : int; constant_rec : int; vars_rec : VarRecSet.t } [@@deriving eq]
 
   let mk ?(s = 1) ?(c = 0) vars = { factor = abs s; constant = abs c; vars = VarSet.of_string_list vars }
   let initial_lsb s c vs = { factor = s; constant = c; vars = vs }
   let factor t = t.factor
   let constant t = t.constant
   let vars t = t.vars
+  let vars_rec t = t.vars_rec
   let is_constant = Set.is_empty % vars
 
   let to_string lsb =
     "{" ^ "factor: " ^ Int.to_string lsb.factor ^ "; " ^ "constant: " ^ Int.to_string lsb.constant ^ "; "
     ^ "vars: " ^ VarSet.to_string lsb.vars ^ "; " ^ "}"
+
+
+  let to_string_rec lsb =
+    "{" ^ "factor: " ^ Int.to_string lsb.factor_rec ^ "; " ^ "constant: " ^ Int.to_string lsb.constant_rec
+    ^ "; " ^ "vars: " ^ VarRecSet.to_string lsb.vars_rec ^ "; " ^ "}"
 
 
   let to_string_option = function
@@ -171,9 +179,8 @@ struct
       execute
 
 
-  module Monomial = Monomials.Make (OurInt)
-
   let from_update_poly program_vars update_var update =
+    let module Monomial = Monomials.Make (OurInt) in
     let open OptionMonad in
     let to_abs_int = OurInt.to_int % OurInt.abs in
     let* const, factor, vars =
@@ -206,10 +213,46 @@ struct
     Option.return (lsb, Lazy.from_val is_equality_type)
 
 
-  let compute_bound program_vars (l, t, l') var =
+  let from_update_polyrec program_vars update_var update =
+    let module Monomial = Monomials.MakeOverIndeterminate (VarRec) (OurInt) in
+    let open OptionMonad in
+    let open PolyRec in
+    let to_abs_int = OurInt.to_int % OurInt.abs in
+    let* const, factor, vars =
+      try
+        PolyRec.monomials_with_coeffs update
+        |> List.fold_left
+             ~f:(fun lsb (coeff, mon) ->
+               let* const, factor, vars = lsb in
+               match Sequence.to_list (Monomial.to_sequence mon) with
+               | [] -> Option.return (const + to_abs_int coeff, factor, vars)
+               | [ (v, 1) ] when Set.mem (VarRecSet.of_varset program_vars) v || VarRec.is_rec v ->
+                   Option.return (const, max factor (to_abs_int coeff), Set.add vars v)
+               | _ -> None)
+             ~init:(Some (0, 1, VarRecSet.empty))
+      with
+      | OurInt.Overflow -> None
+    in
+    let lsb =
+      {
+        factor_rec = factor;
+        vars_rec = vars;
+        constant_rec =
+          (if const mod factor = 0 then
+             const / factor
+           else
+             (const / factor) + 1);
+      }
+    in
+    let is_equality_type = PolyRec.equal (PolyRec.of_var update_var) update in
+    Option.return (lsb, Lazy.from_val is_equality_type)
+
+
+  let compute_bound program_vars m var =
     let open PolyRec in
     let execute () =
       let open OptionMonad in
+      let t = T.label @@ RV.transition_ m in
       let* update = TL.update t var in
       if PolyRec.has_recvars update then
         None
@@ -237,12 +280,7 @@ struct
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
-        ( "compute_bound",
-          [
-            ("transition", T.to_id_string (l, t, l'));
-            ("guard", Constraints.Constraint.to_string (TL.guard t));
-            ("var", Var.to_string var);
-          ] ))
+        ("compute_bound", [ ("transition", T.to_id_string @@ RV.transition_ m); ("var", Var.to_string var) ]))
       ~result:to_string_option_tuple execute
 
 
@@ -250,4 +288,4 @@ struct
   let sizebound_local program t v = Option.map ~f:Tuple2.first @@ sizebound_local_with_equality program t v
 end
 
-include Make (TransitionLabel_) (Transition_) (Program_)
+include Make (TransitionLabel_) (Transition_) (RVGTypes.RV) (Program_)

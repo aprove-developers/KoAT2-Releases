@@ -55,7 +55,7 @@ struct
     filter_aseq_finite % SizeApproximation.to_sequence % size
 
 
-  let add_sizebound bound transition var = Lens.size ^%= SizeApproximation.add bound (transition, var)
+  let add_sizebound bound modifier var = Lens.size ^%= SizeApproximation.add bound (modifier, var)
   let add_sizebounds bound scc = Lens.size ^%= SizeApproximation.add_all bound scc
 
   let is_size_bounded program appr t =

@@ -64,6 +64,7 @@ val to_var : t -> Var.t
 val to_var_or_tmp : t -> Var.t
 val mk_rec : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t
 val return_loc : t -> Location.t
+val return_var : t -> Var.t
 val update : t -> VarMapPoly.map_type
 val remove_non_contributors : VarSet.t -> t -> t
 val dependencies : VarSet.t -> Var.t -> t -> VarSet.t

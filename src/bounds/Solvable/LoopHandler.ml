@@ -17,7 +17,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let complete_proofs twn_proofs cycle ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry, local_bound) =
-      let bound_with_sizebound = Bound.substitute_f (get_sizebound entry) local_bound in
+      let bound_with_sizebound =
+        Bound.substitute_f (get_sizebound (RV.modifier_of_transition entry)) local_bound
+      in
       Bound.mul (get_timebound entry) bound_with_sizebound
       |> tap @@ fun b ->
          Logger.log logger Logger.INFO (fun () ->
@@ -25,7 +27,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                Bound.vars local_bound |> Set.to_list
                |> List.map ~f:(fun v ->
                       ( "t: " ^ Transition.to_id_string entry ^ ", yvar: " ^ Var.to_string v,
-                        get_sizebound entry v |> Bound.to_string ~pretty:true )) ));
+                        get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true ))
+             ));
          Logger.log logger Logger.INFO (fun () ->
              ( "lift",
                [ ("RB of entry", get_timebound entry |> Bound.to_string); ("Result", Bound.to_string b) ] ));
@@ -37,7 +40,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 <> (Bound.vars local_bound |> Set.to_list
                    |> List.map ~f:(fun v ->
                           Var.to_string ~pretty:true v ^ ": "
-                          ^ (get_sizebound entry v |> Bound.to_string ~pretty:true))
+                          ^ (get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true))
                    |> List.map ~f:mk_str_line |> mappend)
                 <> mk_str_line
                      ("Runtime-bound of t"
@@ -65,7 +68,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : loop) =
     finite_bound_possible_if_terminating_with_combined_bounds
-      ~get_combined_bounds:(fun t -> (get_timebound t, get_sizebound t))
+      ~get_combined_bounds:(fun t -> (get_timebound t, get_sizebound (RV.modifier_of_transition t)))
       loop
 
 

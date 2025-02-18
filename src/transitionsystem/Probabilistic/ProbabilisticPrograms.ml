@@ -1318,8 +1318,10 @@ module GRV = struct
   module TransComp = Comparator.Make (Trans)
 
   type transition = Trans.t
+  type modifier = Trans.t
   type transition_comparator_witness = TransComp.comparator_witness
   type t = transition * Var.t
+  type comparator_witness_modifier = transition_comparator_witness
 
   type comparator_witness =
     (transition_comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
@@ -1331,6 +1333,8 @@ module GRV = struct
   let hash ((gt, l), v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
   let variable (_, v) = v
   let transition (t, _) = t
+  let transition_ = identity
+  let modifier_of_transition = identity
   let gt ((gt, _), _) = gt
 
   let to_id_string ((gt, l), v) =
@@ -1352,10 +1356,13 @@ module GRV = struct
   module GTVarTuple = struct
     type transition = GeneralTransition.t
     type transition_comparator_witness = GeneralTransition.comparator_witness
+    type modifier = transition
     type t = transition * Var.t
 
     type comparator_witness =
       (transition_comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
+
+    type comparator_witness_modifier = transition_comparator_witness
 
     let comparator = RVComparator.comparator GeneralTransition.comparator Var.comparator
     let compare = Comparator.compare_of_comparator comparator
@@ -1364,21 +1371,26 @@ module GRV = struct
     let hash (gt, v) = Hashtbl.hash (GeneralTransition.gt_id gt, Var.to_string v)
     let variable (_, v) = v
     let transition (t, _) = t
+    let transition_ = identity
     let to_id_string (gt, v) = "|" ^ GeneralTransition.to_id_string gt ^ "," ^ Var.to_string v ^ "|"
 
     let ids_to_string ?(pretty = false) (gt, v) =
       GeneralTransition.ids_to_string ~pretty gt ^ "," ^ Var.to_string ~pretty v
+
+
+    let modifier_of_transition = identity
   end
 end
 
 module RVTuple_ = struct
   type transition = ProbabilisticTransition.t
-  type transition_comparator_witness = ProbabilisticTransition.comparator_witness
+  type modifier = transition
   type t = transition * Var.t
 
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
   let hash (t1, v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
   let transition (t, _) = t
+  let transition_ = identity
   let variable (_, v) = v
 
   type comparator_witness =
@@ -1387,10 +1399,13 @@ module RVTuple_ = struct
   let comparator = RVComparator.comparator ProbabilisticTransition.comparator Var.comparator
   let compare = Comparator.compare_of_comparator comparator
   let equal = Comparator.equal_of_comparator comparator
+  let modifier_of_transition = identity
 end
 
 module ProbabilisticRV = struct
   include RVTuple_
+
+  type comparator_witness_modifier = ProbabilisticTransition.comparator_witness
 
   let to_id_string (t, v) = "|" ^ ProbabilisticTransition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
@@ -1402,6 +1417,8 @@ end
 module ProbabilisticRVNonProbOverappr = struct
   include RVTuple_
 
+  type comparator_witness_modifier = ProbabilisticTransitionNonProbOverappr.comparator_witness
+
   let to_id_string (t, v) =
     "|" ^ ProbabilisticTransitionNonProbOverappr.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
@@ -1410,6 +1427,16 @@ module ProbabilisticRVNonProbOverappr = struct
     ProbabilisticTransitionLabelNonProbOverappr.ids_to_string ~pretty
       (ProbabilisticTransitionNonProbOverappr.label t)
     ^ ", " ^ Var.to_string ~pretty v
+
+
+  let to_generic_modifier t = GenericModifier_.TR t
+  let modifier_of_function_call fc = failwith "TODO"
+
+  let update (t, _) v =
+    ProbabilisticTransitionNonProbOverappr.TransitionLabel.update
+      (ProbabilisticTransitionNonProbOverappr.label t)
+      v
+    |? PolyRec.PolyRec.of_var v
 end
 
 module Equalities = struct

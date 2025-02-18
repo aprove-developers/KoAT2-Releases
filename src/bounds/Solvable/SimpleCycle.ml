@@ -258,7 +258,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 Loop.commuting loop_t loop
                 && List.for_all
                      (not % Approximation.is_size_bounded program appr)
-                     (List.filter (Location.equal l % Tuple3.third) handled_transitions)
+                     (List.map PM.RV.modifier_of_transition
+                     @@ List.filter (Location.equal l % Tuple3.third) handled_transitions)
               then
                 Option.some (loop, handled_transitions)
               else

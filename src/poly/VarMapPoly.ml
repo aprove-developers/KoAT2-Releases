@@ -10,5 +10,5 @@ let map_type_of_sexp = Map.m__t_of_sexp (module Var) Polynomial.t_of_sexp
 let sexp_of_map_type = Map.sexp_of_m__t (module Var) Polynomial.sexp_of_t
 
 let to_string map =
-  Util.sequence_to_string ~f:(fun (v, p) -> "(" ^ Var.to_string v ^ "," ^ Polynomial.to_string p ^ ")")
+  Util.sequence_to_string ~f:(fun (v, p) -> "(" ^ Var.to_string v ^ " <- " ^ Polynomial.to_string p ^ ")")
   @@ Map.to_sequence map

@@ -496,17 +496,19 @@ end
 
 module type RV = sig
   type transition
-  type transition_comparator_witness
-  type t = transition * Var.t
+  type modifier
+  type comparator_witness_modifier
+  type t = modifier * Var.t
 
   include
     Comparator.S
       with type t := t
        and type comparator_witness =
-        (transition_comparator_witness, Var.comparator_witness) RVComparator.comparator_witness
+        (comparator_witness_modifier, Var.comparator_witness) RVComparator.comparator_witness
 
+  (* val has_transition : t -> bool *)
   val transition : t -> transition
-  (** Returns the transition of the result variable. *)
+  val transition_ : modifier -> transition
 
   val variable : t -> Var.t
   (** Returns the variable of the result variable. *)
@@ -517,6 +519,7 @@ module type RV = sig
   val compare : t -> t -> int
   val ids_to_string : ?pretty:bool -> t -> string
   val sexp_of_t : t -> Sexp.t
+  val modifier_of_transition : transition -> modifier
 end
 
 type !'a program_modules_meta
@@ -590,10 +593,13 @@ module type ClassicalProgramModules = sig
        and type transition = Transition.t
        and type transition_graph = TransitionGraph.t
 
-  module RV :
-    RV
-      with type transition = Transition.t
-       and type transition_comparator_witness = Transition.comparator_witness
+  module RV : sig
+    include RV with type transition = Transition.t
+
+    val to_generic_modifier : modifier -> transition GenericModifier_.modifier_t_
+    val modifier_of_function_call : VarRec.t -> modifier
+    val update : t -> Var.t -> PolyRec.PolyRec.t
+  end
 
   type program_modules_t =
     (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t) program_modules_meta

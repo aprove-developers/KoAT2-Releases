@@ -68,21 +68,21 @@ module Make
 
   (** {1  {L  Sizebound related methods}} *)
 
-  val sizebound : t -> PM.RV.transition -> Var.t -> B.t
+  val sizebound : t -> PM.RV.modifier -> Var.t -> B.t
   (** Returns a sizebound for the var of the transition.
           A sizebound is expressed in relation to the input variable values of the program. *)
 
   val all_finite_sizebounds : t -> (PM.RV.t * B.t) Sequence.t
   (** Returns a sequence of all registered finite cost bounds *)
 
-  val add_sizebound : B.t -> PM.RV.transition -> Var.t -> t -> t
+  val add_sizebound : B.t -> PM.RV.modifier -> Var.t -> t -> t
   (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
           The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 
   val add_sizebounds : B.t -> PM.RV.t list -> t -> t
   (** Add a size bound for all result variables of the list *)
 
-  val is_size_bounded : PM.Program.t -> t -> PM.RV.transition -> bool
+  val is_size_bounded : PM.Program.t -> t -> PM.RV.modifier -> bool
   (** Returns true iff. all size bounds of a given transition are bounded and not infinity. *)
 end
 

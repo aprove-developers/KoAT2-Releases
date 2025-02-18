@@ -8,12 +8,7 @@ module MakeForClassicalAnalysis (PM : ProgramTypes.ProgramModules) :
 
 module MakeForRVGFromClassical (PM : ProgramTypes.ClassicalProgramModules) : sig
   val print_rvg :
-    label:(RVGTypes.MakeRVG(PM).vertex -> string) ->
-    outdir:Fpath.t ->
-    file:string ->
-    PM.Program.t ->
-    format:string ->
-    unit
+    label:(PM.RV.t -> string) -> outdir:Fpath.t -> file:string -> PM.Program.t -> format:string -> unit
 end
 
 module MakeForDependencyGraph : sig

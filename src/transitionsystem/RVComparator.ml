@@ -1,11 +1,11 @@
 open! OurBase
 
-(** RVComparators only depend on Transition & Variable Comparators *)
+(** RVComparators only depend on Modifier & Variable Comparators *)
 include Comparator.Derived2 (struct
-  type (!'trans, !'var) t = 'trans * 'var
+  type (!'modifier, !'var) t = 'modifier * 'var
 
-  let compare trans_compare var_compare (t1, v1) (t2, v2) =
-    let t_compare = trans_compare t1 t2 in
+  let compare modifier_compare var_compare (m1, v1) (m2, v2) =
+    let t_compare = modifier_compare m1 m2 in
     if t_compare = 0 then
       var_compare v1 v2
     else

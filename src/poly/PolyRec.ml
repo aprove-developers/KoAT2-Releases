@@ -21,6 +21,7 @@ module PolyRec = struct
 
   let has_recvars = List.exists ~f:VarRec.is_rec % indeterminates
   let rec_vars = List.filter ~f:VarRec.is_rec % indeterminates
+  let all_vars p = Set.union (VarRecSet.of_varset @@ vars p) (VarRecSet.of_list @@ rec_vars p)
 
   exception Rec_Vars of string
 
@@ -47,4 +48,10 @@ module PolyRec = struct
 
   let remove_non_contributors_in_rec_vars non_contributors =
     substitute_varrec_f (fun x -> of_varrec @@ VarRec.remove_non_contributors non_contributors x)
+
+
+  let max_of_occurring_constants =
+    fold ~const:OurInt.abs
+      ~indeterminate:(fun _ -> OurInt.one)
+      ~plus:OurInt.add ~times:OurInt.mul ~pow:OurInt.pow
 end

@@ -27,6 +27,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     PM.Program.t ->
     t ->
     ( PM.Transition.t,
+      PM.RV.modifier,
       Bound.t,
       PM.Transition.comparator_witness )
     UnliftedBounds.UnliftedTimeBound.unlifted_time_bound
