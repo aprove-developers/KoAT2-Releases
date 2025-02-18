@@ -184,6 +184,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       in
       Bound.(rt + (rf * (one + (rt * (one + nfc))) * exp (nfc * rtf) rf))
     in
+    let locs = OurBase.Set.map (module Location) t.non_increasing ~f:Tuple3.first in
     UnliftedBound.mk_from_program logger ~handled_transitions:t.non_increasing
       ~measure_decr_transitions:(TransitionSet.singleton t.decreasing)
       ~compute_proof:
@@ -191,11 +192,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       program
       (fun ((_, _, l') as t') ->
         if
-          OurBase.Set.exists
-            ~f:(fun v -> Location.equal (VarRec.return_loc v) (Transition.src t.decreasing))
-            (Transition.rec_vars t')
+          OurBase.Set.exists ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
         then
-          Bound.one
+          OurBase.Set.fold
+            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarRec.return_loc v)) b)
+            ~init:Bound.zero (Transition.rec_vars t')
         else
           evaluated_rank_for_entry_loc l')
 
@@ -334,12 +335,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let varrec_constraint cache = constraint_cache_varrec cache (varrec_constraint_ cache)
 
-  let non_increasing_varrec_constraint cache measure varrec transition =
-    varrec_constraint cache (measure, `Non_Increasing, varrec, transition)
-
-
-  let decreasing_varrec_constraint cache measure varrec transition =
-    varrec_constraint cache (measure, `Decreasing, varrec, transition)
+  let varrec_constraint cache measure varrec transition =
+    Formula.mk_and
+      (varrec_constraint cache (measure, `Decreasing, varrec, transition))
+      (varrec_constraint cache (measure, `Non_Increasing, varrec, transition))
 
 
   (** A valuation is a function which maps from a finite set of variables to values *)
@@ -371,11 +370,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let t = problem.make_decreasing in
     Solver.add solver_int (decreasing_transition_constraint cache problem.measure t);
     OurBase.Set.iter (Transition.rec_vars t) ~f:(fun v ->
-        Solver.add solver_int (decreasing_varrec_constraint cache problem.measure v t))
+        Solver.add solver_int (varrec_constraint cache problem.measure v t))
 
 
   let add_non_increasing_constraint cache problem solver_int transition =
-    Solver.add solver_int (non_increasing_transition_constraint cache problem.measure transition)
+    Solver.add solver_int (non_increasing_transition_constraint cache problem.measure transition);
+    OurBase.Set.iter (Transition.rec_vars transition) ~f:(fun v ->
+        Solver.add solver_int (varrec_constraint cache problem.measure v transition))
 
 
   let finalise_rrf cache solver_int non_increasing entry_transitions problem =
@@ -500,7 +501,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let non_inc = Stack.of_enum @@ List.enum (Base.Set.to_list min_applicable) in
     let make_non_increasing =
       Base.Set.to_array
-      @@ Base.Set.diff (Base.Set.of_array (module Transition) rrf_problem.make_non_increasing) min_applicable
+      @@ (Base.Set.diff (Base.Set.of_array (module Transition) rrf_problem.make_non_increasing) min_applicable
+         |> Base.Set.filter ~f:(fun (l, _, l') -> not @@ Location.equal l l'))
     in
     Base.Set.iter ~f:(add_non_increasing_constraint cache rrf_problem solver_int) min_applicable;
     (try
