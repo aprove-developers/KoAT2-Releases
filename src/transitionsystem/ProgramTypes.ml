@@ -506,7 +506,6 @@ module type RV = sig
        and type comparator_witness =
         (comparator_witness_modifier, Var.comparator_witness) RVComparator.comparator_witness
 
-  (* val has_transition : t -> bool *)
   val transition : t -> transition
   val transition_ : modifier -> transition
 
@@ -599,6 +598,7 @@ module type ClassicalProgramModules = sig
     val to_generic_modifier : modifier -> transition GenericModifier_.modifier_t_
     val modifier_of_function_call : VarRec.t -> modifier
     val update : t -> Var.t -> PolyRec.PolyRec.t
+    val function_call : t -> VarRec.t
     val has_transition : t -> bool
   end
 

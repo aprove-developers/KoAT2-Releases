@@ -46,6 +46,11 @@ struct
       | VR v -> failwith "VarRec cannot be transformed into transition!"
 
 
+    let to_function_call = function
+      | TR t -> failwith "Transition cannot be transformed into VarRec!"
+      | VR v -> v
+
+
     let is_transition = function
       | TR t -> true
       | VR v -> false
@@ -101,6 +106,7 @@ struct
   let modifier_of_function_call = M.of_function_call
   let _has_transition = M.is_transition % Tuple2.first
   let transition (t, _) = M.to_transition t
+  let function_call (fc, _) = M.to_function_call fc
   let transition_ = M.to_transition
   let modifier (m, _) = m
   let variable (_, v) = v

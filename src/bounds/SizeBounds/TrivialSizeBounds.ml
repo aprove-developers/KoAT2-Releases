@@ -18,7 +18,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
       Corresponds to 'SizeBounds for trivial SCCs':
       S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)). *)
-  let incoming_bound pre_transitions (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb t v =
+  let incoming_bound pre_transitions (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb (m : RV.modifier) v
+      =
     (* since this is a trivial scc*)
     let execute () =
       (* If the LSB is constant there are no pre-transitions in the RVG *)
@@ -30,8 +31,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
-        ( "compute_highest_incoming_bound",
-          [ ("lsb", Bound.to_string lsb); ("transition", Transition.to_id_string t) ] ))
+        ("compute_highest_incoming_bound", [ ("lsb", Bound.to_string lsb); ("rv", RV.to_id_string (m, v)) ]))
       ~result:Bound.to_string execute
 
 
@@ -42,14 +42,31 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       else
         Sequence.of_list @@ List.map ~f:RV.modifier_of_transition (Set.to_list @@ Program.pre program t)
     in
-    incoming_bound pre_transitions get_sizebound lsb t v
+    incoming_bound pre_transitions get_sizebound lsb (RV.modifier_of_transition t) v
 
 
   let incoming_bound_lifted_update program get_sizebound upd t v =
     let pre_transitions =
       Sequence.of_list @@ List.map ~f:RV.modifier_of_transition (Set.to_list @@ Program.pre program t)
     in
-    incoming_bound pre_transitions get_sizebound upd t v
+    incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_transition t) v
+
+
+  let incoming_bound_lifted_update_fc program get_sizebound upd fc v =
+    let pre_transitions t =
+      Sequence.of_list @@ List.map ~f:RV.modifier_of_transition (Set.to_list @@ Program.pre program t)
+    in
+    let pre_transitions =
+      List.filter_map
+        (Set.to_list @@ Program.transitions program)
+        ~f:(fun t ->
+          if Set.mem (Transition.rec_vars t) fc then
+            Option.return @@ pre_transitions t
+          else
+            None)
+      |> Sequence.of_list |> Sequence.join
+    in
+    incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_function_call fc) v
 
 
   let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) rec_v v =
@@ -88,7 +105,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let execute () =
       if RV.has_transition (m, v) then
         let t = RV.transition_ m in
-        (* TODO Rec *)
         let res_from_lsb, res_from_update =
           if Program.is_initial program t then
             let res_from_lsb = lsb_as_bound in
@@ -124,7 +140,16 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         in
         Bound.(keep_simpler_bound (res_from_lsb |? infinity) (res_from_update |? infinity))
       else
-        Bound.infinity
+        let update = RV.update (m, v) v in
+        if Set.is_subset (PolyRec.vars update) ~of_:(Program.input_vars program) then
+          let lsb =
+            PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+              ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
+              update
+          in
+          incoming_bound_lifted_update_fc program get_sizebound lsb (RV.function_call (m, v)) v
+        else
+          Bound.infinity
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> ("compute_trivial_bound", [ ("rv", RV.to_id_string (m, v)) ]))

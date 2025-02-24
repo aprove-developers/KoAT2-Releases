@@ -1440,6 +1440,7 @@ module ProbabilisticRVNonProbOverappr = struct
 
 
   let has_transition = const true
+  let function_call m = failwith "TODO"
 end
 
 module Equalities = struct
