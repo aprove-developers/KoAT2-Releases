@@ -1437,6 +1437,9 @@ module ProbabilisticRVNonProbOverappr = struct
       (ProbabilisticTransitionNonProbOverappr.label t)
       v
     |? PolyRec.PolyRec.of_var v
+
+
+  let has_transition = const true
 end
 
 module Equalities = struct

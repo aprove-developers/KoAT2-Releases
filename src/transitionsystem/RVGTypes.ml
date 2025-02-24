@@ -116,6 +116,7 @@ struct
   let equal = Comparator.equal_of_comparator comparator
   let to_generic_modifier = identity
   let update (m, _) v = M.update m v
+  let has_transition (m, _) = M.is_transition m
 end
 
 module IdentityAdapter = struct

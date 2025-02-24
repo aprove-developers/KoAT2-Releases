@@ -86,40 +86,45 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       lsb_as_bound =
     let open OptionMonad in
     let execute () =
-      let t = RV.transition_ m in
-      (* TODO Rec *)
-      let res_from_lsb, res_from_update =
-        if Program.is_initial program t then
-          let res_from_lsb = lsb_as_bound in
-          let res_from_update =
-            let+ update = TransitionLabel.update (Transition.label t) v in
-            if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t)) then
-              PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
-                ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
-                update
-            else
-              Bound.infinity
-          in
-          (res_from_lsb, res_from_update)
-        else
-          let res_from_lsb =
-            Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
-          in
-          let res_from_update =
-            let+ update = TransitionLabel.update (Transition.label t) v in
-            if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t)) then
-              let lsb =
+      if RV.has_transition (m, v) then
+        let t = RV.transition_ m in
+        (* TODO Rec *)
+        let res_from_lsb, res_from_update =
+          if Program.is_initial program t then
+            let res_from_lsb = lsb_as_bound in
+            let res_from_update =
+              let+ update = TransitionLabel.update (Transition.label t) v in
+              if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
+              then
                 PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
                   ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
                   update
-              in
-              incoming_bound_lifted_update program get_sizebound lsb t v
-            else
-              Bound.infinity
-          in
-          (res_from_lsb, res_from_update)
-      in
-      Bound.(keep_simpler_bound (res_from_lsb |? infinity) (res_from_update |? infinity))
+              else
+                Bound.infinity
+            in
+            (res_from_lsb, res_from_update)
+          else
+            let res_from_lsb =
+              Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
+            in
+            let res_from_update =
+              let+ update = TransitionLabel.update (Transition.label t) v in
+              if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
+              then
+                let lsb =
+                  PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+                    ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
+                    update
+                in
+                incoming_bound_lifted_update program get_sizebound lsb t v
+              else
+                Bound.infinity
+            in
+            (res_from_lsb, res_from_update)
+        in
+        Bound.(keep_simpler_bound (res_from_lsb |? infinity) (res_from_update |? infinity))
+      else
+        Bound.infinity
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> ("compute_trivial_bound", [ ("rv", RV.to_id_string (m, v)) ]))

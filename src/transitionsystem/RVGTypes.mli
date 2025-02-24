@@ -45,6 +45,7 @@ module MakeRV
   val modifier_of_function_call : VarRec.t -> modifier
   val update : t -> Var.t -> PolyRec.PolyRec.t
   val hash : t -> int
+  val has_transition : t -> bool
 end
 
 module IdentityAdapter : sig
