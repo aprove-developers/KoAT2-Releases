@@ -210,6 +210,9 @@ module ProbabilisticRVNonProbOverappr : sig
   val update : t -> Var.t -> PolyRec.PolyRec.t
   val has_transition : t -> bool
   val function_call : t -> VarRec.t
+  val function_call_ : modifier -> VarRec.t
+  val is_transition : modifier -> bool
+  val equal_modifier : modifier -> modifier -> bool
 end
 
 module GRV : sig

@@ -158,6 +158,7 @@ module type ClassicalTransitionLabel = sig
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 
+  val has_rec_call : t -> VarRec.t -> bool
   val has_rec_calls : t -> bool
   val rec_vars : t -> (VarRec.t, VarRec.comparator_witness) Base.Set.t
   val of_non_rec : TransitionLabelNonRec.t -> t
@@ -226,6 +227,7 @@ module type ClassicalTransition = sig
   module TransitionLabel : ClassicalTransitionLabel
 
   val overapprox_nonlinear_updates : t -> t
+  val has_rec_call : t -> VarRec.t -> bool
   val has_rec_calls : t -> bool
   val rec_vars : t -> (VarRec.t, VarRec.comparator_witness) Base.Set.t
 end
@@ -597,9 +599,12 @@ module type ClassicalProgramModules = sig
 
     val to_generic_modifier : modifier -> transition GenericModifier_.modifier_t_
     val modifier_of_function_call : VarRec.t -> modifier
+    val equal_modifier : modifier -> modifier -> bool
     val update : t -> Var.t -> PolyRec.PolyRec.t
     val function_call : t -> VarRec.t
+    val function_call_ : modifier -> VarRec.t
     val has_transition : t -> bool
+    val is_transition : modifier -> bool
   end
 
   type program_modules_t =

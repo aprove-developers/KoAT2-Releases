@@ -556,6 +556,10 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   type update_element = PolyRec.PolyRec.t
 
+  let has_rec_call t v =
+    Map.exists (update_map t) ~f:(fun p -> Set.mem (VarRecSet.of_list @@ PolyRec.PolyRec.rec_vars p) v)
+
+
   let has_rec_calls t = Map.exists (update_map t) ~f:PolyRec.PolyRec.has_recvars
 
   let rec_vars t =
@@ -802,6 +806,7 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let to_string = GenericClassical.to_string
   let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
+  let has_rec_call = GenericClassical.has_rec_call
   let has_rec_calls = GenericClassical.has_rec_calls
   let rec_vars = GenericClassical.rec_vars
 end
@@ -1439,8 +1444,11 @@ module ProbabilisticRVNonProbOverappr = struct
     |? PolyRec.PolyRec.of_var v
 
 
+  let equal_modifier = ProbabilisticTransitionNonProbOverappr.equal
+  let is_transition = const true
   let has_transition = const true
   let function_call m = failwith "TODO"
+  let function_call_ m = failwith "TODO"
 end
 
 module Equalities = struct

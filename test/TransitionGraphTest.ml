@@ -78,7 +78,7 @@ let suite =
                 in
                 assert_equal_bound bound
                   LocalSizeBound.(
-                    sizebound_local program (RV.modifier_of_transition t) var |> option_lsb_as_bound)));
+                    sizebound_local program (RV.modifier_of_transition t) var |> option_lsb_as_bound_rec)));
          ( "Print" >:: fun _ ->
            GraphPrint.print_system ~format:"png"
              ~label:(TransitionLabel.to_string % Transition.label)

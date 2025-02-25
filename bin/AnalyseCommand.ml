@@ -141,12 +141,21 @@ let bounded_label_to_string (type b) (module B : BoundType.Bound with type t = b
     ]
 
 
+let print_lsb lsb =
+  if Option.is_none lsb then
+    Bound.show ~complexity:false Bound.infinity
+  else
+    let lsb = Option.value_exn lsb in
+    if not @@ PolyRec.PolyRec.has_recvars lsb then
+      Bound.show ~complexity:false (Bound.of_poly (PolyRec.PolyRec.to_poly lsb))
+    else
+      PolyRec.PolyRec.to_string_pretty lsb
+
+
 (** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)
 let bounded_rv_to_string (type b) (module B : BoundType.Bound with type t = b) (program : Program.t)
     (appr : b approximation_t) (t, v) =
-  let get_lsb (t, v) =
-    LocalSizeBound.(sizebound_local program t v |> Option.map ~f:as_bound |? Bound.infinity)
-  in
+  let get_lsb (t, v) = LocalSizeBound.(sizebound_local program t v |> Option.map ~f:as_poly) in
   let module Approximation = Approximation.MakeForClassicalAnalysis (B) (ProgramModules) in
   String.concat ~sep:""
     [
@@ -156,13 +165,8 @@ let bounded_rv_to_string (type b) (module B : BoundType.Bound with type t = b) (
       Approximation.sizebound appr t v |> B.to_string;
       "\n";
       "Local: ";
-      get_lsb (t, v) |> Bound.show ~complexity:false;
+      print_lsb @@ get_lsb (t, v);
     ]
-
-
-(** Returns a local size-bound for a specified transition and a specified variable. *)
-let get_lsb program (t, v) =
-  LocalSizeBound.(sizebound_local program t v |> Option.map ~f:as_bound |? Bound.infinity)
 
 
 let program_to_formatted_string prog = function
@@ -229,11 +233,11 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
              GraphPrint.print_system ~format:"png"
                ~label:(bounded_label_to_string (module Bound) appr)
                ~outdir:output_dir ~file:input_filename program)
-    |> tap (fun (program, appr) ->
+    (* |> tap (fun (program, appr) ->
            if params.print_rvg then
              GraphPrint.print_rvg ~format:"png"
                ~label:(bounded_rv_to_string (module Bound) program appr)
-               ~outdir:output_dir ~file:input_filename program)
+               ~outdir:output_dir ~file:input_filename program) *)
     |> ignore
 end
 

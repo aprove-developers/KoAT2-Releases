@@ -10,9 +10,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module TrivialSizeBounds = TrivialSizeBounds.Make (PM)
   module LSB = LocalSizeBound.Make (PM.TransitionLabel) (PM.Transition) (PM.RV) (PM.Program)
 
-  let improve_scc program rvg get_lsb appr = function
+  let improve_scc program rvg (get_lsb : PM.RV.modifier * Var.t -> (LSB.t_rec * bool Lazy.t) Option.t) appr =
+    function
     | [ (m, v) ] when not (RVG.mem_edge rvg (m, v) (m, v)) ->
-        let lsb_as_bound = get_lsb (m, v) |> Option.map (LSB.as_bound % Tuple2.first) in
+        let lsb_as_bound = get_lsb (m, v) |> Option.map (LSB.as_poly % Tuple2.first) in
         let new_bound =
           TrivialSizeBounds.compute program (Approximation.sizebound appr) (m, v) lsb_as_bound
         in

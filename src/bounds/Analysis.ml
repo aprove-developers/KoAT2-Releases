@@ -329,7 +329,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
         in
         RVG.rvg_from_transitionset_with_sccs
-          (Option.map ~f:(VarRecSet.of_varset % LSB.vars % Tuple2.first) % Map.find (Lazy.force opt_lsbs))
+          (Option.map ~f:(LSB.vars_rec % Tuple2.first) % Map.find (Lazy.force opt_lsbs))
           program scc_transitions_with_out)
 
 

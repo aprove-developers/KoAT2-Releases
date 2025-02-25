@@ -13,7 +13,7 @@ type params = {
 [@@deriving cmdliner, show]
 
 module RVG = RVGTypes.MakeRVG (ProgramModules)
-module LSB = LocalSizeBound.Make (TransitionLabel) (Transition) (Program)
+module LSB = LocalSizeBound.Make (TransitionLabel) (Transition) (RV) (Program)
 
 let run (params : params) =
   Logging.(use_loggers [ (Size, Logger.DEBUG) ]);
@@ -22,11 +22,12 @@ let run (params : params) =
 
   let lsbs =
     List.cartesian_product (Set.to_list @@ Program.transitions program) (Set.to_list input_vars)
-    |> List.map ~f:(fun (t, v) -> ((t, v), LSB.compute_bound input_vars t v))
+    |> List.map ~f:(fun (t, v) ->
+           ((RV.modifier_of_transition t, v), LSB.compute_bound input_vars (RV.modifier_of_transition t) v))
     |> Hashtbl.of_alist_exn (module ProgramModules.RV)
   in
 
   SizeBounds.improve program
-    (RVG.rvg_with_sccs (Option.map ~f:(LSB.vars % Tuple2.first) % Hashtbl.find_exn lsbs) program)
+    (RVG.rvg_with_sccs (Option.map ~f:(LSB.vars_rec % Tuple2.first) % Hashtbl.find_exn lsbs) program)
     (Hashtbl.find_exn lsbs) appr
   |> Approximation.to_string program |> print_string

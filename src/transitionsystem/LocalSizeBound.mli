@@ -27,7 +27,13 @@ module Make
   val factor : t -> int
   (** Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 
+  val factor_rec : t_rec -> int
+  (** Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
+
   val constant : t -> int
+  (** Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
+
+  val constant_rec : t_rec -> int
   (** Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 
   val vars : t -> VarSet.t
@@ -47,7 +53,9 @@ module Make
   val as_bound : t -> Bound.t
   (** Converts the templated bound to an actual (finite) bound. *)
 
+  val as_poly : t_rec -> PolyRec.PolyRec.t
   val option_lsb_as_bound : t option -> Bound.t
+  val option_lsb_as_bound_rec : t_rec option -> Bound.t
 
   val find_bound : VarSet.t -> Var.t -> Formula.t -> int -> (t * bool Lazy.t) option
   (** Tries to find a templated bound of any of the defined templates. The first vars corresponds to
@@ -60,9 +68,9 @@ module Make
   val from_update_polyrec : VarSet.t -> Var.t -> PolyRec.PolyRec.t -> (t_rec * bool Lazy.t) option
   (** Construct a local size bound directly from the update expression *)
 
-  val compute_bound : VarSet.t -> RV.modifier -> Var.t -> (t * bool Lazy.t) option
+  val compute_bound : VarSet.t -> RV.modifier -> Var.t -> (t_rec * bool Lazy.t) option
 
-  val sizebound_local : P.t -> RV.modifier -> Var.t -> t Option.t
+  val sizebound_local : P.t -> RV.modifier -> Var.t -> t_rec Option.t
   (** Returns a local sizebound of the specified kind for the variable of the transition.
       A local sizebound is expressed in relation to the values directly before executing the transition. *)
 end

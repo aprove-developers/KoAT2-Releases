@@ -100,14 +100,19 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
       Corresponds to 'SizeBounds for trivial SCCs'. *)
   let compute (program : Program.t) (get_sizebound : RV.modifier -> Var.t -> Bound.t) ((m, v) : PM.RV.t)
-      lsb_as_bound =
+      (lsb_as_bound : PolyRec.t Option.t) =
     let open OptionMonad in
     let execute () =
       if RV.has_transition (m, v) then
         let t = RV.transition_ m in
         let res_from_lsb, res_from_update =
           if Program.is_initial program t then
-            let res_from_lsb = lsb_as_bound in
+            let res_from_lsb =
+              if Option.is_some lsb_as_bound then
+                Bound.of_poly @@ PolyRec.to_poly (Option.value_exn lsb_as_bound)
+              else
+                Bound.infinity
+            in
             let res_from_update =
               let+ update = TransitionLabel.update (Transition.label t) v in
               if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
@@ -121,7 +126,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             (res_from_lsb, res_from_update)
           else
             let res_from_lsb =
-              Option.map ~f:(fun lsb -> incoming_bound_lsb program get_sizebound lsb t v) lsb_as_bound
+              if Option.is_some lsb_as_bound then
+                incoming_bound_lsb program get_sizebound
+                  (Bound.of_poly @@ PolyRec.to_poly (Option.value_exn lsb_as_bound))
+                  t v
+              else
+                Bound.infinity
             in
             let res_from_update =
               let+ update = TransitionLabel.update (Transition.label t) v in
@@ -138,7 +148,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             in
             (res_from_lsb, res_from_update)
         in
-        Bound.(keep_simpler_bound (res_from_lsb |? infinity) (res_from_update |? infinity))
+        Bound.(keep_simpler_bound res_from_lsb (res_from_update |? infinity))
       else
         let update = RV.update (m, v) v in
         if Set.is_subset (PolyRec.vars update) ~of_:(Program.input_vars program) then

@@ -43,10 +43,13 @@ module MakeRV
   val modifier : t -> modifier
   val to_generic_modifier : modifier -> T.t GenericModifier_.modifier_t_
   val modifier_of_function_call : VarRec.t -> modifier
+  val equal_modifier : modifier -> modifier -> bool
   val update : t -> Var.t -> PolyRec.PolyRec.t
   val hash : t -> int
   val has_transition : t -> bool
+  val is_transition : modifier -> bool
   val function_call : t -> VarRec.t
+  val function_call_ : modifier -> VarRec.t
 end
 
 module IdentityAdapter : sig
@@ -77,6 +80,9 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) : sig
 
   val pre : t -> rv -> rv List.t
   (** Returns the predecessors of a result variable in the result variable graph. *)
+
+  val pre_omega : t -> rv -> rv List.t
+  (** Returns the omega-predecessors of a result variable in the result variable graph. *)
 
   val rvg : (rv -> VarRecSet.t Option.t) -> PM.Program.t -> t
   (** Compute the result variable graph.

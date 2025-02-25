@@ -507,6 +507,7 @@ let eliminate_tmp_var var t =
 module UpdateElementNonRec = Polynomials.Polynomial
 module TransitionLabelNonRec = TransitionLabelNonRec_
 
+let has_rec_call t v = Map.exists t.update ~f:(fun p -> Set.mem (VarRecSet.of_list @@ PolyRec.rec_vars p) v)
 let has_rec_calls t = Map.exists t.update ~f:PolyRec.has_recvars
 
 let rec_vars t =

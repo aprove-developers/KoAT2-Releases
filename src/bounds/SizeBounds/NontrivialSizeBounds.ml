@@ -11,7 +11,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
      *)
-  let compute_ (rvg : RVG.t) (get_lsb : RV.t -> LSB.t * bool) (get_timebound : Transition.t -> Bound.t)
+  let compute_ (rvg : RVG.t) (get_lsb : RV.t -> LSB.t_rec * bool) (get_timebound : Transition.t -> Bound.t)
       (get_sizebound : RV.modifier -> Var.t -> Bound.t) (scc : RV.t List.t) =
     let scc_rvset = Set.of_list (module RV) scc in
     let rvs_equality, rvs_non_equality = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
@@ -20,7 +20,11 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
        Corresponds to T_C in the thesis. *)
     let transitions =
       rvs_non_equality
-      |> List.map ~f:(fun (t, v) -> RV.transition_ t)
+      |> List.filter_map ~f:(fun rv ->
+             if RV.has_transition rv then
+               Option.return (RV.transition rv)
+             else
+               None)
       |> TransitionSet.stable_dedup_list
       |> tap (fun transitions ->
              Logger.log logger Logger.DEBUG (fun () ->
@@ -31,11 +35,30 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                    ] )))
     in
 
-    (* Returns all the variables with which the given transition does occur as result variable in the scc. *)
-    let get_scc_vars transition =
+    let function_calls =
       rvs_non_equality
-      |> List.filter ~f:(fun (t, v) -> Transition.equal (RV.transition_ t) transition)
-      |> List.map ~f:(fun (t, v) -> v)
+      |> List.filter_map ~f:(fun rv ->
+             if RV.has_transition rv then
+               None
+             else
+               Option.return (RV.function_call rv))
+      |> VarRecSet.of_list
+      |> tap (fun function_calls ->
+             Logger.log logger Logger.DEBUG (fun () ->
+                 ("function_calls", [ ("result", VarRecSet.to_string function_calls) ])))
+    in
+
+    let modifiers =
+      let modifiers_of_trans = transitions |> List.map ~f:RV.modifier_of_transition in
+      let modifiers_of_fcs = function_calls |> Set.to_list |> List.map ~f:RV.modifier_of_function_call in
+      List.append modifiers_of_trans modifiers_of_fcs
+    in
+
+    (* Returns all the variables with which the given transition does occur as result variable in the scc. *)
+    let get_scc_vars modifier =
+      rvs_non_equality
+      |> List.filter ~f:(fun (m, _) -> RV.equal_modifier m modifier)
+      |> List.map ~f:(fun (_, v) -> v)
       |> VarSet.stable_dedup_list
       |> tap (fun scc_vars ->
              Logger.log logger Logger.DEBUG (fun () ->
@@ -49,6 +72,16 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     (* Returns all result variables that may influence the given result variable and that are not part of the scc. *)
     let pre_out_scc rv = rv |> RVG.pre rvg |> Set.of_list (module RV) |> fun pre -> Set.diff pre scc_rvset in
 
+    (* Returns all result variables that may influence the given result variable and that are part of the scc. *)
+    let pre_omega_in_scc (rv : RV.t) =
+      rv |> RVG.pre_omega rvg |> Set.of_list (module RV) |> Set.inter scc_rvset
+    in
+
+    (* Returns all result variables that may influence the given result variable and that are not part of the scc. *)
+    let pre_omega_out_scc rv =
+      rv |> RVG.pre_omega rvg |> Set.of_list (module RV) |> fun pre -> Set.diff pre scc_rvset
+    in
+
     (* Returns all result variables that may influence the given result variable from within the scc.
         Corresponds to V_rv in the thesis. *)
     let scc_variables rv =
@@ -57,9 +90,17 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> Sequence.of_list % VarSet.stable_dedup_list % Sequence.to_list
     in
 
+    (* Returns all result variables that may influence the given result variable from within the scc.
+    Corresponds to F_rv in the thesis. *)
+    let scc_variables_omega rv =
+      rv |> Set.to_sequence % pre_omega_in_scc
+      |> Sequence.map ~f:(fun (t, v) -> v)
+      |> Sequence.of_list % VarSet.stable_dedup_list % Sequence.to_list
+    in
+
     let starting_value =
       let rvs_equality_type_max_constant =
-        List.map ~f:(LSB.constant % Tuple2.first % get_lsb) rvs_equality |> List.fold ~f:max ~init:0
+        List.map ~f:(LSB.constant_rec % Tuple2.first % get_lsb) rvs_equality |> List.fold ~f:max ~init:0
       in
       scc
       |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:pre_out_scc
@@ -68,34 +109,59 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
     in
 
-    let transition_scaling_factor t =
+    let starting_value_omega =
+      let rvs_equality_type_max_constant =
+        List.map ~f:(LSB.constant_rec % Tuple2.first % get_lsb) rvs_equality |> List.fold ~f:max ~init:0
+      in
+      scc
+      |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:pre_omega_out_scc
+      |> Sequence.map ~f:(uncurry get_sizebound)
+      |> Bound.maximum
+      |> Bound.max (Bound.of_int rvs_equality_type_max_constant)
+    in
+
+    let modifier_scaling_factor m =
       let affecting_variables =
-        get_scc_vars (RV.transition_ t)
-        |> List.map ~f:(fun v -> scc_variables (t, v))
+        get_scc_vars m
+        |> List.map ~f:(fun v -> scc_variables (m, v))
+        |> List.map ~f:Sequence.length |> List.max_elt ~compare:Int.compare |? 1
+      in
+      let affecting_variables_omega =
+        get_scc_vars m
+        |> List.map ~f:(fun v -> scc_variables_omega (m, v))
         |> List.map ~f:Sequence.length |> List.max_elt ~compare:Int.compare |? 1
       in
 
       let scaling_explicit =
-        t |> RV.transition_ |> get_scc_vars
-        |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (t, v))
-        |> List.map ~f:LSB.factor |> List.max_elt ~compare:Int.compare |? 1
+        get_scc_vars m
+        |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (m, v))
+        |> List.map ~f:LSB.factor_rec |> List.max_elt ~compare:Int.compare |? 1
         |> tap (fun result ->
                Logger.log logger Logger.DEBUG (fun () ->
                    ("extreme_scaling_factor", [ ("result", Int.to_string result) ])))
       in
 
-      OurInt.of_int (scaling_explicit * affecting_variables)
+      OurInt.of_int (scaling_explicit * (affecting_variables + affecting_variables_omega))
     in
 
     let loop_scaling =
-      Sequence.of_list transitions
-      |> Sequence.map ~f:RV.modifier_of_transition
-      |> Sequence.map ~f:(fun t ->
-             let scaling = transition_scaling_factor t in
+      Sequence.of_list modifiers
+      |> Sequence.map ~f:(fun m ->
+             let scaling = modifier_scaling_factor m in
              if OurInt.(equal scaling one) then
                Bound.one
+             else if RV.is_transition m then
+               Bound.(exp (of_constant scaling) (get_timebound (RV.transition_ m)))
              else
-               Bound.(exp (of_constant scaling) (get_timebound (RV.transition_ t))))
+               let timebound =
+                 List.filter_map transitions ~f:(fun t ->
+                     if Transition.has_rec_call t (RV.function_call_ m) then
+                       Option.return @@ get_timebound t
+                     else
+                       None)
+                 |> Bound.sum_list
+               in
+               Bound.(exp (of_constant scaling) timebound))
       |> Bound.product
     in
 
@@ -106,46 +172,81 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> Bound.sum
     in
 
-    let rv_constant = Bound.of_int % LSB.constant % Tuple2.first % get_lsb in
+    let incoming_constant_omega rv v =
+      (* TODO *)
+      Set.to_sequence (pre_omega_out_scc rv)
+      |> Sequence.filter ~f:(fun (_, v') -> Var.equal v v')
+      |> Sequence.map ~f:(uncurry get_sizebound)
+      |> Bound.sum
+    in
+
+    let rv_constant = Bound.of_int % LSB.constant_rec % Tuple2.first % get_lsb in
 
     let rv_effect rv =
-      let rv_vars =
-        Set.diff (LSB.vars @@ Tuple2.first @@ get_lsb rv) (VarSet.of_sequence @@ scc_variables rv)
+      let actV =
+        LSB.vars_rec @@ Tuple2.first @@ get_lsb rv
+        |> Set.to_list
+        |> List.filter_map ~f:(fun v ->
+               if VarRec.is_rec v then
+                 None
+               else
+                 Option.return (VarRec.to_var v))
+        |> VarSet.of_list
+      in
+      let actF = LSB.vars_rec @@ Tuple2.first @@ get_lsb rv |> Set.filter ~f:VarRec.is_rec in
+      let rv_vars_actV = Set.diff actV (VarSet.of_sequence @@ scc_variables rv) |> Set.to_sequence in
+      let rv_vars_actF =
+        Set.diff (Set.map (module Var) ~f:VarRec.return_var actF) (VarSet.of_sequence @@ scc_variables rv)
         |> Set.to_sequence
       in
-      Bound.(rv_constant rv + (Sequence.map ~f:(incoming_constant rv) rv_vars |> sum))
+      Bound.(
+        rv_constant rv
+        + (Sequence.map ~f:(incoming_constant rv) rv_vars_actV |> sum)
+        + (Sequence.map ~f:(incoming_constant_omega rv) rv_vars_actF |> sum))
     in
 
-    let transition_effect t =
-      get_scc_vars (RV.transition_ t) |> List.map ~f:(fun v -> rv_effect (t, v)) |> Bound.sum_list
-    in
+    let modifier_effect m = get_scc_vars m |> List.map ~f:(fun v -> rv_effect (m, v)) |> Bound.sum_list in
 
     let loop_effect =
-      Sequence.of_list transitions
-      |> Sequence.map ~f:(fun t ->
-             if Bound.is_infinity (get_timebound t) then
-               if Bound.(equal zero (transition_effect (RV.modifier_of_transition t))) then
+      Sequence.of_list modifiers
+      |> Sequence.map ~f:(fun m ->
+             let timebound =
+               if RV.is_transition m then
+                 get_timebound (RV.transition_ m)
+               else
+                 List.filter_map transitions ~f:(fun t ->
+                     if Transition.has_rec_call t (RV.function_call_ m) then
+                       Option.return @@ get_timebound t
+                     else
+                       None)
+                 |> Bound.sum_list
+             in
+             if Bound.is_infinity timebound then
+               if Bound.(equal zero (modifier_effect m)) then
                  Bound.zero
                else
                  Bound.infinity
              else
-               Bound.(get_timebound t * transition_effect (RV.modifier_of_transition t)))
+               Bound.(timebound * modifier_effect m))
       |> Bound.sum
     in
 
-    (if Bound.(is_infinity (starting_value + loop_effect)) then
+    (if Bound.(is_infinity (starting_value + starting_value_omega + loop_effect)) then
        Bound.infinity
-     else if Bound.is_infinity loop_scaling && Bound.(equal zero (starting_value + loop_effect)) then
+     else if
+       Bound.is_infinity loop_scaling
+       && Bound.(equal zero (starting_value + starting_value_omega + loop_effect))
+     then
        Bound.zero
      else
        (* We have computed a bound in the absolute values*)
-       Bound.(loop_scaling * (starting_value + loop_effect)))
+       Bound.(loop_scaling * (starting_value + starting_value_omega + loop_effect)))
     |> tap (fun res ->
            Logger.log logger Logger.DEBUG (fun () ->
                ( "compute",
                  [
                    ("loop_scaling", Bound.to_string loop_scaling);
-                   ("starting_value", Bound.to_string starting_value);
+                   ("starting_value", Bound.(to_string @@ (starting_value + starting_value_omega)));
                    ("loop_effect", Bound.to_string loop_effect);
                    ("result", Bound.to_string res);
                  ] )))

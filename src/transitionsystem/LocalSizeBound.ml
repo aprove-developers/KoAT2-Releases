@@ -65,10 +65,16 @@ struct
   let mk ?(s = 1) ?(c = 0) vars = { factor = abs s; constant = abs c; vars = VarSet.of_string_list vars }
   let initial_lsb s c vs = { factor = s; constant = c; vars = vs }
   let factor t = t.factor
+  let factor_rec t = t.factor_rec
   let constant t = t.constant
+  let constant_rec t = t.constant_rec
   let vars t = t.vars
   let vars_rec t = t.vars_rec
   let is_constant = Set.is_empty % vars
+
+  let from_t_to_trec t =
+    { factor_rec = t.factor; constant_rec = t.constant; vars_rec = VarRecSet.of_varset t.vars }
+
 
   let to_string lsb =
     "{" ^ "factor: " ^ Int.to_string lsb.factor ^ "; " ^ "constant: " ^ Int.to_string lsb.constant ^ "; "
@@ -87,7 +93,7 @@ struct
 
   let to_string_option_tuple = function
     | None -> "Unbounded"
-    | Some (lsb, b) -> to_string lsb ^ " equality: " ^ Bool.to_string (Lazy.force b)
+    | Some (lsb, b) -> to_string_rec lsb ^ " equality: " ^ Bool.to_string (Lazy.force b)
 
 
   let as_bound lsb =
@@ -95,8 +101,18 @@ struct
     Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
 
 
+  let as_poly lsb =
+    let vars_sum = PolyRec.PolyRec.(sum @@ Sequence.map ~f:of_varrec (Set.to_sequence lsb.vars_rec)) in
+    PolyRec.PolyRec.(of_int lsb.factor_rec * (of_int lsb.constant_rec + vars_sum))
+
+
   let option_lsb_as_bound = function
     | Some a -> as_bound a
+    | None -> Bound.infinity
+
+
+  let option_lsb_as_bound_rec = function
+    | Some a -> Bound.of_poly @@ PolyRec.PolyRec.to_poly @@ as_poly a
     | None -> Bound.infinity
 
 
@@ -256,27 +272,31 @@ struct
       let* update = TL.update t var in
       if PolyRec.has_recvars update then
         None
+      else if Set.are_disjoint (PolyRec.vars update) (Guard.vars @@ TL.guard t) || PolyRec.has_recvars update
+      then
+        from_update_polyrec program_vars var update
       else
-        let update = PolyRec.to_poly update in
-        if Set.are_disjoint (Polynomial.vars update) (Guard.vars @@ TL.guard t) then
-          from_update_poly program_vars var update
-        else
-          let v' = Var.fresh_id Var.Int () in
-          let update_formula =
-            (* Facilitate SMT call by removing non-linear constraints. *)
-            (* The resulting update_formula is an overapproximation of the original formula *)
-            Formula.mk @@ Constraint.drop_nonlinear
-            @@ Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') update)
-          in
-          let update_vars =
-            Set.union (Polynomial.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
-          in
-          try
-            (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
-            (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-            find_bound (Set.inter program_vars update_vars) v' update_formula (s_range update)
-          with
-          | SMT.SMTFailure _ -> None
+        let v' = Var.fresh_id Var.Int () in
+        let update_formula =
+          (* Facilitate SMT call by removing non-linear constraints. *)
+          (* The resulting update_formula is an overapproximation of the original formula *)
+          Formula.mk @@ Constraint.drop_nonlinear
+          @@ Constraint.mk_and (TL.guard t)
+               (if PolyRec.has_recvars update then
+                  Constraint.mk_true
+                else
+                  Constraint.mk_eq (Polynomial.of_var v') (PolyRec.to_poly update))
+        in
+        let update_vars =
+          Set.union (PolyRec.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+        in
+        try
+          (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
+          (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
+          find_bound (Set.inter program_vars update_vars) v' update_formula (s_range (PolyRec.to_poly update))
+          |> Option.map ~f:(Tuple2.map1 from_t_to_trec)
+        with
+        | SMT.SMTFailure _ -> None
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->

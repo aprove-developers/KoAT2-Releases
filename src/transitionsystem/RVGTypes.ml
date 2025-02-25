@@ -35,6 +35,7 @@ struct
     type t = T.t ModifierComparator_.t
 
     let comparator = ModifierComparator.comparator T.comparator
+    let equal = Comparator.equal_of_comparator comparator
 
     type comparator_witness = T.comparator_witness ModifierComparator.comparator_witness
 
@@ -104,9 +105,9 @@ struct
   let hash (m, v) = Hashtbl.hash (M.hash m, Var.to_string v)
   let modifier_of_transition = M.of_transition
   let modifier_of_function_call = M.of_function_call
-  let _has_transition = M.is_transition % Tuple2.first
   let transition (t, _) = M.to_transition t
   let function_call (fc, _) = M.to_function_call fc
+  let function_call_ fc = M.to_function_call fc
   let transition_ = M.to_transition
   let modifier (m, _) = m
   let variable (_, v) = v
@@ -120,9 +121,11 @@ struct
   let comparator = RVComparator.comparator M.comparator Var.comparator
   let compare = Comparator.compare_of_comparator comparator
   let equal = Comparator.equal_of_comparator comparator
+  let equal_modifier = M.equal
   let to_generic_modifier = identity
   let update (m, _) v = M.update m v
   let has_transition (m, _) = M.is_transition m
+  let is_transition m = M.is_transition m
 end
 
 module IdentityAdapter = struct
@@ -156,7 +159,23 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
   type scc = RV.t list
 
   let rvs_to_id_string rvs = rvs |> List.map ~f:RV.to_id_string |> String.concat ~sep:","
-  let pre rvg rv = pred rvg rv
+
+  let pre rvg rv =
+    pred_e rvg rv
+    |> List.filter_map ~f:(fun (v, e, _) ->
+           match e with
+           | Edge.NORMAL -> Option.return v
+           | _ -> None)
+
+
+  let pre_omega rvg rv =
+    pred_e rvg rv
+    |> List.filter_map ~f:(fun (v, e, _) ->
+           match e with
+           | Edge.RETURN -> Option.return v
+           | _ -> None)
+
+
   let add_vertices_to_rvg vertices rvg = Sequence.fold ~f:add_vertex ~init:rvg vertices
 
   let rvg_from_transitionset (get_vars_in_lsb : rv -> VarRecSet.t Option.t) program tset =
