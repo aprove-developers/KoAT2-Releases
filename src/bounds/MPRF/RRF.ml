@@ -185,20 +185,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Bound.(rt + (rf * (one + (rt * (one + nfc))) * exp (nfc * rtf) rf))
     in
     let locs = OurBase.Set.map (module Location) t.non_increasing ~f:Tuple3.first in
-    UnliftedBound.mk_from_program logger ~handled_transitions:t.non_increasing
+    UnliftedBound.mk_from_program_fcs logger ~handled_transitions:t.non_increasing
       ~measure_decr_transitions:(TransitionSet.singleton t.decreasing)
       ~compute_proof:
         (Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> compute_proof t (Some bound) program)
       program
-      (fun ((_, _, l') as t') ->
-        if
-          OurBase.Set.exists ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
-        then
-          OurBase.Set.fold
+      (fun (_, _, l') -> evaluated_rank_for_entry_loc l')
+      (fun t' ->
+        ( OurBase.Set.fold
             ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarRec.return_loc v)) b)
-            ~init:Bound.zero (Transition.rec_vars t')
-        else
-          evaluated_rank_for_entry_loc l')
+            ~init:Bound.zero (Transition.rec_vars t'),
+          OurBase.Set.filter ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
+        ))
 
 
   let compute_ranking_templates_ (vars : VarSet.t) (locations : Location.t list) ranking_template_

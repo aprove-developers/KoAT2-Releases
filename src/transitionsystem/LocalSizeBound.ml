@@ -268,39 +268,42 @@ struct
     let open PolyRec in
     let execute () =
       let open OptionMonad in
-      let t = T.label @@ RV.transition_ m in
-      let* update = TL.update t var in
-      if PolyRec.has_recvars update then
-        None
-      else if Set.are_disjoint (PolyRec.vars update) (Guard.vars @@ TL.guard t) || PolyRec.has_recvars update
-      then
-        from_update_polyrec program_vars var update
+      if RV.has_transition (m, var) then
+        let t = T.label @@ RV.transition_ m in
+        let* update = TL.update t var in
+        if Set.are_disjoint (PolyRec.vars update) (Guard.vars @@ TL.guard t) || PolyRec.has_recvars update
+        then
+          from_update_polyrec program_vars var update
+        else
+          let v' = Var.fresh_id Var.Int () in
+          let update_formula =
+            (* Facilitate SMT call by removing non-linear constraints. *)
+            (* The resulting update_formula is an overapproximation of the original formula *)
+            Formula.mk @@ Constraint.drop_nonlinear
+            @@ Constraint.mk_and (TL.guard t)
+                 (if PolyRec.has_recvars update then
+                    Constraint.mk_true
+                  else
+                    Constraint.mk_eq (Polynomial.of_var v') (PolyRec.to_poly update))
+          in
+          let update_vars =
+            Set.union (PolyRec.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+          in
+          try
+            (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
+            (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
+            find_bound (Set.inter program_vars update_vars) v' update_formula
+              (s_range (PolyRec.to_poly update))
+            |> Option.map ~f:(Tuple2.map1 from_t_to_trec)
+          with
+          | SMT.SMTFailure _ -> None
       else
-        let v' = Var.fresh_id Var.Int () in
-        let update_formula =
-          (* Facilitate SMT call by removing non-linear constraints. *)
-          (* The resulting update_formula is an overapproximation of the original formula *)
-          Formula.mk @@ Constraint.drop_nonlinear
-          @@ Constraint.mk_and (TL.guard t)
-               (if PolyRec.has_recvars update then
-                  Constraint.mk_true
-                else
-                  Constraint.mk_eq (Polynomial.of_var v') (PolyRec.to_poly update))
-        in
-        let update_vars =
-          Set.union (PolyRec.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
-        in
-        try
-          (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
-          (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-          find_bound (Set.inter program_vars update_vars) v' update_formula (s_range (PolyRec.to_poly update))
-          |> Option.map ~f:(Tuple2.map1 from_t_to_trec)
-        with
-        | SMT.SMTFailure _ -> None
+        from_update_polyrec program_vars var
+          (PolyRec.of_poly
+          @@ Map.find_default (VarRec.update @@ RV.function_call_ m) ~default:(Polynomial.of_var var) var)
     in
     Logger.with_log logger Logger.DEBUG
-      (fun () ->
-        ("compute_bound", [ ("transition", T.to_id_string @@ RV.transition_ m); ("var", Var.to_string var) ]))
+      (fun () -> ("compute_bound", [ ("rv", RV.to_id_string (m, var)); ("var", Var.to_string var) ]))
       ~result:to_string_option_tuple execute
 
 

@@ -492,6 +492,8 @@ module type ClassicProgram = sig
   (** Computes all entry transitions of the given transitions including recursive calls.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
 
+  val entry_transitions_only_rec : t -> transition list -> transition list
+
   val entry_transitions_without_rec_with_logger : Logger.log -> t -> transition list -> transition list
   (** Like [entry_transitions_rec] but logs the results using the given logger *)
 end
@@ -510,6 +512,8 @@ module type RV = sig
 
   val transition : t -> transition
   val transition_ : modifier -> transition
+  val function_call : t -> VarRec.t
+  val function_call_ : modifier -> VarRec.t
 
   val variable : t -> Var.t
   (** Returns the variable of the result variable. *)
@@ -521,6 +525,7 @@ module type RV = sig
   val ids_to_string : ?pretty:bool -> t -> string
   val sexp_of_t : t -> Sexp.t
   val modifier_of_transition : transition -> modifier
+  val has_transition : t -> bool
 end
 
 type !'a program_modules_meta
@@ -601,10 +606,8 @@ module type ClassicalProgramModules = sig
     val modifier_of_function_call : VarRec.t -> modifier
     val equal_modifier : modifier -> modifier -> bool
     val update : t -> Var.t -> PolyRec.PolyRec.t
-    val function_call : t -> VarRec.t
-    val function_call_ : modifier -> VarRec.t
-    val has_transition : t -> bool
     val is_transition : modifier -> bool
+    val modifier : t -> modifier
   end
 
   type program_modules_t =

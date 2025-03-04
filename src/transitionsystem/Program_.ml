@@ -263,6 +263,14 @@ module ClassicalProgram = struct
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
   let pre_without_rec = PreAdapterNonRec.pre
   let entry_transitions_without_rec = PreAdapterNonRec.entry_transitions
+
+  let entry_transitions_only_rec program trans =
+    Set.diff
+      (TransitionSet.of_list @@ entry_transitions program trans)
+      (TransitionSet.of_list @@ entry_transitions_without_rec program trans)
+    |> Set.to_list
+
+
   let entry_transitions_without_rec_with_logger = PreAdapterNonRec.entry_transitions_with_logger
 end
 

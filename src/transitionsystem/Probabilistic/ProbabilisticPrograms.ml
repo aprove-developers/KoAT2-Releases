@@ -1304,6 +1304,7 @@ module ProbabilisticProgramNonProbOverappr = struct
   let remove_unsatisfiable_transitions = ProbabilisticProgram.remove_unsatisfiable_transitions
   let pre_without_rec = pre
   let entry_transitions_without_rec = entry_transitions
+  let entry_transitions_only_rec _ _ = []
   let entry_transitions_without_rec_with_logger = entry_transitions_with_logger
 end
 
@@ -1321,6 +1322,8 @@ module GRV = struct
   end
 
   module TransComp = Comparator.Make (Trans)
+
+  let has_transition = const true
 
   type transition = Trans.t
   type modifier = Trans.t
@@ -1340,6 +1343,8 @@ module GRV = struct
   let transition (t, _) = t
   let transition_ = identity
   let modifier_of_transition = identity
+  let function_call _ = failwith "No Function Calls"
+  let function_call_ _ = failwith "No Function Calls"
   let gt ((gt, _), _) = gt
 
   let to_id_string ((gt, l), v) =
@@ -1376,7 +1381,10 @@ module GRV = struct
     let hash (gt, v) = Hashtbl.hash (GeneralTransition.gt_id gt, Var.to_string v)
     let variable (_, v) = v
     let transition (t, _) = t
+    let has_transition = const true
     let transition_ = identity
+    let function_call _ = failwith "No Function Calls"
+    let function_call_ _ = failwith "No Function Calls"
     let to_id_string (gt, v) = "|" ^ GeneralTransition.to_id_string gt ^ "," ^ Var.to_string v ^ "|"
 
     let ids_to_string ?(pretty = false) (gt, v) =
@@ -1405,6 +1413,9 @@ module RVTuple_ = struct
   let compare = Comparator.compare_of_comparator comparator
   let equal = Comparator.equal_of_comparator comparator
   let modifier_of_transition = identity
+  let has_transition = const true
+  let function_call _ = failwith "No Function Calls"
+  let function_call_ _ = failwith "No Function Calls"
 end
 
 module ProbabilisticRV = struct
@@ -1449,6 +1460,7 @@ module ProbabilisticRVNonProbOverappr = struct
   let has_transition = const true
   let function_call m = failwith "TODO"
   let function_call_ m = failwith "TODO"
+  let modifier (t, _) = t
 end
 
 module Equalities = struct

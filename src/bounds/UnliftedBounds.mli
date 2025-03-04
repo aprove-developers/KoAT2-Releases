@@ -31,6 +31,14 @@ module UnliftedTimeBound : sig
       t
     (** Create a new unlifted time bound. The transitions in [measure_decr_transitions] are those for which a new time bound can be derived. *)
 
+    val mk_fcs :
+      measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
+      ?compute_proof:compute_proof Option.t ->
+      (Transition.t, B.t, Transition.comparator_witness) Map.t ->
+      (Transition.t, B.t * VarRecSet.t, Transition.comparator_witness) Map.t ->
+      t
+    (** Create a new unlifted time bound. The transitions in [measure_decr_transitions] are those for which a new time bound can be derived. *)
+
     val mk_from_program :
       Logger.log ->
       handled_transitions:(Transition.t, 'a) Set.t ->
@@ -42,6 +50,19 @@ module UnliftedTimeBound : sig
     (** Similar to before but explicitly computes the map mapping entry transitions to unlifted (local) time bounds.
           Here, the entry transitions are considered to be all transitions that are pre transitions of [handled_transitions] but not contained in [handled_transitions] itself.
           All computed entry transitions are then logged via the provided logger. *)
+
+    val mk_from_program_fcs :
+      Logger.log ->
+      handled_transitions:(Transition.t, 'a) Set.t ->
+      measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
+      ?compute_proof:compute_proof Option.t ->
+      Program.t ->
+      (Transition.t -> B.t) ->
+      (Transition.t -> B.t * VarRecSet.t) ->
+      t
+    (** Similar to before but explicitly computes the map mapping entry transitions to unlifted (local) time bounds.
+              Here, the entry transitions are considered to be all transitions that are pre transitions of [handled_transitions] but not contained in [handled_transitions] itself.
+              All computed entry transitions are then logged via the provided logger. *)
 
     val lift :
       get_sizebound:(PM.RV.modifier -> Var.t -> B.t) -> get_timebound:(Transition.t -> B.t) -> t -> B.t

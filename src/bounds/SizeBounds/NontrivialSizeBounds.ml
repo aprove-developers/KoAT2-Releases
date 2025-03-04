@@ -173,7 +173,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     in
 
     let incoming_constant_omega rv v =
-      (* TODO *)
       Set.to_sequence (pre_omega_out_scc rv)
       |> Sequence.filter ~f:(fun (_, v') -> Var.equal v v')
       |> Sequence.map ~f:(uncurry get_sizebound)

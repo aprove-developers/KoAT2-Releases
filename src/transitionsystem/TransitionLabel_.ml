@@ -391,7 +391,7 @@ include Make (PolyRec)
 let overapprox_nonlinear_updates t =
   let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
   let overapprox_poly orig_var poly (guard, update) =
-    if PolyRec.is_linear poly then
+    if PolyRec.is_linear poly || PolyRec.has_recvars poly then
       (guard, update)
     else
       let handle_monom (coeff, mon) =

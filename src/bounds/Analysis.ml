@@ -313,13 +313,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           let scc_with_in_and_out =
             Program.scc_transitions_from_locs_with_incoming_and_outgoing program scc_locs
           in
-          Sequence.cartesian_product (Set.to_sequence scc_with_in_and_out) (Set.to_sequence input_vars)
+          Set.to_list scc_with_in_and_out
         in
-        all_rvs_of_scc_and_out
-        |> Sequence.filter_map ~f:(fun (t, v) ->
+        let fcs =
+          List.map ~f:(fun t -> Set.to_list @@ Transition.rec_vars t) all_rvs_of_scc_and_out
+          |> List.concat
+          |> List.map ~f:RV.modifier_of_function_call
+        in
+        let modifiers = all_rvs_of_scc_and_out |> List.map ~f:RV.modifier_of_transition |> List.append fcs in
+        List.cartesian_product modifiers (Set.to_list input_vars)
+        |> Sequence.of_list
+        |> Sequence.filter_map ~f:(fun (m, v) ->
                let open OptionMonad in
-               let+ lsb = LSB.compute_bound input_vars (PM.RV.modifier_of_transition t) v in
-               ((RV.modifier_of_transition t, v), lsb))
+               let+ lsb = LSB.compute_bound input_vars m v in
+               ((m, v), lsb))
         |> Map.of_sequence_exn (module RV))
 
 

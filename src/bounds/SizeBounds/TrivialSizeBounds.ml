@@ -15,11 +15,12 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module RV = PM.RV
   module RVG = RVGTypes.MakeRVG (PM)
 
+  (* let pre rvg rv = rv |> RVG.pre rvg |> Set.of_list (module RV) |> fun pre -> Set.remove pre rv |> Set.to_list *)
+
   (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
       Corresponds to 'SizeBounds for trivial SCCs':
       S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)). *)
-  let incoming_bound pre_transitions (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb (m : RV.modifier) v
-      =
+  let incoming_bound pre (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb (m : RV.modifier) v =
     (* since this is a trivial scc*)
     let execute () =
       (* If the LSB is constant there are no pre-transitions in the RVG *)
@@ -27,7 +28,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         lsb
       else
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
-        pre_transitions |> Sequence.map ~f:substitute_with_prevalues |> Bound.maximum
+        pre |> Sequence.map ~f:substitute_with_prevalues |> Bound.maximum
     in
     Logger.with_log logger Logger.DEBUG
       (fun () ->
@@ -35,14 +36,15 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       ~result:Bound.to_string execute
 
 
-  let incoming_bound_lsb program (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb t v =
+  let incoming_bound_lsb program (get_sizebound : RV.modifier -> Var.t -> Bound.t) lsb rv v =
     let pre_transitions =
       if Set.is_empty (Bound.vars lsb) then
         Sequence.empty
       else
-        Sequence.of_list @@ List.map ~f:RV.modifier_of_transition (Set.to_list @@ Program.pre program t)
+        Sequence.of_list
+        @@ List.map ~f:RV.modifier_of_transition (Set.to_list @@ Program.pre program (RV.transition rv))
     in
-    incoming_bound pre_transitions get_sizebound lsb (RV.modifier_of_transition t) v
+    incoming_bound pre_transitions get_sizebound lsb (RV.modifier rv) v
 
 
   let incoming_bound_lifted_update program get_sizebound upd t v =
@@ -66,7 +68,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             None)
       |> Sequence.of_list |> Sequence.join
     in
-    incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_function_call fc) v
+    if Sequence.is_empty pre_transitions then
+      upd
+    else
+      incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_function_call fc) v
 
 
   let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) rec_v v =
@@ -74,17 +79,17 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     match rec_v with
     | Recursion (loc, var, map) ->
         let transitions_ending_return_locations =
-          Set.diff (Program.reachable_locations program loc) (Program.return_locations program)
+          Set.inter (Program.reachable_locations program loc) (Program.return_locations program)
           |> Set.to_list
           |> List.map ~f:(Program.ending_in_loc program)
-          |> List.map ~f:Set.to_list |> List.concat |> TransitionSet.of_list |> Set.to_list
+          |> List.map ~f:Set.to_list |> List.concat |> TransitionSet.of_list
         in
         let lsb_return =
           Bound.maximum
             (Sequence.of_list
             @@ List.map
                  ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) v)
-                 transitions_ending_return_locations)
+                 (Set.to_list transitions_ending_return_locations))
         in
         let lsb_jump =
           if Set.mem (Program.return_locations program) loc then
@@ -93,7 +98,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             Bound.zero
         in
         Bound.max lsb_return lsb_jump
-    | Var x -> Bound.of_var (Var x)
+    | Var _ -> Bound.of_var (VarRec.to_var rec_v)
+    | Argument _ -> Bound.of_var (VarRec.to_var rec_v)
     | _ -> Bound.infinity
 
 
@@ -109,7 +115,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           if Program.is_initial program t then
             let res_from_lsb =
               if Option.is_some lsb_as_bound then
-                Bound.of_poly @@ PolyRec.to_poly (Option.value_exn lsb_as_bound)
+                PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+                  ~indeterminate:(fun ind -> subRecSize program get_sizebound ind v)
+                  (Option.value_exn lsb_as_bound)
               else
                 Bound.infinity
             in
@@ -129,7 +137,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               if Option.is_some lsb_as_bound then
                 incoming_bound_lsb program get_sizebound
                   (Bound.of_poly @@ PolyRec.to_poly (Option.value_exn lsb_as_bound))
-                  t v
+                  (m, v) v
               else
                 Bound.infinity
             in
