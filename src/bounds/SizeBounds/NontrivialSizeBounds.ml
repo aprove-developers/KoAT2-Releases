@@ -11,8 +11,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
      *)
-  let compute_ (rvg : RVG.t) (get_lsb : RV.t -> LSB.t_rec * bool) (get_timebound : Transition.t -> Bound.t)
-      (get_sizebound : RV.modifier -> Var.t -> Bound.t) (scc : RV.t List.t) =
+  let compute_ program (rvg : RVG.t) (get_lsb : RV.t -> LSB.t_rec * bool)
+      (get_timebound : Transition.t -> Bound.t) (get_sizebound : RV.modifier -> Var.t -> Bound.t)
+      (scc : RV.t List.t) =
     let scc_rvset = Set.of_list (module RV) scc in
     let rvs_equality, rvs_non_equality = List.partition_tf ~f:(Tuple2.second % get_lsb) scc in
 
@@ -154,7 +155,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                Bound.(exp (of_constant scaling) (get_timebound (RV.transition_ m)))
              else
                let timebound =
-                 List.filter_map transitions ~f:(fun t ->
+                 List.filter_map
+                   (Set.to_list @@ Program.transitions program)
+                   ~f:(fun t ->
                      if Transition.has_rec_call t (RV.function_call_ m) then
                        Option.return @@ get_timebound t
                      else
@@ -265,7 +268,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
     let execute () =
       match lsb_fun with
-      | Some get_lsb -> compute_ rvg get_lsb get_timebound get_sizebound scc
+      | Some get_lsb -> compute_ program rvg get_lsb get_timebound get_sizebound scc
       | None -> Bound.infinity
     in
     Logger.with_log logger Logger.DEBUG
