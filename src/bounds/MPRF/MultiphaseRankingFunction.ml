@@ -539,13 +539,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let find_scc measure program is_time_bounded unbounded_vars (scc : TransitionSet.t) depth make_decreasing =
     let cache = new_cache depth in
-    let locs = LocationSet.map ~f:Transition.src scc in
-    if
-      OurBase.Set.exists
+    let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
+    let scc =
+      OurBase.Set.filter
         ~f:(fun t ->
-          OurBase.Set.exists ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t))
+          not
+          @@ OurBase.Set.exists
+               ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v))
+               (Transition.rec_vars t))
         scc
-    then
+    in
+    if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem scc make_decreasing) then
       None
     else
       let mprf_problem =

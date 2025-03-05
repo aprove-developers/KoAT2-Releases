@@ -217,10 +217,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
       let compute_function trans =
+        let scc_overapprox_nonlinear_only_connected =
+          Set.filter scc_overapprox_nonlinear ~f:(fun t ->
+              Set.mem (Program.reachable_locations program (Transition.src trans)) (Transition.target t))
+        in
         MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars
-          scc_overapprox_nonlinear depth
+          scc_overapprox_nonlinear_only_connected depth
         @@ Option.value_exn
-        @@ Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
+        @@ Set.binary_search scc_overapprox_nonlinear_only_connected ~compare:Transition.compare
+             `First_equal_to trans
       in
       Set.to_array unbounded_transitions |> Array.map ~f:compute_function |> Array.to_sequence
       |> Sequence.filter_opt
@@ -257,9 +262,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
     let rankfuncs =
       let compute_function trans =
-        RRF.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear
+        let scc_overapprox_nonlinear_only_connected =
+          Set.filter scc_overapprox_nonlinear ~f:(fun t ->
+              Set.mem (Program.reachable_locations program (Transition.src trans)) (Transition.target t))
+        in
+        RRF.find_scc measure program is_time_bounded get_unbounded_vars
+          scc_overapprox_nonlinear_only_connected
         @@ Option.value_exn
-        @@ Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
+        @@ Set.binary_search scc_overapprox_nonlinear_only_connected ~compare:Transition.compare
+             `First_equal_to trans
       in
       Set.to_sequence unbounded_transitions |> Sequence.map ~f:compute_function |> Sequence.filter_opt
     in

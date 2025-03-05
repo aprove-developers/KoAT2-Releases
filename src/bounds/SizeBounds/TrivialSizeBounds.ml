@@ -74,7 +74,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_function_call fc) v
 
 
-  let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) v rec_v =
+  let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) rec_v =
     let open VarRec in
     match rec_v with
     | Recursion (loc, var, map) ->
@@ -84,28 +84,19 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           |> List.map ~f:(Program.ending_in_loc program)
           |> List.map ~f:Set.to_list |> List.concat |> TransitionSet.of_list
         in
-        let lsb_return =
-          Bound.maximum
-            (Sequence.of_list
-            @@ List.map
-                 ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) v)
-                 (Set.to_list transitions_ending_return_locations))
-        in
-        let lsb_jump =
-          if Set.mem (Program.return_locations program) loc then
-            Bound.of_poly @@ Map.find_exn map var
-          else
-            Bound.zero
-        in
-        Bound.max lsb_return lsb_jump
+        Bound.maximum
+          (Sequence.of_list
+          @@ List.map
+               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarRec.return_var rec_v))
+               (Set.to_list transitions_ending_return_locations))
     | Var _ -> Bound.of_var (VarRec.to_var rec_v)
     | Argument _ -> Bound.of_var (VarRec.to_var rec_v)
     | _ -> Bound.infinity
 
 
-  let obtainPolyFromFCs program get_sizebound v =
+  let obtainPolyFromFCs program get_sizebound =
     PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
-      ~indeterminate:(subRecSize program get_sizebound v)
+      ~indeterminate:(subRecSize program get_sizebound)
 
 
   (** Computes a bound for a  scc. That is an scc which consists only of one result variable without a loop to itself.
@@ -120,7 +111,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
           if Program.is_initial program t then
             let res_from_lsb =
               if Option.is_some lsb_as_bound then
-                obtainPolyFromFCs program get_sizebound v (Option.value_exn lsb_as_bound)
+                obtainPolyFromFCs program get_sizebound (Option.value_exn lsb_as_bound)
               else
                 Bound.infinity
             in
@@ -128,7 +119,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               let+ update = TransitionLabel.update (Transition.label t) v in
               if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
               then
-                obtainPolyFromFCs program get_sizebound v update
+                obtainPolyFromFCs program get_sizebound update
               else
                 Bound.infinity
             in
@@ -137,7 +128,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             let res_from_lsb =
               if Option.is_some lsb_as_bound then
                 incoming_bound_lsb program get_sizebound
-                  (obtainPolyFromFCs program get_sizebound v (Option.value_exn lsb_as_bound))
+                  (obtainPolyFromFCs program get_sizebound (Option.value_exn lsb_as_bound))
                   (m, v) v
               else
                 Bound.infinity
@@ -146,7 +137,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
               let+ update = TransitionLabel.update (Transition.label t) v in
               if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
               then
-                let lsb = obtainPolyFromFCs program get_sizebound v update in
+                let lsb = obtainPolyFromFCs program get_sizebound update in
                 incoming_bound_lifted_update program get_sizebound lsb t v
               else
                 Bound.infinity
@@ -157,7 +148,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       else
         let update = RV.update (m, v) v in
         if Set.is_subset (PolyRec.vars update) ~of_:(Program.input_vars program) then
-          let lsb = obtainPolyFromFCs program get_sizebound v update in
+          let lsb = obtainPolyFromFCs program get_sizebound update in
           incoming_bound_lifted_update_fc program get_sizebound lsb (RV.function_call (m, v)) v
         else
           Bound.infinity
