@@ -133,26 +133,35 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> List.map ~f:Sequence.length |> List.max_elt ~compare:Int.compare |? 1
       in
 
+      let insertSB bound =
+        scc
+        |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:pre_out_scc
+        |> Sequence.map ~f:(fun rv -> Bound.substitute_f (fun v -> (uncurry get_sizebound) rv) bound)
+        |> Bound.maximum
+      in
+
       let scaling_explicit =
         get_scc_vars m
         |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (m, v))
-        |> List.map ~f:LSB.factor_rec |> List.max_elt ~compare:Int.compare |? 1
+        |> List.map ~f:(insertSB % Bound.of_poly % LSB.factor_rec)
+        |> Sequence.of_list |> Bound.maximum
+        |> Bound.(max one)
         |> tap (fun result ->
                Logger.log logger Logger.DEBUG (fun () ->
-                   ("extreme_scaling_factor", [ ("result", Int.to_string result) ])))
+                   ("extreme_scaling_factor", [ ("result", Bound.to_string result) ])))
       in
 
-      OurInt.of_int (scaling_explicit * (affecting_variables + affecting_variables_omega))
+      Bound.(scaling_explicit * (of_int affecting_variables + of_int affecting_variables_omega))
     in
 
     let loop_scaling =
       Sequence.of_list modifiers
       |> Sequence.map ~f:(fun m ->
              let scaling = modifier_scaling_factor m in
-             if OurInt.(equal scaling one) then
+             if Bound.(equal scaling one) then
                Bound.one
              else if RV.is_transition m then
-               Bound.(exp (of_constant scaling) (get_timebound (RV.transition_ m)))
+               Bound.(exp scaling (get_timebound (RV.transition_ m)))
              else
                let timebound =
                  List.filter_map
@@ -164,7 +173,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                        None)
                  |> Bound.sum_list
                in
-               Bound.(exp (of_constant scaling) timebound))
+               Bound.(exp scaling timebound))
       |> Bound.product
     in
 

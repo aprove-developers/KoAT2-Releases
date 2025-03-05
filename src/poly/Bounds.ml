@@ -515,7 +515,13 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let add_bound b1 b2 = simplify_bound (Sum (b1, b2))
   let add = OptionMonad.liftM2 add_bound
   let mul_bound b1 b2 = simplify_bound (Product (b1, b2))
-  let max = add
+
+  let max b1 b2 =
+    match (b1, b2) with
+    | Some (Const c1), Some (Const c2) -> Option.return @@ Const (Num.max c1 c2)
+    | b1, b2 -> add b1 b2 (* TODO Improve this. *)
+
+
   let maximum bounds = Sequence.reduce ~f:max bounds |> Option.map ~f:simplify |? zero
 
   let mul b1 b2 =

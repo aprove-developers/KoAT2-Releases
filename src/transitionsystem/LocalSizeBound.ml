@@ -59,11 +59,14 @@ module Make
     (RV : ProgramTypes.RV with type transition = T.t)
     (P : ProgramTypes.Program with type transition_label = TL.t) =
 struct
-  type t = { factor : int; constant : int; vars : VarSet.t } [@@deriving eq]
-  type t_rec = { factor_rec : int; constant_rec : int; vars_rec : VarRecSet.t } [@@deriving eq]
+  type t = { factor : Polynomial.t; constant : int; vars : VarSet.t } [@@deriving eq]
+  type t_rec = { factor_rec : Polynomial.t; constant_rec : int; vars_rec : VarRecSet.t } [@@deriving eq]
 
-  let mk ?(s = 1) ?(c = 0) vars = { factor = abs s; constant = abs c; vars = VarSet.of_string_list vars }
-  let initial_lsb s c vs = { factor = s; constant = c; vars = vs }
+  let mk ?(s = 1) ?(c = 0) vars =
+    { factor = Polynomial.of_int @@ abs s; constant = abs c; vars = VarSet.of_string_list vars }
+
+
+  let initial_lsb s c vs = { factor = Polynomial.of_int s; constant = c; vars = vs }
   let factor t = t.factor
   let factor_rec t = t.factor_rec
   let constant t = t.constant
@@ -77,13 +80,13 @@ struct
 
 
   let to_string lsb =
-    "{" ^ "factor: " ^ Int.to_string lsb.factor ^ "; " ^ "constant: " ^ Int.to_string lsb.constant ^ "; "
-    ^ "vars: " ^ VarSet.to_string lsb.vars ^ "; " ^ "}"
+    "{" ^ "factor: " ^ Polynomial.to_string lsb.factor ^ "; " ^ "constant: " ^ Int.to_string lsb.constant
+    ^ "; " ^ "vars: " ^ VarSet.to_string lsb.vars ^ "; " ^ "}"
 
 
   let to_string_rec lsb =
-    "{" ^ "factor: " ^ Int.to_string lsb.factor_rec ^ "; " ^ "constant: " ^ Int.to_string lsb.constant_rec
-    ^ "; " ^ "vars: " ^ VarRecSet.to_string lsb.vars_rec ^ "; " ^ "}"
+    "{" ^ "factor: " ^ Polynomial.to_string lsb.factor_rec ^ "; " ^ "constant: "
+    ^ Int.to_string lsb.constant_rec ^ "; " ^ "vars: " ^ VarRecSet.to_string lsb.vars_rec ^ "; " ^ "}"
 
 
   let to_string_option = function
@@ -98,12 +101,12 @@ struct
 
   let as_bound lsb =
     let vars_sum = Bound.sum @@ Sequence.map ~f:Bound.of_var (Set.to_sequence lsb.vars) in
-    Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
+    Bound.(of_poly lsb.factor * (of_int lsb.constant + vars_sum))
 
 
   let as_poly lsb =
     let vars_sum = PolyRec.PolyRec.(sum @@ Sequence.map ~f:of_varrec (Set.to_sequence lsb.vars_rec)) in
-    PolyRec.PolyRec.(of_int lsb.factor_rec * (of_int lsb.constant_rec + vars_sum))
+    PolyRec.PolyRec.(of_poly lsb.factor_rec * (of_int lsb.constant_rec + vars_sum))
 
 
   let option_lsb_as_bound = function
@@ -132,7 +135,7 @@ struct
       true
     else if
       (* Trivially does not hold if scaling > 1 and variables are present *)
-      t.factor > 1 && not (Set.is_empty t.vars)
+      (not Polynomial.(equal one t.factor || equal one t.factor)) && not (Set.is_empty t.vars)
     then
       false
     else if
@@ -155,9 +158,10 @@ struct
 
   let optimize_s max_s predicate lsb =
     let s_result =
-      binary_search ~divisor:16. 1 max_s (fun next_s -> predicate { lsb with factor = next_s })
+      binary_search ~divisor:16. 1 max_s (fun next_s ->
+          predicate { lsb with factor = Polynomial.of_int next_s })
     in
-    { lsb with factor = s_result }
+    { lsb with factor = Polynomial.of_int s_result }
 
 
   let optimize_c max_c predicate lsb =
@@ -216,7 +220,7 @@ struct
     in
     let lsb =
       {
-        factor;
+        factor = Polynomial.of_int factor;
         vars;
         constant =
           (if const mod factor = 0 then
@@ -234,7 +238,7 @@ struct
     let open OptionMonad in
     let open PolyRec in
     let to_abs_int = OurInt.to_int % OurInt.abs in
-    let* const, factor, vars =
+    let* const, factor_rec, vars_rec =
       try
         PolyRec.monomials_with_coeffs update
         |> List.fold_left
@@ -251,13 +255,13 @@ struct
     in
     let lsb =
       {
-        factor_rec = factor;
-        vars_rec = vars;
+        factor_rec = Polynomial.of_int factor_rec;
+        vars_rec;
         constant_rec =
-          (if const mod factor = 0 then
-             const / factor
+          (if const mod factor_rec = 0 then
+             const / factor_rec
            else
-             (const / factor) + 1);
+             (const / factor_rec) + 1);
       }
     in
     let is_equality_type = PolyRec.equal (PolyRec.of_var update_var) update in

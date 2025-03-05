@@ -24,10 +24,10 @@ module Make
   val equal : t -> t -> bool
   (** Returns if the templated bounds represent the same bound. *)
 
-  val factor : t -> int
+  val factor : t -> Polynomial.t
   (** Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 
-  val factor_rec : t_rec -> int
+  val factor_rec : t_rec -> Polynomial.t
   (** Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 
   val constant : t -> int
