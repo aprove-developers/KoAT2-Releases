@@ -15,8 +15,6 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
   module RV = PM.RV
   module RVG = RVGTypes.MakeRVG (PM)
 
-  (* let pre rvg rv = rv |> RVG.pre rvg |> Set.of_list (module RV) |> fun pre -> Set.remove pre rv |> Set.to_list *)
-
   (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
       Corresponds to 'SizeBounds for trivial SCCs':
       S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)). *)

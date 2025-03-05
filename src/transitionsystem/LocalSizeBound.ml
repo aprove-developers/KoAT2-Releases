@@ -238,24 +238,32 @@ struct
     let open OptionMonad in
     let open PolyRec in
     let to_abs_int = OurInt.to_int % OurInt.abs in
-    let* const, factor_rec, vars_rec =
+    let* const, factor_rec, factor_poly, vars_rec =
       try
         PolyRec.monomials_with_coeffs update
         |> List.fold_left
              ~f:(fun lsb (coeff, mon) ->
-               let* const, factor, vars = lsb in
+               let* const, factor, factor_poly, vars = lsb in
                match Sequence.to_list (Monomial.to_sequence mon) with
-               | [] -> Option.return (const + to_abs_int coeff, factor, vars)
-               | [ (v, 1) ] when Set.mem (VarRecSet.of_varset program_vars) v || VarRec.is_rec v ->
-                   Option.return (const, max factor (to_abs_int coeff), Set.add vars v)
+               | [] -> Option.return (const + to_abs_int coeff, factor, factor_poly, vars)
+               | [ (v, 1) ] when VarRec.is_integral v || VarRec.is_rec v ->
+                   Option.return (const, max factor (to_abs_int coeff), factor_poly, Set.add vars v)
+               | [ (v, 1); (v', 1) ] when VarRec.is_integral v && VarRec.is_rec v' ->
+                   Option.return
+                     ( const,
+                       max factor (to_abs_int coeff),
+                       Polynomial.(add factor_poly (of_var (VarRec.to_var v))),
+                       Set.add vars v' )
+                   (* TODO use Polynomial.max instead of Polynomial.add *)
                | _ -> None)
-             ~init:(Some (0, 1, VarRecSet.empty))
+             ~init:(Some (0, 1, Polynomial.zero, VarRecSet.empty))
       with
       | OurInt.Overflow -> None
     in
     let lsb =
       {
-        factor_rec = Polynomial.of_int factor_rec;
+        factor_rec = Polynomial.(of_int factor_rec + factor_poly);
+        (* TODO use Polynomial.max instead of Polynomial.+ *)
         vars_rec;
         constant_rec =
           (if const mod factor_rec = 0 then

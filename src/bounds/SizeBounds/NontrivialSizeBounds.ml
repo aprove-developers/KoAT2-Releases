@@ -133,17 +133,17 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> List.map ~f:Sequence.length |> List.max_elt ~compare:Int.compare |? 1
       in
 
-      let insertSB bound =
-        scc
-        |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:pre_out_scc
-        |> Sequence.map ~f:(fun rv -> Bound.substitute_f (fun v -> (uncurry get_sizebound) rv) bound)
+      let insertSB m bound =
+        Program.input_vars program |> Set.to_list
+        |> Set.to_sequence % Set.union_list (module RV) % List.map ~f:(fun v -> pre_out_scc (m, v))
+        |> Sequence.map ~f:(fun rv -> Bound.substitute_f (get_sizebound (RV.modifier rv)) bound)
         |> Bound.maximum
       in
 
       let scaling_explicit =
         get_scc_vars m
         |> List.map ~f:(fun v -> Tuple2.first @@ get_lsb (m, v))
-        |> List.map ~f:(insertSB % Bound.of_poly % LSB.factor_rec)
+        |> List.map ~f:(insertSB m % Bound.of_poly % LSB.factor_rec)
         |> Sequence.of_list |> Bound.maximum
         |> Bound.(max one)
         |> tap (fun result ->
