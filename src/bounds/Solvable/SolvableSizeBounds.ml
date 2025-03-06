@@ -160,5 +160,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let improve ?(commuting = false) program ?(scc = None) appr =
     let trans = scc |? PM.Program.transitions program in
-    Set.fold ~f:(flip @@ improve_t ~commuting program trans) trans ~init:appr
+    if Set.exists trans ~f:PM.Transition.has_rec_calls then
+      appr
+    else
+      Set.fold ~f:(flip @@ improve_t ~commuting program trans) trans ~init:appr
 end

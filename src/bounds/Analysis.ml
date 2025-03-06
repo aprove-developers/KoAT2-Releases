@@ -460,13 +460,16 @@ module Classical (Bound : BoundType.Bound) = struct
       (program, appr)
     else
       let refinement_result =
-        CFR.iter_cfrs ~preprocess program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
-          ~compute_timelimit:(fun () ->
-            CFR.compute_timeout_time program
-              ~infinite_timebound:(Bound.is_infinity % Approximation.timebound appr)
-              scc)
-          (analyse_refined_scc ~conf:conf.local_configuration appr program scc)
-          conf.cfrs
+        if Set.exists (Program.transitions program) ~f:Transition.has_rec_calls then
+          None
+        else
+          CFR.iter_cfrs ~preprocess program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions
+            ~compute_timelimit:(fun () ->
+              CFR.compute_timeout_time program
+                ~infinite_timebound:(Bound.is_infinity % Approximation.timebound appr)
+                scc)
+            (analyse_refined_scc ~conf:conf.local_configuration appr program scc)
+            conf.cfrs
       in
       match refinement_result with
       | None -> (program, appr)
