@@ -319,9 +319,7 @@ module Make (P : PolyTypes.Polynomial) = struct
 
 
     let remove_non_contributors non_contributors t =
-      let patterns =
-        List.filter ~f:(Set.mem (Set.diff (input_vars t) non_contributors)) (Set.to_list @@ input_vars t)
-      in
+      let patterns = Set.to_list @@ Set.diff (input_vars t) non_contributors in
       let assignments =
         List.map
           ~f:(fun x -> Map.find_exn t.update x |> P.remove_non_contributors_in_rec_vars non_contributors)

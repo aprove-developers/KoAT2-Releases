@@ -147,8 +147,7 @@ let rename m v =
         ( l,
           f v,
           Map.map map ~f:(Polynomial.rename m) |> VarMapPoly.map_keys_exn ~f:(VarIndeterminate.rename m) )
-  | Var v -> of_var @@ f (Var.of_string v)
-  | v -> v
+  | x -> of_var @@ VarIndeterminate.rename m (to_var x)
 
 
 let vars = function

@@ -18,7 +18,7 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   type transition = Transition.t
   type transition_label = TransitionLabel.t
 
-  (* Returns a variables which have arecursive call. We cannot remove them. *)
+  (* Returns the variables which have a recursive call. We cannot remove them. *)
   let vars_with_rec_calls (_, t, _) =
     TransitionLabel.input_vars t
     |> Set.filter ~f:(fun x ->
@@ -29,7 +29,8 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   let dependency_rec t x y =
     let rec_vars = TransitionLabel.rec_vars t in
     Set.exists rec_vars ~f:(fun varrec ->
-        Set.mem (VarRec.dependencies (TransitionLabel.input_vars t) x varrec) y)
+        Set.mem (VarRec.dependencies (TransitionLabel.input_vars t) x varrec) y
+        || Var.equal y (VarRec.return_var varrec))
 end
 
 module DefaultAdapter = struct
