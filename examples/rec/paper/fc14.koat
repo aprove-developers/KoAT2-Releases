@@ -1,0 +1,15 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f2))
+(VAR x y a)
+(RULES
+  # Computes the sum x! + ... + 1! at l1 and afterwards uses this result in the second loop at l2.
+  l0(x,y,a) -> l1(x,y,a)
+  l1(x,y,a) -> l1(x-1,y+f1[a | (x,y,a) <- (x,y,x)],a) :|: x > 0
+  l1(x,y,a) -> l2(1,y,a) :|: x <= 0
+  l2(x,y,a) -> l2(3*x,2*y,a) :|: x < y && x > 0
+
+  # Recursively computes the factorial a!.
+  f1(x,y,a) -> f2(x,y,1) :|: a = 0
+  f1(x,y,a) -> f2(x,y,a*f1[a | (x,y,a) <- (x,y,a - 1)]) :|: a > 0
+)

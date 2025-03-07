@@ -107,15 +107,7 @@ type params = {
       (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
   preprocessors : Program.t Preprocessor.t list;
       [@enum Preprocessor.(List.map (fun p -> (show p, p)) all_classical)]
-      [@default
-        Preprocessor.
-          [
-            InvariantGeneration;
-            CutUnsatisfiableTransitions;
-            CutUnreachableLocations;
-            EliminateNonContributors;
-            EliminateTempVars;
-          ]]
+      [@default Preprocessor.default_classical]
       (** The preprocessors which should be applied before running the actual algorithm. *)
   preprocessing_strategy : Preprocessor.strategy;
       [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]

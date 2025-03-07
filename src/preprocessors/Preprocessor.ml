@@ -70,6 +70,17 @@ let all_classical : Program.t t list =
   ]
 
 
+let default_classical : Program.t t list =
+  [
+    Chaining;
+    InvariantGeneration;
+    CutUnsatisfiableTransitions;
+    CutUnreachableLocations;
+    EliminateNonContributors;
+    EliminateTempVars;
+  ]
+
+
 let all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list =
   [
     CutZeroProbTransitions;

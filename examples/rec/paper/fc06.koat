@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f2))
+(VAR x y a)
+(RULES
+  l0(x,y,a) -> l1(x,y,f1[y | (x,y,a) <- (1,1,a)])
+  f1(x,y,a) -> f2(x,y,a) :|: a <= 1
+  f1(x,y,a) -> f2(x,f1[y | (x,y,a) <- (y,x+y,a-1)],a) :|: a > 1
+)

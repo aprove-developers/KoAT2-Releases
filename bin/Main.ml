@@ -33,5 +33,4 @@ let () =
   let main_command =
     (Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term ())), Cmdliner.Term.info Sys.argv.(0))
   in
-  (* Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG; "prf", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout); *)
   Cmdliner.Term.(exit @@ eval_choice main_command subcommands)

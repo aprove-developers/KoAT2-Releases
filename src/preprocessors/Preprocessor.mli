@@ -22,6 +22,9 @@ val show : 'p t -> string
 val all_classical : Program.t t list
 (** Returns all available classical preprocessors. *)
 
+val default_classical : Program.t t list
+(** Returns default classical preprocessors. *)
+
 val all_probabilistic : ProbabilisticPrograms.ProbabilisticProgram.t t list
 (** Returns all available probabilistic preprocessors. *)
 

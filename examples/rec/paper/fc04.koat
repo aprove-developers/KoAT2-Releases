@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(RETURNLOCATIONS (FUNCTIONSYMBOLS f2))
+(VAR x)
+(RULES
+  l0(x) -> l1(f1[x | (x) <- (x)])
+  f1(x) -> f2(0) :|: x <= 1
+  f1(x) -> f2(f1[x | (x) <- (T)]) :|: 0 < T && 2*T <= x
+)

@@ -27,6 +27,7 @@ let suite =
          MatrixTest.tests;
          PlrfTest.tests;
          MomentsTest.tests;
+         FunctionCallProgramsTest.tests;
        ]
 
 
