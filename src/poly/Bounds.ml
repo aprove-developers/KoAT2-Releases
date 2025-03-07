@@ -92,15 +92,16 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Inf  (** Bound is infinite. *)
   [@@deriving eq]
 
+  let correct_str base_str x =
+    base_str
+    ^
+    if OurRational.(equal x one) then
+      ""
+    else
+      "^" ^ OurRational.to_string x
+
+
   let rec show_complexity b =
-    let correct_str base_str x =
-      base_str
-      ^
-      if OurRational.(equal x one) then
-        ""
-      else
-        "^" ^ OurRational.to_string x
-    in
     match b with
     | Inf -> "Infinity"
     | LogarithmicPolynomial (x, y) when OurRational.(equal x zero && equal y zero) -> "O(1)"
@@ -114,9 +115,19 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let show_complexity_termcomp = function
     | Inf -> "MAYBE"
     | LogarithmicPolynomial (x, y) when OurRational.(equal x zero && equal y zero) -> "WORST_CASE(?, O(1))"
-    | LogarithmicPolynomial (x, y) when OurRational.(equal x one && equal y zero) ->
-        "WORST_CASE(?, O(log(n)))"
     | LogarithmicPolynomial (x, y) -> "WORST_CASE(?, O(n^" ^ OurRational.(to_string (x + y)) ^ "))"
+    | Exponential _ -> "WORST_CASE(?, O(EXP))"
+
+
+  let show_complexity_termcomp_log = function
+    | Inf -> "MAYBE"
+    | LogarithmicPolynomial (x, y) when OurRational.(equal x zero && equal y zero) -> "WORST_CASE(?, O(1))"
+    | LogarithmicPolynomial (x, y) when OurRational.(equal x zero) ->
+        "WORST_CASE(?, O(" ^ correct_str "n" y ^ "))"
+    | LogarithmicPolynomial (x, y) when OurRational.(equal y zero) ->
+        "WORST_CASE(?, O(" ^ correct_str "log(n)" x ^ "))"
+    | LogarithmicPolynomial (x, y) ->
+        "WORST_CASE(?, O(" ^ correct_str "log(n)" x ^ "*" ^ correct_str "n" y ^ "))"
     | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
 
@@ -794,6 +805,7 @@ module BinaryBound = struct
 
   let show_complexity = to_string ~pretty:false ~termination_only:true
   let show_complexity_termcomp = show ~pretty:false ~termination_only:false ~complexity:false
+  let show_complexity_termcomp_log = show_complexity_termcomp
   let asymptotic_complexity = identity
 
   let compare_asy b1 b2 =

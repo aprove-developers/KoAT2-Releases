@@ -149,6 +149,9 @@ module type Bound = sig
   val show_complexity_termcomp : complexity -> string
   (** Returns string representing asymptotic complexity class in the TermComp format. *)
 
+  val show_complexity_termcomp_log : complexity -> string
+  (** Returns string representing asymptotic complexity class in the TermComp format but also outputs logarithms. *)
+
   val asymptotic_complexity : t -> complexity
   (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
 
