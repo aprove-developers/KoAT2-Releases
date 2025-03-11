@@ -184,27 +184,32 @@ struct
             Hashtbl.find_or_add version_location_tbl current_version ~default:(fun () ->
                 generate_version_location_name current_version)
           in
-          let next_versions = ref [] in
-          let evaluated_grouped_transition =
-            grouped_transition
-            |> Adapter.copy_and_modify_grouped_transition ~new_start:version_start_loc
-                 ~add_invariant:src_constr ~redirect:(fun trans ->
-                   match evaluate_transition src_polyh trans with
-                   | `ExitTransition target_version ->
-                       (* Here, we exit the component hence we go to the original location *)
-                       Version.location target_version
-                   | `EvaluatedTransition next_version -> (
-                       match Hashtbl.find version_location_tbl next_version with
-                       | Some target_location ->
-                           (* We have already seen next_version *)
-                           target_location
-                       | None ->
-                           let target_location = generate_version_location_name next_version in
-                           Hashtbl.add_exn version_location_tbl ~key:next_version ~data:target_location;
-                           next_versions := next_version :: !next_versions;
-                           target_location))
-          in
-          Some (evaluated_grouped_transition, !next_versions)
+          (* If we have a grouped transition with exit-transitions only starting from an initial version then we don't add it here as it is not removed from the original program *)
+          let all_trans = Adapter.all_transitions_in_grouped_transition grouped_transition in
+          if Sequence.for_all ~f:(Set.mem entry_transitions) all_trans && Version.is_true current_version then
+            None
+          else
+            let next_versions = ref [] in
+            let copied_grouped_transition =
+              grouped_transition
+              |> Adapter.copy_and_modify_grouped_transition ~new_start:version_start_loc
+                   ~add_invariant:src_constr ~redirect:(fun trans ->
+                     match evaluate_transition src_polyh trans with
+                     | `ExitTransition target_version ->
+                         (* Here, we exit the component hence we go to the original location *)
+                         Version.location target_version
+                     | `EvaluatedTransition next_version -> (
+                         match Hashtbl.find version_location_tbl next_version with
+                         | Some target_location ->
+                             (* We have already seen next_version *)
+                             target_location
+                         | None ->
+                             let target_location = generate_version_location_name next_version in
+                             Hashtbl.add_exn version_location_tbl ~key:next_version ~data:target_location;
+                             next_versions := next_version :: !next_versions;
+                             target_location))
+            in
+            Some (copied_grouped_transition, !next_versions)
       in
       let refined_outgoing_grouped_transitions, next_versionss =
         Adapter.outgoing_grouped_transitions graph (Version.location current_version)
@@ -374,6 +379,7 @@ module ClassicAdapter = struct
 
 
   let create_new_program location tset = Program.from_sequence location (Set.to_sequence tset)
+  let all_transitions_in_grouped_transition = Sequence.singleton
 end
 
 (** Uses already existing overapproximation *)
@@ -416,6 +422,7 @@ module ProbabilisticAdapter = struct
 
 
   let create_new_program = Program.from_gts
+  let all_transitions_in_grouped_transition = Set.to_sequence % GeneralTransition.transitions
 end
 
 module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ClassicAdapter)

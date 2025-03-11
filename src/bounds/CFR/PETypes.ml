@@ -15,6 +15,9 @@ module type PEAdapter = sig
   val empty_grouped_transition_set : (grouped_transition, grouped_transition_cmp_wit) Set.t
   val guard_of_grouped_transition : grouped_transition -> Guard.t
 
+  val all_transitions_in_grouped_transition : grouped_transition -> transition Sequence.t
+  (** Get all the transitions of the grouped ones *)
+
   val all_grouped_transitions_of_graph :
     transition_graph -> (grouped_transition, grouped_transition_cmp_wit) Set.t
 
