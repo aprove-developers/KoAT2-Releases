@@ -8,12 +8,9 @@ let log ?(level = Logger.INFO) method_name data =
 
 module Unfolding
     (PM : ProgramTypes.ProgramModules)
-    (A :
-      GenericProgram_.Adapter
-        with type update_element = PM.UpdateElement.t
-         and type transition = PM.Transition.t) =
+    (A : PETypes.PEAdapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) =
 struct
-  open GenericProgram_.OverApproximationUtils (A)
+  open GenericPEHelper.Make (A)
   open Polyhedrons
 
   (** [initial_guard_polyh am constr guard] computes a polyhedron overapproximating satisfying assignments for the conjunction of [constr] and [guard] *)
@@ -83,7 +80,7 @@ end
 module PartialEvaluation
     (PM : ProgramTypes.ProgramModules)
     (Adapter :
-      GenericProgram_.Adapter
+      PETypes.PEAdapter
         with type update_element = PM.UpdateElement.t
          and type transition = PM.Transition.t
          and type program = PM.Program.t
@@ -347,7 +344,79 @@ struct
     pe_prog
 end
 
-module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ProgramModules.ClassicAdapter)
+module ClassicAdapter = struct
+  open ProgramModules
 
-module ProbabilisticPartialEvaluation =
-  PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticProgramModules.ProbabilisticAdapter)
+  type update_element = UpdateElement.t
+  type approx = UpdateElementNonRec.t * Guard.t
+  type transition = Transition.t
+  type transition_graph = TransitionGraph.t
+  type program = Program.t
+  type grouped_transition = Transition.t
+  type grouped_transition_cmp_wit = Transition.comparator_witness
+
+  (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
+  let overapprox_indeterminates poly = (UpdateElement.to_poly poly, Guard.mk_true)
+
+  let outgoing_grouped_transitions trans_graph location =
+    TransitionGraph.succ_e trans_graph location |> Sequence.of_list
+
+
+  let empty_grouped_transition_set = TransitionSet.empty
+  let guard_of_grouped_transition = TransitionLabel.guard % Transition.label
+  let all_grouped_transitions_of_graph = TransitionGraph.transitions
+  let grouped_transition_of_transition = identity
+
+  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect
+      (((l : Location.t), (label : TransitionLabel.t), (l' : Location.t)) as transition) =
+    let new_label = TransitionLabel.fresh_id label |> flip TransitionLabel.add_invariant add_invariant in
+    (new_start, new_label, redirect transition)
+
+
+  let create_new_program location tset = Program.from_sequence location (Set.to_sequence tset)
+end
+
+(** Uses already existing overapproximation *)
+module ProbabilisticAdapter = struct
+  open ProbabilisticProgramModules
+
+  type update_element = UpdateElement.t
+  type approx = Polynomials.Polynomial.t * Guard.t
+  type transition = Transition.t
+  type transition_graph = TransitionGraph.t
+  type program = Program.t
+  type grouped_transition = GeneralTransition.t
+  type grouped_transition_cmp_wit = GeneralTransition.comparator_witness
+
+  let overapprox_indeterminates ue =
+    let new_var = Var.fresh_id Var.Int () in
+    (Polynomials.Polynomial.of_var new_var, UpdateElement_.as_guard ue new_var)
+
+
+  let outgoing_grouped_transitions trans_graph location =
+    TransitionGraph.outgoing_gts trans_graph location |> Set.to_sequence
+
+
+  let empty_grouped_transition_set = GeneralTransitionSet.empty
+  let guard_of_grouped_transition = GeneralTransition.guard
+  let all_grouped_transitions_of_graph = TransitionGraph.gts
+  let grouped_transition_of_transition = Transition.gt
+
+  let copy_and_modify_grouped_transition ~new_start ~add_invariant ~redirect gt =
+    GeneralTransition.mk_from_labels_without_backlink ~start:new_start
+      ~guard_without_invariant:(GeneralTransition.guard_without_inv gt)
+      ~invariant:(Guard.mk_and (GeneralTransition.invariant gt) add_invariant)
+      ~cost:(GeneralTransition.cost gt)
+      ~rhss:
+        (GeneralTransition.transitions gt |> Set.to_sequence
+        |> Sequence.map ~f:(fun ((_, label, _) as transition) ->
+               let target_location = redirect transition in
+               (TransitionLabel.without_backlink label, target_location))
+        |> Sequence.to_list)
+
+
+  let create_new_program = Program.from_gts
+end
+
+module ClassicPartialEvaluation = PartialEvaluation (ProgramModules) (ClassicAdapter)
+module ProbabilisticPartialEvaluation = PartialEvaluation (ProbabilisticProgramModules) (ProbabilisticAdapter)

@@ -28,17 +28,14 @@ end
 
 module PropertyBasedAbstraction
     (PM : ProgramTypes.ProgramModules)
-    (A :
-      GenericProgram_.Adapter
-        with type update_element = PM.UpdateElement.t
-         and type transition = PM.Transition.t) : sig
+    (A : PETypes.PEAdapter with type update_element = PM.UpdateElement.t and type transition = PM.Transition.t) : sig
   include Abstraction
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
 end = struct
   open PM
   open Polyhedrons
-  open GenericProgram_.OverApproximationUtils (A)
+  open GenericPEHelper.Make (A)
   open Formulas
   open Constraints
   open Atoms
