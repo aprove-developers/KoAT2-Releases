@@ -34,11 +34,17 @@ type params = {
       [@enum Formatter.all_formats |> List.map (fun f -> (Formatter.format_to_string f, f))]
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
-  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound ];
-      [@enum [ ("termcomp", `PrintTermcomp); ("all", `PrintAllBounds); ("overall", `PrintOverallCostbound) ]]
+  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound | `PrintTermcompLog ];
+      [@enum
+        [
+          ("termcomp", `PrintTermcomp);
+          ("termcompLog", `PrintTermcompLog);
+          ("all", `PrintAllBounds);
+          ("overall", `PrintOverallCostbound);
+        ]]
       [@default `PrintOverallCostbound]
       [@aka [ "r" ]]
-      (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
+      (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
   logs : Logging.logger list;
       [@enum Logging.(List.map (fun l -> (show_logger l, l)) all_available)]
       [@default Logging.all_available]
@@ -163,10 +169,17 @@ module ResultPrinter (BP : BoundPair.T) = struct
     |> BP.ProbBound.asymptotic_complexity |> BP.ProbBound.show_complexity_termcomp |> print_endline
 
 
+  (** Prints the overall timebound of the program to the shell in the TermComp fashion with logaritms. *)
+  let print_termcomp_log (program : Program.t) (appr : ExpApproximation.t) : unit =
+    ExpApproximation.program_costbound appr program
+    |> BP.ProbBound.asymptotic_complexity |> BP.ProbBound.show_complexity_termcomp_log |> print_endline
+
+
   let print_result = function
     | `PrintOverallCostbound -> print_overall_costbound
     | `PrintTermcomp -> print_termcomp
     | `PrintAllBounds -> print_all_bounds
+    | `PrintTermcompLog -> print_termcomp_log
 end
 
 let run (params : params) =
