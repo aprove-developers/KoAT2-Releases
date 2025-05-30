@@ -72,7 +72,6 @@ let all_classical : Program.t t list =
 
 let default_classical : Program.t t list =
   [
-    Chaining;
     InvariantGeneration;
     CutUnsatisfiableTransitions;
     CutUnreachableLocations;
