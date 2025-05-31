@@ -521,7 +521,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let find_scc measure program is_time_bounded unbounded_vars scc make_decreasing =
     let cache = new_cache () in
-    if OurBase.Set.is_empty scc then
+    let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
+    let transitions_with_looping_fc =
+      OurBase.Set.filter
+        ~f:(fun t ->
+          OurBase.Set.exists
+               ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v))
+               (Transition.rec_vars t))
+        scc
+    in
+    if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_with_looping_fc make_decreasing) then
       None
     else
       let rrf_problem =
