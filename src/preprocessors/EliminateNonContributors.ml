@@ -136,29 +136,32 @@ struct
     let vars_with_rec =
       List.map ~f:A.vars_with_rec_calls (Set.to_list @@ Program.transitions program) |> VarSet.union_list
     in
-    let init_contr = VarSet.union_list [ vars_with_rec; vars_guard; vars_cost ] in
-    Logger.(
-      log logger INFO (fun () ->
-          ( "EliminateNonContributors",
-            [
-              ("init_contr", VarSet.to_string init_contr);
-              ("init_non_contributors", VarSet.to_string (Set.diff vars vars_guard));
-            ] )));
-    let contributors = eliminate_ program init_contr (Set.diff vars init_contr) in
-    let non_contributors = Set.diff vars contributors in
-    let program_ = Program.remove_non_contributors non_contributors program in
-    Logger.(
-      log logger INFO (fun () ->
-          ("EliminateNonContributors", [ ("non_contributors", VarSet.to_string non_contributors) ])));
-    if not (Set.is_empty non_contributors) then
-      ProofOutput.add_str_paragraph_to_proof (fun () ->
-          "Eliminate variables "
-          ^ VarSet.to_string ~pretty:true non_contributors
-          ^ " that do not contribute to the problem");
-    if Set.is_empty non_contributors then
-      MaybeChanged.same program
+    if Set.is_empty vars_with_rec then (
+      let init_contr = VarSet.union_list [ vars_with_rec; vars_guard; vars_cost ] in
+      Logger.(
+        log logger INFO (fun () ->
+            ( "EliminateNonContributors",
+              [
+                ("init_contr", VarSet.to_string init_contr);
+                ("init_non_contributors", VarSet.to_string (Set.diff vars vars_guard));
+              ] )));
+      let contributors = eliminate_ program init_contr (Set.diff vars init_contr) in
+      let non_contributors = Set.diff vars contributors in
+      let program_ = Program.remove_non_contributors non_contributors program in
+      Logger.(
+        log logger INFO (fun () ->
+            ("EliminateNonContributors", [ ("non_contributors", VarSet.to_string non_contributors) ])));
+      if not (Set.is_empty non_contributors) then
+        ProofOutput.add_str_paragraph_to_proof (fun () ->
+            "Eliminate variables "
+            ^ VarSet.to_string ~pretty:true non_contributors
+            ^ " that do not contribute to the problem");
+      if Set.is_empty non_contributors then
+        MaybeChanged.same program
+      else
+        MaybeChanged.changed program_)
     else
-      MaybeChanged.changed program_
+      MaybeChanged.same program
 end
 
 include Make (ProgramModules) (ClassicAdapter (ProgramModules))
