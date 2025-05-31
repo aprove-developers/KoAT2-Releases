@@ -115,6 +115,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let show_complexity_termcomp = function
     | Inf -> "MAYBE"
     | LogarithmicPolynomial (x, y) when OurRational.(equal x zero && equal y zero) -> "WORST_CASE(?, O(1))"
+    | LogarithmicPolynomial (x, y) when OurRational.(equal x one && equal y zero) ->
+        "WORST_CASE(?, O(log(n)))"
     | LogarithmicPolynomial (x, y) -> "WORST_CASE(?, O(n^" ^ OurRational.(to_string (x + y)) ^ "))"
     | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
