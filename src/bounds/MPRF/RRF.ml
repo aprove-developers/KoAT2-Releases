@@ -14,7 +14,7 @@ let logger = Logging.(get RRF)
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  type rrf = (Location.t -> Polynomial.t) * (Location.t -> Polynomial.t) * (Location.t -> Polynomial.t)
+  type rrf = (Location.t -> Polynomial.t) * (Location.t -> Polynomial.t)
   type t = { rank : rrf; decreasing : Transition.t; non_increasing : TransitionSet.t }
 
   module TemplateTable = Hashtbl.Make (Location)
@@ -38,16 +38,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   type ranking_cache = {
     rank_func : t option ref;
     template_table :
-      ParameterPolynomial.t TemplateTable.t (* r_tf *)
-      * ParameterPolynomial.t TemplateTable.t (* r_t *)
-      * ParameterPolynomial.t TemplateTable.t (* r_f *);
+      ParameterPolynomial.t TemplateTable.t (* r_tf *) * ParameterPolynomial.t TemplateTable.t (* r_f *);
     coeffs_table : VarSet.t CoeffsTable.t;
     constraint_cache_transition : (constraint_type * int, Formula.t) Hashtbl.t;
     constraint_cache_varrec : (constraint_type * int * int, Formula.t) Hashtbl.t;
   }
 
   let new_cache () =
-    let new_template_table () = (TemplateTable.create 10, TemplateTable.create 10, TemplateTable.create 10) in
+    let new_template_table () = (TemplateTable.create 10, TemplateTable.create 10) in
     {
       rank_func = ref None;
       template_table = new_template_table ();
@@ -126,8 +124,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         Polynomial.to_string (r l)
     in
 
-    let x, y, z = Tuple3.mapn print rank in
-    "(" ^ x ^ "," ^ y ^ "," ^ z ^ ")"
+    let x, y = Tuple2.mapn print rank in
+    "(" ^ x ^ "," ^ y ^ ")"
 
 
   let only_rank_to_string { rank; decreasing; non_increasing } =
@@ -176,13 +174,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let to_unlifted_bound program t =
     let evaluated_rank_for_entry_loc entry_loc =
-      let rtf, rt, rf = Tuple3.mapn (fun r -> Bound.of_intpoly @@ r entry_loc) t.rank
+      let rtf, rf = Tuple2.mapn (fun r -> Bound.of_intpoly @@ r entry_loc) t.rank
       and nfc =
         Bound.of_int
         @@ List.max
              (List.map (OurBase.Set.length % Transition.rec_vars) @@ OurBase.Set.to_list t.non_increasing)
       in
-      Bound.(rt + (rf * (one + (rt * (one + nfc))) * exp (nfc * rtf) rf))
+      let graph = TransitionGraph.mk (Base.Set.to_sequence t.non_increasing) in
+      let module CycleCheck = Graph.Components.Make (TransitionGraph) in
+      if List.length (CycleCheck.scc_list graph) > 1 then
+        Bound.(rf * exp nfc rf)
+      else
+        Bound.(rf * exp (nfc * rtf) rf)
     in
     let locs = OurBase.Set.map (module Location) t.non_increasing ~f:Tuple3.first in
     UnliftedBound.mk_from_program_fcs logger ~handled_transitions:t.non_increasing
@@ -199,8 +202,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ))
 
 
-  let compute_ranking_templates_ (vars : VarSet.t) (locations : Location.t list) ranking_template_
-      (tt1, tt2, tt3) to_string : unit =
+  let compute_ranking_templates_ (vars : VarSet.t) (locations : Location.t list) ranking_template_ (tt1, tt2)
+      to_string : unit =
     let execute template_table =
       let ins_loc_prf location =
         (* Each location needs its own ranking template with different fresh variables *)
@@ -219,11 +222,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           |> Util.enum_to_string (fun (location, polynomial) ->
                  Location.to_string location ^ ": " ^ to_string polynomial)
         in
-        to_string tt1 ^ "\n" ^ to_string tt2 ^ "\n" ^ to_string tt3)
+        to_string tt1 ^ "\n" ^ to_string tt2)
       (fun () ->
         execute tt1;
-        execute tt2;
-        execute tt3)
+        execute tt2)
 
 
   let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t list) : unit =
@@ -280,17 +282,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     match constraint_type with
     | `Decreasing ->
         if TransitionLabel.has_rec_calls t then
-          transition_constraint (Tuple3.first cache.template_table, measure, `Decreasing, (l, t_non_rec, l'))
+          transition_constraint (Tuple2.first cache.template_table, measure, `Decreasing, (l, t_non_rec, l'))
         else
-          transition_constraint (Tuple3.second cache.template_table, measure, `Decreasing, (l, t_non_rec, l'))
+          Formula.mk_true
     | `Non_Increasing ->
-        let f1, f2, f3 =
-          Tuple3.mapn
+        let f1, f2 =
+          Tuple2.mapn
             (fun template_table ->
               transition_constraint (template_table, measure, `Decreasing, (l, t_non_rec, l')))
             cache.template_table
         in
-        Formula.(mk_and f1 (mk_and f2 f3))
+        Formula.(mk_and f1 f2)
 
 
   let transition_constraint cache = constraint_cache_transition cache (transition_constraint_ cache)
@@ -321,14 +323,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let varrec_constraint_ cache (measure, constraint_type, varrec, t) : Formula.t =
     match constraint_type with
-    | `Decreasing -> varrec_constraint (Tuple3.third cache.template_table, measure, `Decreasing, t, varrec)
+    | `Decreasing -> varrec_constraint (Tuple2.second cache.template_table, measure, `Decreasing, t, varrec)
     | `Non_Increasing ->
-        let f1, f2, f3 =
-          Tuple3.mapn
+        let f1, f2 =
+          Tuple2.mapn
             (fun template_table -> varrec_constraint (template_table, measure, `Non_Increasing, t, varrec))
             cache.template_table
         in
-        Formula.(mk_and f1 (mk_and f2 f3))
+        Formula.(mk_and f1 f2)
 
 
   let varrec_constraint cache = constraint_cache_varrec cache (varrec_constraint_ cache)
@@ -350,7 +352,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let make cache decreasing_transition non_increasing_transitions valuation =
     {
-      rank = Tuple3.mapn (fun cache -> rank_from_valuation cache valuation) cache.template_table;
+      rank = Tuple2.mapn (fun cache -> rank_from_valuation cache valuation) cache.template_table;
       decreasing = decreasing_transition;
       non_increasing = non_increasing_transitions;
     }
@@ -472,7 +474,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       if Base.Set.length tset > Base.Set.length min_applicable then
         helper tset
       else
-        tset
+        Base.Set.add tset rrf_problem.make_decreasing
     in
     helper (TransitionSet.singleton rrf_problem.make_decreasing)
 
@@ -525,9 +527,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let transitions_with_looping_fc =
       OurBase.Set.filter
         ~f:(fun t ->
-          OurBase.Set.exists
-               ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v))
-               (Transition.rec_vars t))
+          OurBase.Set.exists ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t))
         scc
     in
     if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_with_looping_fc make_decreasing) then
