@@ -289,7 +289,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         let f1, f2 =
           Tuple2.mapn
             (fun template_table ->
-              transition_constraint (template_table, measure, `Decreasing, (l, t_non_rec, l')))
+              transition_constraint (template_table, measure, `Non_Increasing, (l, t_non_rec, l')))
             cache.template_table
         in
         Formula.(mk_and f1 f2)

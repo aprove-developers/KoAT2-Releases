@@ -171,28 +171,28 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let to_unlifted_bound program t =
     let evaluated_rank_for_entry_loc entry_loc =
       if t.depth = 1 then
-        (List.hd t.rank) entry_loc
+        Bound.of_intpoly @@ (List.hd t.rank) entry_loc
       else
         let mprf_coeff = MPRF_Coefficient.coefficient t.depth in
         let ranking_functions_at_entry_loc =
           OurBase.Sequence.of_list t.rank |> OurBase.Sequence.map ~f:(fun f -> f entry_loc)
         in
-        Polynomial.(one + (of_constant mprf_coeff * Polynomial.sum ranking_functions_at_entry_loc))
+        Bound.of_intpoly
+        @@ Polynomial.(one + (of_constant mprf_coeff * Polynomial.sum ranking_functions_at_entry_loc))
     in
-    UnliftedBound.mk_from_program logger ~handled_transitions:t.non_increasing
+    let locs = OurBase.Set.map (module Location) t.non_increasing ~f:Tuple3.first in
+    UnliftedBound.mk_from_program_fcs logger ~handled_transitions:t.non_increasing
       ~measure_decr_transitions:(TransitionSet.singleton t.decreasing)
       ~compute_proof:
         (Option.some @@ fun ~get_timebound ~get_sizebound _ bound -> compute_proof t (Some bound) program)
       program
-      (fun ((_, _, l') as t') ->
-        if
-          OurBase.Set.exists
-            ~f:(fun v -> Location.equal (VarRec.return_loc v) (Transition.src t.decreasing))
-            (Transition.rec_vars t')
-        then
-          Bound.one
-        else
-          Bound.of_intpoly @@ evaluated_rank_for_entry_loc l')
+      (fun (_, _, l') -> evaluated_rank_for_entry_loc l')
+      (fun t' ->
+        ( OurBase.Set.fold
+            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarRec.return_loc v)) b)
+            ~init:Bound.zero (Transition.rec_vars t'),
+          OurBase.Set.filter ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
+        ))
 
 
   (* We do not minimise the coefficients for now *)
@@ -540,7 +540,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let find_scc measure program is_time_bounded unbounded_vars (scc : TransitionSet.t) depth make_decreasing =
     let cache = new_cache depth in
     let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
-    let scc =
+    let transitions_without_looping_fc =
       OurBase.Set.filter
         ~f:(fun t ->
           not
@@ -549,14 +549,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                (Transition.rec_vars t))
         scc
     in
-    if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem scc make_decreasing) then
+    if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_without_looping_fc make_decreasing)
+    then
       None
     else
       let mprf_problem =
         {
           program;
           measure;
-          make_non_increasing = Base.Set.to_array scc;
+          make_non_increasing =
+            Base.Set.(
+              if is_empty transitions_without_looping_fc then
+                to_array scc
+              else
+                to_array @@ TransitionSet.singleton make_decreasing);
           make_decreasing;
           unbounded_vars;
           find_depth = depth;
