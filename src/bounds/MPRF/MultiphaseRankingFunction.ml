@@ -559,10 +559,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           measure;
           make_non_increasing =
             Base.Set.(
-              if is_empty transitions_without_looping_fc then
-                to_array @@ TransitionSet.singleton make_decreasing
+              if is_empty (OurBase.Set.diff scc transitions_without_looping_fc) then
+                to_array scc
               else
-                to_array scc);
+                to_array @@ TransitionSet.singleton make_decreasing);
           make_decreasing;
           unbounded_vars;
           find_depth = depth;
