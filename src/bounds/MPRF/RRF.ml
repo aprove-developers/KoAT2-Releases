@@ -125,7 +125,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     in
 
     let x, y = Tuple2.mapn print rank in
-    "(" ^ x ^ "," ^ y ^ ")"
+    "r_tf: " ^ x ^ ", r_f: " ^ y ^ ")"
 
 
   let only_rank_to_string { rank; decreasing; non_increasing } =
