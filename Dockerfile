@@ -14,7 +14,7 @@ ARG OCAML_VERSION=5.2.1
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
 
 # PPL
-RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
+RUN wget https://support.bugseng.com/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
     tar xfv ppl-1.2.tar.xz && \
     cd ppl-1.2 && \
     ./configure && \
