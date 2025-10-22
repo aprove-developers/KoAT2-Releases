@@ -20,7 +20,7 @@
 (package
  (name koat2_external)
  (synopsis "External (automatically generated files) for KoAT2")
- (depends (z3 (= 4.13.0-3)))
+ (depends (z3 (= 4.15.2)))
 )
 
 (package
@@ -28,7 +28,7 @@
  (synopsis "KoAT2: Runtime Analysis of Integer Programs")
  (depends
    apron
-   (base (= v0.17.1))
+   (base (= v0.17.3))
    stdio
    batteries
    cmdliner
@@ -50,7 +50,7 @@
    ppx_deriving_cmdliner
    ppx_sexp_conv
    zarith
-   (z3 (= 4.13.0-3))
+   (z3 (= 4.15.2))
    koat2_external
    )
  )
