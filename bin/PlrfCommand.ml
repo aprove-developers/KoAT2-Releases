@@ -15,7 +15,7 @@ type params = {
 
 let run (params : params) =
   Logging.(use_loggers [ (PLRF, Logger.DEBUG); (Preprocessor, Logger.DEBUG) ]);
-  let prog, _ = Readers.read_probabilistic_prog_goal_file params.input in
+  let prog, _ = KoatReaders.read_probabilistic_prog_goal_file params.input in
 
   let prog =
     Preprocessor.(

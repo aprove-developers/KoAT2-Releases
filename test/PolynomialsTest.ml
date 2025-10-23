@@ -13,7 +13,7 @@ module Parser = struct
            let open Polynomial in
            List.map
              (fun (testname, expected, expression) ->
-               testname >:: fun _ -> assert_equal_poly expected (Readers.read_polynomial expression))
+               testname >:: fun _ -> assert_equal_poly expected (KoatReaders.read_polynomial expression))
              [
                ("Const", value 42, " 42 ");
                ("Negated Constant", -value 42, " - 42 ");
@@ -36,7 +36,7 @@ module Parser = struct
            "Negative Tests"
            >::: List.map
                   (fun (testname, expression) ->
-                    testname >:: fun _ -> assert_exception (fun _ -> Readers.read_polynomial expression))
+                    testname >:: fun _ -> assert_exception (fun _ -> KoatReaders.read_polynomial expression))
                   [
                     ("Power with negative exponent", " x ^ - 3 ");
                     ("Power with variable exponent", " x ^ y ");
@@ -49,7 +49,7 @@ module Methods = struct
   module Valuation = Valuation.Make (OurInt)
 
   let example_valuation = Valuation.from_native [ ("x", 3); ("y", 5); ("z", 7) ]
-  let evaluate str = str |> Readers.read_polynomial |> fun poly -> Polynomial.eval poly example_valuation
+  let evaluate str = str |> KoatReaders.read_polynomial |> fun poly -> Polynomial.eval poly example_valuation
 
   let example_valuation2 =
     Valuation.from
@@ -79,11 +79,11 @@ module Methods = struct
            "pull_out_common_addends"
            >::: List.map
                   (fun (t1_s, t2_s, (t'_s, (t1'_s, t2'_s))) ->
-                    let t1 = Readers.read_polynomial t1_s in
-                    let t2 = Readers.read_polynomial t2_s in
-                    let t' = Readers.read_polynomial t'_s in
-                    let t1' = Readers.read_polynomial t1'_s in
-                    let t2' = Readers.read_polynomial t2'_s in
+                    let t1 = KoatReaders.read_polynomial t1_s in
+                    let t2 = KoatReaders.read_polynomial t2_s in
+                    let t' = KoatReaders.read_polynomial t'_s in
+                    let t1' = KoatReaders.read_polynomial t1'_s in
+                    let t2' = KoatReaders.read_polynomial t2'_s in
 
                     let t'_comp, (t1'_comp, t2'_comp) = Polynomial.pull_out_common_addends t1 t2 in
                     Polynomial.to_string t1 ^ "," ^ Polynomial.to_string t2
@@ -212,7 +212,7 @@ module Methods = struct
                     expected >:: fun _ ->
                     assert_equal_poly
                       (Polynomial.of_coeff_list coeffs vars)
-                      (Readers.read_polynomial expected))
+                      (KoatReaders.read_polynomial expected))
                   [
                     ( "2 * x + 3 * y - 4 * z",
                       [ of_int 2; of_int 3; of_int (-4) ],
@@ -229,7 +229,7 @@ module Methods = struct
                         expected >:: fun _ ->
                         assert_equal_poly
                           (Polynomial.of_coeff coeffs var)
-                          (Readers.read_polynomial expected))
+                          (KoatReaders.read_polynomial expected))
                       [
                         ( "0", [], of_string "x");
                         ( "3", [of_int 3], of_string "x");
@@ -248,7 +248,7 @@ module Methods = struct
                          (fun (expected, expression) ->
                            expression >:: fun _ ->
                            assert_equal_value (OurInt.of_int expected)
-                             (Polynomial.get_constant (Readers.read_polynomial expression)))
+                             (Polynomial.get_constant (KoatReaders.read_polynomial expression)))
                          [
                            (5, " 5 ");
                            (0, " x ");
@@ -263,7 +263,7 @@ module Methods = struct
                          (fun (expected, expression) ->
                            expression >:: fun _ ->
                            assert_equal_bool expected
-                             (Polynomial.is_indeterminate (Readers.read_polynomial expression)))
+                             (Polynomial.is_indeterminate (KoatReaders.read_polynomial expression)))
                          [
                            (false, " 1 ");
                            (true, " x ");
@@ -282,7 +282,7 @@ module Methods = struct
                          (fun (expected, expression) ->
                            expression >:: fun _ ->
                            assert_equal_bool expected
-                             (Polynomial.is_univariate_linear (Readers.read_polynomial expression)))
+                             (Polynomial.is_univariate_linear (KoatReaders.read_polynomial expression)))
                          [
                            (true, " 1 ");
                            (true, " x ");
@@ -301,7 +301,7 @@ module Methods = struct
                          (fun (expected, expression) ->
                            expression >:: fun _ ->
                            assert_equal_bool expected
-                             (Polynomial.is_linear (Readers.read_polynomial expression)))
+                             (Polynomial.is_linear (KoatReaders.read_polynomial expression)))
                          [
                            (true, " 1 ");
                            (true, " x ");
@@ -325,8 +325,8 @@ module Methods = struct
                            expression1 ^ "," ^ expression2 >:: fun _ ->
                            assert_equal_bool expected
                              (Polynomial.equal
-                                (Readers.read_polynomial expression1)
-                                (Readers.read_polynomial expression2)))
+                                (KoatReaders.read_polynomial expression1)
+                                (KoatReaders.read_polynomial expression2)))
                          [
                            (true, "x + y", "y + x"); (true, "x + y", "x + y"); (true, "x + y - (y + x)", "0");
                          ];
@@ -358,10 +358,11 @@ module Methods = struct
                   >::: List.map
                          (fun (expected, substitution, polynomial) ->
                            polynomial >:: fun _ ->
-                           assert_equal_poly (Readers.read_polynomial expected)
+                           assert_equal_poly
+                             (KoatReaders.read_polynomial expected)
                              (Polynomial.substitute (Var.of_string "x")
-                                ~replacement:(Readers.read_polynomial substitution)
-                                (Readers.read_polynomial polynomial)))
+                                ~replacement:(KoatReaders.read_polynomial substitution)
+                                (KoatReaders.read_polynomial polynomial)))
                          [
                            (* No variables -> No change *)
                            (" 0 ", " 1 ", " 0 ");
@@ -389,9 +390,9 @@ module Methods = struct
                   "simplified"
                   >::: List.map
                          (fun (expected, poly, poly_str) ->
-                           poly_str >:: fun _ -> assert_equal_poly (Readers.read_polynomial expected) poly)
-                         (let poly = Readers.read_polynomial "X+Y" in
-                          let poly2 = Readers.read_polynomial "X-Y" in
+                           poly_str >:: fun _ -> assert_equal_poly (KoatReaders.read_polynomial expected) poly)
+                         (let poly = KoatReaders.read_polynomial "X+Y" in
+                          let poly2 = KoatReaders.read_polynomial "X-Y" in
                           let polyneg = Polynomial.neg poly in
                           let polystr = Polynomial.to_string poly in
                           let poly2str = Polynomial.to_string poly in

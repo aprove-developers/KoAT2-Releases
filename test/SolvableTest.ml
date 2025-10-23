@@ -25,9 +25,9 @@ let tests =
                   program >:: fun _ ->
                   let result =
                     Check_Solvable.check_solvable_
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn
-                     |> Base.Set.choose_exn |> Tuple3.second
-                     |> ProgramModules.TransitionLabel.to_non_function_call)
+                      (KoatReaders.read_program_simple program
+                      |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn |> Tuple3.second
+                      |> ProgramModules.TransitionLabel.to_non_function_call)
                   in
                   assert_equal_string expected_string (to_string result))
                 [
@@ -55,8 +55,9 @@ let tests =
                 ~f:(fun (expected_str, program) ->
                   program >:: fun _ ->
                   let loop =
-                    Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                    |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk
+                    KoatReaders.read_program_simple program
+                    |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
+                    |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk
                   in
                   let closed_form = Option.value_exn @@ Check_Solvable.compute_closed_form loop in
                   let res =

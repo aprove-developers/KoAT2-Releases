@@ -13,7 +13,7 @@ let tests =
   >::: List.mapi
          ~f:(fun i (gt, expected) ->
            Printf.sprintf "case %i:%s" i gt >:: fun _ ->
-           let gt = Set.choose_exn (Readers.read_general_transitions gt) in
+           let gt = Set.choose_exn (KoatReaders.read_general_transitions gt) in
            let program_vars = GeneralTransition.input_vars gt in
            let elcb = ExpectedLocalChangeBound.compute_elcb program_vars ((gt, loc_g), var_first_arg) in
 

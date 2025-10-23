@@ -15,7 +15,7 @@ let tests =
                   let bound =
                     find_bound
                       (VarSet.of_list [ Var.of_string "y"; Var.of_string "z" ])
-                      (Var.of_string "x") (Readers.read_formula guard) 1024
+                      (Var.of_string "x") (KoatReaders.read_formula guard) 1024
                   in
                   match bound with
                   | Some (lsb, equality) ->
@@ -55,7 +55,7 @@ let tests =
                 ~f:(fun (expected, poly_str) ->
                   let program_vars = VarSet.of_string_list [ "x"; "y" ] in
                   let update_var = Var.of_string "x" in
-                  let update = Readers.read_polynomial poly_str in
+                  let update = KoatReaders.read_polynomial poly_str in
 
                   "lsb from update " ^ Polynomial.to_string update >:: fun _ ->
                   let lsb =

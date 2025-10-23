@@ -16,7 +16,7 @@ let run (params : params) =
   let solve =
     match params.solver with
     | `Z3 -> Z3.get_model
-  and constr = Readers.read_formula params.constr in
+  and constr = KoatReaders.read_formula params.constr in
   constr |> solve
   |> Option.map ~f:(fun solution ->
          Sequence.fold

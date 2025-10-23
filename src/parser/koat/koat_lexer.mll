@@ -5,7 +5,7 @@
 (*  module Make(G : Parseable.Program) =
     struct*)
       open Lexing
-      module P = Parser(*.Make(G)*)
+      module P = Koat_parser(*.Make(G)*)
 
       exception SyntaxError of string
 

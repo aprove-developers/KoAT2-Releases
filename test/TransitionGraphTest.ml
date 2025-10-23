@@ -15,8 +15,8 @@ let suite =
             let files =
               Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../../examples/" ^ folder))
             and test (file : string) : unit =
-              try ignore (Readers.read_file ("../../../examples/" ^ folder ^ "/" ^ file)) with
-              | ParserUtil.Error msg -> failwith msg
+              try ignore (KoatReaders.read_file ("../../../examples/" ^ folder ^ "/" ^ file)) with
+              | KoatParserUtil.Error msg -> failwith msg
               | Program.RecursionNotSupported -> skip_if true "Recursion not supported"
             in
             Array.to_list (Array.map (fun s -> s >:: fun _ -> test s) files)
@@ -31,7 +31,7 @@ let suite =
             let test (file : string) : unit =
               try
                 let read_function () =
-                  ignore (Readers.read_file ("../../../examples/" ^ folder ^ "/" ^ file))
+                  ignore (KoatReaders.read_file ("../../../examples/" ^ folder ^ "/" ^ file))
                 in
                 (* Check if an exception is raised when transitions lead back to the initial location *)
                 if file = "start_incoming.koat" then
@@ -39,7 +39,7 @@ let suite =
                 else
                   read_function ()
               with
-              | ParserUtil.Error msg -> failwith msg
+              | KoatParserUtil.Error msg -> failwith msg
               | Program.RecursionNotSupported -> skip_if true "Recursion not supported"
             in
             Array.to_list (Array.map (fun s -> s >:: fun _ -> test s) files)
@@ -54,7 +54,7 @@ let suite =
                    "CageKoAT-Input-Examples/cexamples";
                  ]);
          ( "pre(t)" >:: fun _ ->
-           let program = Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
+           let program = KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
            let transition =
              TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1")
                (Location.of_string "l2")
@@ -71,7 +71,7 @@ let suite =
                 "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ Var.to_string var ^ " is "
                 ^ Bound.to_string bound ^ "?"
                 >:: fun _ ->
-                let program = Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
+                let program = KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
                 let t =
                   TransitionGraph.find_edge (Program.graph program) (Location.of_string l)
                     (Location.of_string l')
@@ -83,8 +83,8 @@ let suite =
            GraphPrint.print_system ~format:"png"
              ~label:(TransitionLabel.to_string % Transition.label)
              ~outdir:(Fpath.v "output") ~file:"sect1-lin"
-             (Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat");
-           "../../../examples/KoAT-2013/sect1-lin.koat" |> Readers.read_file
+             (KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat");
+           "../../../examples/KoAT-2013/sect1-lin.koat" |> KoatReaders.read_file
            |> tap (fun program ->
                   GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:(Fpath.v "output")
                     ~file:"sect1-lin" program)
@@ -94,7 +94,7 @@ let suite =
                 (let program_str =
                    "(GOAL COMPLEXITY)\n(STARTTERM (FUNCTIONSYMBOLS f0))\n(VAR A)\n(RULES f0(X,A)->f1(A,A))"
                  in
-                 let prog = Readers.read_program program_str in
+                 let prog = KoatReaders.read_program program_str in
                  program_str >:: fun _ ->
                  Base.Set.choose_exn (Program.transitions prog)
                  |> TransitionLabel.update_map % Transition.label

@@ -24,7 +24,7 @@ let tests =
          >::: List.map
                 ~f:(fun (name, complexity_exp, prog_dir, conf) ->
                   prog_dir >:: fun _ ->
-                  let prog = Readers.read_file (prog_dir ^ name ^ ".koat") |> preprocess in
+                  let prog = KoatReaders.read_file (prog_dir ^ name ^ ".koat") |> preprocess in
                   let prog, appr = Analysis.improve ~conf ~preprocess prog Approximation.empty in
 
                   let bound = Approximation.program_timebound appr prog in

@@ -93,10 +93,10 @@ let run (params : params) =
   let cfr_config : Abstraction.config = { abstract = params.abstract } in
   if params.probabilistic then
     let module PE = PartialEvaluation.ProbabilisticPartialEvaluation in
-    let program = Readers.read_probabilistic_program input in
+    let program = KoatReaders.read_probabilistic_program input in
     PE.evaluate_transitions cfr_config program (probabilistic_transitions_to_refine program)
     |> prob_program_to_file output
   else
     let module PE = PartialEvaluation.ClassicPartialEvaluation in
-    let program = Readers.read_file input in
+    let program = KoatReaders.read_file input in
     PE.evaluate_transitions cfr_config program (transitions_to_refine program) |> sane_program_to_file output

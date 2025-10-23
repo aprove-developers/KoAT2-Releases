@@ -20,7 +20,7 @@ let tests =
                   in
                   Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
                   (* "E(" ^ dist_str ^ order_string ^ ")" >:: fun _ -> *)
-                  let dist = Readers.read_probability_distribution dist_str in
+                  let dist = KoatReaders.read_probability_distribution dist_str in
                   let result = ProbabilityDistribution.moment_poly dist order in
 
                   assert_equal_rationalpoly_smt expected_result result)
@@ -35,7 +35,7 @@ let tests =
                    ( 2,
                      "UNIFORM(-3,2*X)",
                      of_constant OurRational.(one / of_int 6)
-                     * of_intpoly (Readers.read_polynomial "8*X^2 - 10*X + 21") );
+                     * of_intpoly (KoatReaders.read_polynomial "8*X^2 - 10*X + 21") );
                  ]);
          "moment_abs_bound"
          >::: List.map
@@ -47,7 +47,7 @@ let tests =
                       "^" ^ Int.to_string order
                   in
                   Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
-                  let dist = Readers.read_probability_distribution dist_str in
+                  let dist = KoatReaders.read_probability_distribution dist_str in
                   let result = ProbabilityDistribution.moment_abs_bound dist order in
 
                   assert_ge_realbound_smt result expected_result)
@@ -63,6 +63,6 @@ let tests =
                    ( 2,
                      "UNIFORM(-3,2*X)",
                      of_constant OurRational.(one / of_int 6)
-                     * of_intpoly (Readers.read_polynomial "8*X^2 - 10*X + 21") );
+                     * of_intpoly (KoatReaders.read_polynomial "8*X^2 - 10*X + 21") );
                  ]);
        ]

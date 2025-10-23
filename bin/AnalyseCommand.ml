@@ -333,7 +333,7 @@ let run (params : params) =
      print_string (program_str ^ "\n\n"));
   let program =
     input
-    |> Readers.read_input ~termination:params.termination ~rename:params.rename params.simple_input
+    |> KoatReaders.read_input ~termination:params.termination ~rename:params.rename params.simple_input
     |> tap (fun prog ->
            ProofOutput.add_to_proof @@ fun () ->
            FormattedString.(

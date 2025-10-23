@@ -8,7 +8,7 @@ let tests =
   >::: List.map
          ~f:(fun (name, loc, rank_exp, prog_dir) ->
            name >:: fun _ ->
-           let program = Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat") in
+           let program = KoatReaders.read_probabilistic_program (prog_dir ^ name ^ ".koat") in
            let plrfs = Plrf.find program in
            match Sequence.hd plrfs with
            | None -> assert_failure "No Plrf found for program!"

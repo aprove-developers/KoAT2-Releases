@@ -12,7 +12,7 @@ let tests =
                 (fun (l, l', invariant, program_str) ->
                   program_str >:: fun _ ->
                   let result_program =
-                    program_str |> Readers.read_program_simple |> InvariantGeneration.transform_program
+                    program_str |> KoatReaders.read_program_simple |> InvariantGeneration.transform_program
                     |> MaybeChanged.unpack
                   in
                   let fulfiled =
@@ -22,7 +22,7 @@ let tests =
                     |> List.exists (fun (l, t, l') ->
                            SMT.Z3Solver.tautology
                              Formula.Infix.(
-                               Formula.mk (TransitionLabel.guard t) => Readers.read_formula invariant))
+                               Formula.mk (TransitionLabel.guard t) => KoatReaders.read_formula invariant))
                   in
                   assert_bool
                     (String.concat " "

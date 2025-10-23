@@ -15,7 +15,7 @@ module Parser = struct
            let open Constraint.Infix in
            List.map
              (fun (testname, expected, atom) ->
-               testname >:: fun _ -> assert_equal_constr expected (Readers.read_constraint atom))
+               testname >:: fun _ -> assert_equal_constr expected (KoatReaders.read_constraint atom))
              [
                ( "Constants ",
                  value 42 < value 42
@@ -29,7 +29,7 @@ module Parser = struct
            "Negative Tests"
            >::: List.map
                   (fun (testname, atom) ->
-                    testname >:: fun _ -> assert_exception (fun _ -> Readers.read_constraint atom))
+                    testname >:: fun _ -> assert_exception (fun _ -> KoatReaders.read_constraint atom))
                   [ ("Unexpected char: =", "x == y") ];
          ]
 end
@@ -39,7 +39,10 @@ module Methods = struct
 
   let example_valuation = Valuation.from_native [ ("x", 3); ("y", 5); ("z", 7) ]
   let example_renaming = RenameMap.from_native [ ("x", "a"); ("y", "b"); ("z", "c") ]
-  let rename str = str |> Readers.read_constraint |> fun constr -> Constraint.rename constr example_renaming
+
+  let rename str =
+    str |> KoatReaders.read_constraint |> fun constr -> Constraint.rename constr example_renaming
+
 
   (*
     let evaluate str =
@@ -73,7 +76,7 @@ module Methods = struct
                   (fun (expected, constr) ->
                     constr >:: fun _ ->
                     assert_equal_varset (VarSet.of_string_list expected)
-                      (Constraint.vars (Readers.read_constraint constr)))
+                      (Constraint.vars (KoatReaders.read_constraint constr)))
                   [
                     ( [ "x"; "y"; "z" ],
                       " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 \
@@ -82,7 +85,8 @@ module Methods = struct
            "rename_vars"
            >::: List.map
                   (fun (expected, constr) ->
-                    constr >:: fun _ -> assert_equal_constr (Readers.read_constraint expected) (rename constr))
+                    constr >:: fun _ ->
+                    assert_equal_constr (KoatReaders.read_constraint expected) (rename constr))
                   [
                     ("5 <= 5", " 5 <= 5 ");
                     ("a <= a", "x <= x");
@@ -106,8 +110,9 @@ module Methods = struct
            >::: List.map
                   (fun (expected, constr) ->
                     constr >:: fun _ ->
-                    assert_equal_constr (Readers.read_constraint expected)
-                      (Constraint.drop_nonlinear (Readers.read_constraint constr)))
+                    assert_equal_constr
+                      (KoatReaders.read_constraint expected)
+                      (Constraint.drop_nonlinear (KoatReaders.read_constraint constr)))
                   [
                     ("", "x^2 < x*y + 3");
                     ("3 < x", "3 < x + y^3 - y*y^2");
@@ -120,7 +125,7 @@ module Methods = struct
                     assert_equal ~cmp:list_equality ~printer:list_print (List.map OurInt.of_int expected)
                       (Constraint.get_coefficient_vector
                          (var |> Var.of_string |> Polynomial.of_var |> Polynomial.monomials |> List.first)
-                         (Readers.read_constraint constr)))
+                         (KoatReaders.read_constraint constr)))
                   [
                     ([ 1; 2; 3 ], "x", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                     ([ 1; 3; -4 ], "y", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -140,7 +145,7 @@ module Methods = struct
                   (fun (expected, constr) ->
                     constr >:: fun _ ->
                     assert_equal ~cmp:list_equality ~printer:list_print (List.map OurInt.of_int expected)
-                      (Constraint.get_constant_vector (Readers.read_constraint constr)))
+                      (Constraint.get_constant_vector (KoatReaders.read_constraint constr)))
                   [
                     ([ 5; -2; 0 ], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                     ([ 8; -4; 1; -1 ], "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
@@ -157,7 +162,7 @@ module Methods = struct
                             (fun var ->
                               var |> Var.of_string |> Polynomial.of_var |> Polynomial.monomials |> List.first)
                             vars)
-                         (Readers.read_constraint constr)))
+                         (KoatReaders.read_constraint constr)))
                   [
                     ( [ [ 1; 2; 3 ]; [ 1; 3; -4 ] ],
                       [ "x"; "y" ],

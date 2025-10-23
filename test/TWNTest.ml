@@ -17,7 +17,7 @@ let tests =
          >::: List.map
                 ~f:(fun (expected_bool, program) ->
                   program >:: fun _ ->
-                  let program = Readers.read_program_simple program in
+                  let program = KoatReaders.read_program_simple program in
                   let result =
                     Check_TWN.check_twn
                       (program |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
@@ -43,7 +43,7 @@ let tests =
                     List.map
                       ~f:(fun (str1, str2) ->
                         ( Var.of_string str1,
-                          Polynomials.RationalPolynomial.of_intpoly @@ Readers.read_polynomial str2 ))
+                          Polynomials.RationalPolynomial.of_intpoly @@ KoatReaders.read_polynomial str2 ))
                       expr
                   in
                   let result =
@@ -96,7 +96,7 @@ let tests =
                     List.map
                       ~f:(fun (str1, str2) ->
                         ( Var.of_string str1,
-                          Polynomials.RationalPolynomial.of_intpoly @@ Readers.read_polynomial str2 ))
+                          Polynomials.RationalPolynomial.of_intpoly @@ KoatReaders.read_polynomial str2 ))
                       expr
                   in
                   let result =
@@ -130,8 +130,9 @@ let tests =
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Termination.termination twn_proofs
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
+                      (KoatReaders.read_program_simple program
+                      |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
+                      |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
                   in
                   assert_equal_bool expected_bool result)
                 [
@@ -185,8 +186,9 @@ let tests =
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Complexity.complexity twn_proofs
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
+                      (KoatReaders.read_program_simple program
+                      |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
+                      |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
                   in
                   let error_msg =
                     "Asymptotic Complexity "
@@ -222,8 +224,9 @@ let tests =
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
                     TWN_Complexity.complexity twn_proofs ~twnlog:true
-                      (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                     |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
+                      (KoatReaders.read_program_simple program
+                      |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
+                      |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
                   in
                   let error_msg =
                     "Asymptotic Complexity "

@@ -21,7 +21,7 @@ type params = {
 
 let run (params : params) =
   Logging.(use_loggers [ (MPRF, Logger.DEBUG) ]);
-  params.input |> Readers.read_input params.simple_input |> fun program ->
+  params.input |> KoatReaders.read_input params.simple_input |> fun program ->
   Approximation.empty |> TrivialTimeBounds.compute program |> fun appr ->
   let transitions =
     program |> Program.graph |> TransitionGraph.transitions

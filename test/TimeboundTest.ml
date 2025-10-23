@@ -89,10 +89,10 @@ let tests =
          >::: List.map
                 (fun (minimal_sound_costbound_str, wanted_costbound_str, program_str) ->
                   program_str >:: fun _ ->
-                  let program = Readers.read_program_simple program_str in
-                  let minimal_sound_costbound = Readers.read_bound minimal_sound_costbound_str in
+                  let program = KoatReaders.read_program_simple program_str in
+                  let minimal_sound_costbound = KoatReaders.read_bound minimal_sound_costbound_str in
                   let wanted_costbound =
-                    Option.map Readers.read_bound wanted_costbound_str |? minimal_sound_costbound
+                    Option.map KoatReaders.read_bound wanted_costbound_str |? minimal_sound_costbound
                   in
                   let costbound = find_costbound program in
                   assert_bool
@@ -145,7 +145,7 @@ let tests =
            (fun (expected_complexity, program_str, conf) ->
              program_str >:: fun _ ->
              let complexity =
-               (asymptotic_complexity % find_costbound ~conf % Readers.read_program_simple) program_str
+               (asymptotic_complexity % find_costbound ~conf % KoatReaders.read_program_simple) program_str
              in
              let error_msg =
                "Asymptotic Complexity " ^ Bound.show_complexity complexity

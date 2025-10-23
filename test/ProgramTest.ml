@@ -9,7 +9,7 @@ let tests =
          "pre"
          >::: List.map
                 ~f:(fun (program_simple_str, has_pre) ->
-                  let program = Readers.read_program_simple program_simple_str in
+                  let program = KoatReaders.read_program_simple program_simple_str in
                   let trans =
                     Program.transitions program
                     |> Set.filter ~f:(not % Location.equal (Program.start program) % Transition.src)
@@ -43,7 +43,7 @@ let tests =
          "pre_cache"
          >::: List.map
                 ~f:(fun program_simple_str ->
-                  let program = Readers.read_program_simple program_simple_str in
+                  let program = KoatReaders.read_program_simple program_simple_str in
                   let program_transitions = Program.transitions program in
 
                   let all_locations_without_start =

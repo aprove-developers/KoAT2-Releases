@@ -21,7 +21,7 @@ type params = {
 
 let run (params : params) =
   Logging.(use_loggers [ (LocalSizeBound, Logger.DEBUG) ]);
-  let guard = Readers.read_formula params.guard in
+  let guard = KoatReaders.read_formula params.guard in
   let var = Var.of_string params.var in
   print_string
     (Bound.to_string

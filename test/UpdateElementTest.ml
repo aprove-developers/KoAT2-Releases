@@ -12,10 +12,10 @@ let tests =
          >::: List.mapi
                 ~f:(fun i (guard, updated_var, update, expected_result) ->
                   "case " ^ Int.to_string i >:: fun _ ->
-                  let guard = Readers.read_constraint guard in
+                  let guard = KoatReaders.read_constraint guard in
                   let updated_var = Var.of_string updated_var in
-                  let update = Readers.read_update_element update in
-                  let expected_result = Readers.read_constraint expected_result in
+                  let update = KoatReaders.read_update_element update in
+                  let expected_result = KoatReaders.read_constraint expected_result in
                   let result = UpdateElement.as_linear_guard guard update updated_var in
 
                   assert_equal_formula (Formula.mk expected_result) (Formula.mk result))
@@ -49,7 +49,7 @@ let tests =
          >::: List.map
                 ~f:(fun (ue_str, exp_result) ->
                   ue_str >:: fun _ ->
-                  let ue = Readers.read_update_element ue_str in
+                  let ue = KoatReaders.read_update_element ue_str in
                   let exp_value = UpdateElement.exp_value_poly ue in
                   assert_equal_rationalpoly_smt exp_result exp_value)
                 (let open Polynomials.RationalPolynomial in

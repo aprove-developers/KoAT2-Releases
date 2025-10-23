@@ -187,7 +187,7 @@ let run (params : params) =
   let logs = List.map ~f:(fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
 
-  let program, default_goal = Readers.read_probabilistic_prog_goal_file params.input in
+  let program, default_goal = KoatReaders.read_probabilistic_prog_goal_file params.input in
   let goal =
     match params.goal with
     | Some goal -> goal

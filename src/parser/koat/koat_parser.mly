@@ -123,7 +123,7 @@ probabilisticProgramAndGoal:
     start = start
     variables = variables;
     general_transitions = general_transitions; EOF
-    { ParserUtil.mk_probabilistic_program start general_transitions, g }
+    { KoatParserUtil.mk_probabilistic_program start general_transitions, g }
 
 onlyProgram_simple:
   | graph = program_simple; EOF
@@ -131,11 +131,11 @@ onlyProgram_simple:
 
 program_simple:
   | transitions = separated_nonempty_list(COMMA, transition_simple)
-    { ParserUtil.mk_program_simple (List.flatten transitions) } ;
+    { KoatParserUtil.mk_program_simple (List.flatten transitions) } ;
 
 transition_simple:
   | start = ID; LPAR vars = variables_simple RPAR cost = cost ; rhs = transition_rhs; formula = withConstraints
-    { ParserUtil.mk_transition_simple start vars cost rhs formula } ;
+    { KoatParserUtil.mk_transition_simple start vars cost rhs formula } ;
 
 variables_simple:
   | vars = separated_list(COMMA,ID)
@@ -173,7 +173,7 @@ transitions:
 
 general_transitions:
   | LPAR RULES general_transitions = list(general_transition) RPAR
-    { ParserUtil.mk_general_transitions general_transitions } ;
+    { KoatParserUtil.mk_general_transitions general_transitions } ;
 
 variables:
   | LPAR VAR vars = list(ID) RPAR
@@ -181,7 +181,7 @@ variables:
 
 transition:
   | lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
-    { ParserUtil.mk_transition lhs cost rhs formula } ;
+    { KoatParserUtil.mk_transition lhs cost rhs formula } ;
 
 (* We construct the ProbabilisticTransitionLabels in a delayed fashion since we might have to copy them, e.g. the guard
        contains multiple constraints. The delayed construction ensures that every Label gets a unique id *)
@@ -189,7 +189,7 @@ general_transition:
   | lhs = transition_lhs; cost = cost; rhss = general_transition_rhss; constr = withConstraints
     { (lhs, cost,
        List.map
-         (fun r -> ParserUtil.embed_probabilistic_transition_label lhs r) rhss, constr) } ;
+         (fun r -> KoatParserUtil.embed_probabilistic_transition_label lhs r) rhss, constr) } ;
 
 cost:
   | MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
@@ -345,7 +345,7 @@ variableRec:
 
 our_float:
   | float_string = UFLOAT
-    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string }
+    { KoatParserUtil.ourfloat_of_decimal_or_fraction_string float_string }
   | int_string = UINT
     { OurRational.of_ourint (OurInt.of_string int_string) } ;
 

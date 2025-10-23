@@ -23,7 +23,7 @@ let suite =
          >::: List.map
                 (fun (testname, expected, constr) ->
                   testname >:: fun _ ->
-                  assert_equal_bool expected (Z3Solver.satisfiable (Readers.read_formula constr)))
+                  assert_equal_bool expected (Z3Solver.satisfiable (KoatReaders.read_formula constr)))
                 [
                   ("Empty", true, "");
                   ("Constant Equality", true, "1 = 1");
@@ -43,7 +43,7 @@ let suite =
                 ];
          (*"Satisfiable_Farkas" >::: (
            List.map (fun (expected,constr,atom) ->
-               constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (Readers.read_constraint constr) (Readers.read_atom atom))))))
+               constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (KoatReaders.read_constraint constr) (KoatReaders.read_atom atom))))))
                        [
                            (true, "x>=0", "x>=0");
                            (false, "x>=0", "x < -10");
@@ -56,9 +56,10 @@ let suite =
          >::: List.map
                 (fun (testname, expected, constr, poly) ->
                   testname >:: fun _ ->
-                  assert_equal_poly (Readers.read_polynomial expected)
-                    (Polynomial.eval_partial (Readers.read_polynomial poly)
-                       (Z3Solver.get_model (Readers.read_formula constr) |? Valuation.from [])))
+                  assert_equal_poly
+                    (KoatReaders.read_polynomial expected)
+                    (Polynomial.eval_partial (KoatReaders.read_polynomial poly)
+                       (Z3Solver.get_model (KoatReaders.read_formula constr) |? Valuation.from [])))
                 [
                   ("fst", "x+y", "a = 1 && b = 1", "a*x+b*y");
                   ( "snd",

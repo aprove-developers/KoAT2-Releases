@@ -13,9 +13,9 @@ let tests =
                   program >:: fun _ ->
                   let result =
                     MaybeChanged.unpack
-                      (CutUnreachableLocations.transform_program (Readers.read_program_simple program))
+                      (CutUnreachableLocations.transform_program (KoatReaders.read_program_simple program))
                   in
-                  assert_equal_program (Readers.read_program_simple expected_program) result)
+                  assert_equal_program (KoatReaders.read_program_simple expected_program) result)
                 [
                   ("l1(x) -> l2(x)", "l1(x) -> l2(x), l3(x) -> l4(x)");
                   ("l1(x) -> l2(x), l2(x) -> l3(x)", "l1(x) -> l2(x), l2(x) -> l3(x), l4(x) -> l5(x)");
@@ -29,9 +29,10 @@ let tests =
                   program >:: fun _ ->
                   let result =
                     MaybeChanged.unpack
-                      (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))
+                      (CutUnsatisfiableTransitions.transform_program
+                         (KoatReaders.read_program_simple program))
                   in
-                  assert_equal_program (Readers.read_program_simple expected_program) result)
+                  assert_equal_program (KoatReaders.read_program_simple expected_program) result)
                 [
                   ( "l1(x) -> l2(x), l2(x) -> l3(x)",
                     "l1(x) -> l3(x) :|: 2 > 3, l1(x) -> l2(x), l2(x) -> l3(x)" );
@@ -43,9 +44,9 @@ let tests =
                   let result =
                     MaybeChanged.unpack
                       (Preprocessor.lift_to_program Chaining.transform_graph
-                         (Readers.read_program_simple program))
+                         (KoatReaders.read_program_simple program))
                   in
-                  assert_equal_program (Readers.read_program_simple expected_program) result)
+                  assert_equal_program (KoatReaders.read_program_simple expected_program) result)
                 [
                   ("l1(x) -> l2(x)", "l1(x) -> l2(x)");
                   ("l1(x) -{2}> l3(x), l1(x) -> l2(x)", "l1(x) -> l2(x), l2(x) -> l3(x)");
@@ -69,9 +70,9 @@ let tests =
                     Preprocessor.(
                       StandardProgram.process process_till_fixpoint
                         [ CutUnreachableLocations; CutUnsatisfiableTransitions ]
-                        (Readers.read_program_simple program))
+                        (KoatReaders.read_program_simple program))
                   in
-                  assert_equal_program (Readers.read_program_simple expected_program) result)
+                  assert_equal_program (KoatReaders.read_program_simple expected_program) result)
                 [
                   ("l1(x) -> l2(x)", "l1(x) -> l2(x)");
                   ("l1(x) -> l2(x)", "l1(x) -> l2(x), l2(x) -> l3(x) :|: 2 > 3");

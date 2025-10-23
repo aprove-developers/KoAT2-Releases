@@ -10,7 +10,7 @@ let tests =
          >::: List.map
                 (fun (expected_bound, bound) ->
                   bound >:: fun _ ->
-                  assert_equal_bound (Readers.read_bound expected_bound) (Readers.read_bound bound))
+                  assert_equal_bound (KoatReaders.read_bound expected_bound) (KoatReaders.read_bound bound))
                 [
                   (* Inf *)
                   ("inf", "inf");
@@ -61,8 +61,8 @@ let tests =
                 (fun (expected_bound, bound) ->
                   bound >:: fun _ ->
                   assert_equal_rational_bound
-                    (Readers.read_rational_bound expected_bound)
-                    (Readers.read_rational_bound bound))
+                    (KoatReaders.read_rational_bound expected_bound)
+                    (KoatReaders.read_rational_bound bound))
                 [
                   (* Roots *)
                   ("4", "2^0.5 * 8^0.5");
