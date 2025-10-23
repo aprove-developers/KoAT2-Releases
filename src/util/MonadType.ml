@@ -3,6 +3,7 @@ module type Monad = sig
 
   val pure : 'a -> 'a t
   val return : 'a -> 'a t
+  val map : ('a -> 'b) -> 'a t -> 'b t
   val bind : 'a t -> ('a -> 'b t) -> 'b t
   val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
   val ( >> ) : 'a t -> 'b t -> 'b t
@@ -20,5 +21,12 @@ module type Monad = sig
   val when_m : bool -> unit t -> unit t
   val sequence : 'a t list -> 'a list t
   val mapM : ('a -> 'b t) -> 'a list -> 'b list t
+  val replicateM : Int.t -> 'a t -> 'a List.t t
   val liftM2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+  val ( <%> ) : ('a -> 'b) t -> 'a t -> 'b t
+  val ( %> ) : 'a t -> 'b t -> 'b t
+  val ( <% ) : 'a t -> 'b t -> 'a t
+  val ( <$> ) : ('a -> 'b) -> 'a t -> 'b t
+  val ( <$ ) : 'a -> 'b t -> 'a t
+  val ( $> ) : 'a t -> 'b -> 'b t
 end
