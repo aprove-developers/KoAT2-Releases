@@ -75,5 +75,7 @@ val from_com_transitions :
 val rename : t -> t
 (** TODO doc *)
 
+val to_file_string : t -> string
+
 val to_file : ?file:string option -> t -> unit
 (** Creates a file (if it does not already exist) and writes the program into it. *)
