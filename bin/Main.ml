@@ -10,6 +10,7 @@ let subcommand run params_cmdliner_term description command =
 
 let subcommands =
   [
+    AriToKoatCommand.(subcommand run params_cmdliner_term description command);
     AnalyseCommand.(subcommand run params_cmdliner_term description command);
     MPRFCommand.(subcommand run params_cmdliner_term description command);
     LocalSizeBoundCommand.(subcommand run params_cmdliner_term description command);

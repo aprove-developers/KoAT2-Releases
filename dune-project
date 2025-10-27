@@ -45,6 +45,8 @@
    odoc
    ounit
    parmap
+   parsexp
+   parsexp_io
    ppx_deriving
    ppx_deriving_cmdliner
    ppx_sexp_conv

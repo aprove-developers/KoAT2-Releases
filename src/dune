@@ -17,6 +17,8 @@
   base
   cmdliner
   dune-build-info
+  parsexp
+  parsexp_io
   stdio
   z3
   ocamlgraph
