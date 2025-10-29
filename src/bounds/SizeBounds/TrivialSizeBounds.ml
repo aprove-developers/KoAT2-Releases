@@ -59,7 +59,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       List.filter_map
         (Set.to_list @@ Program.transitions program)
         ~f:(fun t ->
-          if Set.mem (Transition.rec_vars t) fc then
+          if Set.mem (Transition.function_call_vars t) fc then
             Option.return @@ pre_transitions t
           else
             None)

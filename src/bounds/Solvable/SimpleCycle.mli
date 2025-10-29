@@ -1,7 +1,7 @@
 open ProgramTypes
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
-  module Loop : module type of Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module Loop : module type of Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
   module Approximation : module type of Approximation.MakeForClassicalAnalysis (Bound) (PM)
   open PM
 

@@ -552,34 +552,34 @@ end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
   include NonProbTransitionLabel (PolyFunctionCall)
-  module TransitionLabelNonRec = ProbabilisticTransitionLabelNonProbOverapprNonRec
+  module TransitionLabelNonFunctionCall = ProbabilisticTransitionLabelNonProbOverapprNonRec
 
   type update_element = PolyFunctionCall.t
 
-  let has_rec_call t v =
+  let has_function_call t v =
     Map.exists (update_map t) ~f:(fun p ->
         Set.mem (VarFunctionCallSet.of_list @@ PolyFunctionCall.function_call_vars p) v)
 
 
-  let has_rec_calls t = Map.exists (update_map t) ~f:PolyFunctionCall.has_function_calls
+  let has_function_calls t = Map.exists (update_map t) ~f:PolyFunctionCall.has_function_calls
 
-  let rec_vars t =
+  let function_call_vars t =
     Map.to_alist (update_map t)
     |> List.map ~f:(PolyFunctionCall.function_call_vars % Tuple2.second)
     |> List.concat
     |> Set.of_list (module VarFunctionCall)
 
 
-  exception Rec_Vars of string
+  exception FunctionCalls of string
 
-  let to_non_rec t : TransitionLabelNonRec.t =
-    if has_rec_calls t then
-      raise (Rec_Vars ("Recursive: " ^ to_id_string t))
+  let to_non_function_call t : TransitionLabelNonFunctionCall.t =
+    if has_function_calls t then
+      raise (FunctionCalls ("Function Call: " ^ to_id_string t))
     else
       let overappr_nonprob_update =
         Map.map ~f:PolyFunctionCall.to_poly t.properties.overappr_nonprob_update
       in
-      TransitionLabelNonRec.mk_2_with_gt
+      TransitionLabelNonFunctionCall.mk_2_with_gt
         {
           probability = t.properties.probability;
           overappr_guard = t.properties.overappr_guard;
@@ -589,7 +589,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
         (gt t)
 
 
-  let overapprox_rec_updates (t : t) : TransitionLabelNonRec.t =
+  let overapprox_function_calls (t : t) : TransitionLabelNonFunctionCall.t =
     let overappr_nonprob_update =
       Map.map
         ~f:
@@ -602,7 +602,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
                     of_var (VarFunctionCall.to_var v)))
         t.properties.overappr_nonprob_update
     in
-    TransitionLabelNonRec.mk_2_with_gt
+    TransitionLabelNonFunctionCall.mk_2_with_gt
       {
         probability = t.properties.probability;
         overappr_guard = t.properties.overappr_guard;
@@ -612,7 +612,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       (gt t)
 
 
-  let of_non_rec t =
+  let of_non_function_call t =
     (gt t).transitions |> Set.find_exn ~f:(fun (_, t', _) -> Int.equal t.id t'.id) |> Tuple3.second
 
 
@@ -809,9 +809,9 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let to_string = GenericClassical.to_string
   let to_string_pretty = GenericClassical.to_string_pretty
   let overapprox_nonlinear_updates = GenericClassical.overapprox_nonlinear_updates
-  let has_rec_call = GenericClassical.has_rec_call
-  let has_rec_calls = GenericClassical.has_rec_calls
-  let rec_vars = GenericClassical.rec_vars
+  let has_function_call = GenericClassical.has_function_call
+  let has_function_calls = GenericClassical.has_function_calls
+  let function_call_vars = GenericClassical.function_call_vars
 end
 
 module GeneralTransition = struct

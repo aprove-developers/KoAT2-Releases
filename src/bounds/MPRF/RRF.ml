@@ -178,7 +178,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       and nfc =
         Bound.of_int
         @@ List.max
-             (List.map (OurBase.Set.length % Transition.rec_vars) @@ OurBase.Set.to_list t.non_increasing)
+             (List.map (OurBase.Set.length % Transition.function_call_vars)
+             @@ OurBase.Set.to_list t.non_increasing)
       in
       let graph = TransitionGraph.mk (Base.Set.to_sequence t.non_increasing) in
       let module CycleCheck = Graph.Components.Make (TransitionGraph) in
@@ -197,10 +198,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (fun t' ->
         ( OurBase.Set.fold
             ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarFunctionCall.return_loc v)) b)
-            ~init:Bound.zero (Transition.rec_vars t'),
+            ~init:Bound.zero (Transition.function_call_vars t'),
           OurBase.Set.filter
             ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
-            (Transition.rec_vars t') ))
+            (Transition.function_call_vars t') ))
 
 
   let compute_ranking_templates_ (vars : VarSet.t) (locations : Location.t list) ranking_template_ (tt1, tt2)
@@ -271,18 +272,18 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     and template_l' = TemplateTable.find template_table l' in
     Formula.mk_and
       (constraint_ (measure, constraint_type)
-         TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
+         TransitionLabel.TransitionLabelNonFunctionCall.(update_map t, guard t, cost t)
          template_l template_l')
       (bounded_ (measure, constraint_type)
-         TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
+         TransitionLabel.TransitionLabelNonFunctionCall.(update_map t, guard t, cost t)
          template_l)
 
 
   let transition_constraint_ cache (measure, constraint_type, (l, (t : TransitionLabel.t), l')) : Formula.t =
-    let t_non_rec = TransitionLabel.overapprox_rec_updates t in
+    let t_non_rec = TransitionLabel.overapprox_function_calls t in
     match constraint_type with
     | `Decreasing ->
-        if TransitionLabel.has_rec_calls t then
+        if TransitionLabel.has_function_calls t then
           transition_constraint (Tuple2.first cache.template_table, measure, `Decreasing, (l, t_non_rec, l'))
         else
           Formula.mk_true
@@ -305,7 +306,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
 
   let non_increasing_transition_constraint cache measure transition =
-    if Transition.has_rec_calls transition then
+    if Transition.has_function_calls transition then
       (* If a transition has rec. calls it must always be decreasing. *)
       decreasing_transition_constraint cache measure transition
     else
@@ -372,13 +373,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let add_decreasing_constraint cache problem solver_int =
     let t = problem.make_decreasing in
     Solver.add solver_int (decreasing_transition_constraint cache problem.measure t);
-    OurBase.Set.iter (Transition.rec_vars t) ~f:(fun v ->
+    OurBase.Set.iter (Transition.function_call_vars t) ~f:(fun v ->
         Solver.add solver_int (varrec_constraint cache problem.measure v t))
 
 
   let add_non_increasing_constraint cache problem solver_int transition =
     Solver.add solver_int (non_increasing_transition_constraint cache problem.measure transition);
-    OurBase.Set.iter (Transition.rec_vars transition) ~f:(fun v ->
+    OurBase.Set.iter (Transition.function_call_vars transition) ~f:(fun v ->
         Solver.add solver_int (varrec_constraint cache problem.measure v transition))
 
 
@@ -532,7 +533,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ~f:(fun t ->
           OurBase.Set.exists
             ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
-            (Transition.rec_vars t))
+            (Transition.function_call_vars t))
         scc
     in
     if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_with_looping_fc make_decreasing) then

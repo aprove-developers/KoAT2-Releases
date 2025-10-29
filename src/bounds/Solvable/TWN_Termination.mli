@@ -1,6 +1,6 @@
 open PolyExponential
 
-module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) : sig
   module Loop : module type of Loop.Make (Bound) (TL)
 
   val termination_ : ProofOutput.LocalProofOutput.t -> Loop.t -> (Var.t, RationalPE.t) Hashtbl.t -> bool

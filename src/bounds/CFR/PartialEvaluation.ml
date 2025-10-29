@@ -353,7 +353,7 @@ module ClassicAdapter = struct
   open ProgramModules
 
   type update_element = UpdateElement.t
-  type approx = UpdateElementNonRec.t * Guard.t
+  type approx = UpdateElementNonFunctionCall.t * Guard.t
   type transition = Transition.t
   type transition_graph = TransitionGraph.t
   type program = Program.t

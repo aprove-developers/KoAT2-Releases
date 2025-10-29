@@ -180,7 +180,7 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
   let rvg_from_transitionset (get_vars_in_lsb : rv -> VarFunctionCallSet.t Option.t) program tset =
     let program_vars = Program.input_vars program in
     let add_transition rvg post_transition =
-      let function_calls_of_post_transition = Transition.rec_vars post_transition in
+      let function_calls_of_post_transition = Transition.function_call_vars post_transition in
       let rvg_with_vertices : t =
         add_vertices_to_rvg
           (Set.to_sequence program_vars
@@ -238,7 +238,7 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
           |> Sequence.join
         in
         let function_calls =
-          List.map (Set.to_list tset) ~f:Transition.rec_vars |> VarFunctionCallSet.union_list
+          List.map (Set.to_list tset) ~f:Transition.function_call_vars |> VarFunctionCallSet.union_list
         in
         let fc_transition =
           vars_in_lsb (RV.modifier_of_transition transition, post_var)

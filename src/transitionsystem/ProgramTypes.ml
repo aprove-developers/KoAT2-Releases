@@ -135,7 +135,7 @@ module type DefaultTransitionLabel = sig
   (** Guard that is true if both transitions can be executed one after another *)
 end
 
-module type ClassicalTransitionLabelNonRec = sig
+module type ClassicalTransitionLabelNonFunctionCall = sig
   include DefaultTransitionLabel with type update_element = Polynomial.t
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
@@ -147,7 +147,7 @@ end
 
 module type ClassicalTransitionLabel = sig
   include DefaultTransitionLabel with type update_element = PolyFunctionCall.t
-  module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
+  module TransitionLabelNonFunctionCall : ClassicalTransitionLabelNonFunctionCall
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
   (** Apply function to guard *)
@@ -158,12 +158,12 @@ module type ClassicalTransitionLabel = sig
   val overapprox_nonlinear_updates : t -> t
   (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 
-  val has_rec_call : t -> VarFunctionCall.t -> bool
-  val has_rec_calls : t -> bool
-  val rec_vars : t -> (VarFunctionCall.t, VarFunctionCall.comparator_witness) Base.Set.t
-  val of_non_rec : TransitionLabelNonRec.t -> t
-  val overapprox_rec_updates : t -> TransitionLabelNonRec.t
-  val to_non_rec : t -> TransitionLabelNonRec.t
+  val has_function_call : t -> VarFunctionCall.t -> bool
+  val has_function_calls : t -> bool
+  val function_call_vars : t -> (VarFunctionCall.t, VarFunctionCall.comparator_witness) Base.Set.t
+  val of_non_function_call : TransitionLabelNonFunctionCall.t -> t
+  val overapprox_function_calls : t -> TransitionLabelNonFunctionCall.t
+  val to_non_function_call : t -> TransitionLabelNonFunctionCall.t
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -227,9 +227,9 @@ module type ClassicalTransition = sig
   module TransitionLabel : ClassicalTransitionLabel
 
   val overapprox_nonlinear_updates : t -> t
-  val has_rec_call : t -> VarFunctionCall.t -> bool
-  val has_rec_calls : t -> bool
-  val rec_vars : t -> (VarFunctionCall.t, VarFunctionCall.comparator_witness) Base.Set.t
+  val has_function_call : t -> VarFunctionCall.t -> bool
+  val has_function_calls : t -> bool
+  val function_call_vars : t -> (VarFunctionCall.t, VarFunctionCall.comparator_witness) Base.Set.t
 end
 
 (** This module represents a transition graph. *)
@@ -570,10 +570,10 @@ module type ClassicalProgramModules = sig
 
   module UpdateElement : module type of PolyFunctionCall
   module TransitionLabel : ClassicalTransitionLabel
-  module UpdateElementNonRec : module type of Polynomial
+  module UpdateElementNonFunctionCall : module type of Polynomial
 
-  module TransitionLabelNonRec :
-    ClassicalTransitionLabelNonRec with type update_element = UpdateElementNonRec.t
+  module TransitionLabelNonFunctionCall :
+    ClassicalTransitionLabelNonFunctionCall with type update_element = UpdateElementNonFunctionCall.t
 
   module Transition :
     ClassicalTransition

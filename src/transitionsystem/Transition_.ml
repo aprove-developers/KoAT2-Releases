@@ -81,9 +81,9 @@ module MakeClassical (TL : ProgramTypes.ClassicalTransitionLabel) = struct
   module TransitionLabel = TL
 
   let overapprox_nonlinear_updates (l, t, l') = (l, TL.overapprox_nonlinear_updates t, l')
-  let has_rec_call t v = TL.has_rec_call (label t) v
-  let has_rec_calls = TL.has_rec_calls % label
-  let rec_vars = TL.rec_vars % label
+  let has_function_call t v = TL.has_function_call (label t) v
+  let has_function_calls = TL.has_function_calls % label
+  let function_call_vars = TL.function_call_vars % label
 end
 
 open! OurBase

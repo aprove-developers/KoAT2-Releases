@@ -341,7 +341,7 @@ let from_com_transitions ?(termination = false) ?(return_locations = LocationSet
         List.map ~f:(Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
       in
       let rec_locations =
-        List.map transs ~f:(LocationSet.map ~f:VarFunctionCall.return_loc % Transition_.rec_vars)
+        List.map transs ~f:(LocationSet.map ~f:VarFunctionCall.return_loc % Transition_.function_call_vars)
         |> LocationSet.union_list
       in
       from_sequence start ~return_locations ~rec_locations (Sequence.of_list transs)

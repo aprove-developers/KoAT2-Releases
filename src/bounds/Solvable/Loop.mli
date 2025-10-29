@@ -1,7 +1,7 @@
 open Formulas
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) : sig
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
 
   val mk : TL.t -> t

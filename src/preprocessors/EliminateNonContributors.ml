@@ -27,7 +27,7 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
 
   (* Returns true iff x depends on y in a recursive call of t. *)
   let dependency_rec t x y =
-    let rec_vars = TransitionLabel.rec_vars t in
+    let rec_vars = TransitionLabel.function_call_vars t in
     Set.exists rec_vars ~f:(fun varrec ->
         Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x varrec) y
         || Var.equal y (VarFunctionCall.return_var varrec))

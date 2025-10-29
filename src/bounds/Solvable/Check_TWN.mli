@@ -1,4 +1,4 @@
-module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) : sig
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) : sig
   module Loop : module type of Loop.Make (Bound) (TL)
 
   type twn = TWN of Var.t list | NOTTRIANGULAR

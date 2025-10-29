@@ -9,10 +9,10 @@ module RV = ProbabilisticPrograms.ProbabilisticRV
 module GeneralTransition = ProbabilisticPrograms.GeneralTransition
 module GeneralTransitionSet = ProbabilisticPrograms.GeneralTransitionSet
 module GRV = ProbabilisticPrograms.GRV
-module UpdateElementNonRec = Polynomials.Polynomial
+module UpdateElementNonFunctionCall = Polynomials.Polynomial
 
-module TransitionLabelNonRec =
-  ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonRec
+module TransitionLabelNonFunctionCall =
+  ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonFunctionCall
 
 type program_modules_t =
   (TransitionLabel.t * TransitionLabel.comparator_witness * TransitionGraph.t)
@@ -23,10 +23,10 @@ module NonProbOverappr = struct
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
   module Location = Location
   module UpdateElement = PolyFunctionCall
-  module UpdateElementNonRec = Polynomials.Polynomial
+  module UpdateElementNonFunctionCall = Polynomials.Polynomial
 
-  module TransitionLabelNonRec =
-    ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonRec
+  module TransitionLabelNonFunctionCall =
+    ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr.TransitionLabelNonFunctionCall
 
   module TransitionSet =
     Transition_.TransitionSetOver (ProbabilisticPrograms.ProbabilisticTransitionNonProbOverappr)

@@ -2,7 +2,7 @@ open OurBase
 open Formulas
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) = struct
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
   (** A loop is a 3-tuple (guard_and_inv, guard, update) *)
 

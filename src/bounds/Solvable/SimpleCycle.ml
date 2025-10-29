@@ -5,7 +5,7 @@ open Polynomials
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module TL = PM.TransitionLabel
-  module Loop = Loop.Make (Bound) (TL.TransitionLabelNonRec)
+  module Loop = Loop.Make (Bound) (TL.TransitionLabelNonFunctionCall)
   module TWN_Proofs = TWN_Proofs.Make (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
 
@@ -81,7 +81,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (* all updates of var in the path *)
         let updates var =
           OurBase.List.filter_opt
-          @@ List.map (flip (TL.TransitionLabelNonRec.update % TL.overapprox_rec_updates) var) labels
+          @@ List.map
+               (flip (TL.TransitionLabelNonFunctionCall.update % TL.overapprox_function_calls) var)
+               labels
         in
         let deterministic_update var = List.for_all update_is_deterministic @@ updates var in
         let new_deterministic var = not (deterministic_update var || Hashtbl.mem static_dep_table var) in
@@ -106,7 +108,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let merge (_, ts, _) =
       ( List.map (Formula.mk % TL.guard) ts |> Formula.any,
         List.map (Formula.mk % TL.guard_without_inv) ts |> Formula.any,
-        List.first ts |> TL.overapprox_rec_updates |> TL.TransitionLabelNonRec.update_map )
+        List.first ts |> TL.overapprox_function_calls |> TL.TransitionLabelNonFunctionCall.update_map )
     in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post @ merge_pre)

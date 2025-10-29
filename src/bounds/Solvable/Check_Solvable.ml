@@ -1,7 +1,7 @@
 open OurBase
 open Polynomials
 
-module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonRec) = struct
+module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) = struct
   module Loop = Loop.Make (Bound) (TL)
 
   type blocks = Var.t list list

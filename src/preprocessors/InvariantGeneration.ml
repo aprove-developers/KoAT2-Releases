@@ -27,7 +27,7 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
     let open ApronInterface.Koat2Apron in
     let open ApronInterface.Apron2Koat in
     let transitions = Program.transitions program_ in
-    if Set.exists ~f:Transition.has_rec_calls transitions then
+    if Set.exists ~f:Transition.has_function_calls transitions then
       MaybeChanged.same program
     else
       let locations = Program.locations program_ in

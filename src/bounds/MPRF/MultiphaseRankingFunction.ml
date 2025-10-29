@@ -190,10 +190,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (fun t' ->
         ( OurBase.Set.fold
             ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarFunctionCall.return_loc v)) b)
-            ~init:Bound.zero (Transition.rec_vars t'),
+            ~init:Bound.zero (Transition.function_call_vars t'),
           OurBase.Set.filter
             ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
-            (Transition.rec_vars t') ))
+            (Transition.function_call_vars t') ))
 
 
   (* We do not minimise the coefficients for now *)
@@ -265,7 +265,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     and template1_l = TemplateTable.find template_table1 l
     and template1_l' = TemplateTable.find template_table1 l' in
     transition_constraint_i_ (measure, constraint_type)
-      TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
+      TransitionLabel.TransitionLabelNonFunctionCall.(update_map t, guard t, cost t)
       template0_l template1_l template1_l'
 
 
@@ -291,7 +291,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let template1_l = TemplateTable.find template_table1 l
     and template1_l' = TemplateTable.find template_table1 l' in
     transition_constraint_1_ (measure, constraint_type)
-      TransitionLabel.TransitionLabelNonRec.(update_map t, guard t, cost t)
+      TransitionLabel.TransitionLabelNonFunctionCall.(update_map t, guard t, cost t)
       template1_l template1_l'
 
 
@@ -307,14 +307,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let transition_constraint_d bound (template_table1, measure, constraint_type, (l, t, l')) : Formula.t =
     let template1_l = TemplateTable.find template_table1 l in
     transition_constraint_d_ bound (measure, constraint_type)
-      (TransitionLabel.TransitionLabelNonRec.guard t)
+      (TransitionLabel.TransitionLabelNonFunctionCall.guard t)
       template1_l
 
 
   (* use all three functions above combined*)
   let transition_constraint_ cache (depth, measure, constraint_type, (l, (t : TransitionLabel.t), l')) :
       Formula.t =
-    let t_non_rec = TransitionLabel.overapprox_rec_updates t in
+    let t_non_rec = TransitionLabel.overapprox_function_calls t in
     let res = ref Formula.mk_true in
     for i = 1 to depth - 1 do
       res :=
@@ -547,7 +547,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           not
           @@ OurBase.Set.exists
                ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
-               (Transition.rec_vars t))
+               (Transition.function_call_vars t))
         scc
     in
     if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_without_looping_fc make_decreasing)
@@ -595,7 +595,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       execute
 
 
-  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
 
   type t_loop = { rank : Polynomial.t list; depth : int }
 

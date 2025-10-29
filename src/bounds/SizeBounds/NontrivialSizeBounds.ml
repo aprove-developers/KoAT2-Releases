@@ -167,7 +167,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                  List.filter_map
                    (Set.to_list @@ Program.transitions program)
                    ~f:(fun t ->
-                     if Transition.has_rec_call t (RV.function_call_ m) then
+                     if Transition.has_function_call t (RV.function_call_ m) then
                        Option.return @@ get_timebound t
                      else
                        None)
@@ -230,7 +230,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                  get_timebound (RV.transition_ m)
                else
                  List.filter_map transitions ~f:(fun t ->
-                     if Transition.has_rec_call t (RV.function_call_ m) then
+                     if Transition.has_function_call t (RV.function_call_ m) then
                        Option.return @@ get_timebound t
                      else
                        None)

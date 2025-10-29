@@ -347,7 +347,7 @@ module Make (P : PolyTypes.Polynomial) = struct
   include Comparator.Make (Inner)
 end
 
-module TransitionLabelNonRec_ = struct
+module TransitionLabelNonFunctionCall_ = struct
   include Make (Polynomial)
 
   let append t1 t2 =
@@ -502,27 +502,27 @@ let eliminate_tmp_var var t =
     MaybeChanged.same t
 
 
-module UpdateElementNonRec = Polynomials.Polynomial
-module TransitionLabelNonRec = TransitionLabelNonRec_
+module UpdateElementNonFunctionCall = Polynomials.Polynomial
+module TransitionLabelNonFunctionCall = TransitionLabelNonFunctionCall_
 
-let has_rec_call t v =
+let has_function_call t v =
   Map.exists t.update ~f:(fun p ->
       Set.mem (VarFunctionCallSet.of_list @@ PolyFunctionCall.function_call_vars p) v)
 
 
-let has_rec_calls t = Map.exists t.update ~f:PolyFunctionCall.has_function_calls
+let has_function_calls t = Map.exists t.update ~f:PolyFunctionCall.has_function_calls
 
-let rec_vars t =
+let function_call_vars t =
   Map.to_alist t.update
   |> List.map ~f:(PolyFunctionCall.function_call_vars % Tuple2.second)
   |> List.concat
   |> Set.of_list (module VarFunctionCall)
 
 
-let of_non_rec t =
+let of_non_function_call t =
   {
     id = Unique.unique ();
-    update = Map.map (TransitionLabelNonRec.update_map t) ~f:PolyFunctionCall.of_poly;
+    update = Map.map (TransitionLabelNonFunctionCall.update_map t) ~f:PolyFunctionCall.of_poly;
     guard = t.guard;
     invariant = t.invariant;
     cost = t.cost;
@@ -531,16 +531,16 @@ let of_non_rec t =
 
 exception Rec_Vars of string
 
-let to_non_rec t =
-  if has_rec_calls t then
+let to_non_function_call t =
+  if has_function_calls t then
     raise (Rec_Vars ("VarFunctionCallrsive: " ^ to_id_string t))
   else
-    TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
+    TransitionLabelNonFunctionCall.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
       ~update:(Map.map (update_map t) ~f:PolyFunctionCall.to_poly)
 
 
-let overapprox_rec_updates t =
-  TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
+let overapprox_function_calls t =
+  TransitionLabelNonFunctionCall.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
     ~update:
       (Map.map (update_map t)
          ~f:

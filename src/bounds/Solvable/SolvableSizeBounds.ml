@@ -2,8 +2,10 @@ open Bounds
 open OurBase
 
 module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
-  module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonRec)
-  module Loop = Loop.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module Check_Solvable =
+    Check_Solvable.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
+
+  module Loop = Loop.Make (Bounds.Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
   module SimpleCycle = SimpleCycle.Make (Bounds.Bound) (PM)
   module Approximation = Approximation.MakeForClassicalAnalysis (Bounds.Bound) (PM)
 
@@ -161,7 +163,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let improve ?(commuting = false) program ?(scc = None) appr =
     let trans = scc |? PM.Program.transitions program in
-    if Set.exists trans ~f:PM.Transition.has_rec_calls then
+    if Set.exists trans ~f:PM.Transition.has_function_calls then
       appr
     else
       Set.fold ~f:(flip @@ improve_t ~commuting program trans) trans ~init:appr

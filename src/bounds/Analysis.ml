@@ -327,7 +327,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Set.to_list scc_with_in_and_out
         in
         let fcs =
-          List.map ~f:(fun t -> Set.to_list @@ Transition.rec_vars t) all_rvs_of_scc_and_out
+          List.map ~f:(fun t -> Set.to_list @@ Transition.function_call_vars t) all_rvs_of_scc_and_out
           |> List.concat
           |> List.map ~f:RV.modifier_of_function_call
         in
@@ -361,7 +361,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let rvg_with_sccs = compute_rvg_with_sccs ~conf lsbs program scc_locs in
     let scc = Program.scc_transitions_from_locs program scc_locs in
     let loop_state =
-      let module Check_TWN = Check_TWN.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec) in
+      let module Check_TWN = Check_TWN.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall) in
       if conf.unsolvable then
         ref (initial_loop_state (const true) program scc)
       else if conf.twn then
@@ -460,7 +460,7 @@ module Classical (Bound : BoundType.Bound) = struct
       (program, appr)
     else
       let refinement_result =
-        if Set.exists (Program.transitions program) ~f:Transition.has_rec_calls then
+        if Set.exists (Program.transitions program) ~f:Transition.has_function_calls then
           None
         else
           CFR.iter_cfrs ~preprocess program ~scc_orig:scc ~transitions_to_refine:non_linear_transitions

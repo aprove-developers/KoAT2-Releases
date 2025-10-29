@@ -10,10 +10,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   module EliminateNonContributors =
     EliminateNonContributors.Make (PM) (EliminateNonContributors.DefaultAdapter)
 
-  module TWN_Complexity = TWN_Complexity.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module TWN_Complexity = TWN_Complexity.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
   module SimpleCycle = SimpleCycle.Make (Bound) (PM)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
-  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonRec)
+  module Loop = Loop.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
 
   let complete_proofs twn_proofs cycle ~get_timebound ~get_sizebound entry_measure_map lifted_bound =
     let for_entry_and_local_bound (entry, local_bound) =

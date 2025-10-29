@@ -3,8 +3,8 @@ open OurBase
 open OUnit2
 open Helper
 open ProgramModules
-module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
-module Loop = Loop.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonRec)
+module Check_Solvable = Check_Solvable.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonFunctionCall)
+module Loop = Loop.Make (Bounds.Bound) (ProgramModules.TransitionLabelNonFunctionCall)
 
 let to_string arg =
   if Option.is_some arg then
@@ -26,7 +26,8 @@ let tests =
                   let result =
                     Check_Solvable.check_solvable_
                       (Readers.read_program_simple program |> Program.sccs |> List.hd_exn
-                     |> Base.Set.choose_exn |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_rec)
+                     |> Base.Set.choose_exn |> Tuple3.second
+                     |> ProgramModules.TransitionLabel.to_non_function_call)
                   in
                   assert_equal_string expected_string (to_string result))
                 [
@@ -55,7 +56,7 @@ let tests =
                   program >:: fun _ ->
                   let loop =
                     Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Set.choose_exn
-                    |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_rec |> Loop.mk
+                    |> Tuple3.second |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk
                   in
                   let closed_form = Option.value_exn @@ Check_Solvable.compute_closed_form loop in
                   let res =
