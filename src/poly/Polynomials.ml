@@ -403,7 +403,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
       t
 
 
-  let remove_non_contributors_in_rec_vars non_contributors = identity
+  let remove_non_contributors_in_function_calls non_contributors = identity
 end
 
 module PolynomialOver (Value : PolyTypes.Ring) = PolynomialOverIndeterminate (VarIndeterminate) (Value)
