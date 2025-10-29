@@ -71,6 +71,9 @@ val of_var : Var.t -> t
 val to_var : t -> Var.t
 (** Transforms a function call-variable into a variable (if possible and raise an exception if function call-variable is a function call) *)
 
+val to_var_or_tmp : t -> Var.t
+(** Over approximate a function call-variable into a temporary variables *)
+
 val mk_function_call : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t
 (** Creates a function call-variable *)
 

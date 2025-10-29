@@ -107,6 +107,14 @@ module Inner = struct
     | FunctionCall (_, _, _) -> raise (Invalid_argument "Function Call variable cannot be converted to Var.t")
 
 
+  let to_var_or_tmp = function
+    | Var str -> Var.Var str
+    | Helper (Real, i) -> Var.Helper (Real, i)
+    | Helper (Int, i) -> Var.Helper (Int, i)
+    | Argument i -> Var.Argument i
+    | FunctionCall (_, _, _) -> Var.fresh_id Int ()
+
+
   let return_loc = function
     | FunctionCall (l, _, _) -> l
     | _ -> raise (invalid_arg "Non function call variable do not have return location.")
