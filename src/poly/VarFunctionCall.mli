@@ -57,14 +57,34 @@ val is_real : t -> bool
 (** Returns true if variable is ranged over real numbers. *)
 
 val is_function_call : t -> bool
+(** Returns true if the given variable represents a function call. *)
+
 val rename : RenameMap.t -> t -> t
+(** Renames variables in the variable (also in the underlying function call) according to the provided RenameMap. *)
+
 val vars : t -> VarSet.t
+(** Returns variable as a singleton set (if the function call-variable is a function call the empty set is returned). *)
+
 val of_var : Var.t -> t
+(** Constructs a function call-variable from a variable. *)
+
 val to_var : t -> Var.t
-val to_var_or_tmp : t -> Var.t
+(** Transforms a function call-variable into a variable (if possible and raise an exception if function call-variable is a function call) *)
+
 val mk_function_call : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t
+(** Creates a function call-variable *)
+
 val return_loc : t -> Location.t
+(** Returns the return location associated with a function call-variable. *)
+
 val return_var : t -> Var.t
+(** Returns the return variable associated with a function call-variable. *)
+
 val update : t -> VarMapPoly.map_type
+(** Returns the update associated with a function call variable. *)
+
 val remove_non_contributors : VarSet.t -> t -> t
+(** Removes variables from the function call update. *)
+
 val dependencies : VarSet.t -> Var.t -> t -> VarSet.t
+(** Returns all variables which influence the provided variable in the function call-update *)

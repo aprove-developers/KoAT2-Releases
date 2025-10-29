@@ -41,7 +41,7 @@ module PolyRec = struct
   let to_poly_overapprox p : Polynomials.Polynomial.t =
     fold ~const:Polynomials.Polynomial.of_constant ~plus:Polynomials.Polynomial.add
       ~times:Polynomials.Polynomial.mul ~pow:Polynomials.Polynomial.pow
-      ~indeterminate:(Polynomials.Polynomial.of_var % VarFunctionCall.to_var_or_tmp)
+      ~indeterminate:(Polynomials.Polynomial.of_var % VarFunctionCall.to_var)
       p
 
 
