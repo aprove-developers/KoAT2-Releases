@@ -271,7 +271,7 @@ module ClassicalProgram = struct
     |> Set.to_list
 
 
-  let entry_transitions_without_rec_with_logger = PreAdapterNonRec.entry_transitions_with_logger
+  let entry_transitions_without_function_calls_with_logger = PreAdapterNonRec.entry_transitions_with_logger
 end
 
 open GenericProgram_

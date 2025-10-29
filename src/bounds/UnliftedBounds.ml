@@ -49,7 +49,7 @@ module UnliftedTimeBound = struct
     let mk_from_program logger ~handled_transitions ~measure_decr_transitions ?(compute_proof = None) program
         measure_from_entry_trans : t =
       let entry_transitions_measure =
-        Program.entry_transitions_without_rec_with_logger logger program (Set.to_list handled_transitions)
+        Program.entry_transitions_without_function_calls_with_logger logger program (Set.to_list handled_transitions)
         |> List.map ~f:(fun t -> (t, measure_from_entry_trans t))
         |> Map.of_alist_exn (module Transition)
       in
@@ -59,7 +59,7 @@ module UnliftedTimeBound = struct
     let mk_from_program_fcs logger ~handled_transitions ~measure_decr_transitions ?(compute_proof = None)
         program measure_from_entry_trans measure_from_entry_trans_fcs : t =
       let entry_transitions_measure =
-        Program.entry_transitions_without_rec_with_logger logger program (Set.to_list handled_transitions)
+        Program.entry_transitions_without_function_calls_with_logger logger program (Set.to_list handled_transitions)
         |> List.map ~f:(fun t -> (t, measure_from_entry_trans t))
         |> Map.of_alist_exn (module Transition)
       in

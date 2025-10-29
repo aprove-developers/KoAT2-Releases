@@ -100,7 +100,9 @@ struct
       |> List.map ~f:(Constraint.vars % TransitionLabel.guard % Transition.label)
       |> VarSet.union_list
     in
-    let vars_with_function_call = List.map ~f:A.vars_with_function_call_calls (Set.to_list transitionset) |> VarSet.union_list in
+    let vars_with_function_call =
+      List.map ~f:A.vars_with_function_call_calls (Set.to_list transitionset) |> VarSet.union_list
+    in
     let vars = Set.union vars_with_function_call vars_guard in
     compute_contributors_ transitionset vars (Set.diff all_vars vars)
 
@@ -134,7 +136,8 @@ struct
         (Program.transitions program) ~init:VarSet.empty
     in
     let vars_with_function_call =
-      List.map ~f:A.vars_with_function_call_calls (Set.to_list @@ Program.transitions program) |> VarSet.union_list
+      List.map ~f:A.vars_with_function_call_calls (Set.to_list @@ Program.transitions program)
+      |> VarSet.union_list
     in
     if Set.is_empty vars_with_function_call then (
       let init_contr = VarSet.union_list [ vars_with_function_call; vars_guard; vars_cost ] in

@@ -494,7 +494,7 @@ module type ClassicProgram = sig
 
   val entry_transitions_only_rec : t -> transition list -> transition list
 
-  val entry_transitions_without_rec_with_logger : Logger.log -> t -> transition list -> transition list
+  val entry_transitions_without_function_calls_with_logger : Logger.log -> t -> transition list -> transition list
   (** Like [entry_transitions_rec] but logs the results using the given logger *)
 end
 

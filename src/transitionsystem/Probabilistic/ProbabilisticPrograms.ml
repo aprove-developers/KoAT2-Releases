@@ -1308,7 +1308,7 @@ module ProbabilisticProgramNonProbOverappr = struct
   let pre_without_rec = pre
   let entry_transitions_without_rec = entry_transitions
   let entry_transitions_only_rec _ _ = []
-  let entry_transitions_without_rec_with_logger = entry_transitions_with_logger
+  let entry_transitions_without_function_calls_with_logger = entry_transitions_with_logger
 end
 
 module GRV = struct
