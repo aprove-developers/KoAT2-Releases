@@ -21,7 +21,7 @@ module ModifierComparator = Comparator.Derived (ModifierComparator_)
 module type Adapter2PolyRec = sig
   type t
 
-  val convert : t -> PolyRec.PolyRec.t
+  val convert : t -> PolyFunctionCall.t
 end
 
 module Modifier
@@ -67,8 +67,6 @@ struct
       | VR v -> VarFunctionCall.to_string v
 
 
-    open PolyRec
-
     let update m v =
       match m with
       | TR t ->
@@ -76,9 +74,9 @@ struct
           if Option.is_some opt then
             A.convert @@ Option.value_exn opt
           else
-            PolyRec.of_var v
+            PolyFunctionCall.of_var v
       | VR fc ->
-          PolyRec.of_poly
+          PolyFunctionCall.of_poly
           @@ Map.find_default (VarFunctionCall.update fc) ~default:(Polynomials.Polynomial.of_var v) v
 
 
@@ -130,7 +128,7 @@ struct
 end
 
 module IdentityAdapter = struct
-  type t = PolyRec.PolyRec.t
+  type t = PolyFunctionCall.t
 
   let convert = identity
 end
@@ -285,7 +283,7 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
             |> Sequence.map ~f:(fun (t, v) ->
                    let function_calls =
                      TransitionLabel.update (Transition.label t) v
-                     |? PolyRec.PolyRec.of_var v |> PolyRec.PolyRec.rec_vars
+                     |? PolyFunctionCall.of_var v |> PolyFunctionCall.function_call_vars
                    in
                    List.filter_map function_calls ~f:(fun fc ->
                        if

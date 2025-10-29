@@ -173,11 +173,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         |> List.take_while (not % Location.equal target % Tuple3.third)
         |> List.rev |> ( @ ) [ target_t ]
       in
-      let substitution update_map var = Base.Map.find update_map var |? PolyRec.PolyRec.of_var var in
+      let substitution update_map var = Base.Map.find update_map var |? PolyFunctionCall.of_var var in
       List.fold
         (fun map (_, ts, _) ->
           Base.Map.map
-            ~f:(PolyRec.PolyRec.substitute_var_f (substitution (TL.update_map @@ List.first ts)))
+            ~f:(PolyFunctionCall.substitute_var_f (substitution (TL.update_map @@ List.first ts)))
             map)
         (Base.Map.empty (module Var))
         traversal

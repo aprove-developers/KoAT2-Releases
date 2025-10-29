@@ -146,7 +146,7 @@ module type ClassicalTransitionLabelNonRec = sig
 end
 
 module type ClassicalTransitionLabel = sig
-  include DefaultTransitionLabel with type update_element = PolyRec.PolyRec.t
+  include DefaultTransitionLabel with type update_element = PolyFunctionCall.t
   module TransitionLabelNonRec : ClassicalTransitionLabelNonRec
 
   val map_guard : (Guard.t -> Guard.t) -> t -> t
@@ -568,7 +568,7 @@ end
 module type ClassicalProgramModules = sig
   (* Can we avoid copy/pasting below? *)
 
-  module UpdateElement : module type of PolyRec.PolyRec
+  module UpdateElement : module type of PolyFunctionCall
   module TransitionLabel : ClassicalTransitionLabel
   module UpdateElementNonRec : module type of Polynomial
 
@@ -605,7 +605,7 @@ module type ClassicalProgramModules = sig
     val to_generic_modifier : modifier -> transition GenericModifier_.modifier_t_
     val modifier_of_function_call : VarFunctionCall.t -> modifier
     val equal_modifier : modifier -> modifier -> bool
-    val update : t -> Var.t -> PolyRec.PolyRec.t
+    val update : t -> Var.t -> PolyFunctionCall.t
     val is_transition : modifier -> bool
     val modifier : t -> modifier
   end

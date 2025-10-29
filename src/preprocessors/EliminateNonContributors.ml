@@ -22,7 +22,7 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   let vars_with_rec_calls (_, t, _) =
     TransitionLabel.input_vars t
     |> Set.filter ~f:(fun x ->
-           TransitionLabel.update t x |? PolyRec.PolyRec.of_var x |> PolyRec.PolyRec.has_recvars)
+           TransitionLabel.update t x |? PolyFunctionCall.of_var x |> PolyFunctionCall.has_function_calls)
 
 
   (* Returns true iff x depends on y in a recursive call of t. *)

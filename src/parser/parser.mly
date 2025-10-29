@@ -38,7 +38,7 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
-%start <PolyRec.t> onlyPolynomialRec
+%start <PolyFunctionCall.t> onlyPolynomialRec
 
 %start <Polynomials.RationalLaurentPolynomial.t> onlyProb
 
@@ -62,7 +62,7 @@
 
 %type <Polynomials.Polynomial.t> polynomial
 
-%type <PolyRec.t> polynomialRec
+%type <PolyFunctionCall.t> polynomialRec
 
 %type <Var.t list> variables
 
@@ -70,7 +70,6 @@
   open Constraints
   open Atoms
   open Polynomials
-  open PolyRec
   open Formulas
   open ProgramModules
   open Bounds
@@ -370,19 +369,19 @@ polynomial:
 
 polynomialRec:
   | v = variableRec
-    { PolyRec.of_varrec v }
+    { PolyFunctionCall.of_function_call v }
   | v = variable
-    { PolyRec.of_var v }
+    { PolyFunctionCall.of_var v }
   | c = our_int
-    { PolyRec.of_constant c }
+    { PolyFunctionCall.of_constant c }
   | LPAR; ex = polynomialRec; RPAR
     { ex }
   | MINUS; ex = polynomialRec
-    { PolyRec.neg ex }
+    { PolyFunctionCall.neg ex }
   | p1 = polynomialRec; op = bioperatorRec; p2 = polynomialRec
     { op p1 p2 }
   | v = variable; POW; c = UINT
-    { PolyRec.pow (PolyRec.of_var v) (int_of_string c) } ;
+    { PolyFunctionCall.pow (PolyFunctionCall.of_var v) (int_of_string c) } ;
 
 rational_laurent_polynomial:
   | v = variable
@@ -459,9 +458,9 @@ rationalBound:
   | MINUS { Polynomial.sub } ;
 
 %inline bioperatorRec:
-  | PLUS { PolyRec.add }
-  | TIMES { PolyRec.mul }
-  | MINUS { PolyRec.sub } ;
+  | PLUS { PolyFunctionCall.add }
+  | TIMES { PolyFunctionCall.mul }
+  | MINUS { PolyFunctionCall.sub } ;
 
 %inline laurent_bioperator:
   | PLUS { RationalLaurentPolynomial.add }

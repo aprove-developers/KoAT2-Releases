@@ -85,7 +85,7 @@ module TransitionLabelNonRec_ : sig
   val append : t -> t -> t
 end
 
-include module type of Make (PolyRec.PolyRec)
+include module type of Make (PolyFunctionCall)
 include ProgramTypes.ClassicalTransitionLabel with type t := t
 
 val eliminate_tmp_var : Var.t -> t -> t MaybeChanged.t

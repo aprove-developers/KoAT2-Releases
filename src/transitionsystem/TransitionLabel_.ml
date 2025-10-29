@@ -383,13 +383,12 @@ module TransitionLabelNonRec_ = struct
   let chain_guards t1 t2 = guard (append t1 t2)
 end
 
-open PolyRec
-include Make (PolyRec)
+include Make (PolyFunctionCall)
 
 let overapprox_nonlinear_updates t =
   let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
   let overapprox_poly orig_var poly (guard, update) =
-    if PolyRec.is_linear poly || PolyRec.has_recvars poly then
+    if PolyFunctionCall.is_linear poly || PolyFunctionCall.has_function_calls poly then
       (guard, update)
     else
       let handle_monom (coeff, mon) =
@@ -438,13 +437,13 @@ let overapprox_nonlinear_updates t =
             (Guard.mk_true, new_var_poly_with_coeff)
       in
       let final_guard, final_upd_poly =
-        List.map ~f:handle_monom (Polynomial.monomials_with_coeffs (PolyRec.to_poly_overapprox poly))
+        List.map ~f:handle_monom (Polynomial.monomials_with_coeffs (PolyFunctionCall.to_poly_overapprox poly))
         (* All function calls are replaced by TMP vars *)
         |> List.fold_left
              ~f:(fun (g, p) (g', p') -> (Guard.mk_and g g', Polynomial.add p p'))
              ~init:(guard, Polynomial.zero)
       in
-      (final_guard, Map.set update ~key:orig_var ~data:(PolyRec.of_poly final_upd_poly))
+      (final_guard, Map.set update ~key:orig_var ~data:(PolyFunctionCall.of_poly final_upd_poly))
   in
 
   let guard', update' =
@@ -479,7 +478,8 @@ let eliminate_tmp_var var t =
     if Set.are_disjoint (Polynomial.vars replacement) (tmp_vars t) then
       let update' =
         Map.map
-          ~f:(fun p -> PolyRec.of_poly (Polynomial.substitute var ~replacement (PolyRec.to_poly p)))
+          ~f:(fun p ->
+            PolyFunctionCall.of_poly (Polynomial.substitute var ~replacement (PolyFunctionCall.to_poly p)))
           t.update
       in
       (* TODO Nils *)
@@ -506,14 +506,15 @@ module UpdateElementNonRec = Polynomials.Polynomial
 module TransitionLabelNonRec = TransitionLabelNonRec_
 
 let has_rec_call t v =
-  Map.exists t.update ~f:(fun p -> Set.mem (VarFunctionCallSet.of_list @@ PolyRec.rec_vars p) v)
+  Map.exists t.update ~f:(fun p ->
+      Set.mem (VarFunctionCallSet.of_list @@ PolyFunctionCall.function_call_vars p) v)
 
 
-let has_rec_calls t = Map.exists t.update ~f:PolyRec.has_recvars
+let has_rec_calls t = Map.exists t.update ~f:PolyFunctionCall.has_function_calls
 
 let rec_vars t =
   Map.to_alist t.update
-  |> List.map ~f:(PolyRec.rec_vars % Tuple2.second)
+  |> List.map ~f:(PolyFunctionCall.function_call_vars % Tuple2.second)
   |> List.concat
   |> Set.of_list (module VarFunctionCall)
 
@@ -521,7 +522,7 @@ let rec_vars t =
 let of_non_rec t =
   {
     id = Unique.unique ();
-    update = Map.map (TransitionLabelNonRec.update_map t) ~f:PolyRec.of_poly;
+    update = Map.map (TransitionLabelNonRec.update_map t) ~f:PolyFunctionCall.of_poly;
     guard = t.guard;
     invariant = t.invariant;
     cost = t.cost;
@@ -535,7 +536,7 @@ let to_non_rec t =
     raise (Rec_Vars ("VarFunctionCallrsive: " ^ to_id_string t))
   else
     TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
-      ~update:(Map.map (update_map t) ~f:PolyRec.to_poly)
+      ~update:(Map.map (update_map t) ~f:PolyFunctionCall.to_poly)
 
 
 let overapprox_rec_updates t =
@@ -543,9 +544,9 @@ let overapprox_rec_updates t =
     ~update:
       (Map.map (update_map t)
          ~f:
-           (PolyRec.to_poly
-           % PolyRec.substitute_varrec_f (fun v ->
-                 PolyRec.of_var
+           (PolyFunctionCall.to_poly
+           % PolyFunctionCall.substitute_var_function_call_f (fun v ->
+                 PolyFunctionCall.of_var
                  @@
                  if VarFunctionCall.is_function_call v then
                    Var.fresh_id Var.Int ()
@@ -557,14 +558,14 @@ let chain_guards t1 t2 =
   let nondet_vars = Hashtbl.create ~size:3 (module Var) in
   let substitution update_map var =
     Map.find update_map var
-    |? PolyRec.of_var
+    |? PolyFunctionCall.of_var
          (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
          (Hashtbl.find nondet_vars var
          |> Option.value_or_thunk ~default:(fun () ->
                 let nondet_var = Var.fresh_id Var.Int () in
                 Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                 nondet_var))
-    |> PolyRec.to_poly_overapprox (* All function calls are replaced by TMP vars *)
+    |> PolyFunctionCall.to_poly_overapprox (* All function calls are replaced by TMP vars *)
   in
   Guard.Infix.(
     guard t1 && invariant t1

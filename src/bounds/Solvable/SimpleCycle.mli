@@ -1,4 +1,3 @@
-open PolyRec
 open ProgramTypes
 
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) : sig
@@ -25,7 +24,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    (Loop.t * Transition.t list * (Transition.t * PolyRec.t VarMap.t) list) option
+    (Loop.t * Transition.t list * (Transition.t * PolyFunctionCall.t VarMap.t) list) option
 
   val find_commuting_loops :
     (Approximation.t -> Program.t -> Loop.t -> bool) ->
@@ -33,5 +32,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    ((Loop.t * Transition.t list) list * Transition.t list * Transition.t list * PolyRec.t VarMap.t) option
+    ((Loop.t * Transition.t list) list * Transition.t list * Transition.t list * PolyFunctionCall.t VarMap.t)
+    option
 end

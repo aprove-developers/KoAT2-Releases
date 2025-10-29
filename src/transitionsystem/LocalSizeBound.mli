@@ -53,7 +53,7 @@ module Make
   val as_bound : t -> Bound.t
   (** Converts the templated bound to an actual (finite) bound. *)
 
-  val as_poly : t_rec -> PolyRec.PolyRec.t
+  val as_poly : t_rec -> PolyFunctionCall.t
   val option_lsb_as_bound : t option -> Bound.t
   val option_lsb_as_bound_rec : t_rec option -> Bound.t
 
@@ -65,7 +65,7 @@ module Make
   val from_update_poly : VarSet.t -> Var.t -> Polynomial.t -> (t * bool Lazy.t) option
   (** Construct a local size bound directly from the update expression *)
 
-  val from_update_polyrec : VarSet.t -> Var.t -> PolyRec.PolyRec.t -> (t_rec * bool Lazy.t) option
+  val from_update_polyrec : VarSet.t -> Var.t -> PolyFunctionCall.t -> (t_rec * bool Lazy.t) option
   (** Construct a local size bound directly from the update expression *)
 
   val compute_bound : VarSet.t -> RV.modifier -> Var.t -> (t_rec * bool Lazy.t) option

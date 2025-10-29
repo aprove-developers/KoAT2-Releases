@@ -2,7 +2,6 @@ open! OurBase
 (** Modules used to infer size-bounds for trivial components. *)
 
 open Bounds
-open PolyRec
 
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'.*)
@@ -93,14 +92,14 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let obtainPolyFromFCs program get_sizebound =
-    PolyRec.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
+    PolyFunctionCall.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
       ~indeterminate:(subRecSize program get_sizebound)
 
 
   (** Computes a bound for a  scc. That is an scc which consists only of one result variable without a loop to itself.
       Corresponds to 'SizeBounds for trivial SCCs'. *)
   let compute (program : Program.t) (get_sizebound : RV.modifier -> Var.t -> Bound.t) ((m, v) : PM.RV.t)
-      (lsb_as_bound : PolyRec.t Option.t) =
+      (lsb_as_bound : PolyFunctionCall.t Option.t) =
     let open OptionMonad in
     let execute () =
       if RV.has_transition (m, v) then
@@ -115,7 +114,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             in
             let res_from_update =
               let+ update = TransitionLabel.update (Transition.label t) v in
-              if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
+              if
+                Set.is_subset (PolyFunctionCall.vars update)
+                  ~of_:(TransitionLabel.input_vars (Transition.label t))
               then
                 obtainPolyFromFCs program get_sizebound update
               else
@@ -133,7 +134,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             in
             let res_from_update =
               let+ update = TransitionLabel.update (Transition.label t) v in
-              if Set.is_subset (PolyRec.vars update) ~of_:(TransitionLabel.input_vars (Transition.label t))
+              if
+                Set.is_subset (PolyFunctionCall.vars update)
+                  ~of_:(TransitionLabel.input_vars (Transition.label t))
               then
                 let lsb = obtainPolyFromFCs program get_sizebound update in
                 incoming_bound_lifted_update program get_sizebound lsb t v
@@ -145,7 +148,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         Bound.(keep_simpler_bound res_from_lsb (res_from_update |? infinity))
       else
         let update = RV.update (m, v) v in
-        if Set.is_subset (PolyRec.vars update) ~of_:(Program.input_vars program) then
+        if Set.is_subset (PolyFunctionCall.vars update) ~of_:(Program.input_vars program) then
           let lsb = obtainPolyFromFCs program get_sizebound update in
           incoming_bound_lifted_update_fc program get_sizebound lsb (RV.function_call (m, v)) v
         else

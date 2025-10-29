@@ -2,7 +2,7 @@ open! OurBase
 
 (** Modules relevant for working with programs *)
 module ProgramModulesOver : ProgramTypes.ClassicalProgramModules = struct
-  module UpdateElement = PolyRec.PolyRec
+  module UpdateElement = PolyFunctionCall
   module TransitionLabel = TransitionLabel_
   module UpdateElementNonRec = Polynomials.Polynomial
   module TransitionLabelNonRec = TransitionLabel_.TransitionLabelNonRec_
@@ -19,7 +19,7 @@ end
 
 (* here we can not simply use include ProgramModulesOver(Location) since we rely on the specialized versions *)
 module Program = Program_
-module UpdateElement = PolyRec.PolyRec
+module UpdateElement = PolyFunctionCall
 module UpdateElementNonRec = Polynomials.Polynomial
 module TransitionGraph = TransitionGraph_
 module TransitionLabel = TransitionLabel_

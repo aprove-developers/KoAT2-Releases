@@ -109,8 +109,10 @@ struct
 
 
   let as_poly lsb =
-    let vars_sum = PolyRec.PolyRec.(sum @@ Sequence.map ~f:of_varrec (Set.to_sequence lsb.vars_rec)) in
-    PolyRec.PolyRec.(of_poly lsb.factor_rec * (of_int lsb.constant_rec + vars_sum))
+    let vars_sum =
+      PolyFunctionCall.(sum @@ Sequence.map ~f:of_function_call (Set.to_sequence lsb.vars_rec))
+    in
+    PolyFunctionCall.(of_poly lsb.factor_rec * (of_int lsb.constant_rec + vars_sum))
 
 
   let option_lsb_as_bound = function
@@ -119,7 +121,7 @@ struct
 
 
   let option_lsb_as_bound_rec = function
-    | Some a -> Bound.of_poly @@ PolyRec.PolyRec.to_poly @@ as_poly a
+    | Some a -> Bound.of_poly @@ PolyFunctionCall.to_poly @@ as_poly a
     | None -> Bound.infinity
 
 
@@ -240,11 +242,10 @@ struct
   let from_update_polyrec program_vars update_var update =
     let module Monomial = Monomials.MakeOverIndeterminate (VarFunctionCall) (OurInt) in
     let open OptionMonad in
-    let open PolyRec in
     let to_abs_int = OurInt.to_int % OurInt.abs in
     let* const, factor_rec, factor_poly, vars_rec =
       try
-        PolyRec.monomials_with_coeffs update
+        PolyFunctionCall.monomials_with_coeffs update
         |> List.fold_left
              ~f:(fun lsb (coeff, mon) ->
                let* const, factor, factor_poly, vars = lsb in
@@ -277,18 +278,19 @@ struct
              (const / factor_rec) + 1);
       }
     in
-    let is_equality_type = PolyRec.equal (PolyRec.of_var update_var) update in
+    let is_equality_type = PolyFunctionCall.equal (PolyFunctionCall.of_var update_var) update in
     Option.return (lsb, Lazy.from_val is_equality_type)
 
 
   let compute_bound program_vars m var =
-    let open PolyRec in
     let execute () =
       let open OptionMonad in
       if RV.has_transition (m, var) then
         let t = T.label @@ RV.transition_ m in
         let* update = TL.update t var in
-        if Set.are_disjoint (PolyRec.vars update) (Guard.vars @@ TL.guard t) || PolyRec.has_recvars update
+        if
+          Set.are_disjoint (PolyFunctionCall.vars update) (Guard.vars @@ TL.guard t)
+          || PolyFunctionCall.has_function_calls update
         then
           from_update_polyrec program_vars var update
         else
@@ -298,25 +300,26 @@ struct
             (* The resulting update_formula is an overapproximation of the original formula *)
             Formula.mk @@ Constraint.drop_nonlinear
             @@ Constraint.mk_and (TL.guard t)
-                 (if PolyRec.has_recvars update then
+                 (if PolyFunctionCall.has_function_calls update then
                     Constraint.mk_true
                   else
-                    Constraint.mk_eq (Polynomial.of_var v') (PolyRec.to_poly update))
+                    Constraint.mk_eq (Polynomial.of_var v') (PolyFunctionCall.to_poly update))
           in
           let update_vars =
-            Set.union (PolyRec.vars update) (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+            Set.union (PolyFunctionCall.vars update)
+              (Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
           in
           try
             (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
             (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
             find_bound (Set.inter program_vars update_vars) v' update_formula
-              (s_range (PolyRec.to_poly update))
+              (s_range (PolyFunctionCall.to_poly update))
             |> Option.map ~f:(Tuple2.map1 from_t_to_trec)
           with
           | SMT.SMTFailure _ -> None
       else
         from_update_polyrec program_vars var
-          (PolyRec.of_poly
+          (PolyFunctionCall.of_poly
           @@ Map.find_default
                (VarFunctionCall.update @@ RV.function_call_ m)
                ~default:(Polynomial.of_var var) var)

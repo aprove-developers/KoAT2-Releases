@@ -153,10 +153,10 @@ let print_lsb lsb =
     Bound.show ~complexity:false Bound.infinity
   else
     let lsb = Option.value_exn lsb in
-    if not @@ PolyRec.PolyRec.has_recvars lsb then
-      Bound.show ~complexity:false (Bound.of_poly (PolyRec.PolyRec.to_poly lsb))
+    if not @@ PolyFunctionCall.has_function_calls lsb then
+      Bound.show ~complexity:false (Bound.of_poly (PolyFunctionCall.to_poly lsb))
     else
-      PolyRec.PolyRec.to_string_pretty lsb
+      PolyFunctionCall.to_string_pretty lsb
 
 
 (** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)

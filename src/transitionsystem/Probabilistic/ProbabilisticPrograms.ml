@@ -44,7 +44,7 @@ module LabelComparator (POverAppr : sig
   type t
 end) =
 Comparator.Make1 (struct
-  type 'trans_label_cmp_gt t = (POverAppr.t, PolyRec.PolyRec.t, 'trans_label_cmp_gt) transition_label_
+  type 'trans_label_cmp_gt t = (POverAppr.t, PolyFunctionCall.t, 'trans_label_cmp_gt) transition_label_
 
   let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
   let compare label1 label2 = Int.compare label1.id label2.id
@@ -55,13 +55,13 @@ module MakeTransitionTypes (POverAppr : sig
 end) =
 struct
   type transition_label =
-    (POverAppr.t, PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) transition_label_
+    (POverAppr.t, PolyFunctionCall.t, LabelComparator(PolyFunctionCall).comparator_witness) transition_label_
 
   type general_transition =
-    (PolyRec.PolyRec.t, LabelComparator(PolyRec.PolyRec).comparator_witness) general_transition_
+    (PolyFunctionCall.t, LabelComparator(PolyFunctionCall).comparator_witness) general_transition_
 end
 
-module RecursiveClassicalUpdateTransitionTypes = MakeTransitionTypes (PolyRec.PolyRec)
+module RecursiveClassicalUpdateTransitionTypes = MakeTransitionTypes (PolyFunctionCall)
 
 type general_transition = RecursiveClassicalUpdateTransitionTypes.general_transition
 
@@ -354,7 +354,7 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
 end
 
 module ProbabilisticTransitionLabel = struct
-  include ProbabilisticTransitionLabel_ (PolyRec.PolyRec)
+  include ProbabilisticTransitionLabel_ (PolyFunctionCall)
 
   type update_element = UpdateElement_.t
 
@@ -425,14 +425,14 @@ module ProbabilisticTransitionLabel = struct
     let nondet_vars = Hashtbl.create ~size:3 (module Var) in
     let substitution update_map var =
       Map.find update_map var
-      |? PolyRec.PolyRec.of_var
+      |? PolyFunctionCall.of_var
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
                   let nondet_var = Var.fresh_id Var.Int () in
                   Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                   nondet_var))
-      |> PolyRec.PolyRec.to_poly (* TODO Overappr rec -> tmp *)
+      |> PolyFunctionCall.to_poly (* TODO Overappr rec -> tmp *)
     in
     Guard.Infix.(
       overappr_guard t1 && invariant t1
@@ -551,21 +551,21 @@ module ProbabilisticTransitionLabelNonProbOverapprNonRec = struct
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
-  include NonProbTransitionLabel (PolyRec.PolyRec)
+  include NonProbTransitionLabel (PolyFunctionCall)
   module TransitionLabelNonRec = ProbabilisticTransitionLabelNonProbOverapprNonRec
 
-  type update_element = PolyRec.PolyRec.t
+  type update_element = PolyFunctionCall.t
 
   let has_rec_call t v =
     Map.exists (update_map t) ~f:(fun p ->
-        Set.mem (VarFunctionCallSet.of_list @@ PolyRec.PolyRec.rec_vars p) v)
+        Set.mem (VarFunctionCallSet.of_list @@ PolyFunctionCall.function_call_vars p) v)
 
 
-  let has_rec_calls t = Map.exists (update_map t) ~f:PolyRec.PolyRec.has_recvars
+  let has_rec_calls t = Map.exists (update_map t) ~f:PolyFunctionCall.has_function_calls
 
   let rec_vars t =
     Map.to_alist (update_map t)
-    |> List.map ~f:(PolyRec.PolyRec.rec_vars % Tuple2.second)
+    |> List.map ~f:(PolyFunctionCall.function_call_vars % Tuple2.second)
     |> List.concat
     |> Set.of_list (module VarFunctionCall)
 
@@ -576,7 +576,9 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
     if has_rec_calls t then
       raise (Rec_Vars ("Recursive: " ^ to_id_string t))
     else
-      let overappr_nonprob_update = Map.map ~f:PolyRec.PolyRec.to_poly t.properties.overappr_nonprob_update in
+      let overappr_nonprob_update =
+        Map.map ~f:PolyFunctionCall.to_poly t.properties.overappr_nonprob_update
+      in
       TransitionLabelNonRec.mk_2_with_gt
         {
           probability = t.properties.probability;
@@ -591,13 +593,13 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
     let overappr_nonprob_update =
       Map.map
         ~f:
-          PolyRec.(
-            PolyRec.to_poly
-            % PolyRec.substitute_varrec_f (fun v ->
+          PolyFunctionCall.(
+            to_poly
+            % substitute_var_function_call_f (fun v ->
                   if VarFunctionCall.is_function_call v then
-                    PolyRec.of_var (Var.fresh_id Var.Int ())
+                    of_var (Var.fresh_id Var.Int ())
                   else
-                    PolyRec.of_var (VarFunctionCall.to_var v)))
+                    of_var (VarFunctionCall.to_var v)))
         t.properties.overappr_nonprob_update
     in
     TransitionLabelNonRec.mk_2_with_gt
@@ -618,14 +620,14 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
     let nondet_vars = Hashtbl.create ~size:3 (module Var) in
     let substitution update_map var =
       Map.find update_map var
-      |? PolyRec.PolyRec.of_var
+      |? PolyFunctionCall.of_var
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
                   let nondet_var = Var.fresh_id Var.Int () in
                   Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
                   nondet_var))
-      |> PolyRec.PolyRec.to_poly (* TODO Overappr rec -> tmp *)
+      |> PolyFunctionCall.to_poly (* TODO Overappr rec -> tmp *)
     in
     Guard.Infix.(
       overappr_guard t1 && invariant t1
@@ -640,13 +642,13 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let overapprox_nonlinear_updates (t : t) =
     let handle_nonlinear_or_probabilistic ue =
       let v' = Var.fresh_id Var.Int () in
-      (PolyRec.PolyRec.of_var v', UpdateElement_.as_linear_guard (guard t) ue v')
+      (PolyFunctionCall.of_var v', UpdateElement_.as_linear_guard (guard t) ue v')
     in
     let overappr_nonprob_update, overappr_guard_ =
       Map.map
         ~f:(fun ue ->
-          match UpdateElement_.to_polynomial ue |> Option.map ~f:PolyRec.PolyRec.of_poly with
-          | Some p when PolyRec.PolyRec.degree p = 1 -> (p, Guard.mk_true)
+          match UpdateElement_.to_polynomial ue |> Option.map ~f:PolyFunctionCall.of_poly with
+          | Some p when PolyFunctionCall.degree p = 1 -> (p, Guard.mk_true)
           | _ -> handle_nonlinear_or_probabilistic ue)
         (ProbabilisticTransitionLabel.update_map t)
       |> fun m -> (Map.map ~f:Tuple2.first m, Guard.all (List.map ~f:Tuple2.second @@ Map.data m))
@@ -1453,7 +1455,7 @@ module ProbabilisticRVNonProbOverappr = struct
     ProbabilisticTransitionNonProbOverappr.TransitionLabel.update
       (ProbabilisticTransitionNonProbOverappr.label t)
       v
-    |? PolyRec.PolyRec.of_var v
+    |? PolyFunctionCall.of_var v
 
 
   let equal_modifier = ProbabilisticTransitionNonProbOverappr.equal

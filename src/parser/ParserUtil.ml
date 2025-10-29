@@ -3,7 +3,6 @@ open! OurBase
 
 open Formulas
 open Polynomials
-open PolyRec
 open ProgramModules
 
 exception Error of string
@@ -65,7 +64,7 @@ let mk_transition lhs (cost : Polynomial.t) rhs (formula : Formula.t) (vars : Va
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input.
     Assume Com_1 transitions *)
 let mk_transition_simple (start : string) vars (cost : Polynomial.t)
-    (rhs : string * (string * PolyRec.t list) list) (formula : Formula.t) : Transition.t list =
+    (rhs : string * (string * PolyFunctionCall.t list) list) (formula : Formula.t) : Transition.t list =
   let com_kind = get_com_kind_from_com_str (Tuple2.first rhs) in
   if not (Int.equal com_kind 1) then
     raise OnlyCom1InSimpleMode

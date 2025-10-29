@@ -51,7 +51,7 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
       in
 
       (* Applies the update to the abstract value. *)
-      let apply_update (update : Var.t -> PolyRec.PolyRec.t Option.t) (abstract : 'a Apron.Abstract1.t) :
+      let apply_update (update : Var.t -> PolyFunctionCall.t Option.t) (abstract : 'a Apron.Abstract1.t) :
           'a Apron.Abstract1.t =
         (* A completely unbound (non-deterministic) choice *)
         let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
@@ -60,7 +60,7 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
           |> Array.map
                ~f:
                  (Option.value_map
-                    ~f:(poly_to_apron environment % PolyRec.PolyRec.to_poly)
+                    ~f:(poly_to_apron environment % PolyFunctionCall.to_poly)
                     ~default:any_value)
         in
         Apron.Abstract1.assign_texpr_array manager abstract (vars_to_apron vars) assignments None

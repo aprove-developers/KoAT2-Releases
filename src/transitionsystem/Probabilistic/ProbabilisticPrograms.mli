@@ -11,11 +11,11 @@ module ProbabilisticTransitionLabel : sig
   include ProgramTypes.TransitionLabel with type update_element = UpdateElement_.t
 
   val probability : t -> Polynomials.RationalLaurentPolynomial.t
-  val without_backlink : t -> PolyRec.PolyRec.t label_without_backlink
+  val without_backlink : t -> PolyFunctionCall.t label_without_backlink
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr : sig
-  include ProgramTypes.ClassicalTransitionLabel with type update_element = PolyRec.PolyRec.t
+  include ProgramTypes.ClassicalTransitionLabel with type update_element = PolyFunctionCall.t
 end
 
 type general_transition
@@ -30,7 +30,7 @@ module ProbabilisticTransition : sig
   val same_gt : t -> t -> bool
   (** Returns true if both transitions belong to the same general transition, i.e. they have the same gt_id *)
 
-  val without_backlink : t -> Location.t * PolyRec.PolyRec.t label_without_backlink * Location.t
+  val without_backlink : t -> Location.t * PolyFunctionCall.t label_without_backlink * Location.t
 
   val gt : t -> general_transition
   (** Obtain the general transition from the program that contains this transition *)
@@ -62,7 +62,7 @@ module GeneralTransition : sig
     guard_without_invariant:Guard.t ->
     invariant:Guard.t ->
     cost:Polynomials.Polynomial.t ->
-    rhss:(PolyRec.PolyRec.t label_without_backlink * Location.t) List.t ->
+    rhss:(PolyFunctionCall.t label_without_backlink * Location.t) List.t ->
     t
   (** Similar to [mk] but higher-level.
       Note that we assume the provided updates to be {i complete}, i.e., we do not fill up the argument variables *)
@@ -207,7 +207,7 @@ module ProbabilisticRVNonProbOverappr : sig
 
   val to_generic_modifier : modifier -> ProbabilisticTransitionNonProbOverappr.t GenericModifier_.modifier_t_
   val modifier_of_function_call : VarFunctionCall.t -> modifier
-  val update : t -> Var.t -> PolyRec.PolyRec.t
+  val update : t -> Var.t -> PolyFunctionCall.t
   val has_transition : t -> bool
   val function_call : t -> VarFunctionCall.t
   val function_call_ : modifier -> VarFunctionCall.t

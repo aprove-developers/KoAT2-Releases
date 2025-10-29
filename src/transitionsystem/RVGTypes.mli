@@ -8,7 +8,7 @@ end
 module type Adapter2PolyRec = sig
   type t
 
-  val convert : t -> PolyRec.PolyRec.t
+  val convert : t -> PolyFunctionCall.t
 end
 
 module Modifier
@@ -22,7 +22,7 @@ module Modifier
       with type t := t
        and type comparator_witness = T.comparator_witness ModifierComparator.comparator_witness
 
-  val update : t -> Var.t -> PolyRec.PolyRec.t
+  val update : t -> Var.t -> PolyFunctionCall.t
 end
 
 (** Module handling result variables. *)
@@ -44,7 +44,7 @@ module MakeRV
   val to_generic_modifier : modifier -> T.t GenericModifier_.modifier_t_
   val modifier_of_function_call : VarFunctionCall.t -> modifier
   val equal_modifier : modifier -> modifier -> bool
-  val update : t -> Var.t -> PolyRec.PolyRec.t
+  val update : t -> Var.t -> PolyFunctionCall.t
   val hash : t -> int
   val has_transition : t -> bool
   val is_transition : modifier -> bool
@@ -53,9 +53,9 @@ module MakeRV
 end
 
 module IdentityAdapter : sig
-  type t = PolyRec.PolyRec.t
+  type t = PolyFunctionCall.t
 
-  val convert : t -> PolyRec.PolyRec.t
+  val convert : t -> PolyFunctionCall.t
 end
 
 module RV : module type of MakeRV (TransitionLabel_) (IdentityAdapter) (Transition_)

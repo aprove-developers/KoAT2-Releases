@@ -22,7 +22,7 @@ module NonProbOverappr = struct
   module Program = ProbabilisticPrograms.ProbabilisticProgramNonProbOverappr
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
   module Location = Location
-  module UpdateElement = PolyRec.PolyRec
+  module UpdateElement = PolyFunctionCall
   module UpdateElementNonRec = Polynomials.Polynomial
 
   module TransitionLabelNonRec =

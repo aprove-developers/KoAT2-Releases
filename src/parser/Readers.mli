@@ -17,7 +17,7 @@ val read_formula : string -> Formulas.Formula.t
 val read_constraint : string -> Constraints.Constraint.t
 val read_atom : string -> Atoms.Atom.t
 val read_polynomial : string -> Polynomials.Polynomial.t
-val read_polynomialRec : string -> PolyRec.PolyRec.t
+val read_polynomialRec : string -> PolyFunctionCall.t
 val read_probability_distribution : string -> ProbabilityDistribution.t
 val read_update_element : string -> ProbabilisticProgramModules.UpdateElement.t
 val read_bound : string -> Bound.t
