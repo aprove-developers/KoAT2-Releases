@@ -71,9 +71,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       incoming_bound pre_transitions get_sizebound upd (RV.modifier_of_function_call fc) v
 
 
-  let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) rec_v =
+  let subFunctionCallSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) function_call_v =
     let open VarFunctionCall in
-    match rec_v with
+    match function_call_v with
     | FunctionCall (loc, var, map) ->
         let transitions_ending_return_locations =
           Set.inter (Program.reachable_locations program loc) (Program.return_locations program)
@@ -84,16 +84,16 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         Bound.maximum
           (Sequence.of_list
           @@ List.map
-               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarFunctionCall.return_var rec_v))
+               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarFunctionCall.return_var function_call_v))
                (Set.to_list transitions_ending_return_locations))
-    | Var _ -> Bound.of_var (VarFunctionCall.to_var rec_v)
-    | Argument _ -> Bound.of_var (VarFunctionCall.to_var rec_v)
+    | Var _ -> Bound.of_var (VarFunctionCall.to_var function_call_v)
+    | Argument _ -> Bound.of_var (VarFunctionCall.to_var function_call_v)
     | _ -> Bound.infinity
 
 
   let obtainPolyFromFCs program get_sizebound =
     PolyFunctionCall.fold ~const:Bound.of_constant ~plus:Bound.add ~times:Bound.mul ~pow:Bound.pow
-      ~indeterminate:(subRecSize program get_sizebound)
+      ~indeterminate:(subFunctionCallSize program get_sizebound)
 
 
   (** Computes a bound for a  scc. That is an scc which consists only of one result variable without a loop to itself.
