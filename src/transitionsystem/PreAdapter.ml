@@ -86,21 +86,21 @@ module PreAdapter = struct
   type transition_graph = TransitionGraph_.t
   type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
 
-  let rec_trans program l =
+  let trans_with_function_call program l =
     let open GenericProgram_ in
     Set.filter (TransitionGraph_.transitions program.graph) ~f:(fun t ->
         Set.mem (Set.map (module Location) ~f:VarFunctionCall.return_loc (Transition.function_call_vars t)) l)
 
 
   let compute_pre program ((l, _, _) as t) =
-    Sequence.append (PreAdapter.compute_pre program t) (Set.to_sequence @@ rec_trans program l)
+    Sequence.append (PreAdapter.compute_pre program t) (Set.to_sequence @@ trans_with_function_call program l)
 
 
   let pre_lazy program ((l, _, _) as t) =
-    Sequence.append (PreAdapter.pre_lazy program t) (Set.to_sequence @@ rec_trans program l)
+    Sequence.append (PreAdapter.pre_lazy program t) (Set.to_sequence @@ trans_with_function_call program l)
 
 
-  let pre program ((l, _, _) as t) = Set.union (PreAdapter.pre program t) (rec_trans program l)
+  let pre program ((l, _, _) as t) = Set.union (PreAdapter.pre program t) (trans_with_function_call program l)
 
   let entry_transitions program transitions =
     let transitions_set = TransitionSet.of_list transitions in
