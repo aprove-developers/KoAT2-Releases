@@ -84,7 +84,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         Bound.maximum
           (Sequence.of_list
           @@ List.map
-               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarFunctionCall.return_var function_call_v))
+               ~f:(fun t ->
+                 get_sizebound (RV.modifier_of_transition t) (VarFunctionCall.return_var function_call_v))
                (Set.to_list transitions_ending_return_locations))
     | Var _ -> Bound.of_var (VarFunctionCall.to_var function_call_v)
     | Argument _ -> Bound.of_var (VarFunctionCall.to_var function_call_v)
