@@ -9,7 +9,7 @@ module ModifierComparator_ = struct
     match (x, y) with
     | TR _, VR _ -> -1
     | VR _, TR _ -> 1
-    | VR v1, VR v2 -> VarRec.compare v1 v2
+    | VR v1, VR v2 -> VarFunctionCall.compare v1 v2
     | TR t1, TR t2 -> trans_compare t1 t2
 
 
@@ -44,11 +44,11 @@ struct
 
     let to_transition = function
       | TR t -> t
-      | VR v -> failwith "VarRec cannot be transformed into transition!"
+      | VR v -> failwith "VarFunctionCall cannot be transformed into transition!"
 
 
     let to_function_call = function
-      | TR t -> failwith "Transition cannot be transformed into VarRec!"
+      | TR t -> failwith "Transition cannot be transformed into VarFunctionCall!"
       | VR v -> v
 
 
@@ -59,12 +59,12 @@ struct
 
     let to_id_string = function
       | TR t -> T.to_id_string t
-      | VR v -> VarRec.to_string v
+      | VR v -> VarFunctionCall.to_string v
 
 
     let ids_to_string ?(pretty = false) = function
       | TR t -> TL.ids_to_string ~pretty (T.label t)
-      | VR v -> VarRec.to_string v
+      | VR v -> VarFunctionCall.to_string v
 
 
     open PolyRec
@@ -78,12 +78,13 @@ struct
           else
             PolyRec.of_var v
       | VR fc ->
-          PolyRec.of_poly @@ Map.find_default (VarRec.update fc) ~default:(Polynomials.Polynomial.of_var v) v
+          PolyRec.of_poly
+          @@ Map.find_default (VarFunctionCall.update fc) ~default:(Polynomials.Polynomial.of_var v) v
 
 
     let hash = function
       | TR t -> T.hash t
-      | VR fc -> VarRec.hash fc
+      | VR fc -> VarFunctionCall.hash fc
   end
 
   include Inner
@@ -178,7 +179,7 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
 
   let add_vertices_to_rvg vertices rvg = Sequence.fold ~f:add_vertex ~init:rvg vertices
 
-  let rvg_from_transitionset (get_vars_in_lsb : rv -> VarRecSet.t Option.t) program tset =
+  let rvg_from_transitionset (get_vars_in_lsb : rv -> VarFunctionCallSet.t Option.t) program tset =
     let program_vars = Program.input_vars program in
     let add_transition rvg post_transition =
       let function_calls_of_post_transition = Transition.rec_vars post_transition in
@@ -200,13 +201,14 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
       let pre_nodes transition (post_var : Var.t) =
         let vars_in_lsb (modifier, post_var) =
           get_vars_in_lsb (modifier, post_var)
-          |? VarRecSet.empty
-          |> Set.filter ~f:(not % VarRec.is_rec)
-          |> VarSet.map ~f:VarRec.to_var
+          |? VarFunctionCallSet.empty
+          |> Set.filter ~f:(not % VarFunctionCall.is_function_call)
+          |> VarSet.map ~f:VarFunctionCall.to_var
         in
         let fc_in_lsb =
           get_vars_in_lsb (RV.modifier_of_transition transition, post_var)
-          |? VarRecSet.empty |> Set.filter ~f:VarRec.is_rec
+          |? VarFunctionCallSet.empty
+          |> Set.filter ~f:VarFunctionCall.is_function_call
         in
 
         (* All RV pairs which result of a transition -> transition *)
@@ -237,14 +239,16 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
                           pre_var )))
           |> Sequence.join
         in
-        let function_calls = List.map (Set.to_list tset) ~f:Transition.rec_vars |> VarRecSet.union_list in
+        let function_calls =
+          List.map (Set.to_list tset) ~f:Transition.rec_vars |> VarFunctionCallSet.union_list
+        in
         let fc_transition =
           vars_in_lsb (RV.modifier_of_transition transition, post_var)
           |> Set.to_sequence
           |> Sequence.map ~f:(fun pre_var ->
                  Set.to_sequence function_calls
                  |> Sequence.filter_map ~f:(fun fc ->
-                        if Location.equal (VarRec.return_loc fc) (Transition.src transition) then
+                        if Location.equal (VarFunctionCall.return_loc fc) (Transition.src transition) then
                           Option.return
                             ( RV.modifier_of_function_call fc,
                               pre_var,
@@ -261,7 +265,7 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
           |> Sequence.cartesian_product (fc_in_lsb |> Set.to_sequence)
           |> Sequence.cartesian_product (Set.to_sequence function_calls)
           |> Sequence.map ~f:(fun (pre_fc, (fc, pre_var)) ->
-                 if Location.equal (VarRec.return_loc pre_fc) (Transition.src post_transition) then
+                 if Location.equal (VarFunctionCall.return_loc pre_fc) (Transition.src post_transition) then
                    let active_vars = Set.to_list @@ vars_in_lsb (RV.modifier_of_function_call fc, pre_var) in
                    Sequence.of_list
                    @@ List.map active_vars ~f:(fun v ->
@@ -286,12 +290,12 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) = struct
                    List.filter_map function_calls ~f:(fun fc ->
                        if
                          Set.mem
-                           (Program.reachable_locations program (VarRec.return_loc fc))
+                           (Program.reachable_locations program (VarFunctionCall.return_loc fc))
                            (Transition.target post_transition)
                        then
                          Option.return
                            ( RV.modifier_of_transition post_transition,
-                             VarRec.return_var fc,
+                             VarFunctionCall.return_var fc,
                              Edge.RETURN,
                              RV.modifier_of_transition t,
                              v )

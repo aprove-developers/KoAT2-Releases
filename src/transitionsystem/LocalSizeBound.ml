@@ -60,7 +60,9 @@ module Make
     (P : ProgramTypes.Program with type transition_label = TL.t) =
 struct
   type t = { factor : Polynomial.t; constant : int; vars : VarSet.t } [@@deriving eq]
-  type t_rec = { factor_rec : Polynomial.t; constant_rec : int; vars_rec : VarRecSet.t } [@@deriving eq]
+
+  type t_rec = { factor_rec : Polynomial.t; constant_rec : int; vars_rec : VarFunctionCallSet.t }
+  [@@deriving eq]
 
   let mk ?(s = 1) ?(c = 0) vars =
     { factor = Polynomial.of_int @@ abs s; constant = abs c; vars = VarSet.of_string_list vars }
@@ -76,7 +78,7 @@ struct
   let is_constant = Set.is_empty % vars
 
   let from_t_to_trec t =
-    { factor_rec = t.factor; constant_rec = t.constant; vars_rec = VarRecSet.of_varset t.vars }
+    { factor_rec = t.factor; constant_rec = t.constant; vars_rec = VarFunctionCallSet.of_varset t.vars }
 
 
   let to_string lsb =
@@ -86,7 +88,9 @@ struct
 
   let to_string_rec lsb =
     "{" ^ "factor: " ^ Polynomial.to_string lsb.factor_rec ^ "; " ^ "constant: "
-    ^ Int.to_string lsb.constant_rec ^ "; " ^ "vars: " ^ VarRecSet.to_string lsb.vars_rec ^ "; " ^ "}"
+    ^ Int.to_string lsb.constant_rec ^ "; " ^ "vars: "
+    ^ VarFunctionCallSet.to_string lsb.vars_rec
+    ^ "; " ^ "}"
 
 
   let to_string_option = function
@@ -234,7 +238,7 @@ struct
 
 
   let from_update_polyrec program_vars update_var update =
-    let module Monomial = Monomials.MakeOverIndeterminate (VarRec) (OurInt) in
+    let module Monomial = Monomials.MakeOverIndeterminate (VarFunctionCall) (OurInt) in
     let open OptionMonad in
     let open PolyRec in
     let to_abs_int = OurInt.to_int % OurInt.abs in
@@ -246,17 +250,18 @@ struct
                let* const, factor, factor_poly, vars = lsb in
                match Sequence.to_list (Monomial.to_sequence mon) with
                | [] -> Option.return (const + to_abs_int coeff, factor, factor_poly, vars)
-               | [ (v, 1) ] when VarRec.is_integral v || VarRec.is_rec v ->
+               | [ (v, 1) ] when VarFunctionCall.is_integral v || VarFunctionCall.is_function_call v ->
                    Option.return (const, max factor (to_abs_int coeff), factor_poly, Set.add vars v)
-               | [ (v, 1); (v', 1) ] when VarRec.is_integral v && VarRec.is_rec v' ->
+               | [ (v, 1); (v', 1) ] when VarFunctionCall.is_integral v && VarFunctionCall.is_function_call v'
+                 ->
                    Option.return
                      ( const,
                        max factor (to_abs_int coeff),
-                       Polynomial.(add factor_poly (of_var (VarRec.to_var v))),
+                       Polynomial.(add factor_poly (of_var (VarFunctionCall.to_var v))),
                        Set.add vars v' )
                    (* TODO use Polynomial.max instead of Polynomial.add *)
                | _ -> None)
-             ~init:(Some (0, 1, Polynomial.zero, VarRecSet.empty))
+             ~init:(Some (0, 1, Polynomial.zero, VarFunctionCallSet.empty))
       with
       | OurInt.Overflow -> None
     in
@@ -312,7 +317,9 @@ struct
       else
         from_update_polyrec program_vars var
           (PolyRec.of_poly
-          @@ Map.find_default (VarRec.update @@ RV.function_call_ m) ~default:(Polynomial.of_var var) var)
+          @@ Map.find_default
+               (VarFunctionCall.update @@ RV.function_call_ m)
+               ~default:(Polynomial.of_var var) var)
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> ("compute_bound", [ ("rv", RV.to_id_string (m, var)); ("var", Var.to_string var) ]))

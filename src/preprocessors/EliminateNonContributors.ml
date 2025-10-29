@@ -29,8 +29,8 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   let dependency_rec t x y =
     let rec_vars = TransitionLabel.rec_vars t in
     Set.exists rec_vars ~f:(fun varrec ->
-        Set.mem (VarRec.dependencies (TransitionLabel.input_vars t) x varrec) y
-        || Var.equal y (VarRec.return_var varrec))
+        Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x varrec) y
+        || Var.equal y (VarFunctionCall.return_var varrec))
 end
 
 module DefaultAdapter = struct

@@ -1,1 +1,1 @@
-type 'a modifier_t_ = TR of 'a | VR of VarRec.t
+type 'a modifier_t_ = TR of 'a | VR of VarFunctionCall.t

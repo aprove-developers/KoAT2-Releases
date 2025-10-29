@@ -18,7 +18,7 @@ module ClassicAdapter = struct
         (* Add all recursive jumps λ an edge l -> λ and an edge l'' -> l iff l'' is a return location and reachable from λ *)
         Set.fold (TransitionLabel_.rec_vars t)
           ~f:(fun g v ->
-            let return_loc = VarRec.return_loc v in
+            let return_loc = VarFunctionCall.return_loc v in
             let reachable_locs = TransitionGraph_.reachable_locations graph return_loc in
             Set.fold reachable_locs
               ~f:(fun g l'' -> DependencyGraph.add_edge g l'' l)

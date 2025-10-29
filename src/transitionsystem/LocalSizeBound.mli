@@ -39,7 +39,7 @@ module Make
   val vars : t -> VarSet.t
   (** Returns a set of of variables which affect the local sizebound *)
 
-  val vars_rec : t_rec -> VarRecSet.t
+  val vars_rec : t_rec -> VarFunctionCallSet.t
 
   val is_constant : t -> bool
   (** Is the LocalSizeBound constant, i.e. does it contain no variables? *)

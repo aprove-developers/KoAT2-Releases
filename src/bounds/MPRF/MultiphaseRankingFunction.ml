@@ -189,10 +189,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (fun (_, _, l') -> evaluated_rank_for_entry_loc l')
       (fun t' ->
         ( OurBase.Set.fold
-            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarRec.return_loc v)) b)
+            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarFunctionCall.return_loc v)) b)
             ~init:Bound.zero (Transition.rec_vars t'),
-          OurBase.Set.filter ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
-        ))
+          OurBase.Set.filter
+            ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
+            (Transition.rec_vars t') ))
 
 
   (* We do not minimise the coefficients for now *)
@@ -545,7 +546,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ~f:(fun t ->
           not
           @@ OurBase.Set.exists
-               ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v))
+               ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
                (Transition.rec_vars t))
         scc
     in

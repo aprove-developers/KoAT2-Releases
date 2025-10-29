@@ -73,9 +73,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
 
 
   let subRecSize program (get_sizebound : RV.modifier -> Var.t -> Bound.t) rec_v =
-    let open VarRec in
+    let open VarFunctionCall in
     match rec_v with
-    | Recursion (loc, var, map) ->
+    | FunctionCall (loc, var, map) ->
         let transitions_ending_return_locations =
           Set.inter (Program.reachable_locations program loc) (Program.return_locations program)
           |> Set.to_list
@@ -85,10 +85,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         Bound.maximum
           (Sequence.of_list
           @@ List.map
-               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarRec.return_var rec_v))
+               ~f:(fun t -> get_sizebound (RV.modifier_of_transition t) (VarFunctionCall.return_var rec_v))
                (Set.to_list transitions_ending_return_locations))
-    | Var _ -> Bound.of_var (VarRec.to_var rec_v)
-    | Argument _ -> Bound.of_var (VarRec.to_var rec_v)
+    | Var _ -> Bound.of_var (VarFunctionCall.to_var rec_v)
+    | Argument _ -> Bound.of_var (VarFunctionCall.to_var rec_v)
     | _ -> Bound.infinity
 
 

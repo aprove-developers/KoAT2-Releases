@@ -13,7 +13,7 @@ type t =
       (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort * int
   | Argument of int
-  | Recursion of Location.t * Var.t * VarMapPoly.map_type
+  | FunctionCall of Location.t * Var.t * VarMapPoly.map_type
 
 include Comparator.S with type t := t
 
@@ -56,13 +56,13 @@ val is_integral : t -> bool
 val is_real : t -> bool
 (** Returns true if variable is ranged over real numbers. *)
 
-val is_rec : t -> bool
+val is_function_call : t -> bool
 val rename : RenameMap.t -> t -> t
 val vars : t -> VarSet.t
 val of_var : Var.t -> t
 val to_var : t -> Var.t
 val to_var_or_tmp : t -> Var.t
-val mk_rec : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t
+val mk_function_call : Location.t -> Var.t -> Var.t list -> Polynomials.Polynomial.t list -> t
 val return_loc : t -> Location.t
 val return_var : t -> Var.t
 val update : t -> VarMapPoly.map_type

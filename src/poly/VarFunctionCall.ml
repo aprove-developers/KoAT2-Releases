@@ -8,7 +8,7 @@ module Inner = struct
     | Var of String.t
     | Helper of sort * int
     | Argument of int
-    | Recursion of Location.t * Var.t * VarMapPoly.map_type
+    | FunctionCall of Location.t * Var.t * VarMapPoly.map_type
   [@@deriving eq, ord, sexp]
 
   let ( =~= ) = equal
@@ -36,7 +36,7 @@ module Inner = struct
       | Helper (Real, i) -> "TempReal" ^ Int.to_string i
       | Helper (Int, i) -> "TempInt" ^ Int.to_string i
       | Argument i -> "Arg" ^ Int.to_string i
-      | Recursion (loc, var, map) ->
+      | FunctionCall (loc, var, map) ->
           Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
     else if pretty then
       function
@@ -44,7 +44,7 @@ module Inner = struct
       | Helper (Real, i) -> "Temp_Real" ^ Util.natural_to_subscript i
       | Helper (Int, i) -> "Temp_Int" ^ Util.natural_to_subscript i
       | Argument i -> "X" ^ Util.natural_to_subscript i
-      | Recursion (loc, var, map) ->
+      | FunctionCall (loc, var, map) ->
           Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
     else
       function
@@ -52,7 +52,7 @@ module Inner = struct
       | Helper (Real, i) -> "Temp_Real_" ^ Int.to_string i
       | Helper (Int, i) -> "Temp_Int_" ^ Int.to_string i
       | Argument i -> "Arg_" ^ Int.to_string i
-      | Recursion (loc, var, map) ->
+      | FunctionCall (loc, var, map) ->
           Location.to_string loc ^ "[" ^ Var.to_string var ^ " | " ^ VarMapPoly.to_string map ^ "]"
 
 
@@ -93,9 +93,9 @@ module Inner = struct
     | _ -> false
 
 
-  let is_rec var =
+  let is_function_call var =
     match var with
-    | Recursion (_, _, _) -> true
+    | FunctionCall (_, _, _) -> true
     | _ -> false
 
 
@@ -104,7 +104,7 @@ module Inner = struct
     | Helper (Real, i) -> Var.Helper (Real, i)
     | Helper (Int, i) -> Var.Helper (Int, i)
     | Argument i -> Var.Argument i
-    | Recursion (_, _, _) -> raise (Invalid_argument "Recursive variable cannot be converted to Var.t")
+    | FunctionCall (_, _, _) -> raise (Invalid_argument "Function Call variable cannot be converted to Var.t")
 
 
   let to_var_or_tmp = function
@@ -112,22 +112,22 @@ module Inner = struct
     | Helper (Real, i) -> Var.Helper (Real, i)
     | Helper (Int, i) -> Var.Helper (Int, i)
     | Argument i -> Var.Argument i
-    | Recursion (_, _, _) -> Var.fresh_id Int ()
+    | FunctionCall (_, _, _) -> Var.fresh_id Int ()
 
 
   let return_loc = function
-    | Recursion (l, _, _) -> l
-    | _ -> raise (invalid_arg "Non recursive variable do not have return location.")
+    | FunctionCall (l, _, _) -> l
+    | _ -> raise (invalid_arg "Non function call variable do not have return location.")
 
 
   let return_var = function
-    | Recursion (_, v, _) -> v
-    | _ -> raise (invalid_arg "Non recursive variable do not have return location.")
+    | FunctionCall (_, v, _) -> v
+    | _ -> raise (invalid_arg "Non function call variable do not have return location.")
 
 
   let update = function
-    | Recursion (_, _, u) -> u
-    | _ -> raise (invalid_arg "Non recursive variable do not have an update.")
+    | FunctionCall (_, _, u) -> u
+    | _ -> raise (invalid_arg "Non function call variable do not have an update.")
 end
 
 include Inner
@@ -142,8 +142,8 @@ let of_var = function
 let rename m v =
   let f v = RenameMap.find v m ~default:v in
   match v with
-  | Recursion (l, v, map) ->
-      Recursion
+  | FunctionCall (l, v, map) ->
+      FunctionCall
         ( l,
           f v,
           Map.map map ~f:(Polynomial.rename m) |> VarMapPoly.map_keys_exn ~f:(VarIndeterminate.rename m) )
@@ -151,11 +151,11 @@ let rename m v =
 
 
 let vars = function
-  | Recursion _ -> VarSet.empty
+  | FunctionCall _ -> VarSet.empty
   | x -> VarSet.singleton (to_var x)
 
 
-let mk_rec start result patterns target =
+let mk_function_call start result patterns target =
   let map_to_arg_vars = Sequence.zip (Sequence.of_list patterns) Var.args |> RenameMap.of_sequence in
   let fill_up_update_arg_vars_up_to_num n update =
     let missing_args =
@@ -170,11 +170,11 @@ let mk_rec start result patterns target =
     |> Map.of_sequence_exn (module Var)
     |> fill_up_update_arg_vars_up_to_num (List.length patterns)
   in
-  Recursion (start, result, update)
+  FunctionCall (start, result, update)
 
 
 let dependencies input_vars x = function
-  | Recursion (_, _, map) ->
+  | FunctionCall (_, _, map) ->
       let rec f contributors non_contributors =
         let xs, ys =
           Set.fold
@@ -199,11 +199,11 @@ let dependencies input_vars x = function
 
 
 let remove_non_contributors non_contributors = function
-  | Recursion (l, v, map) ->
+  | FunctionCall (l, v, map) ->
       let vars = Map.keys map in
       let patterns = List.filter ~f:(Set.mem (Set.diff (VarSet.of_list vars) non_contributors)) vars in
       let assignments = List.map ~f:(Map.find_exn map) patterns in
-      mk_rec l v patterns assignments
+      mk_function_call l v patterns assignments
   | x -> x
 
 

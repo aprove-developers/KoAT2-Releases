@@ -557,7 +557,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   type update_element = PolyRec.PolyRec.t
 
   let has_rec_call t v =
-    Map.exists (update_map t) ~f:(fun p -> Set.mem (VarRecSet.of_list @@ PolyRec.PolyRec.rec_vars p) v)
+    Map.exists (update_map t) ~f:(fun p ->
+        Set.mem (VarFunctionCallSet.of_list @@ PolyRec.PolyRec.rec_vars p) v)
 
 
   let has_rec_calls t = Map.exists (update_map t) ~f:PolyRec.PolyRec.has_recvars
@@ -566,7 +567,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
     Map.to_alist (update_map t)
     |> List.map ~f:(PolyRec.PolyRec.rec_vars % Tuple2.second)
     |> List.concat
-    |> Set.of_list (module VarRec)
+    |> Set.of_list (module VarFunctionCall)
 
 
   exception Rec_Vars of string
@@ -593,10 +594,10 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
           PolyRec.(
             PolyRec.to_poly
             % PolyRec.substitute_varrec_f (fun v ->
-                  if VarRec.is_rec v then
+                  if VarFunctionCall.is_function_call v then
                     PolyRec.of_var (Var.fresh_id Var.Int ())
                   else
-                    PolyRec.of_var (VarRec.to_var v)))
+                    PolyRec.of_var (VarFunctionCall.to_var v)))
         t.properties.overappr_nonprob_update
     in
     TransitionLabelNonRec.mk_2_with_gt

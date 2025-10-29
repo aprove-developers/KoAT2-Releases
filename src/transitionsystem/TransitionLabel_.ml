@@ -505,14 +505,17 @@ let eliminate_tmp_var var t =
 module UpdateElementNonRec = Polynomials.Polynomial
 module TransitionLabelNonRec = TransitionLabelNonRec_
 
-let has_rec_call t v = Map.exists t.update ~f:(fun p -> Set.mem (VarRecSet.of_list @@ PolyRec.rec_vars p) v)
+let has_rec_call t v =
+  Map.exists t.update ~f:(fun p -> Set.mem (VarFunctionCallSet.of_list @@ PolyRec.rec_vars p) v)
+
+
 let has_rec_calls t = Map.exists t.update ~f:PolyRec.has_recvars
 
 let rec_vars t =
   Map.to_alist t.update
   |> List.map ~f:(PolyRec.rec_vars % Tuple2.second)
   |> List.concat
-  |> Set.of_list (module VarRec)
+  |> Set.of_list (module VarFunctionCall)
 
 
 let of_non_rec t =
@@ -529,7 +532,7 @@ exception Rec_Vars of string
 
 let to_non_rec t =
   if has_rec_calls t then
-    raise (Rec_Vars ("Recursive: " ^ to_id_string t))
+    raise (Rec_Vars ("VarFunctionCallrsive: " ^ to_id_string t))
   else
     TransitionLabelNonRec.mk_map ~id:None ~cost:t.cost ~guard:t.guard ~invariant:t.invariant
       ~update:(Map.map (update_map t) ~f:PolyRec.to_poly)
@@ -544,10 +547,10 @@ let overapprox_rec_updates t =
            % PolyRec.substitute_varrec_f (fun v ->
                  PolyRec.of_var
                  @@
-                 if VarRec.is_rec v then
+                 if VarFunctionCall.is_function_call v then
                    Var.fresh_id Var.Int ()
                  else
-                   VarRec.to_var v)))
+                   VarFunctionCall.to_var v)))
 
 
 let chain_guards t1 t2 =

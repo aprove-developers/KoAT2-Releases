@@ -43,10 +43,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                None
              else
                Option.return (RV.function_call rv))
-      |> VarRecSet.of_list
+      |> VarFunctionCallSet.of_list
       |> tap (fun function_calls ->
              Logger.log logger Logger.DEBUG (fun () ->
-                 ("function_calls", [ ("result", VarRecSet.to_string function_calls) ])))
+                 ("function_calls", [ ("result", VarFunctionCallSet.to_string function_calls) ])))
     in
 
     let modifiers =
@@ -198,16 +198,20 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         LSB.vars_rec @@ Tuple2.first @@ get_lsb rv
         |> Set.to_list
         |> List.filter_map ~f:(fun v ->
-               if VarRec.is_rec v then
+               if VarFunctionCall.is_function_call v then
                  None
                else
-                 Option.return (VarRec.to_var v))
+                 Option.return (VarFunctionCall.to_var v))
         |> VarSet.of_list
       in
-      let actF = LSB.vars_rec @@ Tuple2.first @@ get_lsb rv |> Set.filter ~f:VarRec.is_rec in
+      let actF =
+        LSB.vars_rec @@ Tuple2.first @@ get_lsb rv |> Set.filter ~f:VarFunctionCall.is_function_call
+      in
       let rv_vars_actV = Set.diff actV (VarSet.of_sequence @@ scc_variables rv) |> Set.to_sequence in
       let rv_vars_actF =
-        Set.diff (Set.map (module Var) ~f:VarRec.return_var actF) (VarSet.of_sequence @@ scc_variables rv)
+        Set.diff
+          (Set.map (module Var) ~f:VarFunctionCall.return_var actF)
+          (VarSet.of_sequence @@ scc_variables rv)
         |> Set.to_sequence
       in
       Bound.(

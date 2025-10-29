@@ -42,14 +42,14 @@ module MakeRV
 
   val modifier : t -> modifier
   val to_generic_modifier : modifier -> T.t GenericModifier_.modifier_t_
-  val modifier_of_function_call : VarRec.t -> modifier
+  val modifier_of_function_call : VarFunctionCall.t -> modifier
   val equal_modifier : modifier -> modifier -> bool
   val update : t -> Var.t -> PolyRec.PolyRec.t
   val hash : t -> int
   val has_transition : t -> bool
   val is_transition : modifier -> bool
-  val function_call : t -> VarRec.t
-  val function_call_ : modifier -> VarRec.t
+  val function_call : t -> VarFunctionCall.t
+  val function_call_ : modifier -> VarFunctionCall.t
 end
 
 module IdentityAdapter : sig
@@ -84,18 +84,19 @@ module MakeRVG (PM : ProgramTypes.ClassicalProgramModules) : sig
   val pre_omega : t -> rv -> rv List.t
   (** Returns the omega-predecessors of a result variable in the result variable graph. *)
 
-  val rvg : (rv -> VarRecSet.t Option.t) -> PM.Program.t -> t
+  val rvg : (rv -> VarFunctionCallSet.t Option.t) -> PM.Program.t -> t
   (** Compute the result variable graph.
       The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
 
-  val rvg_from_transitionset : (rv -> VarRecSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t
+  val rvg_from_transitionset :
+    (rv -> VarFunctionCallSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t
   (** Similar to [rvg] but only considers the transition of the given [TransitionSet] and their outgoing transitions *)
 
-  val rvg_with_sccs : (rv -> VarRecSet.t Option.t) -> PM.Program.t -> t * scc list Lazy.t
+  val rvg_with_sccs : (rv -> VarFunctionCallSet.t Option.t) -> PM.Program.t -> t * scc list Lazy.t
   (** Compute the result variable graph and lazily compute the list of all SCCs
       The first argument computes the variables in the corresponding lsb or None if no such (finite) lsb exists *)
 
   val rvg_from_transitionset_with_sccs :
-    (rv -> VarRecSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t * scc list Lazy.t
+    (rv -> VarFunctionCallSet.t Option.t) -> PM.Program.t -> PM.TransitionSet.t -> t * scc list Lazy.t
   (** Similar to [rvg_with_sccs] but only considers transitions from the given [TransitionSet] and its outgoing transitions *)
 end

@@ -63,7 +63,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let constraint_cache_varrec cache =
     Util.memoize cache.constraint_cache_varrec ~extractor:(fun (_, constraint_type, v, t) ->
-        (constraint_type, VarRec.hash v, Transition.id t))
+        (constraint_type, VarFunctionCall.hash v, Transition.id t))
 
 
   let decreaser measure cost =
@@ -196,10 +196,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       (fun (_, _, l') -> evaluated_rank_for_entry_loc l')
       (fun t' ->
         ( OurBase.Set.fold
-            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarRec.return_loc v)) b)
+            ~f:(fun b v -> Bound.add (evaluated_rank_for_entry_loc (VarFunctionCall.return_loc v)) b)
             ~init:Bound.zero (Transition.rec_vars t'),
-          OurBase.Set.filter ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t')
-        ))
+          OurBase.Set.filter
+            ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
+            (Transition.rec_vars t') ))
 
 
   let compute_ranking_templates_ (vars : VarSet.t) (locations : Location.t list) ranking_template_ (tt1, tt2)
@@ -313,12 +314,14 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let varrec_constraint (template_table, measure, constraint_type, (l, t, _), varrec) : Formula.t =
     let template_l = TemplateTable.find template_table l
-    and template_l' = TemplateTable.find template_table (VarRec.return_loc varrec) in
+    and template_l' = TemplateTable.find template_table (VarFunctionCall.return_loc varrec) in
     Formula.mk_and
       (constraint_ (measure, constraint_type)
-         TransitionLabel.(VarRec.update varrec, guard t, cost t)
+         TransitionLabel.(VarFunctionCall.update varrec, guard t, cost t)
          template_l template_l')
-      (bounded_ (measure, constraint_type) TransitionLabel.(VarRec.update varrec, guard t, cost t) template_l)
+      (bounded_ (measure, constraint_type)
+         TransitionLabel.(VarFunctionCall.update varrec, guard t, cost t)
+         template_l)
 
 
   let varrec_constraint_ cache (measure, constraint_type, varrec, t) : Formula.t =
@@ -527,7 +530,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let transitions_with_looping_fc =
       OurBase.Set.filter
         ~f:(fun t ->
-          OurBase.Set.exists ~f:(fun v -> OurBase.Set.mem locs (VarRec.return_loc v)) (Transition.rec_vars t))
+          OurBase.Set.exists
+            ~f:(fun v -> OurBase.Set.mem locs (VarFunctionCall.return_loc v))
+            (Transition.rec_vars t))
         scc
     in
     if OurBase.Set.is_empty scc || (not @@ OurBase.Set.mem transitions_with_looping_fc make_decreasing) then

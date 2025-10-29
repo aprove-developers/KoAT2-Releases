@@ -342,7 +342,7 @@ variable:
 
 variableRec:
   | start = location; LBRACK; result = variable; BAR; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR); RLARROW; LPAR targets = separated_nonempty_list(COMMA, polynomial) RPAR RBRACK;
-    { VarRec.mk_rec start result (List.map Var.of_string patterns) targets } ;
+    { VarFunctionCall.mk_function_call start result (List.map Var.of_string patterns) targets } ;
 
 our_float:
   | float_string = UFLOAT

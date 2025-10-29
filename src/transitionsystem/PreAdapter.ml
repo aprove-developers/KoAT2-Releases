@@ -89,7 +89,7 @@ module PreAdapter = struct
   let rec_trans program l =
     let open GenericProgram_ in
     Set.filter (TransitionGraph_.transitions program.graph) ~f:(fun t ->
-        Set.mem (Set.map (module Location) ~f:VarRec.return_loc (Transition.rec_vars t)) l)
+        Set.mem (Set.map (module Location) ~f:VarFunctionCall.return_loc (Transition.rec_vars t)) l)
 
 
   let compute_pre program ((l, _, _) as t) =

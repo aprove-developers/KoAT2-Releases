@@ -12,7 +12,7 @@ module UnliftedTimeBound = struct
   type ('trans, 'modifier, 'bound, 'trans_cmp_wit) unlifted_time_bound = {
     measure_decr_transitions : ('trans, 'trans_cmp_wit) Set.t;
     entry_transitions_measure : ('trans, 'bound, 'trans_cmp_wit) Map.t;
-    entry_transitions_measure_fcs : ('trans, 'bound * VarRecSet.t, 'trans_cmp_wit) Map.t;
+    entry_transitions_measure_fcs : ('trans, 'bound * VarFunctionCallSet.t, 'trans_cmp_wit) Map.t;
     compute_proof : ('trans, 'modifier, 'bound, 'trans_cmp_wit) compute_proof_;
   }
 

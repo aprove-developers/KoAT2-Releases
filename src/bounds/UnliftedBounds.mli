@@ -35,7 +35,7 @@ module UnliftedTimeBound : sig
       measure_decr_transitions:(Transition.t, Transition.comparator_witness) Set.t ->
       ?compute_proof:compute_proof Option.t ->
       (Transition.t, B.t, Transition.comparator_witness) Map.t ->
-      (Transition.t, B.t * VarRecSet.t, Transition.comparator_witness) Map.t ->
+      (Transition.t, B.t * VarFunctionCallSet.t, Transition.comparator_witness) Map.t ->
       t
     (** Create a new unlifted time bound. The transitions in [measure_decr_transitions] are those for which a new time bound can be derived. *)
 
@@ -58,7 +58,7 @@ module UnliftedTimeBound : sig
       ?compute_proof:compute_proof Option.t ->
       Program.t ->
       (Transition.t -> B.t) ->
-      (Transition.t -> B.t * VarRecSet.t) ->
+      (Transition.t -> B.t * VarFunctionCallSet.t) ->
       t
     (** Similar to before but explicitly computes the map mapping entry transitions to unlifted (local) time bounds.
               Here, the entry transitions are considered to be all transitions that are pre transitions of [handled_transitions] but not contained in [handled_transitions] itself.
