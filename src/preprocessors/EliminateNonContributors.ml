@@ -8,7 +8,7 @@ module type Adapter = sig
   type transition
   type transition_label
 
-  val vars_with_rec_calls : transition -> VarSet.t
+  val vars_with_function_call_calls : transition -> VarSet.t
   val dependency_rec : transition_label -> Var.t -> Var.t -> bool
 end
 
@@ -19,7 +19,7 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
   type transition_label = TransitionLabel.t
 
   (* Returns the variables which have a recursive call. We cannot remove them. *)
-  let vars_with_rec_calls (_, t, _) =
+  let vars_with_function_call_calls (_, t, _) =
     TransitionLabel.input_vars t
     |> Set.filter ~f:(fun x ->
            TransitionLabel.update t x |? PolyFunctionCall.of_var x |> PolyFunctionCall.has_function_calls)
@@ -27,17 +27,17 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
 
   (* Returns true iff x depends on y in a recursive call of t. *)
   let dependency_rec t x y =
-    let rec_vars = TransitionLabel.function_call_vars t in
-    Set.exists rec_vars ~f:(fun varrec ->
-        Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x varrec) y
-        || Var.equal y (VarFunctionCall.return_var varrec))
+    let vars_with_function_call = TransitionLabel.function_call_vars t in
+    Set.exists vars_with_function_call ~f:(fun var_function_call ->
+        Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x var_function_call) y
+        || Var.equal y (VarFunctionCall.return_var var_function_call))
 end
 
 module DefaultAdapter = struct
   type transition
   type transition_label
 
-  let vars_with_rec_calls t = VarSet.empty
+  let vars_with_function_call_calls t = VarSet.empty
   let dependency_rec t x y = false
 end
 
@@ -100,8 +100,8 @@ struct
       |> List.map ~f:(Constraint.vars % TransitionLabel.guard % Transition.label)
       |> VarSet.union_list
     in
-    let vars_with_rec = List.map ~f:A.vars_with_rec_calls (Set.to_list transitionset) |> VarSet.union_list in
-    let vars = Set.union vars_with_rec vars_guard in
+    let vars_with_function_call = List.map ~f:A.vars_with_function_call_calls (Set.to_list transitionset) |> VarSet.union_list in
+    let vars = Set.union vars_with_function_call vars_guard in
     compute_contributors_ transitionset vars (Set.diff all_vars vars)
 
 
@@ -133,11 +133,11 @@ struct
         ~f:(fun xs (l, t, l') -> Set.union (Polynomial.vars (TransitionLabel.cost t)) xs)
         (Program.transitions program) ~init:VarSet.empty
     in
-    let vars_with_rec =
-      List.map ~f:A.vars_with_rec_calls (Set.to_list @@ Program.transitions program) |> VarSet.union_list
+    let vars_with_function_call =
+      List.map ~f:A.vars_with_function_call_calls (Set.to_list @@ Program.transitions program) |> VarSet.union_list
     in
-    if Set.is_empty vars_with_rec then (
-      let init_contr = VarSet.union_list [ vars_with_rec; vars_guard; vars_cost ] in
+    if Set.is_empty vars_with_function_call then (
+      let init_contr = VarSet.union_list [ vars_with_function_call; vars_guard; vars_cost ] in
       Logger.(
         log logger INFO (fun () ->
             ( "EliminateNonContributors",
