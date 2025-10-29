@@ -71,8 +71,6 @@ type params = {
       (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
-  simple_input : bool; [@default false] [@aka [ "s" ]]
-      (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
   output_dir : string option; [@aka [ "o" ]]
       (** An absolute or relative path to the output directory, where all generated files should end up. *)
   show_proof : bool;  (** Displays the complexity proof. *)
@@ -105,6 +103,7 @@ type params = {
       [@default `PrintOverallCostbound]
       [@aka [ "r" ]]
       (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
+  format : [ `ARI | `KOAT ]; [@enum [ ("ari", `ARI); ("koat", `KOAT) ]] [@default `KOAT]
   preprocessors : Program.t Preprocessor.t list;
       [@enum Preprocessor.(List.map (fun p -> (show p, p)) all_classical)]
       [@default Preprocessor.default_classical]
@@ -240,11 +239,6 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
              GraphPrint.print_system ~format:"png"
                ~label:(bounded_label_to_string (module Bound) appr)
                ~outdir:output_dir ~file:input_filename program)
-    (* |> tap (fun (program, appr) ->
-           if params.print_rvg then
-             GraphPrint.print_rvg ~format:"png"
-               ~label:(bounded_rv_to_string (module Bound) program appr)
-               ~outdir:output_dir ~file:input_filename program) *)
     |> ignore
 end
 
@@ -310,37 +304,23 @@ let run (params : params) =
       let conf = build_complete_conf goal closed_form_size_bounds in
       AnalysisComplexity.run_analysis conf
   in
-  let input_filename =
-    if params.simple_input then
-      "dummyname"
-    else
-      input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
-  and output_dir =
-    Option.map ~f:Fpath.v params.output_dir
-    |?
-    if params.simple_input then
-      Fpath.v "."
-    else
-      input |> Fpath.v |> Fpath.parent
-  in
+  let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
+  and output_dir = Option.map ~f:Fpath.v params.output_dir |? (input |> Fpath.v |> Fpath.parent) in
   (if params.print_input then
-     let program_str =
-       if params.simple_input then
-         input
-       else
-         Stdio.In_channel.read_lines input |> String.concat ~sep:"\n"
-     in
+     let program_str = Stdio.In_channel.read_lines input |> String.concat ~sep:"\n" in
      print_string (program_str ^ "\n\n"));
   let program =
-    input
-    |> KoatReaders.read_input ~termination:params.termination ~rename:params.rename params.simple_input
-    |> tap (fun prog ->
-           ProofOutput.add_to_proof @@ fun () ->
-           FormattedString.(
-             mk_header_big (mk_str "Initial Problem")
-             <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-             <> program_to_formatted_string prog params.proof_format
-             <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
+    if params.format == `KOAT then
+      KoatReaders.read_input ~termination:params.termination ~rename:params.rename false input
+    else
+      AriParser.from_file_exn input
+      |> tap (fun prog ->
+             ProofOutput.add_to_proof @@ fun () ->
+             FormattedString.(
+               mk_header_big (mk_str "Initial Problem")
+               <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
+               <> program_to_formatted_string prog params.proof_format
+               <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
   in
   Timeout.timed_run params.timeout
     ~action:(fun () ->

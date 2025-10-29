@@ -312,3 +312,11 @@ let sexp_list_parser : Program.t ParseSexpListMonad.t =
 let from_file filename =
   let sexps = parse_sexps_from_file filename in
   run_parser sexp_list_parser sexps
+
+
+exception AriParserExn of string
+
+let from_file_exn filename =
+  match from_file filename with
+  | Ok p -> p
+  | Error e -> raise (AriParserExn e)
