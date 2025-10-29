@@ -41,7 +41,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       ParameterPolynomial.t TemplateTable.t (* r_tf *) * ParameterPolynomial.t TemplateTable.t (* r_f *);
     coeffs_table : VarSet.t CoeffsTable.t;
     constraint_cache_transition : (constraint_type * int, Formula.t) Hashtbl.t;
-    constraint_cache_varrec : (constraint_type * int * int, Formula.t) Hashtbl.t;
+    constraint_cache_var_function_call : (constraint_type * int * int, Formula.t) Hashtbl.t;
   }
 
   let new_cache () =
@@ -51,7 +51,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       template_table = new_template_table ();
       coeffs_table = CoeffsTable.create 10;
       constraint_cache_transition = Hashtbl.create 10;
-      constraint_cache_varrec = Hashtbl.create 10;
+      constraint_cache_var_function_call = Hashtbl.create 10;
     }
 
 
@@ -61,8 +61,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         (constraint_type, Transition.id t))
 
 
-  let constraint_cache_varrec cache =
-    Util.memoize cache.constraint_cache_varrec ~extractor:(fun (_, constraint_type, v, t) ->
+  let constraint_cache_var_function_call cache =
+    Util.memoize cache.constraint_cache_var_function_call ~extractor:(fun (_, constraint_type, v, t) ->
         (constraint_type, VarFunctionCall.hash v, Transition.id t))
 
 
@@ -313,36 +313,42 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       transition_constraint cache (measure, `Non_Increasing, transition)
 
 
-  let varrec_constraint (template_table, measure, constraint_type, (l, t, _), varrec) : Formula.t =
+  let var_function_call_constraint (template_table, measure, constraint_type, (l, t, _), var_function_call) :
+      Formula.t =
     let template_l = TemplateTable.find template_table l
-    and template_l' = TemplateTable.find template_table (VarFunctionCall.return_loc varrec) in
+    and template_l' = TemplateTable.find template_table (VarFunctionCall.return_loc var_function_call) in
     Formula.mk_and
       (constraint_ (measure, constraint_type)
-         TransitionLabel.(VarFunctionCall.update varrec, guard t, cost t)
+         TransitionLabel.(VarFunctionCall.update var_function_call, guard t, cost t)
          template_l template_l')
       (bounded_ (measure, constraint_type)
-         TransitionLabel.(VarFunctionCall.update varrec, guard t, cost t)
+         TransitionLabel.(VarFunctionCall.update var_function_call, guard t, cost t)
          template_l)
 
 
-  let varrec_constraint_ cache (measure, constraint_type, varrec, t) : Formula.t =
+  let var_function_call_constraint_ cache (measure, constraint_type, var_function_call, t) : Formula.t =
     match constraint_type with
-    | `Decreasing -> varrec_constraint (Tuple2.second cache.template_table, measure, `Decreasing, t, varrec)
+    | `Decreasing ->
+        var_function_call_constraint
+          (Tuple2.second cache.template_table, measure, `Decreasing, t, var_function_call)
     | `Non_Increasing ->
         let f1, f2 =
           Tuple2.mapn
-            (fun template_table -> varrec_constraint (template_table, measure, `Non_Increasing, t, varrec))
+            (fun template_table ->
+              var_function_call_constraint (template_table, measure, `Non_Increasing, t, var_function_call))
             cache.template_table
         in
         Formula.(mk_and f1 f2)
 
 
-  let varrec_constraint cache = constraint_cache_varrec cache (varrec_constraint_ cache)
+  let var_function_call_constraint cache =
+    constraint_cache_var_function_call cache (var_function_call_constraint_ cache)
 
-  let varrec_constraint cache measure varrec transition =
+
+  let var_function_call_constraint cache measure var_function_call transition =
     Formula.mk_and
-      (varrec_constraint cache (measure, `Decreasing, varrec, transition))
-      (varrec_constraint cache (measure, `Non_Increasing, varrec, transition))
+      (var_function_call_constraint cache (measure, `Decreasing, var_function_call, transition))
+      (var_function_call_constraint cache (measure, `Non_Increasing, var_function_call, transition))
 
 
   (** A valuation is a function which maps from a finite set of variables to values *)
@@ -374,13 +380,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let t = problem.make_decreasing in
     Solver.add solver_int (decreasing_transition_constraint cache problem.measure t);
     OurBase.Set.iter (Transition.function_call_vars t) ~f:(fun v ->
-        Solver.add solver_int (varrec_constraint cache problem.measure v t))
+        Solver.add solver_int (var_function_call_constraint cache problem.measure v t))
 
 
   let add_non_increasing_constraint cache problem solver_int transition =
     Solver.add solver_int (non_increasing_transition_constraint cache problem.measure transition);
     OurBase.Set.iter (Transition.function_call_vars transition) ~f:(fun v ->
-        Solver.add solver_int (varrec_constraint cache problem.measure v transition))
+        Solver.add solver_int (var_function_call_constraint cache problem.measure v transition))
 
 
   let finalise_rrf cache solver_int non_increasing entry_transitions problem =
