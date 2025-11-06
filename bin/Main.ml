@@ -24,7 +24,9 @@ let subcommands =
 
 let default_cmd params =
   if params.version then
-    `Ok (Stdio.printf "%s\n" Koat2.VersionString.version)
+    `Ok
+      (KoAT.print_logo ();
+       Stdio.printf "%s\n" Koat2.VersionString.version)
   else
     `Help (`Pager, None)
 
@@ -34,5 +36,4 @@ let () =
   let main_command =
     (Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term ())), Cmdliner.Term.info Sys.argv.(0))
   in
-  KoAT.print_logo ();
   Cmdliner.Term.(exit @@ eval_choice main_command subcommands)
