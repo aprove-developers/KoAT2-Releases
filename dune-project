@@ -51,5 +51,6 @@
    zarith
    (z3 (= 4.15.2))
    koat2_external
+   ocolor
    )
  )
