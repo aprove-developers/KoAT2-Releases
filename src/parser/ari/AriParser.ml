@@ -57,17 +57,19 @@ let parse_eos : unit ParseSexpListMonad.t = function
   | sexp :: _ -> Error ("Expected EOS but got " ^ Sexp.to_string sexp)
 
 
-let parse_atom_sat (p : Char.t -> Bool.t) ?(error = "atom did not match sat") : string ParseSexpListMonad.t =
-  function
-  | Sexp.Atom str :: rem ->
-      if String.for_all ~f:p str then
-        Ok (rem, str)
-      else
-        Error (error ^ " got " ^ str)
+let parse_atom : string ParseSexpListMonad.t = function
+  | Sexp.Atom str :: rem -> Ok (rem, str)
   | sexps -> generate_error "atom" sexps
 
 
-let parse_atom : string ParseSexpListMonad.t = parse_atom_sat (const true)
+let parse_atom_sat (p : Char.t -> Bool.t) ?(err = "atom did not match sat") : string ParseSexpListMonad.t =
+  let* str = parse_atom in
+  if String.for_all ~f:p str then
+    pure str
+  else
+    error (err ^ " got " ^ str)
+
+
 let parse_opt p = Option.some <$> p <|> pure None
 
 let parse_string str : unit ParseSexpListMonad.t =
@@ -118,8 +120,8 @@ let descend_into (p : 'a ParseSexpListMonad.t) : 'a ParseSexpListMonad.t = funct
 
 let descend_into_or_lift (p : 'a ParseSexpListMonad.t) : 'a ParseSexpListMonad.t =
   let single_sexp_to_sexp_list = function
-    | Sexp.Atom a -> Sexp.List [ Sexp.Atom a ]
     | Sexp.List _ as l -> l
+    | Sexp.Atom a -> Sexp.List [ Sexp.Atom a ]
   in
   apply_head single_sexp_to_sexp_list %> descend_into p
 

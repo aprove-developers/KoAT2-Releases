@@ -8,6 +8,7 @@ let command = "ari-to-koat"
 type params = {
   input_file : string; [@pos 0]  (** The input file which should be translated *)
   output_file : string option; [@aka [ "o" ]]
+  parse_only : bool;  (** Do not print the KoAT version *)
 }
 [@@deriving cmdliner, show]
 
@@ -17,4 +18,5 @@ let run (params : params) =
     | Ok p -> p
     | Error s -> failwith ("ParseError: " ^ s)
   in
-  Program.to_file program
+  if not params.parse_only then
+    Program.to_file ~file:params.output_file program
