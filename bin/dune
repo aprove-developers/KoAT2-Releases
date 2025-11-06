@@ -8,4 +8,4 @@
  (name main)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_cmdliner))
- (libraries koat2))
+ (libraries koat2 ocolor))

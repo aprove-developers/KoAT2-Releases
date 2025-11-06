@@ -33,4 +33,5 @@ let () =
   let main_command =
     (Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term ())), Cmdliner.Term.info Sys.argv.(0))
   in
+  KoAT.print_logo ();
   Cmdliner.Term.(exit @@ eval_choice main_command subcommands)

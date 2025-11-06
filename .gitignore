@@ -28,3 +28,4 @@ koat2_static
 
 /.vscode
 /docs
+.DS_Store
