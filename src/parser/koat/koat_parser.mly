@@ -254,6 +254,8 @@ update_element:
 update_value:
   | d = onlyProbabilityDistribution
     { UpdateElement_.of_dist d }
+  | id_str = UINT; COLON; d = onlyProbabilityDistribution
+    { UpdateElement_.of_dist ~id:(int_of_string id_str) d }
   | v = ID
     { UpdateElement_.var v } ;
 

@@ -97,7 +97,7 @@ struct
 
 
   let of_poly = OrdinaryPoly.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
-  let of_dist dist = of_indeterminate (Dist { dist; id = Unique.unique () })
+  let of_dist ?(id = 1) dist = of_indeterminate (Dist { dist; id })
 
   let exp_value_poly (* : t -> RationalPolynomial.t *) =
    fun t ->

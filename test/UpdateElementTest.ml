@@ -55,7 +55,8 @@ let tests =
                 (let open Polynomials.RationalPolynomial in
                  [
                    ("UNIFORM(0,3)", of_constant (OurRational.of_float 1.5));
-                   ("UNIFORM(0,3)*UNIFORM(0,3)", of_constant (OurRational.of_float (1.5 *. 1.5)));
+                   ("0:UNIFORM(0,3)*1:UNIFORM(0,3)", of_constant (OurRational.of_float (1.5 *. 1.5)));
+                   ("UNIFORM(0,3)*UNIFORM(0,3)", of_constant (OurRational.of_float (0.25 *. (1. +. 4. +. 9.))));
                    ("UNIFORM(0,3)^2", of_constant (OurRational.of_float (14. /. 4.)));
                  ]);
        ]
