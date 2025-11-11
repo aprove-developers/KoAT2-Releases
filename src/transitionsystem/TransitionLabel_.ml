@@ -69,11 +69,7 @@ module Make (P : PolyTypes.Polynomial) = struct
         |> fill_up_update_arg_vars_up_to_num (List.length patterns)
       in
       {
-        id =
-          (if Option.is_none id then
-             Unique.unique ()
-           else
-             Option.value_exn id);
+        id = Option.value_or_thunk id ~default:Unique.unique;
         update;
         guard = Guard.rename guard map_to_arg_vars |> Guard.remove_duplicate_atoms;
         invariant = Guard.mk_true;
