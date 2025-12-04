@@ -1,0 +1,406 @@
+name: Build and benchmark docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_examples:
+        description: "Max number examples [256]"
+        required: false
+      examples_path:
+        description: "Example path [./examples/Complexity_ITS/]"
+        required: false
+      rebuild_docker:
+        description: "Rebuild Docker image [Y/n]"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: self-hosted
+    env:
+      REBUILD_DOCKER: ${{ github.event.inputs.rebuild_docker || 'Y' }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      if: contains('yY', env.REBUILD_DOCKER)
+      run: ./build_container.sh
+  prepare-matrix:
+    name: Prepare Matrix
+    runs-on: self-hosted
+    outputs:
+      files: ${{ steps.set-matrix.outputs.files }}
+    env:
+      NUM_EXAMPLES: ${{ github.event.inputs.num_examples || '256' }}
+      EXAMPLES_PATH: ${{ github.event.inputs.examples_path || './examples/Complexity_ITS/' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find all KOAT files
+        id: set-matrix
+        run: |
+          out=$(python3 << 'EOF'
+          import json
+          import os
+          from pathlib import Path
+
+          examples_path = os.environ.get("EXAMPLES_PATH", "./examples/Complexity_ITS/")
+          num_examples = int(os.environ.get("NUM_EXAMPLES"))
+
+          files = sorted(str(p) for p in Path(examples_path).rglob("*.koat"))
+          files = files[:num_examples]
+
+          print(json.dumps(files))
+          EOF)
+          echo "files=$out" >> $GITHUB_OUTPUT
+  test:
+    name: Test KoAT Matrix Job
+    runs-on: self-hosted
+    needs:
+    - build
+    - prepare-matrix
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        file: ${{ fromJSON(needs.prepare-matrix.outputs.files) }}
+    env:
+      TIMEOUT: 60
+      FILE_PATH: ${{ matrix.file }}
+    steps:
+    - name: Create benchmark script `benchmark.py`
+      run: |
+        cat << 'EOF' > benchmark.py
+
+        #!/usr/bin/env python3
+        from pathlib import Path
+        import csv
+        import io
+        import os
+        import time
+        import uuid
+        import docker
+
+
+        def escape_string(s):
+            return (
+                s.replace("\n", "")
+                .replace(",", " ")
+                .replace('"', '""')
+            )
+
+
+        def run_container(example_path, timeout = 60):
+            client = docker.from_env()
+            container_name = f"koat2_{uuid.uuid4()}"
+
+            container = None
+            start = time.time_ns()
+
+            try:
+                container = client.containers.run(
+                    "koat2",
+                    ["analyse", "--input", example_path, "-r", "termcomp"],
+                    name=container_name,
+                    entrypoint="koat2",
+                    detach=True,
+                    remove=False
+                )
+
+                try:
+                    result = container.wait(timeout=timeout)
+                    status_code = result.get("StatusCode", -1)
+                    logs = container.logs().decode()
+
+                    if status_code == 0:
+                        status = "OK"
+                    else:
+                        status = f"ERROR({status_code})"
+
+                except docker.errors.APIError:
+                    status = "ERROR"
+                    logs = "DOCKER_API_ERROR"
+
+                except Exception:
+                    try:
+                        container.stop(timeout=10)
+                        status = "TIMEOUT"
+                        logs = "TIMEOUT(TERM)"
+                    except Exception:
+                        container.kill()
+                        status = "TIMEOUT"
+                        logs = "TIMEOUT(KILL)"
+
+            finally:
+                end = time.time_ns()
+
+                if container is not None:
+                    try:
+                        container.remove(force=True)
+                    except Exception:
+                        pass
+
+            wall_time = (end - start) / 1e9
+
+            return status, escape_string(logs), wall_time
+
+
+        def shorten_path(path):
+          p = Path(path)
+          parts = p.parts
+
+          if len(parts) >= 2:
+              return f"{parts[-2]}/{parts[-1]}"
+          else:
+              return p.name
+
+
+        def benchmark(example_path, timeout=60):
+            status, result, wall_time = run_container(example_path, timeout=timeout)
+
+            f = io.StringIO()
+            writer = csv.writer(f)
+            writer.writerow(["Benchmark", "Result", "Status", "Time"])
+            writer.writerow([shorten_path(example_path), result, status, f"{wall_time:.3f}"])
+            return f.getvalue()
+
+
+        if __name__ == "__main__":
+            print(benchmark(
+              os.environ["FILE_PATH"],
+              timeout=int(os.environ["TIMEOUT"])
+            ))
+
+        EOF
+    - name: Run benchmark script `benchmark.py`
+      run: python3 benchmark.py  > "artifact-tmp.csv"
+    - name: Prepare safe artifact name
+      run: |
+        safe_name="${{ matrix.file }}"
+        safe_name="${safe_name#./}"
+        safe_name="${safe_name//\//-}"
+        safe_name="${safe_name//./_}"
+        echo "SAFE_NAME=$safe_name" >> $GITHUB_ENV
+    - name: Upload CSV fragment
+      uses: actions/upload-artifact@v4
+      with:
+        name: csv-${{ env.SAFE_NAME }}
+        path: artifact-tmp.csv
+  aggregate:
+    name: Aggregate and Summarize Results
+    runs-on: self-hosted
+    needs: test
+    env:
+      FINAL_NAME: benchmark-results-${{ github.run_number }}-${{ github.run_attempt }}
+      FINAL_CSV: benchmark-results-${{ github.run_number }}-${{ github.run_attempt }}.csv
+      FRAGMENTS_DIR: fragments
+    steps:
+    - name: List working dir
+      run: ls -l
+    - name: List fragments dir
+      continue-on-error: true
+      run: ls -l ./fragments/
+    - name: Download CSV fragments
+      uses: actions/download-artifact@v4
+      with:
+        path: fragments
+    - name: List fragments dir
+      run: ls -l ./fragments/
+    - name: Make venv with requirements
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install pandas tabulate
+    - name: Create aggregation script `aggregate.py`
+      run: |
+        cat << 'EOF' > aggregate.py
+
+        #!/usr/bin/env python3
+        import os
+        import io
+        import pandas as pd
+
+
+        def merge_csvs(fragments_dir):
+          dfs = []
+          for root, _, files in os.walk(fragments_dir):
+            for name in files:
+              if name.endswith(".csv"):
+                dfs.append(pd.read_csv(os.path.join(root, name)))
+
+          if not dfs:
+              raise RuntimeError("No CSV files found in fragments/")
+
+          final = pd.concat(dfs, ignore_index=True)
+          final = final.sort_values(by=list(final.columns))
+
+          f = io.StringIO()
+          final.to_csv(f, index=False)
+          return f.getvalue()
+
+
+        if __name__ == "__main__":
+          print(merge_csvs(os.environ["FRAGMENTS_DIR"]))
+
+        EOF
+    - name: Run aggregation script `aggregate.py`
+      run: |
+        source venv/bin/activate
+        python3 aggregate.py > "${{ env.FINAL_CSV }}"
+    - name: Upload final CSV
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.FINAL_NAME }}
+        path: ${{ env.FINAL_CSV }}
+    - name: Checkout `benchmark_results` branch
+      uses: actions/checkout@v4
+      with:
+        ref: benchmark_results
+        path: results_branch
+    - name: Configure Git
+      working-directory: results_branch
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+    - name: Add and commit new csv file
+      working-directory: results_branch
+      run: |
+        cp ../${{ env.FINAL_CSV }} ./${{ env.FINAL_CSV }}
+        git add .
+        git diff --cached --quiet || git commit -m "Add benchmark results for run ${{ github.run_number }}-${{ github.run_attempt }}"
+        git push origin benchmark_results
+    - name: Create comparison script `analyze.py`
+      working-directory: results_branch
+      run: |
+        cat << 'EOF' > analyze.py
+
+        #!/usr/bin/env python3
+        import pandas as pd
+        import os
+        from pathlib import Path
+        import re
+        from functools import reduce
+
+
+        def parse_csv(path):
+            df = pd.read_csv(Path(path))
+            df["Time"] = pd.to_numeric(df["Time"], errors="coerce").fillna(0.0)
+            df = df.sort_values(by=list(df.columns))
+            return df
+
+
+        def describe(df):
+            counts = df["Status"].value_counts()
+
+            summary_df = pd.DataFrame({
+                "Metric": ["OK", "Error", "Timeout", "Avg runtime", "Avg successful"],
+                "Value": [
+                    counts.get("OK", 0),
+                    counts.get("ERROR", 0),
+                    counts.get("TIMEOUT", 0),
+                    df["Time"].mean() if len(df) > 0 else 0,
+                    df.loc[df["Status"] == "OK", "Time"].mean() if counts.get("OK", 0) > 0 else 0
+                ],
+            })
+
+            return summary_df
+
+
+        def find_files():
+            pattern = re.compile(r"benchmark-results-(\d+)-(\d+)\.csv$")
+            candidates = []
+
+            for f in Path(".").glob("benchmark-results-*-*.csv"):
+                m = pattern.match(f.name)
+
+                if not m:
+                    continue
+
+                candidates.append((int(m.group(1)), int(m.group(2)), f.name))
+
+            candidates.sort(reverse=True)
+
+            if len(candidates) > 1:
+                new = candidates[0][2]
+                df_new = parse_csv(new)
+
+                for i in range(2, len(candidates)):
+                    current = candidates[i][2]
+                    df_current = parse_csv(current)
+
+                    df = pd.merge(
+                        df_new, df_current,
+                        on="Benchmark",
+                        suffixes=("N", "C")
+                    )
+                    diff = (df["StatusN"] != df["StatusC"]) | (df["ResultN"] != df["ResultC"])
+
+                    if diff.sum() > 0:
+                        return [candidates[0], candidates[1], candidates[i]]
+                return [candidates[0], candidates[1]]
+            return [candidates[0]]
+
+
+        def main():
+            files = find_files()
+
+            dfs = [parse_csv(f[2]) for f in files]
+            names = [f"{f[0]}-{f[1]}" for f in files]
+
+            descriptions = [
+                describe(dfs[i]).rename(columns={"Value": names[i]})
+                for i in range(len(dfs))
+            ]
+
+            merged_description = reduce(
+                lambda left, right: pd.merge(left, right, on="Metric"),
+                descriptions
+            )
+
+            renamed_dfs = []
+            for i, df in enumerate(dfs):
+                renamed = df.rename(columns={
+                    "Result": f"Result {names[i]}",
+                    "Status": f"Status {names[i]}",
+                    "Time": f"Time {names[i]}"
+                })
+                renamed_dfs.append(renamed)
+
+            merged_dfs = reduce(
+                lambda left, right: pd.merge(left, right, on="Benchmark"),
+                renamed_dfs
+            )
+
+            diff_mask = pd.Series(False, index=merged_dfs.index)
+            for col in ["Result", "Status"]:
+                col_names = [f"{col} {name}" for name in names]
+                for i in range(len(col_names)):
+                    for j in range(i + 1, len(col_names)):
+                        diff_mask |= merged_dfs[col_names[i]] != merged_dfs[col_names[j]]
+
+            diff_dfs = merged_dfs[diff_mask]
+
+            print("## Run Info")
+            print(f"- Current run: {names[0]}")
+            if len(names) > 1:
+                print(f"- Previous run: {names[1]}")
+            if len(names) > 2:
+                print(f"- First significantly different run (not previous): {names[2]}")
+
+            print("## Quick Compare Runs")
+            print(merged_description.to_markdown(index=False))
+
+            print("## All Differences")
+            print(diff_dfs.to_markdown(index=False))
+
+
+        if __name__ == "__main__":
+            main()
+
+        EOF
+    - name: Run comparison script `analyze.py`
+      working-directory: results_branch
+      run: |
+        source ../venv/bin/activate
+        python3 analyze.py > $GITHUB_STEP_SUMMARY
