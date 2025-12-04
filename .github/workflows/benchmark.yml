@@ -38,12 +38,13 @@ jobs:
     env:
       NUM_EXAMPLES: ${{ github.event.inputs.num_examples || '256' }}
       EXAMPLES_PATH: ${{ github.event.inputs.examples_path || './examples/Complexity_ITS/' }}
+      PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.9' }}
     steps:
       - uses: actions/checkout@v4
       - name: Find all KOAT files
         id: set-matrix
         run: |
-          out=$(python3 << 'EOF'
+          out=$(python${{ env.PYTHON_VERSION }} << 'EOF'
           import json
           import os
           from pathlib import Path
@@ -69,16 +70,12 @@ jobs:
         with:
           key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
           path: venv
-      - uses: actions/setup-python@v5
-        if: steps.cache.outputs.cache-hit != 'true'
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
+          python${{ env.PYTHON_VERSION }} -m venv venv
           source venv/bin/activate
-          python -m pip install docker pandas tabulate
+          python${{ env.PYTHON_VERSION }} -m pip install docker pandas tabulate
           echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
           echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
       - name: Cache virtual environment
@@ -114,7 +111,7 @@ jobs:
       run: |
         cat << 'EOF' > benchmark.py
 
-        #!/usr/bin/env python3
+        #!/usr/bin/env python${{ env.PYTHON_VERSION }}
         from pathlib import Path
         import csv
         import io
@@ -217,7 +214,7 @@ jobs:
     - name: Run benchmark script `benchmark.py`
       run: |
         source venv/bin/activate
-        python3 benchmark.py  > "artifact-tmp.csv"
+        python${{ env.PYTHON_VERSION }} benchmark.py  > "artifact-tmp.csv"
     - name: Prepare safe artifact name
       run: |
         safe_name="${{ matrix.file }}"
@@ -254,7 +251,7 @@ jobs:
       run: |
         cat << 'EOF' > aggregate.py
 
-        #!/usr/bin/env python3
+        #!/usr/bin/env python${{ env.PYTHON_VERSION }}
         import os
         import io
         import pandas as pd
@@ -285,7 +282,7 @@ jobs:
     - name: Run aggregation script `aggregate.py`
       run: |
         source venv/bin/activate
-        python3 aggregate.py > "${{ env.FINAL_CSV }}"
+        python${{ env.PYTHON_VERSION }} aggregate.py > "${{ env.FINAL_CSV }}"
     - name: Upload final CSV
       uses: actions/upload-artifact@v4
       with:
@@ -313,7 +310,7 @@ jobs:
       run: |
         cat << 'EOF' > analyze.py
 
-        #!/usr/bin/env python3
+        #!/usr/bin/env python${{ env.PYTHON_VERSION }}
         import pandas as pd
         import os
         from pathlib import Path
@@ -441,4 +438,4 @@ jobs:
       working-directory: results_branch
       run: |
         source ../venv/bin/activate
-        python3 analyze.py > $GITHUB_STEP_SUMMARY
+        python${{ env.PYTHON_VERSION }} analyze.py > $GITHUB_STEP_SUMMARY
