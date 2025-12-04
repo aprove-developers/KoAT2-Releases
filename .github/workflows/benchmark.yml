@@ -69,16 +69,12 @@ jobs:
         with:
           key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
           path: venv
-      - uses: actions/setup-python@v5
-        if: steps.cache.outputs.cache-hit != 'true'
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
+          python3 -m venv venv
           source venv/bin/activate
-          python -m pip install docker pandas tabulate
+          python3 -m pip install docker pandas tabulate
           echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
           echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
       - name: Cache virtual environment
