@@ -12,6 +12,9 @@ on:
       rebuild_docker:
         description: "Rebuild Docker image [Y/n]"
         required: false
+      python_version:
+        description: "Python Version [3.9]"
+        required: false
 
 permissions:
   contents: write
@@ -54,12 +57,43 @@ jobs:
           print(json.dumps(files))
           EOF)
           echo "files=$out" >> $GITHUB_OUTPUT
+  build-venv:
+    name: Build and cache Python virtual environment
+    runs-on: self-hosted
+    env:
+      PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.9' }}
+    steps:
+      - name: Restore cached virtual environment
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+          path: venv
+      - uses: actions/setup-python@v5
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          python -m pip install docker pandas tabulate
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+      - name: Cache virtual environment
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+          path: venv
   test:
     name: Test KoAT Matrix Job
     runs-on: self-hosted
     needs:
     - build
     - prepare-matrix
+    - build-venv
     timeout-minutes: 2
     strategy:
       fail-fast: false
@@ -68,7 +102,14 @@ jobs:
     env:
       TIMEOUT: 60
       FILE_PATH: ${{ matrix.file }}
+      PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.9' }}
     steps:
+    - uses: actions/checkout@v4
+    - name: Restore cached virtual environment
+      uses: actions/cache/restore@v4
+      with:
+        key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+        path: venv
     - name: Create benchmark script `benchmark.py`
       run: |
         cat << 'EOF' > benchmark.py
@@ -174,7 +215,9 @@ jobs:
 
         EOF
     - name: Run benchmark script `benchmark.py`
-      run: python3 benchmark.py  > "artifact-tmp.csv"
+      run: |
+        source venv/bin/activate
+        python3 benchmark.py  > "artifact-tmp.csv"
     - name: Prepare safe artifact name
       run: |
         safe_name="${{ matrix.file }}"
@@ -195,23 +238,18 @@ jobs:
       FINAL_NAME: benchmark-results-${{ github.run_number }}-${{ github.run_attempt }}
       FINAL_CSV: benchmark-results-${{ github.run_number }}-${{ github.run_attempt }}.csv
       FRAGMENTS_DIR: fragments
+      PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.9' }}
     steps:
-    - name: List working dir
-      run: ls -l
-    - name: List fragments dir
-      continue-on-error: true
-      run: ls -l ./fragments/
+    - uses: actions/checkout@v4
     - name: Download CSV fragments
       uses: actions/download-artifact@v4
       with:
         path: fragments
-    - name: List fragments dir
-      run: ls -l ./fragments/
-    - name: Make venv with requirements
-      run: |
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install pandas tabulate
+    - name: Restore cached virtual environment
+      uses: actions/cache/restore@v4
+      with:
+        key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+        path: venv
     - name: Create aggregation script `aggregate.py`
       run: |
         cat << 'EOF' > aggregate.py
