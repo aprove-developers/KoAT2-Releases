@@ -13,7 +13,10 @@ on:
         description: "Rebuild Docker image [Y/n]"
         required: false
       python_version:
-        description: "Python Version [3.9]"
+        description: "Python version [3.9]"
+        required: false
+      docker_host:
+        description: "Docker host [/run/user/$UID/docker.sock]"
         required: false
 
 permissions:
@@ -25,6 +28,7 @@ jobs:
     runs-on: self-hosted
     env:
       REBUILD_DOCKER: ${{ github.event.inputs.rebuild_docker || 'Y' }}
+      DOCKER_HOST: unix://${{ github.event.inputs.docker_host || '/run/user/$UID/docker.sock' }}
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
@@ -100,6 +104,7 @@ jobs:
       TIMEOUT: 60
       FILE_PATH: ${{ matrix.file }}
       PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.9' }}
+      DOCKER_HOST: unix://${{ github.event.inputs.docker_host || '/run/user/$UID/docker.sock' }}
     steps:
     - uses: actions/checkout@v4
     - name: Restore cached virtual environment
