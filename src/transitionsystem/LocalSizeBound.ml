@@ -290,6 +290,7 @@ struct
         let* update = TL.update t var in
         if
           Set.are_disjoint (PolyFunctionCall.vars update) (Guard.vars @@ TL.guard t)
+          && Set.is_subset (PolyFunctionCall.vars update) ~of_:program_vars
           || PolyFunctionCall.has_function_calls update
         then
           from_update_polyrec program_vars var update
