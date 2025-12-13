@@ -327,8 +327,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Set.to_list scc_with_in_and_out
         in
         let fcs =
-          List.map ~f:(fun t -> Set.to_list @@ Transition.function_call_vars t) all_rvs_of_scc_and_out
-          |> List.concat
+          List.map ~f:(fun t -> Transition.function_call_vars t) all_rvs_of_scc_and_out
+          |> VarFunctionCallSet.union_list |> Set.to_list
           |> List.map ~f:RV.modifier_of_function_call
         in
         let modifiers = all_rvs_of_scc_and_out |> List.map ~f:RV.modifier_of_transition |> List.append fcs in
