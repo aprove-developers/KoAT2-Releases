@@ -1,5 +1,4 @@
 open! OurBase
-open Formulas
 open Polynomials
 
 exception ProbabilitiesDoNotSumToOne
@@ -411,10 +410,6 @@ module ProbabilisticTransitionLabel = struct
     input_vars t |> Set.filter ~f:(fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
 
 
-  let negative_costs t =
-    SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero (cost t)))
-
-
   let remove_non_contributors non_contributors t =
     let update = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:(update_map t) in
     let overappr_guard, overappr_nonprob_update = compute_overapproximated_update_and_guard update in
@@ -505,10 +500,6 @@ module NonProbTransitionLabel (POverAppr : PolyAdapter.PolyAdapter) = struct
 
 
   let has_tmp_vars t = not @@ Set.is_empty @@ Set.diff (vars t) (input_vars t)
-
-  let negative_costs t =
-    SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero (cost t)))
-
 
   let changed_vars t =
     input_vars t

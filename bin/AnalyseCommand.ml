@@ -225,8 +225,6 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
     |> (fun (program, appr) ->
     if params.no_boundsearch then
       (program, appr)
-    else if Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
-      (program, appr)
     else
       Analysis.improve ~conf:analysis_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr)
     |> tap (fun (program, appr) -> print_result params.result (module Bound) program appr)

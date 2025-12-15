@@ -113,11 +113,6 @@ module Make (P : PolyTypes.Polynomial) = struct
 
 
     let cost t = t.cost
-
-    let negative_costs t =
-      SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
-
-
     let only_update t = { t with cost = Polynomial.one; guard = Guard.mk_true; invariant = Invariant.mk_true }
 
     let vars { update; guard; invariant; cost; _ } =

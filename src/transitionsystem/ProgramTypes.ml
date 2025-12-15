@@ -79,8 +79,6 @@ module type TransitionLabel = sig
   val cost : t -> Polynomials.Polynomial.t
   (** Returns the cost function *)
 
-  val negative_costs : t -> bool
-
   val to_string : ?pretty:bool -> t -> string
   (** Returns a string representing the label. *)
 
