@@ -382,8 +382,8 @@ polynomialRec:
     { PolyFunctionCall.neg ex }
   | p1 = polynomialRec; op = bioperatorRec; p2 = polynomialRec
     { op p1 p2 }
-  | v = variable; POW; c = UINT
-    { PolyFunctionCall.pow (PolyFunctionCall.of_var v) (int_of_string c) } ;
+  | p = polynomialRec; POW; c = UINT
+    { PolyFunctionCall.pow p (int_of_string c) } ;
 
 rational_laurent_polynomial:
   | v = variable
