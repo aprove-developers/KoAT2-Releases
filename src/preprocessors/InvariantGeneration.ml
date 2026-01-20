@@ -42,8 +42,8 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
       let environment : Apron.Environment.t = Apron.Environment.make (vars_to_apron vars) [||] in
 
       (* The manager defines the abstract domain of the variables.
-         The octagon domain searches for something like +-x +-y <= b *)
-      let manager = Oct.manager_alloc () in
+         The polyhedron domain searches for something like a_1*x_1 + ... + a_n*x_n + b >= 0. *)
+      let manager = Polka.manager_alloc_loose () in
 
       (* Applies the guard to the abstract value, reducing its size. *)
       let apply_guard (guard : Guard.t) (abstract : 'a Apron.Abstract1.t) : 'a Apron.Abstract1.t =
