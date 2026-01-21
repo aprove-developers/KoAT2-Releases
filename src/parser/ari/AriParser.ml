@@ -80,6 +80,16 @@ let parse_string str : unit ParseSexpListMonad.t =
     error ("Expected " ^ str ^ " but got " ^ str)
 
 
+let parse_string_prefix prefix : unit ParseSexpListMonad.t =
+  let gen_error sexps = generate_error ("parse_prefix " ^ prefix) sexps in
+  function
+  | Sexp.Atom str :: rem as sexps -> (
+      match String.chop_prefix ~prefix str with
+      | Some str_rest -> Ok (Sexp.Atom str_rest :: rem, ())
+      | None -> gen_error sexps)
+  | sexps -> gen_error sexps
+
+
 let parse_sexps_from_file filename =
   match Parsexp_io.load (module Parsexp.Many) ~filename with
   | Ok a -> a
@@ -171,7 +181,7 @@ let parse_arith ?(var_rename = Map.empty (module Var)) =
         in
         OurInt.of_string <$> parse_atom_sat is_digit
       in
-      parse_uint <|> (OurInt.neg <$> parse_string "-" %> parse_uint) |> map Polynomial.of_constant
+      parse_uint <|> (OurInt.neg <$> parse_string_prefix "-" %> parse_uint) |> map Polynomial.of_constant
     in
     let parse_var =
       let+ v = parse_var in
