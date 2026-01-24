@@ -39,6 +39,7 @@ module Make
   val add_invariant : unit
   val simplify_all_guards : unit
   val remove_unsatisfiable_transitions : unit
+  val remove_non_contributors : unit
 end
 
 module ClassicalProgram : sig
@@ -61,6 +62,7 @@ module ClassicalProgram : sig
     Location.t -> ?return_locations:LocationSet.t -> ?rec_locations:LocationSet.t -> transition_graph -> t
 
   val remove_transition : t -> transition -> t
+  val remove_non_contributors : VarSet.t -> t -> t
 end
 
 include module type of ClassicalProgram

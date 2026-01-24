@@ -99,3 +99,4 @@ val of_non_function_call : TransitionLabelNonFunctionCall.t -> t
 val to_non_function_call : t -> TransitionLabelNonFunctionCall.t
 val overapprox_function_calls : t -> TransitionLabelNonFunctionCall.t
 val chain_guards : t -> t -> Guard.t
+val remove_non_contributors : VarSet.t -> t -> t

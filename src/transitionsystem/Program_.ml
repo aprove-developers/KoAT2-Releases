@@ -232,7 +232,7 @@ struct
 
 
   let ending_in_loc program l = G.pred_e program.graph l |> TransitionSet.of_list
-  let remove_non_contributors vset = map_labels (TL.remove_non_contributors vset)
+  let remove_non_contributors = ()
 
   module InternalTest = struct
     let get_pre_cache program =
@@ -260,6 +260,7 @@ module ClassicalProgram = struct
     map_transitions (Transition.map_label (TransitionLabel_.map_guard Guard.simplify_guard))
 
 
+  let remove_non_contributors vset = map_labels (TransitionLabel_.remove_non_contributors vset)
   let remove_unsatisfiable_transitions t = Set.fold ~init:t ~f:remove_transition
   let pre_without_rec = PreAdapterNonRec.pre
   let entry_transitions_without_rec = PreAdapterNonRec.entry_transitions

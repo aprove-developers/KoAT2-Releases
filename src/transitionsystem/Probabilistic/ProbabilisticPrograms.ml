@@ -410,12 +410,6 @@ module ProbabilisticTransitionLabel = struct
     input_vars t |> Set.filter ~f:(fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
 
 
-  let remove_non_contributors non_contributors t =
-    let update = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:(update_map t) in
-    let overappr_guard, overappr_nonprob_update = compute_overapproximated_update_and_guard update in
-    { t with properties = { t.properties with update; overappr_guard; overappr_nonprob_update } }
-
-
   let chain_guards t1 t2 =
     let nondet_vars = Hashtbl.create ~size:3 (module Var) in
     let substitution update_map var =
@@ -505,13 +499,6 @@ module NonProbTransitionLabel (POverAppr : PolyAdapter.PolyAdapter) = struct
     input_vars t
     |> Set.filter ~f:(fun v ->
            not POverAppr.(equal (of_var v) (Map.find (overappr_nonprob_update t) v |? of_var v)))
-
-
-  let remove_non_contributors non_contributors t =
-    let update_ =
-      Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:(overappr_nonprob_update t)
-    in
-    { t with properties = { t.properties with overappr_nonprob_update = update_ } }
 end
 
 module ProbabilisticTransitionLabelNonProbOverapprNonRec = struct
@@ -817,7 +804,22 @@ module GeneralTransition = struct
     (* TODO conjunction with invariant! *)
 
     let guard t = Guard.mk_and t.guard t.invariant
-    let map_transitions f gt = { gt with transitions = ProbabilisticTransitionSet.map ~f gt.transitions }
+
+    (* we reset the gt pointer after applying f *)
+    let map_transitions f gt =
+      let transitions =
+        ProbabilisticTransitionSet.map gt.transitions ~f:(fun t ->
+            let l, t, l' = f t in
+            (l, { t with gt = ref None }, l'))
+      in
+      let gt = { gt with transitions } in
+      Set.iter gt.transitions ~f:(fun t -> (ProbabilisticTransition.label t).gt := Some gt);
+      gt
+
+
+    let map_transition_properties ~f gt =
+      map_transitions (fun (l, t, l') -> (l, { t with properties = f t.properties }, l')) gt
+
 
     let map_gt f (gt : t) : t =
       let (gt : t) = f gt in
@@ -1205,6 +1207,19 @@ module ProbabilisticProgram = struct
   let gts = ProbabilisticTransitionGraph.gts % graph
   let simplify_all_guards (t : t) : t = map_gtsset (gts t) ~f:GeneralTransition.simplify_guard t
 
+  let remove_non_contributors non_contributors t =
+    let remove_for_transition guard props =
+      let update = Set.fold ~f:(fun u var -> Map.remove u var) non_contributors ~init:props.update in
+      let overappr_guard, overappr_nonprob_update =
+        ProbabilisticTransitionLabel.compute_overapproximated_update_and_guard update
+      in
+      let overappr_guard = Guard.mk_and overappr_guard guard in
+      { props with update; overappr_guard; overappr_nonprob_update }
+    in
+    map_gtsset (gts t) t ~f:(fun gt ->
+        GeneralTransition.map_transition_properties ~f:(remove_for_transition gt.guard) gt)
+
+
   let sccs_gts t =
     sccs t
     |> List.map ~f:(fun tset ->
@@ -1300,6 +1315,7 @@ module ProbabilisticProgramNonProbOverappr = struct
   let entry_transitions_without_rec = entry_transitions
   let entry_transitions_only_rec _ _ = []
   let entry_transitions_without_function_calls_with_logger = entry_transitions_with_logger
+  let remove_non_contributors = ProbabilisticProgram.remove_non_contributors
 end
 
 module GRV = struct

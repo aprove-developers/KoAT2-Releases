@@ -119,8 +119,6 @@ module type TransitionLabel = sig
   val changed_vars : t -> VarSet.t
   (** All input variables where the update is not x' = x.*)
 
-  val remove_non_contributors : VarSet.t -> t -> t
-
   include Comparator.S with type t := t
 
   val sexp_of_t : t -> Sexp.t
