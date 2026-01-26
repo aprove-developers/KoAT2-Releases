@@ -13,7 +13,7 @@ module Koat2Apron = struct
 
   (** Converts a koat integer to its apron equivalent.
         TODO Usage of OurInt.to_int breaks usage of big_int *)
-  let const_to_apron : OurInt.t -> Apron.Coeff.t = Apron.Coeff.s_of_int % OurInt.to_int
+  let const_to_apron : OurInt.t -> Apron.Coeff.t = Apron.Coeff.s_of_mpqf % Mpqf.of_string % OurInt.to_string
 
   (** Converts a koat polynomial to its apron equivalent. *)
   let poly_to_apron (environment : Apron.Environment.t) (poly : Polynomial.t) : Apron.Texpr1.t =
@@ -84,14 +84,21 @@ module Apron2Koat = struct
   (** Converts an apron variable set to its koat equivalent. *)
   let vars_from_apron : Apron.Var.t array -> VarSet.t = VarSet.of_array % Array.map ~f:var_from_apron
 
+  (** Converts an apron scalar into its a koat integer by truncating floating-point numbers. *)
+  let scalar_from_apron (scalar : Apron.Scalar.t) : OurInt.t =
+    let open Apron in
+    match scalar with
+    | Scalar.Float float -> OurInt.of_float float
+    | Scalar.Mpqf float -> OurInt.of_string (Mpqf.to_string float)
+    | Scalar.Mpfrf float -> OurInt.of_string (Mpfrf.to_string float)
+
+
   (** Converts an apron integer to its koat equivalent.
         TODO Usage of OurInt.to_int breaks usage of big_int *)
   let const_from_apron (coeff : Apron.Coeff.t) : OurInt.t =
     let open Apron in
     match coeff with
-    | Coeff.Scalar (Scalar.Float float) -> OurInt.of_int (int_of_float float)
-    | Coeff.Scalar (Scalar.Mpqf float) -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
-    | Coeff.Scalar (Scalar.Mpfrf float) -> (OurInt.of_int % int_of_float % Mpfrf.to_float) float
+    | Coeff.Scalar s -> scalar_from_apron s
     | Coeff.Interval _ -> raise (Failure "Apron Intervals are not allowed!")
 
 
@@ -140,15 +147,6 @@ module Apron2Koat = struct
       result := atom_from_apron (Apron.Tcons1.array_get constraint_array i) :: !result
     done;
     Constraint.all !result
-
-
-  (** Converts an apron scalar into its a koat integer by truncating floating-point numbers. *)
-  let scalar_from_apron (scalar : Apron.Scalar.t) : OurInt.t =
-    let open Apron in
-    match scalar with
-    | Scalar.Float float -> (OurInt.of_int % int_of_float) float
-    | Scalar.Mpqf float -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
-    | Scalar.Mpfrf float -> (OurInt.of_int % int_of_float % Mpfrf.to_float) float
 
 
   (** Creates constraints for a variable bounded by an interval *)
