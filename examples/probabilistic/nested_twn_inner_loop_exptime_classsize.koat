@@ -4,6 +4,6 @@
 (RULES
   f(x,y,z) -> g(x,y,z)
   g(x,y,z) -> h(z,1,z) :|: z > 0
-  h(x,y,z) -> h(2 * x, 3 * y,z) :|: x >= y && y >= 1
+  h(x,y,z) -> h(2 * x, 3 * y,z) :|: x >= y && y >= 1 && z > 0
   h(x,y,z) -> 0.5:g(x,y,z) :+: 0.5:g(x,y,z-1)
 )
