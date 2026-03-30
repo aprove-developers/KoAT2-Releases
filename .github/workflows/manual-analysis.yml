@@ -1,0 +1,63 @@
+#------------------------------------------------------------------------------#
+# Analyse Benchmark Runs Manually                                              #
+#------------------------------------------------------------------------------#
+#                                                                              #
+# This workflow runs the benchmark analysis manually via `workflow_dispatch`.  #
+#                                                                              #
+# It acts as a small entry point only. The analysis action is maintained on    #
+# the `benchmark` branch and is reused here via:                               #
+#  aprove-developers/KoAT2/.github/actions/benchmark/analyse-results@benchmark #
+#                                                                              #
+#------------------------------------------------------------------------------#
+
+
+name: Manual Analysis
+description: >-
+  Manually call benchmark run analysis from benchmark branch.
+  Can be used to compare benchmarks without actually starting a new benchmark.
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: Comma-separated run specs like 152-2,153-1,160-3
+        required: true
+        type: string
+
+      term_comp_results:
+        description: URL to TermCOMP results
+        required: false
+        default: >-
+          https://zenodo.org/api/records/17076326/files/Complexity_ITS.zip/content
+        type: string
+
+
+permissions:
+  contents: read
+
+
+jobs:
+  analyse:
+    name: Analyse selected benchmark runs
+    runs-on: self-hosted
+    steps:
+      - name: Run analysis action from benchmark branch
+        uses: >-
+          aprove-developers/KoAT2/.github/actions/benchmark/analyse-results@benchmark
+        with:
+          runs: ${{ inputs.runs }}
+          term_comp_results_url: ${{ inputs.term_comp_results }}
+
+      - name: Upload analysis artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: >-
+            manual-analysis-${{ github.run_id }}-${{ github.run_attempt }}
+          path: analyse/analysis_summary.md
+
+      - name: Publish analysis to job summary
+        shell: bash
+        run: |
+          cat analyse/analysis_summary.md \
+            >> "$GITHUB_STEP_SUMMARY"

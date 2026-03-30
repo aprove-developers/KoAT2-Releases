@@ -1,0 +1,116 @@
+#------------------------------------------------------------------------------#
+# Benchmark KoAT Manually                                                      #
+#------------------------------------------------------------------------------#
+#                                                                              #
+# This workflow starts the benchmark manually via `workflow_dispatch`.         #
+#                                                                              #
+# It acts as a small entry point only. The actual benchmark workflow and its   #
+# supporting scripts are maintained on the `benchmark` branch and are reused   #
+# here via:                                                                    #
+#  aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark           #
+#                                                                              #
+#------------------------------------------------------------------------------#
+
+
+name: Manual Benchmark
+description: Manually call benchmarking workflow from `benchmark` branch.
+run-name: >-
+  Manual Benchmark #${{ github.run_id }}:
+  ${{ inputs.target_sha != '' && inputs.target_sha || github.sha }}
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: >-
+          Commit SHA on master to benchmark. Leave empty for most recent commit.
+        required: false
+        default: ""
+        type: string
+
+      num_examples:
+        description: Max number examples
+        required: false
+        default: 1024
+        type: string
+
+      examples_path:
+        description: Example path
+        required: false
+        default: ./Complexity_ITS/
+        type: string
+
+      timeout:
+        description: Timeout
+        required: false
+        default: 60
+        type: string
+
+      mem_limit:
+        description: Memory Limit
+        required: false
+        default: 4g
+        type: string
+
+      num_jobs:
+        description: Number of Matrix jobs
+        required: false
+        default: 1
+        type: string
+
+      arguments:
+        description: Arguments
+        required: false
+        default: >-
+          analyse
+          -r termcomp
+          --cfr=pe
+          --local=mprf,twnlog,unsolvable
+          -d5
+          --size=closed,commuting
+        type: string
+
+      term_comp_results:
+        description: URL to TermCOMP results
+        required: false
+        default: >-
+          https://zenodo.org/api/records/17076326/files/Complexity_ITS.zip/content
+        type: string
+
+      max_workers:
+        description: Max Workers per Matrix Job
+        required: false
+        default: 4
+        type: string
+      
+      min_differences:
+        description: >-
+          Minimum number of differing benchmarks required to treat two runs
+          as significantly different
+        required: false
+        default: 2
+        type: string
+
+
+permissions:
+  contents: write
+  packages: write
+
+
+jobs:
+  benchmark:
+    uses: >-
+      aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark
+    with:
+      target_sha: >-
+        ${{ inputs.target_sha != '' && inputs.target_sha || github.sha }}
+      num_examples: ${{ inputs.num_examples }}
+      examples_path: ${{ inputs.examples_path }}
+      timeout: ${{ inputs.timeout }}
+      mem_limit: ${{ inputs.mem_limit }}
+      num_jobs: ${{ inputs.num_jobs }}
+      arguments: ${{ inputs.arguments }}
+      term_comp_results: ${{ inputs.term_comp_results }}
+      max_workers: ${{ inputs.max_workers }}
+      min_differences: ${{ inputs.min_differences }}

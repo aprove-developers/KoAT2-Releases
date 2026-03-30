@@ -1,0 +1,57 @@
+#------------------------------------------------------------------------------#
+# Benchmark KoAT on Push to Main                                               #
+#------------------------------------------------------------------------------#
+#                                                                              #
+# This workflow runs the benchmark automatically for pushes to the `master`    #
+# branch that modify relevant source files (see `paths` below).                #
+#                                                                              #
+# It acts as a small entry point only. The actual benchmark workflow and its   #
+# supporting scripts are maintained on the `benchmark` branch and are reused   #
+# here via:                                                                    #
+#  aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark           #
+#                                                                              #
+#------------------------------------------------------------------------------#
+
+
+name: Push Benchmark
+description: Automatically call benchmarking workflow from `benchmark` branch.
+run-name: >-
+  Benchmark #${{ github.run_id }}:
+  ${{ github.event.head_commit.message }}
+
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/**'
+      - 'docker_scripts/**'
+
+
+permissions:
+  contents: write
+  packages: write
+
+
+jobs:
+  benchmark:
+    uses: aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark
+    with:
+      target_sha: ${{ github.sha }}
+      num_examples: 1024
+      examples_path: ./Complexity_ITS/
+      timeout: 60
+      mem_limit: 4g
+      num_jobs: 1
+      arguments: >-
+        analyse
+        -r termcomp
+        --cfr=pe
+        --local=mprf,twnlog,unsolvable
+        -d5
+        --size=closed,commuting
+      term_comp_results: >-
+        https://zenodo.org/api/records/17076326/files/Complexity_ITS.zip/content
+      max_workers: 4
+      min_differences: 2
