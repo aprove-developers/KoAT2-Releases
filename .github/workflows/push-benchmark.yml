@@ -8,7 +8,7 @@
 # It acts as a small entry point only. The actual benchmark workflow and its   #
 # supporting scripts are maintained on the `benchmark` branch and are reused   #
 # here via:                                                                    #
-#  aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark           #
+#  emilywotruba/KoAT2/.github/workflows/benchmark.yml@benchmark           #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -36,7 +36,7 @@ permissions:
 
 jobs:
   benchmark:
-    uses: aprove-developers/KoAT2/.github/workflows/benchmark.yml@benchmark
+    uses: emilywotruba/KoAT2/.github/workflows/benchmark.yml@benchmark
     with:
       target_sha: ${{ github.sha }}
       num_examples: 1024

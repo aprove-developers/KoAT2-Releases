@@ -6,7 +6,7 @@
 #                                                                              #
 # It acts as a small entry point only. The analysis action is maintained on    #
 # the `benchmark` branch and is reused here via:                               #
-#  aprove-developers/KoAT2/.github/actions/benchmark/analyse-results@benchmark #
+#  emilywotruba/KoAT2/.github/actions/benchmark/analyse-results@benchmark #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Run analysis action from benchmark branch
         uses: >-
-          aprove-developers/KoAT2/.github/actions/benchmark/analyse-results@benchmark
+          emilywotruba/KoAT2/.github/actions/benchmark/analyse-results@benchmark
         with:
           runs: ${{ inputs.runs }}
           term_comp_results_url: ${{ inputs.term_comp_results }}
