@@ -118,7 +118,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     (* | LogarithmicPolynomial (x, y) when OurRational.(equal x one && equal y zero) ->
         "WORST_CASE(?, O(log(n)))" *)
     | LogarithmicPolynomial (x, y) -> "WORST_CASE(?, O(n^" ^ OurRational.(to_string (x + y)) ^ "))"
-    | Exponential _ -> "WORST_CASE(?, O(EXP))"
+    | Exponential _ -> "WORST_CASE(?, FINITE)"
 
 
   let show_complexity_termcomp_log = function
@@ -130,7 +130,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
         "WORST_CASE(?, O(" ^ correct_str "log(n)" x ^ "))"
     | LogarithmicPolynomial (x, y) ->
         "WORST_CASE(?, O(" ^ correct_str "log(n)" x ^ "*" ^ correct_str "n" y ^ "))"
-    | Exponential _ -> "WORST_CASE(?, O(EXP))"
+    | Exponential _ -> "WORST_CASE(?, FINITE)"
 
 
   let lex_compare (b1, a1) (b2, a2) =
