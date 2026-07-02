@@ -7,10 +7,10 @@ module Inner = struct
   let hash l = Hashtbl.hash l
   let of_string name = name
 
-  let cmdliner_converter : t Cmdliner.Arg.parser * t Cmdliner.Arg.printer =
-    let of_string : t Cmdliner.Arg.parser = fun s -> `Ok (of_string s) in
-    let printer : t Cmdliner.Arg.printer = fun fmt t -> Format.fprintf fmt "%s" (to_string t) in
-    (of_string, printer)
+  let cmdliner_converter : t Cmdliner.Arg.conv =
+    let parser = fun s -> Ok (of_string s) in
+    let printer = fun fmt t -> Format.fprintf fmt "%s" (to_string t) in
+    Cmdliner.Arg.conv (parser, printer)
 end
 
 include Inner

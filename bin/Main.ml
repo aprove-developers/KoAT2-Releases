@@ -5,7 +5,9 @@ open Base
 type main_params = { version : bool [@default false]  (** Print the git version *) } [@@deriving cmdliner]
 
 let subcommand run params_cmdliner_term description command =
-  Cmdliner.Term.(const run $ params_cmdliner_term (), info ~doc:description command)
+  let term = Cmdliner.Term.(const run $ params_cmdliner_term ()) in
+  let info = Cmdliner.Cmd.info ~doc:description command in
+  Cmdliner.Cmd.v info term
 
 
 let subcommands =
@@ -33,7 +35,8 @@ let default_cmd params =
 
 let () =
   (* Read the arguments from the shell via an api and call run *)
-  let main_command =
-    (Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term ())), Cmdliner.Term.info Sys.argv.(0))
-  in
-  Cmdliner.Term.(exit @@ eval_choice main_command subcommands)
+  let default_term = Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term ())) in
+  let main_info = Cmdliner.Cmd.info Sys.argv.(0) in
+  let main_group = Cmdliner.Cmd.group ~default:default_term main_info subcommands in
+
+  exit (Cmdliner.Cmd.eval main_group)

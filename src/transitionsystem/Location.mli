@@ -16,7 +16,7 @@ val to_string : t -> string
 val of_string : string -> t
 (** Creates a location from a given name. *)
 
-val cmdliner_converter : t Cmdliner.Arg.converter
+val cmdliner_converter : t Cmdliner.Arg.conv
 
 include Comparator.S with type t := t
 include Sexpable.S with type t := t
