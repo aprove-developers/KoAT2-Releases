@@ -26,29 +26,29 @@ let compute_ue_diff label v =
 let compute_elcb program_vars ((gt, l), v) =
   Set.to_sequence (GeneralTransition.transitions_to_target l gt)
   |> Sequence.map ~f:(fun t ->
-         let label = Transition.label t in
-         let ue_diff = compute_ue_diff label v in
+      let label = Transition.label t in
+      let ue_diff = compute_ue_diff label v in
 
-         let ue_exp_abs_diff_bound =
-           let temp_var_bound tv =
-             let guard = Formulas.Formula.mk (TransitionLabel.guard label) in
-             LocalSizeBound.find_bound program_vars tv guard (LocalSizeBound.c_range guard)
-             |> Option.map ~f:(RationalBound.of_intbound % LocalSizeBound.as_bound % Tuple2.first)
-             |> Option.value ~default:RationalBound.infinity
-           in
-           UpdateElement.exp_value_abs_bound ue_diff
-           |> RationalBound.substitute_f (fun v ->
-                  if Set.mem program_vars v then
-                    RationalBound.of_var v
-                  else
-                    temp_var_bound v)
-         in
-         let ue_exp_abs_diff_poly = RationalBound.to_poly ue_exp_abs_diff_bound in
-         match ue_exp_abs_diff_poly with
-         | Some ue_exp_abs_diff_poly ->
-             Polynomials.RationalLaurentPolynomial.(ue_exp_abs_diff_poly * TransitionLabel.probability label)
-             |> RationalBound.of_overapprox_laurentpoly
-         | None ->
-             RationalBound.(
-               of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_diff_bound))
+      let ue_exp_abs_diff_bound =
+        let temp_var_bound tv =
+          let guard = Formulas.Formula.mk (TransitionLabel.guard label) in
+          LocalSizeBound.find_bound program_vars tv guard (LocalSizeBound.c_range guard)
+          |> Option.map ~f:(RationalBound.of_intbound % LocalSizeBound.as_bound % Tuple2.first)
+          |> Option.value ~default:RationalBound.infinity
+        in
+        UpdateElement.exp_value_abs_bound ue_diff
+        |> RationalBound.substitute_f (fun v ->
+            if Set.mem program_vars v then
+              RationalBound.of_var v
+            else
+              temp_var_bound v)
+      in
+      let ue_exp_abs_diff_poly = RationalBound.to_poly ue_exp_abs_diff_bound in
+      match ue_exp_abs_diff_poly with
+      | Some ue_exp_abs_diff_poly ->
+          Polynomials.RationalLaurentPolynomial.(ue_exp_abs_diff_poly * TransitionLabel.probability label)
+          |> RationalBound.of_overapprox_laurentpoly
+      | None ->
+          RationalBound.(
+            of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_diff_bound))
   |> RationalBound.sum

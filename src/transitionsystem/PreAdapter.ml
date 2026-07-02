@@ -33,8 +33,8 @@ struct
     in
     l |> G.pred_e program.graph |> Sequence.of_list
     |> Sequence.filter ~f:(fun (_, t', _) ->
-           TL.chain_guards t' t
-           |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*))
+        TL.chain_guards t' t
+        |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*))
 
 
   let pre_lazy program trans =
@@ -67,10 +67,9 @@ struct
   let entry_transitions_with_logger logger program (transitions : T.t list) : T.t List.t =
     entry_transitions program transitions
     |> tap (fun transitions ->
-           Logger.log logger Logger.DEBUG (fun () ->
-               ( "entry_transitions",
-                 [ ("result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string) ]
-               )))
+        Logger.log logger Logger.DEBUG (fun () ->
+            ( "entry_transitions",
+              [ ("result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string) ] )))
 end
 
 module PreAdapter = struct
@@ -113,10 +112,10 @@ module PreAdapter = struct
   let entry_transitions_with_logger logger program (transitions : Transition.t list) : Transition.t List.t =
     entry_transitions program transitions
     |> tap (fun transitions ->
-           Logger.log logger Logger.DEBUG (fun () ->
-               ( "entry_transitions_rec",
-                 [
-                   ( "result",
-                     transitions |> Sequence.of_list |> Util.sequence_to_string ~f:Transition.to_id_string );
-                 ] )))
+        Logger.log logger Logger.DEBUG (fun () ->
+            ( "entry_transitions_rec",
+              [
+                ( "result",
+                  transitions |> Sequence.of_list |> Util.sequence_to_string ~f:Transition.to_id_string );
+              ] )))
 end

@@ -51,7 +51,7 @@ struct
   let loc_transitions graph locations =
     transitions graph
     |> Set.filter ~f:(fun (l, _, l') ->
-           List.mem ~equal:Location.equal locations l && List.mem ~equal:Location.equal locations l')
+        List.mem ~equal:Location.equal locations l && List.mem ~equal:Location.equal locations l')
 
 
   let equivalent graph1 graph2 =

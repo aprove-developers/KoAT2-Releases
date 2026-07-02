@@ -70,9 +70,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                   ( entry,
                     Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
                     |> Bound.substitute_f (fun var ->
-                           Bound.of_poly
-                           @@ (Map.find traversal var |? PolyFunctionCall.of_var var
-                             |> PolyFunctionCall.to_poly)) ))
+                        Bound.of_poly
+                        @@ (Map.find traversal var |? PolyFunctionCall.of_var var |> PolyFunctionCall.to_poly))
+                  ))
                 entries_traversal
               |> Option.some
             in

@@ -2804,7 +2804,9 @@ end = struct
     if less_eq_nat (bheight l) (bheight r) then
       Branch (R, l, a, b, r)
     else
-      match l with
+      match
+        l
+      with
       | Branch (R, la, ab, ba, ra) -> Branch (R, la, ab, ba, rbt_joinR ra a b r)
       | Branch (B, la, ab, ba, ra) -> rbt_baliR la ab ba (rbt_joinR ra a b r)
 
@@ -2832,7 +2834,9 @@ end = struct
     if less_eq_nat (bheight r) (bheight l) then
       Branch (R, l, a, b, r)
     else
-      match r with
+      match
+        r
+      with
       | Branch (R, la, ab, ba, ra) -> Branch (R, rbt_joinL l a b la, ab, ba, ra)
       | Branch (B, la, ab, ba, ra) -> rbt_baliL (rbt_joinL l a b la) ab ba ra
 
@@ -2886,7 +2890,9 @@ end = struct
     if less_nat bh2a (nat_of_integer (Z.of_int 4)) then
       folda (rbt_comp_insert_with_key c fa) t2a t1a
     else
-      match t1a with
+      match
+        t1a
+      with
       | Empty -> t2a
       | Branch (_, l1, a, b, r1) ->
           let l2, (beta, r2) = rbt_split_comp c t2a a in
@@ -3108,7 +3114,9 @@ end = struct
     if less_nat bh2a (nat_of_integer (Z.of_int 4)) then
       rbtreeify (map_filter_comp_inter c fa t1a t2a)
     else
-      match t1a with
+      match
+        t1a
+      with
       | Empty -> Empty
       | Branch (_, l1, a, b, r1) -> (
           let l2, (beta, r2) = rbt_split_comp c t2a a in
@@ -5206,7 +5214,9 @@ end = struct
           if equal_nata i qj then
             one
           else
-            match invers i with
+            match
+              invers i
+            with
             | None -> zero
             | Some j -> uminus (index_mat a (j, qj)))
 
@@ -6982,7 +6992,9 @@ end = struct
     if equal_nata p zero_nata then
       zero_inta
     else
-      match root_int_main p x with
+      match
+        root_int_main p x
+      with
       | y, true -> y
       | y, false -> plus_inta y one_inta
 

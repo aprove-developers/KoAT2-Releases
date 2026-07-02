@@ -67,8 +67,8 @@ struct
     transitions |> List.sort ~compare:T.compare
     |> List.map ~f:(fun trans -> (trans, get t trans))
     |> List.map ~f:(fun (trans, b) ->
-           FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty trans ^ ": "
-           ^ B.to_string ~pretty ~termination_only b)
+        FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty trans ^ ": "
+        ^ B.to_string ~pretty ~termination_only b)
     |> FormattedString.mappend
 
 

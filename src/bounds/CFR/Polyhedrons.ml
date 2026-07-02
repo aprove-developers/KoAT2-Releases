@@ -52,12 +52,12 @@ module Polyhedrons = struct
     let env = Apron.Abstract1.env polyh in
     Set.to_sequence vars
     |> Sequence.map ~f:(fun variable ->
-           let apron_var = ApronInterface.Koat2Apron.var_to_apron variable in
-           if Apron.Environment.mem_var env apron_var then
-             Apron.Abstract1.bound_variable am polyh apron_var
-             |> ApronInterface.Apron2Koat.interval_from_apron variable
-           else
-             Guard.mk_true)
+        let apron_var = ApronInterface.Koat2Apron.var_to_apron variable in
+        if Apron.Environment.mem_var env apron_var then
+          Apron.Abstract1.bound_variable am polyh apron_var
+          |> ApronInterface.Apron2Koat.interval_from_apron variable
+        else
+          Guard.mk_true)
     |> Sequence.fold ~f:Constraint.mk_and ~init:Constraint.mk_true
 
 

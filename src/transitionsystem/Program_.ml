@@ -156,12 +156,12 @@ struct
     let in_and_out =
       Set.to_list scc_locs
       |> List.map ~f:(fun loc ->
-             if Set.mem (G.locations program.graph) loc then
-               let outgoing = G.succ_e program.graph loc in
-               let incoming = G.pred_e program.graph loc in
-               Set.union (TransitionSet.of_list outgoing) (TransitionSet.of_list incoming)
-             else
-               TransitionSet.empty)
+          if Set.mem (G.locations program.graph) loc then
+            let outgoing = G.succ_e program.graph loc in
+            let incoming = G.pred_e program.graph loc in
+            Set.union (TransitionSet.of_list outgoing) (TransitionSet.of_list incoming)
+          else
+            TransitionSet.empty)
       |> TransitionSet.union_list
     in
     Set.union scc_transitions in_and_out
@@ -225,10 +225,9 @@ struct
     Set.diff all_succ (TransitionSet.of_list rank_transitions)
     |> Set.to_list
     |> tap (fun transitions ->
-           Logger.log logger Logger.DEBUG (fun () ->
-               ( "outgoing_transitions",
-                 [ ("result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string) ]
-               )))
+        Logger.log logger Logger.DEBUG (fun () ->
+            ( "outgoing_transitions",
+              [ ("result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string) ] )))
 
 
   let ending_in_loc program l = G.pred_e program.graph l |> TransitionSet.of_list
@@ -301,21 +300,20 @@ let from_com_transitions ?(termination = false) ?(return_locations = LocationSet
             else
               cleaned
               |> tap (fun new_ts ->
-                     if List.length new_ts = 1 then
-                       Logger.log
-                         Logging.(get Program)
-                         INFO
-                         (fun () ->
-                           ( "eliminate_recursion",
-                             [
-                               ( "old_targets",
-                                 Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list ts) );
-                               ( "new_targets",
-                                 Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list new_ts)
-                               );
-                             ] ))
-                     else
-                       ())
+                  if List.length new_ts = 1 then
+                    Logger.log
+                      Logging.(get Program)
+                      INFO
+                      (fun () ->
+                        ( "eliminate_recursion",
+                          [
+                            ( "old_targets",
+                              Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list ts) );
+                            ( "new_targets",
+                              Util.sequence_to_string ~f:Transition_.to_id_string (Sequence.of_list new_ts) );
+                          ] ))
+                  else
+                    ())
           else
             ts)
         com_transitions
@@ -354,15 +352,15 @@ let rename program =
   let name location =
     Hashtbl.find map location
     |> Option.value_or_thunk ~default:(fun () ->
-           let new_name = "l" ^ string_of_int !counter in
-           Hashtbl.add_exn map ~key:location ~data:new_name;
-           counter := !counter + 1;
-           Logger.(
-             log
-               Logging.(get Preprocessor)
-               INFO
-               (fun () -> ("renaming", [ ("original", Location.to_string location); ("new", new_name) ])));
-           new_name)
+        let new_name = "l" ^ string_of_int !counter in
+        Hashtbl.add_exn map ~key:location ~data:new_name;
+        counter := !counter + 1;
+        Logger.(
+          log
+            Logging.(get Preprocessor)
+            INFO
+            (fun () -> ("renaming", [ ("original", Location.to_string location); ("new", new_name) ])));
+        new_name)
     |> Location.of_string
   in
   let new_start = name program.start

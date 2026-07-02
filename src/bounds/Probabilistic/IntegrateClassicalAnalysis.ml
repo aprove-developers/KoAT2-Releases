@@ -111,57 +111,57 @@ module Make (BP : BoundPair.T) = struct
       let open OptionMonad in
       Set.to_list all_unbounded_gts
       |> List.map ~f:(fun gt ->
-             let+ mprfs =
-               Set.to_list (GeneralTransition.transitions gt)
-               |> List.map ~f:(Map.find mprf_map)
-               |> OptionMonad.sequence
-             in
-             (gt, mprfs))
+          let+ mprfs =
+            Set.to_list (GeneralTransition.transitions gt)
+            |> List.map ~f:(Map.find mprf_map)
+            |> OptionMonad.sequence
+          in
+          (gt, mprfs))
       |> List.filter_opt
     in
     Sequence.of_list unbounded_gts_with_mprfs
     |> MaybeChanged.fold_sequence ~init:appr ~f:(fun appr (gt, mprfs) ->
-           let new_bounds_and_proofs =
-             List.map mprfs ~f:(fun mprf ->
-                 let time_and_size_direction_proof = ProofOutput.LocalProofOutput.create () in
-                 let get_timebound, get_sizebound =
-                   get_timebound_and_sizebound_both_directions ~proof:time_and_size_direction_proof
-                     (class_appr, appr)
-                 in
-                 let unlifted = MultiphaseRankingFunction.to_unlifted_bound class_program mprf in
-                 let new_bound, compute_proof =
-                   UnliftedBound.lift_and_get_proof ~get_timebound ~get_sizebound unlifted
-                 in
-                 let compute_proof format =
-                   FormattedString.(
-                     compute_proof format
-                     <> mk_block (ProofOutput.LocalProofOutput.get_proof time_and_size_direction_proof format))
-                 in
-                 (new_bound, compute_proof))
-           in
-           let new_bound =
-             List.map ~f:(fun (b, _) -> b) new_bounds_and_proofs
-             |> BP.class_to_prob_bound % BP.ClassBound.sum_list
-           in
-           ProofOutput.add_to_proof_with_format
-             FormattedString.(
-               fun format ->
-                 let header =
-                   mk_header_small @@ mk_str @@ "Computed expected time bound for "
-                   ^ GeneralTransition.to_id_string_pretty gt
-                   ^ " with MPRF"
-                 in
-                 (* Due to the heuristic the bound should always be finite so we don't need to explicitly check here *)
-                 let new_bound =
-                   mk_str_line @@ "Obtained bound " ^ BP.ProbBound.to_string ~pretty:true new_bound
-                 in
-                 let mprf_proofs =
-                   List.map
-                     ~f:(fun (_, f) -> reduce_header_sizes ~levels_to_reduce:1 (f format))
-                     new_bounds_and_proofs
-                 in
-                 header <> new_bound <> mappend mprf_proofs);
-           MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr))
+        let new_bounds_and_proofs =
+          List.map mprfs ~f:(fun mprf ->
+              let time_and_size_direction_proof = ProofOutput.LocalProofOutput.create () in
+              let get_timebound, get_sizebound =
+                get_timebound_and_sizebound_both_directions ~proof:time_and_size_direction_proof
+                  (class_appr, appr)
+              in
+              let unlifted = MultiphaseRankingFunction.to_unlifted_bound class_program mprf in
+              let new_bound, compute_proof =
+                UnliftedBound.lift_and_get_proof ~get_timebound ~get_sizebound unlifted
+              in
+              let compute_proof format =
+                FormattedString.(
+                  compute_proof format
+                  <> mk_block (ProofOutput.LocalProofOutput.get_proof time_and_size_direction_proof format))
+              in
+              (new_bound, compute_proof))
+        in
+        let new_bound =
+          List.map ~f:(fun (b, _) -> b) new_bounds_and_proofs
+          |> BP.class_to_prob_bound % BP.ClassBound.sum_list
+        in
+        ProofOutput.add_to_proof_with_format
+          FormattedString.(
+            fun format ->
+              let header =
+                mk_header_small @@ mk_str @@ "Computed expected time bound for "
+                ^ GeneralTransition.to_id_string_pretty gt
+                ^ " with MPRF"
+              in
+              (* Due to the heuristic the bound should always be finite so we don't need to explicitly check here *)
+              let new_bound =
+                mk_str_line @@ "Obtained bound " ^ BP.ProbBound.to_string ~pretty:true new_bound
+              in
+              let mprf_proofs =
+                List.map
+                  ~f:(fun (_, f) -> reduce_header_sizes ~levels_to_reduce:1 (f format))
+                  new_bounds_and_proofs
+              in
+              header <> new_bound <> mappend mprf_proofs);
+        MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr))
 
 
   (** We want to compare TWN Loops by the set of their handed transitions *)
@@ -198,12 +198,12 @@ module Make (BP : BoundPair.T) = struct
     Printf.sprintf "bounds_from_twn_loops: %s\nremaining_twn_loops: %s\n"
       (Map.to_sequence twn_state.bounds_from_twn_loops
       |> Util.sequence_to_string ~f:(fun (t, (b, _)) ->
-             Transition.to_id_string_pretty t ^ ": " ^ BP.ClassBound.to_string b))
+          Transition.to_id_string_pretty t ^ ": " ^ BP.ClassBound.to_string b))
       (Set.to_sequence twn_state.remaining_twn_loops
       |> Util.sequence_to_string ~f:(fun l_w_p ->
-             let cycle, _ = ProofOutput.LocalProofOutput.result l_w_p in
-             Sequence.of_list cycle
-             |> Util.sequence_to_string ~f:NonProbOverappr.Transition.to_id_string_pretty))
+          let cycle, _ = ProofOutput.LocalProofOutput.result l_w_p in
+          Sequence.of_list cycle |> Util.sequence_to_string ~f:NonProbOverappr.Transition.to_id_string_pretty)
+      )
 
 
   let all_already_bounded_trans twn_state = Map.keys twn_state.bounds_from_twn_loops |> TransitionSet.of_list
@@ -341,32 +341,32 @@ module Make (BP : BoundPair.T) = struct
       ~f:(compute_timebounds_from_loop_with_proof ~twnlog ~unsolvable twn_state (class_appr, appr));
     Set.to_sequence unbounded_gts
     |> Sequence.filter_map ~f:(fun gt ->
-           let open OptionMonad in
-           (* We only store finite bounds in twn_state *)
-           let bounds_with_proofs =
-             Set.to_list (GeneralTransition.transitions gt)
-             |> List.map ~f:(fun t ->
-                    let+ b_w_p = Map.find !twn_state.bounds_from_twn_loops t in
-                    (t, b_w_p))
-             |> OptionMonad.sequence
-           in
-           let+ transs_with_bounds_with_proofs = bounds_with_proofs in
-           let b =
-             Sequence.of_list transs_with_bounds_with_proofs
-             |> Sequence.map ~f:(fun (_, (b, _)) -> BP.class_to_prob_bound b)
-             |> BP.ProbBound.sum
-           in
-           ProofOutput.add_to_proof_with_format
-             FormattedString.(
-               fun format ->
-                 mk_str_header_small
-                   ("Found new bound for " ^ GeneralTransition.to_id_string_pretty gt ^ " with TWN")
-                 <> mappend
-                      (List.map transs_with_bounds_with_proofs ~f:(fun (t, (b, proof)) ->
-                           reduce_header_sizes ~levels_to_reduce:2 (proof format))));
-           (gt, b))
+        let open OptionMonad in
+        (* We only store finite bounds in twn_state *)
+        let bounds_with_proofs =
+          Set.to_list (GeneralTransition.transitions gt)
+          |> List.map ~f:(fun t ->
+              let+ b_w_p = Map.find !twn_state.bounds_from_twn_loops t in
+              (t, b_w_p))
+          |> OptionMonad.sequence
+        in
+        let+ transs_with_bounds_with_proofs = bounds_with_proofs in
+        let b =
+          Sequence.of_list transs_with_bounds_with_proofs
+          |> Sequence.map ~f:(fun (_, (b, _)) -> BP.class_to_prob_bound b)
+          |> BP.ProbBound.sum
+        in
+        ProofOutput.add_to_proof_with_format
+          FormattedString.(
+            fun format ->
+              mk_str_header_small
+                ("Found new bound for " ^ GeneralTransition.to_id_string_pretty gt ^ " with TWN")
+              <> mappend
+                   (List.map transs_with_bounds_with_proofs ~f:(fun (t, (b, proof)) ->
+                        reduce_header_sizes ~levels_to_reduce:2 (proof format))));
+        (gt, b))
     |> MaybeChanged.fold_sequence ~init:appr ~f:(fun appr (gt, b) ->
-           MaybeChanged.changed @@ ExpApproximation.add_timebound b gt appr)
+        MaybeChanged.changed @@ ExpApproximation.add_timebound b gt appr)
 
 
   let improve_with_twn ?(twnlog = false) ?(unsolvable = false) twn_state scc (class_appr, appr) =
@@ -376,8 +376,8 @@ module Make (BP : BoundPair.T) = struct
         let partially_handled_unbounded_gts loop_with_proof =
           handled_transs_of_twn_loop_with_proof loop_with_proof
           |> Sequence.filter_map ~f:(fun t ->
-                 let gt = Transition.gt t in
-                 Option.some_if (Set.mem unbounded_gts gt) gt)
+              let gt = Transition.gt t in
+              Option.some_if (Set.mem unbounded_gts gt) gt)
           |> GeneralTransitionSet.of_sequence
         in
         Set.fold !twn_state.remaining_twn_loops
@@ -386,30 +386,28 @@ module Make (BP : BoundPair.T) = struct
             Set.fold (partially_handled_unbounded_gts loop_with_proof) ~init:map ~f:(fun map gt ->
                 Map.add_multi map ~key:gt ~data:loop_with_proof))
         |> Map.filteri ~f:(fun ~key ~data ->
-               Set.is_subset (GeneralTransition.transitions key)
-                 ~of_:
-                   (Set.union
-                      (handled_transs_of_twn_loops_with_proofs data)
-                      (all_already_bounded_trans !twn_state)))
+            Set.is_subset (GeneralTransition.transitions key)
+              ~of_:
+                (Set.union
+                   (handled_transs_of_twn_loops_with_proofs data)
+                   (all_already_bounded_trans !twn_state)))
       in
       let gt_to_improve_with_loops =
         Map.to_sequence unbounded_gt_to_twn_loops_map
         |> Sequence.find_map ~f:(fun (gt, loops_with_proofs) ->
-               let all_new_boundable_loops =
-                 List.filter
-                   ~f:(twn_heuristic (class_appr, appr) % ProofOutput.LocalProofOutput.result)
-                   loops_with_proofs
-               in
-               let all_new_boundable_trans =
-                 handled_transs_of_twn_loops_with_proofs all_new_boundable_loops
-               in
-               if
-                 Set.is_subset (GeneralTransition.transitions gt)
-                   ~of_:(Set.union all_new_boundable_trans (all_already_bounded_trans !twn_state))
-               then
-                 Some (gt, all_new_boundable_loops)
-               else
-                 None)
+            let all_new_boundable_loops =
+              List.filter
+                ~f:(twn_heuristic (class_appr, appr) % ProofOutput.LocalProofOutput.result)
+                loops_with_proofs
+            in
+            let all_new_boundable_trans = handled_transs_of_twn_loops_with_proofs all_new_boundable_loops in
+            if
+              Set.is_subset (GeneralTransition.transitions gt)
+                ~of_:(Set.union all_new_boundable_trans (all_already_bounded_trans !twn_state))
+            then
+              Some (gt, all_new_boundable_loops)
+            else
+              None)
       in
       match gt_to_improve_with_loops with
       | None -> MaybeChanged.same appr

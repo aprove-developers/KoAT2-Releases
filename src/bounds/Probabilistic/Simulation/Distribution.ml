@@ -126,6 +126,4 @@ let to_grouped_list dist ~cmp =
   to_list dist
   |> List.sort_and_group ~compare:(fun (x1, _) (x2, _) -> cmp x1 x2)
   |> List.map ~f:(fun lst ->
-         List.fold lst
-           ~init:(List.nth_exn lst 0 |> fst, zero)
-           ~f:(fun (acc_x, acc_p) (x, p) -> (x, acc_p + p)))
+      List.fold lst ~init:(List.nth_exn lst 0 |> fst, zero) ~f:(fun (acc_x, acc_p) (x, p) -> (x, acc_p + p)))

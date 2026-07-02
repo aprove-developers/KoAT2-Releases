@@ -138,7 +138,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
         (Base.Set.to_list scc |> handle_scc)
       |> List.map (fun xs ->
-             ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
+          ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
     in
     let merged_t =
       List.find_opt
@@ -194,7 +194,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
           (Base.Set.to_list scc |> List.filter (not % TL.has_tmp_vars % Tuple3.second))
         |> List.map (fun xs ->
-               ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
+            ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
       in
       let merged_t =
         List.find
@@ -231,7 +231,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
             Location.equal l1 l2 && Location.equal l1' l2' && TL.equivalent_update t t')
           (Base.Set.to_list scc |> List.filter (not % TL.has_tmp_vars % Tuple3.second))
         |> List.map (fun xs ->
-               ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
+            ((Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs))
       in
       let outgoing_l = List.filter (Location.equal l % Tuple3.first) merged_trans in
       let cycles =

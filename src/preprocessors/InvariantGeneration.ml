@@ -84,10 +84,10 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
       let bottom (*: 'a program_abstract*) =
         Set.to_list locations
         |> List.map ~f:(fun location ->
-               if Program.is_initial_location program_ location then
-                 (location, Apron.Abstract1.top manager environment)
-               else
-                 (location, Apron.Abstract1.bottom manager environment))
+            if Program.is_initial_location program_ location then
+              (location, Apron.Abstract1.top manager environment)
+            else
+              (location, Apron.Abstract1.bottom manager environment))
         |> Hashtbl.of_alist_exn (module Location)
       in
 
@@ -138,9 +138,9 @@ module Make (M : ProgramTypes.ClassicalProgramModules) = struct
             (* add succesor transitons to worklist *)
             TransitionGraph.succ_e (Program.graph program_) l'
             |> List.iter ~f:(fun transition ->
-                   (*TODO comparison faster with 2 component transition id*)
-                   if not (List.exists ~f:(Transition.equal transition) (Stack.to_list worklist)) then
-                     Stack.push worklist transition))
+                (*TODO comparison faster with 2 component transition id*)
+                if not (List.exists ~f:(Transition.equal transition) (Stack.to_list worklist)) then
+                  Stack.push worklist transition))
         done;
         program_abstract
       in

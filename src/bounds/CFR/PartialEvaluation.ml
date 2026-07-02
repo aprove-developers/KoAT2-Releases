@@ -17,7 +17,7 @@ struct
   let initial_guard_polyh am constr guard =
     Guard.mk_and constr guard
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
+        log ~level:Logger.DEBUG "unfold" (fun () -> [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
     |> ApronInterface.Koat2Apron.constraint_to_polyh am
 
 
@@ -39,41 +39,40 @@ struct
     initial_polyh
     |> Polyhedrons.add_vars_to_polyh am (Set.union update_program_vars update_temp_vars)
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ( "WITH_UPDATE_VARS",
-                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
-               ]))
+        log ~level:Logger.DEBUG "unfold" (fun () ->
+            [
+              ( "WITH_UPDATE_VARS",
+                ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
+            ]))
     |> Polyhedrons.intersect_constraint am update_guard
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ( "INITIAL_POLYH",
-                   ApronInterface.Apron2Koat.polyh_to_constraint am initial_polyh
-                   |> Guard.to_string ~pretty:true );
-                 ( "WITH_UPDATE_GUARD",
-                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
-               ]))
+        log ~level:Logger.DEBUG "unfold" (fun () ->
+            [
+              ( "INITIAL_POLYH",
+                ApronInterface.Apron2Koat.polyh_to_constraint am initial_polyh |> Guard.to_string ~pretty:true
+              );
+              ( "WITH_UPDATE_GUARD",
+                ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
+            ]))
     |> Polyhedrons.update_polyh am update_approx
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ( "UPDATE",
-                   Map.to_sequence update_approx
-                   |> Util.sequence_to_string ~f:(fun (x, p) ->
-                          Printf.sprintf "%s = %s" (Var.to_string ~pretty:true x)
-                            (Polynomials.Polynomial.to_string_pretty p)) );
-                 ( "WITH_UPDATE",
-                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
-               ]))
+        log ~level:Logger.DEBUG "unfold" (fun () ->
+            [
+              ( "UPDATE",
+                Map.to_sequence update_approx
+                |> Util.sequence_to_string ~f:(fun (x, p) ->
+                    Printf.sprintf "%s = %s" (Var.to_string ~pretty:true x)
+                      (Polynomials.Polynomial.to_string_pretty p)) );
+              ( "WITH_UPDATE",
+                ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
+            ]))
     |> Polyhedrons.project_polyh am program_vars
     |> tap (fun p ->
-           log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ("PROGRAM_VARS", VarSet.to_string program_vars);
-                 ( "PROJECTED",
-                   ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true );
-               ]))
+        log ~level:Logger.DEBUG "unfold" (fun () ->
+            [
+              ("PROGRAM_VARS", VarSet.to_string program_vars);
+              ("PROJECTED", ApronInterface.Apron2Koat.polyh_to_constraint am p |> Guard.to_string ~pretty:true);
+            ]))
     |> ApronInterface.Apron2Koat.polyh_to_constraint am
 end
 
@@ -257,19 +256,19 @@ struct
     Stack.of_list (Set.to_list entry_versions)
     |> evaluate_versions_till_fixedpoint
     |> tap (fun _ ->
-           log "evaluate_component" (fun () ->
-               [
-                 ( "version_location_tbl",
-                   Hashtbl.to_alist version_location_tbl
-                   |> List.map ~f:(fun (ver, loc) -> (loc, ver))
-                   |> List.sort ~compare:(fun (loc1, _) (loc2, _) -> Location.compare loc1 loc2)
-                   |> Sequence.of_list
-                   |> Util.sequence_to_string ~f:(fun (loc, ver) ->
-                          Location.to_string loc ^ ": " ^ Version.to_string_pretty ver) );
-                 ("component", TransitionSet.to_id_string component);
-                 ("entry_transitions", TransitionSet.to_id_string entry_transitions);
-                 ("exit_transitions", TransitionSet.to_id_string exit_transitions);
-               ]))
+        log "evaluate_component" (fun () ->
+            [
+              ( "version_location_tbl",
+                Hashtbl.to_alist version_location_tbl
+                |> List.map ~f:(fun (ver, loc) -> (loc, ver))
+                |> List.sort ~compare:(fun (loc1, _) (loc2, _) -> Location.compare loc1 loc2)
+                |> Sequence.of_list
+                |> Util.sequence_to_string ~f:(fun (loc, ver) ->
+                    Location.to_string loc ^ ": " ^ Version.to_string_pretty ver) );
+              ("component", TransitionSet.to_id_string component);
+              ("entry_transitions", TransitionSet.to_id_string entry_transitions);
+              ("exit_transitions", TransitionSet.to_id_string exit_transitions);
+            ]))
 
 
   let evaluate_component_in_program config component program_vars program_start graph =
@@ -416,8 +415,8 @@ module ProbabilisticAdapter = struct
       ~rhss:
         (GeneralTransition.transitions gt |> Set.to_sequence
         |> Sequence.map ~f:(fun ((_, label, _) as transition) ->
-               let target_location = redirect transition in
-               (TransitionLabel.without_backlink label, target_location))
+            let target_location = redirect transition in
+            (TransitionLabel.without_backlink label, target_location))
         |> Sequence.to_list)
 
 

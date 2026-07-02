@@ -302,9 +302,7 @@ let parse_rule loc_arities : Transition.t List.t ParseSexpListMonad.t =
     (* get rid of disjunctions *)
     Formulas.Formula.constraints guard
     |> List.map ~f:(fun constr ->
-           ( start_loc,
-             TransitionLabel.mk ~id:None ~cost ~patterns ~guard:constr ~assignments:updates,
-             target_loc ))
+        (start_loc, TransitionLabel.mk ~id:None ~cost ~patterns ~guard:constr ~assignments:updates, target_loc))
   in
   pure transitions
 

@@ -210,8 +210,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let unbounded_transitions =
       scc
       |> tap (fun scc ->
-             Logger.log logger Logger.INFO (fun () ->
-                 ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
+          Logger.log logger Logger.INFO (fun () ->
+              ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
       |> Set.filter ~f:(not % bounded measure appr)
     in
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
@@ -255,8 +255,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let unbounded_transitions =
       scc
       |> tap (fun scc ->
-             Logger.log logger Logger.INFO (fun () ->
-                 ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
+          Logger.log logger Logger.INFO (fun () ->
+              ("improve_timebound", [ ("scc", TransitionSet.to_string scc) ])))
       |> Set.filter ~f:(not % bounded measure appr)
     in
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
@@ -281,10 +281,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     MaybeChanged.(
       return appr >>= fun appr ->
       (match conf.run_mprf_depth with
-      | Some max_depth ->
-          local_rank_mprf ~conf scc measure program max_depth appr
-          >>= local_rank_rrf ~conf scc measure program
-      | None -> return appr)
+        | Some max_depth ->
+            local_rank_mprf ~conf scc measure program max_depth appr
+            >>= local_rank_rrf ~conf scc measure program
+        | None -> return appr)
       >>= fun appr ->
       match (measure, conf.twn || conf.unsolvable) with
       | `Cost, _ -> return appr
@@ -335,9 +335,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         List.cartesian_product modifiers (Set.to_list input_vars)
         |> Sequence.of_list
         |> Sequence.filter_map ~f:(fun (m, v) ->
-               let open OptionMonad in
-               let+ lsb = LSB.compute_bound input_vars m v in
-               ((m, v), lsb))
+            let open OptionMonad in
+            let+ lsb = LSB.compute_bound input_vars m v in
+            ((m, v), lsb))
         |> Map.of_sequence_exn (module RV))
 
 

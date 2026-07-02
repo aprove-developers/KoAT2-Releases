@@ -238,11 +238,11 @@ module RationalParameterAtom = struct
     let p =
       Sequence.of_list (RationalParameterPolynomial.monomials_with_coeffs p)
       |> Sequence.map ~f:(fun (c, m) ->
-             if Mon.is_constant m || Mon.is_univariate_linear m then
-               RationalParameterPolynomial.of_coeff_and_mon_list [ (c, m) ]
-             else
-               let m = Mon.of_var (Var.fresh_id Var.Real ()) in
-               RationalParameterPolynomial.of_coeff_and_mon_list [ (c, m) ])
+          if Mon.is_constant m || Mon.is_univariate_linear m then
+            RationalParameterPolynomial.of_coeff_and_mon_list [ (c, m) ]
+          else
+            let m = Mon.of_var (Var.fresh_id Var.Real ()) in
+            RationalParameterPolynomial.of_coeff_and_mon_list [ (c, m) ])
       |> RationalParameterPolynomial.sum
     in
     (p, c)

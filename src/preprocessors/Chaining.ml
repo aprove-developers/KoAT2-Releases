@@ -15,25 +15,25 @@ let skip_location location graph =
   |> Tuple2.mapn (fun f -> f graph location)
   |> Tuple2.mapn Sequence.of_list |> uncurry Sequence.cartesian_product
   |> Sequence.map ~f:(fun ((l, t, l1), (l', t', l1')) ->
-         if TransitionLabel.has_function_calls t || TransitionLabel.has_function_calls t' then
-           Sequence.empty
-         else
-           let t_non_rec = TransitionLabel.to_non_function_call t
-           and t'_non_rec = TransitionLabel.to_non_function_call t' in
-           let chained =
-             ( l,
-               TransitionLabel.of_non_function_call
-               @@ TransitionLabel.TransitionLabelNonFunctionCall.append t_non_rec t'_non_rec,
-               l1' )
-           in
-           ProofOutput.add_str_paragraph_to_proof (fun () ->
-               "Chain transitions "
-               ^ Transition.to_id_string_pretty (l, t, l1)
-               ^ " and "
-               ^ Transition.to_id_string_pretty (l', t', l1')
-               ^ " to "
-               ^ Transition.to_id_string_pretty chained);
-           Sequence.of_list [ chained ])
+      if TransitionLabel.has_function_calls t || TransitionLabel.has_function_calls t' then
+        Sequence.empty
+      else
+        let t_non_rec = TransitionLabel.to_non_function_call t
+        and t'_non_rec = TransitionLabel.to_non_function_call t' in
+        let chained =
+          ( l,
+            TransitionLabel.of_non_function_call
+            @@ TransitionLabel.TransitionLabelNonFunctionCall.append t_non_rec t'_non_rec,
+            l1' )
+        in
+        ProofOutput.add_str_paragraph_to_proof (fun () ->
+            "Chain transitions "
+            ^ Transition.to_id_string_pretty (l, t, l1)
+            ^ " and "
+            ^ Transition.to_id_string_pretty (l', t', l1')
+            ^ " to "
+            ^ Transition.to_id_string_pretty chained);
+        Sequence.of_list [ chained ])
   |> Sequence.concat
   |> (flip TransitionGraph.add_transitions) graph
 
@@ -43,10 +43,10 @@ let unskippable_fc_transitions location graph =
   |> Tuple2.mapn (fun f -> f graph location)
   |> Tuple2.mapn Sequence.of_list |> uncurry Sequence.cartesian_product
   |> Sequence.map ~f:(fun (t, t') ->
-         if Transition.has_function_calls t || Transition.has_function_calls t' then
-           Sequence.of_list [ t; t' ]
-         else
-           Sequence.empty)
+      if Transition.has_function_calls t || Transition.has_function_calls t' then
+        Sequence.of_list [ t; t' ]
+      else
+        Sequence.empty)
   |> Sequence.concat
 
 

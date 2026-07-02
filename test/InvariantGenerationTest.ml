@@ -20,9 +20,9 @@ let tests =
                     |> (fun graph ->
                     TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
                     |> List.exists (fun (l, t, l') ->
-                           SMT.Z3Solver.tautology
-                             Formula.Infix.(
-                               Formula.mk (TransitionLabel.guard t) => KoatReaders.read_formula invariant))
+                        SMT.Z3Solver.tautology
+                          Formula.Infix.(
+                            Formula.mk (TransitionLabel.guard t) => KoatReaders.read_formula invariant))
                   in
                   assert_bool
                     (String.concat " "

@@ -113,11 +113,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let polyList_to_string ?(pretty = false) ((rank : (Location.t -> 'a) list), (l : Location.t)) =
     rank |> List.enum
     |> Util.enum_to_string (fun p ->
-           (if pretty then
-              Polynomial.to_string_pretty
-            else
-              Polynomial.to_string)
-             (p l))
+        (if pretty then
+           Polynomial.to_string_pretty
+         else
+           Polynomial.to_string)
+          (p l))
 
 
   let only_rank_to_string { rank; decreasing; non_increasing; depth } =
@@ -148,13 +148,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            ^ " of depth " ^ string_of_int depth ^ ":"))
       <> mk_paragraph
            ((match bound with
-            | Some b ->
-                mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
-            | _ -> FormattedString.Empty)
+              | Some b ->
+                  mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
+              | _ -> FormattedString.Empty)
            <> mk_str "MPRF:" <> mk_newline
            <> (locations
               |> List.map (fun l ->
-                     "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l))
+                  "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l))
               |> List.map mk_str_line |> mappend |> mk_paragraph))
       <>
       match format with
@@ -210,7 +210,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       let templates = List.map ins_loc_prf locations in
       templates
       |> List.iter (fun (location, polynomial, _) ->
-             TemplateTable.add (Array.get template_table_ i) location polynomial)
+          TemplateTable.add (Array.get template_table_ i) location polynomial)
       (*
       * if store_coeffs then templates
       |> List.map (fun (_,_,fresh_vars) -> fresh_vars)
@@ -223,7 +223,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         ~result:(fun () ->
           Array.get template_table_ i |> TemplateTable.enum
           |> Util.enum_to_string (fun (location, polynomial) ->
-                 Location.to_string location ^ ": " ^ to_string polynomial))
+              Location.to_string location ^ ": " ^ to_string polynomial))
         (fun () -> execute i)
     done
 
@@ -412,7 +412,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           |> Enum.fold Base.Set.union VarSet.empty
           |> Base.Set.to_sequence
           |> Base.Sequence.map ~f:(fun v ->
-                 Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc, v))
+              Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc, v))
           |> Base.Sequence.join |> VarSet.of_sequence)
         entry_trans_grouped_by_loc
       |> List.fold_left Base.Set.union VarSet.empty
@@ -429,17 +429,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (make cache problem.find_depth problem.make_decreasing
               (non_increasing |> Stack.enum |> List.of_enum |> TransitionSet.of_list))
       |> Option.may (fun ranking_function ->
-             cache.rank_func := Some ranking_function;
-             Logger.(
-               log logger INFO (fun () ->
-                   ( "add_mprf",
-                     [
-                       ("measure", show_measure problem.measure);
-                       ("decreasing", Transition.to_id_string problem.make_decreasing);
-                       ( "non_increasing",
-                         Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing) );
-                       ("rank", only_rank_to_string ranking_function);
-                     ] ))));
+          cache.rank_func := Some ranking_function;
+          Logger.(
+            log logger INFO (fun () ->
+                ( "add_mprf",
+                  [
+                    ("measure", show_measure problem.measure);
+                    ("decreasing", Transition.to_id_string problem.make_decreasing);
+                    ("non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing));
+                    ("rank", only_rank_to_string ranking_function);
+                  ] ))));
       raise Exit)
     else
       Solver.pop solver_int
@@ -585,8 +584,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let execute () =
       Base.Sequence.of_list (PM.Program.sccs program)
       |> Base.Sequence.map ~f:(fun scc ->
-             Base.Set.to_sequence scc
-             |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc depth))
+          Base.Set.to_sequence scc
+          |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc depth))
       |> Base.Sequence.join |> Base.Sequence.filter_opt
     in
     Logger.with_log logger Logger.DEBUG

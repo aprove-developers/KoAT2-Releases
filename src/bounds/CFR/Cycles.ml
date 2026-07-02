@@ -81,10 +81,8 @@ module Cycles (PM : ProgramTypes.ProgramModules) = struct
         TransitionGraph.succ graph current_location
         |> LocationSet.of_list
         |> tap (fun ls ->
-               Logging.log cfr_logger ~level:Logger.DEBUG "johnson" (fun () ->
-                   [
-                     ("CURRENT", Location.to_string current_location); ("SUCCESSORS", LocationSet.to_string ls);
-                   ]))
+            Logging.log cfr_logger ~level:Logger.DEBUG "johnson" (fun () ->
+                [ ("CURRENT", Location.to_string current_location); ("SUCCESSORS", LocationSet.to_string ls) ]))
       in
       let closed, new_results =
         Set.fold

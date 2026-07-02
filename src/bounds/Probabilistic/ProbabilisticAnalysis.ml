@@ -35,7 +35,7 @@ module Make (BP : BoundPair.T) = struct
   let rvts_from_gts gts =
     Set.to_sequence gts
     |> Sequence.map ~f:(fun gt ->
-           GeneralTransition.targets gt |> Set.to_sequence |> Sequence.map ~f:(fun l -> (gt, l)))
+        GeneralTransition.targets gt |> Set.to_sequence |> Sequence.map ~f:(fun l -> (gt, l)))
     |> Sequence.to_list % Sequence.join
 
 
@@ -68,12 +68,12 @@ module Make (BP : BoundPair.T) = struct
     |> lift_bounds_like ClassicalApproximation.costbound ExpApproximation.add_costbound
     |> lift_size_bounds
     |> tap (fun appr ->
-           ProofOutput.add_to_proof
-             FormattedString.(
-               fun () ->
-                 mk_str_header_small "Classical Approximation after Lifting Classical Results"
-                 <> reduce_header_sizes ~levels_to_reduce:2
-                      (ExpApproximation.to_formatted ~pretty:true program appr)))
+        ProofOutput.add_to_proof
+          FormattedString.(
+            fun () ->
+              mk_str_header_small "Classical Approximation after Lifting Classical Results"
+              <> reduce_header_sizes ~levels_to_reduce:2
+                   (ExpApproximation.to_formatted ~pretty:true program appr)))
 
 
   let improve_timebounds twn_state ~conf program scc apprs =
@@ -305,13 +305,12 @@ module Make (BP : BoundPair.T) = struct
         let gtcost =
           Set.to_sequence (GeneralTransition.transitions gt)
           |> Sequence.map ~f:(fun (_, label, _) ->
-                 let cbound = BP.ProbBound.of_intpoly (TransitionLabel.cost label) in
-                 BP.ProbBound.substitute_f
-                   (match BP.kind with
-                   | BoundPair.AST -> fun var -> Bounds.BinaryBound.one
-                   | BoundPair.PAST ->
-                       ProbabilisticSizeBounds.get_pre_size_classical program apprs.class_appr gt)
-                   cbound)
+              let cbound = BP.ProbBound.of_intpoly (TransitionLabel.cost label) in
+              BP.ProbBound.substitute_f
+                (match BP.kind with
+                | BoundPair.AST -> fun var -> Bounds.BinaryBound.one
+                | BoundPair.PAST -> ProbabilisticSizeBounds.get_pre_size_classical program apprs.class_appr gt)
+                cbound)
           |> BP.ProbBound.sum
         in
         let new_bound = BP.ProbBound.mul gtcost (ExpApproximation.timebound apprs.appr gt) in

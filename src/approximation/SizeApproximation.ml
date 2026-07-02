@@ -55,8 +55,7 @@ module Make (B : ApproximationTypes.ApproximableBoundType) (RV : ProgramTypes.RV
     Map.to_alist size
     |> List.sort ~compare:(fun (rv1, _) (rv2, _) -> RV.compare rv1 rv2)
     |> List.map ~f:(fun (rv, bound) ->
-           FormattedString.mk_str_line @@ "  " ^ RV.ids_to_string ~pretty rv ^ ": "
-           ^ B.to_string ~pretty bound)
+        FormattedString.mk_str_line @@ "  " ^ RV.ids_to_string ~pretty rv ^ ": " ^ B.to_string ~pretty bound)
     |> FormattedString.mappend
 
 

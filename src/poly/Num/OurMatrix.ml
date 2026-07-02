@@ -199,11 +199,11 @@ module IntMatrix = struct
     let jordan_blocks =
       List.map ~f:(Tuple2.map1 (OurInt.to_int % integer_of_nat)) (triangular_to_jnf_vector_ca w)
       |> List.sort ~compare:(fun (m, x) (n, y) ->
-             let compareXY = OurAlgebraicComplex.compare x y in
-             if compareXY != 0 then
-               compareXY
-             else
-               -compare m n)
+          let compareXY = OurAlgebraicComplex.compare x y in
+          if compareXY != 0 then
+            compareXY
+          else
+            -compare m n)
     in
     (* Constructs j. *)
     let j =

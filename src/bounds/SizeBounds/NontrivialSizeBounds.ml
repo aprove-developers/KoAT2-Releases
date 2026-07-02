@@ -22,31 +22,30 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let transitions =
       rvs_non_equality
       |> List.filter_map ~f:(fun rv ->
-             if RV.has_transition rv then
-               Option.return (RV.transition rv)
-             else
-               None)
+          if RV.has_transition rv then
+            Option.return (RV.transition rv)
+          else
+            None)
       |> TransitionSet.stable_dedup_list
       |> tap (fun transitions ->
-             Logger.log logger Logger.DEBUG (fun () ->
-                 ( "transitions",
-                   [
-                     ( "result",
-                       Util.sequence_to_string ~f:Transition.to_id_string (Sequence.of_list transitions) );
-                   ] )))
+          Logger.log logger Logger.DEBUG (fun () ->
+              ( "transitions",
+                [
+                  ("result", Util.sequence_to_string ~f:Transition.to_id_string (Sequence.of_list transitions));
+                ] )))
     in
 
     let function_calls =
       rvs_non_equality
       |> List.filter_map ~f:(fun rv ->
-             if RV.has_transition rv then
-               None
-             else
-               Option.return (RV.function_call rv))
+          if RV.has_transition rv then
+            None
+          else
+            Option.return (RV.function_call rv))
       |> VarFunctionCallSet.of_list
       |> tap (fun function_calls ->
-             Logger.log logger Logger.DEBUG (fun () ->
-                 ("function_calls", [ ("result", VarFunctionCallSet.to_string function_calls) ])))
+          Logger.log logger Logger.DEBUG (fun () ->
+              ("function_calls", [ ("result", VarFunctionCallSet.to_string function_calls) ])))
     in
 
     let modifiers =
@@ -62,9 +61,9 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
       |> List.map ~f:(fun (_, v) -> v)
       |> VarSet.stable_dedup_list
       |> tap (fun scc_vars ->
-             Logger.log logger Logger.DEBUG (fun () ->
-                 ( "scc_vars",
-                   [ ("result", Util.sequence_to_string ~f:Var.to_string (Sequence.of_list scc_vars)) ] )))
+          Logger.log logger Logger.DEBUG (fun () ->
+              ( "scc_vars",
+                [ ("result", Util.sequence_to_string ~f:Var.to_string (Sequence.of_list scc_vars)) ] )))
     in
 
     (* Returns all result variables that may influence the given result variable and that are part of the scc. *)
@@ -147,8 +146,8 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         |> Sequence.of_list |> Bound.maximum
         |> Bound.(max one)
         |> tap (fun result ->
-               Logger.log logger Logger.DEBUG (fun () ->
-                   ("extreme_scaling_factor", [ ("result", Bound.to_string result) ])))
+            Logger.log logger Logger.DEBUG (fun () ->
+                ("extreme_scaling_factor", [ ("result", Bound.to_string result) ])))
       in
 
       Bound.(scaling_explicit * (of_int affecting_variables + of_int affecting_variables_omega))
@@ -157,23 +156,23 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let loop_scaling =
       Sequence.of_list modifiers
       |> Sequence.map ~f:(fun m ->
-             let scaling = modifier_scaling_factor m in
-             if Bound.(equal scaling one) then
-               Bound.one
-             else if RV.is_transition m then
-               Bound.(exp scaling (get_timebound (RV.transition_ m)))
-             else
-               let timebound =
-                 List.filter_map
-                   (Set.to_list @@ Program.transitions program)
-                   ~f:(fun t ->
-                     if Transition.has_function_call t (RV.function_call_ m) then
-                       Option.return @@ get_timebound t
-                     else
-                       None)
-                 |> Bound.sum_list
-               in
-               Bound.(exp scaling timebound))
+          let scaling = modifier_scaling_factor m in
+          if Bound.(equal scaling one) then
+            Bound.one
+          else if RV.is_transition m then
+            Bound.(exp scaling (get_timebound (RV.transition_ m)))
+          else
+            let timebound =
+              List.filter_map
+                (Set.to_list @@ Program.transitions program)
+                ~f:(fun t ->
+                  if Transition.has_function_call t (RV.function_call_ m) then
+                    Option.return @@ get_timebound t
+                  else
+                    None)
+              |> Bound.sum_list
+            in
+            Bound.(exp scaling timebound))
       |> Bound.product
     in
 
@@ -198,10 +197,10 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
         LSB.vars_rec @@ Tuple2.first @@ get_lsb rv
         |> Set.to_list
         |> List.filter_map ~f:(fun v ->
-               if VarFunctionCall.is_function_call v then
-                 None
-               else
-                 Option.return (VarFunctionCall.to_var v))
+            if VarFunctionCall.is_function_call v then
+              None
+            else
+              Option.return (VarFunctionCall.to_var v))
         |> VarSet.of_list
       in
       let actF =
@@ -225,24 +224,24 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
     let loop_effect =
       Sequence.of_list modifiers
       |> Sequence.map ~f:(fun m ->
-             let timebound =
-               if RV.is_transition m then
-                 get_timebound (RV.transition_ m)
-               else
-                 List.filter_map transitions ~f:(fun t ->
-                     if Transition.has_function_call t (RV.function_call_ m) then
-                       Option.return @@ get_timebound t
-                     else
-                       None)
-                 |> Bound.sum_list
-             in
-             if Bound.is_infinity timebound then
-               if Bound.(equal zero (modifier_effect m)) then
-                 Bound.zero
-               else
-                 Bound.infinity
-             else
-               Bound.(timebound * modifier_effect m))
+          let timebound =
+            if RV.is_transition m then
+              get_timebound (RV.transition_ m)
+            else
+              List.filter_map transitions ~f:(fun t ->
+                  if Transition.has_function_call t (RV.function_call_ m) then
+                    Option.return @@ get_timebound t
+                  else
+                    None)
+              |> Bound.sum_list
+          in
+          if Bound.is_infinity timebound then
+            if Bound.(equal zero (modifier_effect m)) then
+              Bound.zero
+            else
+              Bound.infinity
+          else
+            Bound.(timebound * modifier_effect m))
       |> Bound.sum
     in
 
@@ -257,14 +256,14 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
        (* We have computed a bound in the absolute values*)
        Bound.(loop_scaling * (starting_value + starting_value_omega + loop_effect)))
     |> tap (fun res ->
-           Logger.log logger Logger.DEBUG (fun () ->
-               ( "compute",
-                 [
-                   ("loop_scaling", Bound.to_string loop_scaling);
-                   ("starting_value", Bound.(to_string @@ (starting_value + starting_value_omega)));
-                   ("loop_effect", Bound.to_string loop_effect);
-                   ("result", Bound.to_string res);
-                 ] )))
+        Logger.log logger Logger.DEBUG (fun () ->
+            ( "compute",
+              [
+                ("loop_scaling", Bound.to_string loop_scaling);
+                ("starting_value", Bound.(to_string @@ (starting_value + starting_value_omega)));
+                ("loop_effect", Bound.to_string loop_effect);
+                ("result", Bound.to_string res);
+              ] )))
 
 
   (* Computes a bound for a nontrivial scc. That is an scc which consists of a loop.

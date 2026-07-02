@@ -167,11 +167,11 @@ module Make (P : PolyTypes.Polynomial) = struct
       else
         update |> Map.to_alist
         |> List.map ~f:(fun (var, poly) ->
-               ( Var.to_string ~to_file var,
-                 if to_file then
-                   P.to_string_to_file poly
-                 else
-                   P.to_string poly ))
+            ( Var.to_string ~to_file var,
+              if to_file then
+                P.to_string_to_file poly
+              else
+                P.to_string poly ))
         |> List.unzip |> Tuple2.first
         |> fun xs -> "(" ^ String.concat ~sep:"," xs ^ ")"
 
@@ -189,11 +189,11 @@ module Make (P : PolyTypes.Polynomial) = struct
       else
         update |> Map.to_alist
         |> List.map ~f:(fun (var, poly) ->
-               ( Var.to_string ~to_file var,
-                 if to_file then
-                   P.to_string_to_file poly
-                 else
-                   P.to_string poly ))
+            ( Var.to_string ~to_file var,
+              if to_file then
+                P.to_string_to_file poly
+              else
+                P.to_string poly ))
         |> List.unzip |> Tuple2.second
         |> fun xs -> "(" ^ String.concat ~sep:"," xs ^ ")"
 
@@ -273,7 +273,7 @@ module Make (P : PolyTypes.Polynomial) = struct
     let rename_update update rename_map =
       update |> Map.to_sequence
       |> Sequence.map ~f:(fun (key, value) ->
-             (RenameMap.find key rename_map ~default:key, P.rename rename_map value))
+          (RenameMap.find key rename_map ~default:key, P.rename rename_map value))
       |> Map.of_sequence_exn (module Var)
 
 
@@ -350,9 +350,9 @@ module TransitionLabelNonFunctionCall_ = struct
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
-                  let nondet_var = Var.fresh_id Var.Int () in
-                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                  nondet_var))
+               let nondet_var = Var.fresh_id Var.Int () in
+               Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+               nondet_var))
     in
     let new_update = Map.map ~f:(Polynomial.substitute_f (substitution t1.update)) t2.update
     and new_guard =
@@ -538,12 +538,12 @@ let overapprox_function_calls t =
          ~f:
            (PolyFunctionCall.to_poly
            % PolyFunctionCall.substitute_var_function_call_f (fun v ->
-                 PolyFunctionCall.of_var
-                 @@
-                 if VarFunctionCall.is_function_call v then
-                   Var.fresh_id Var.Int ()
-                 else
-                   VarFunctionCall.to_var v)))
+               PolyFunctionCall.of_var
+               @@
+               if VarFunctionCall.is_function_call v then
+                 Var.fresh_id Var.Int ()
+               else
+                 VarFunctionCall.to_var v)))
 
 
 let chain_guards t1 t2 =
@@ -554,9 +554,9 @@ let chain_guards t1 t2 =
          (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
          (Hashtbl.find nondet_vars var
          |> Option.value_or_thunk ~default:(fun () ->
-                let nondet_var = Var.fresh_id Var.Int () in
-                Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                nondet_var))
+             let nondet_var = Var.fresh_id Var.Int () in
+             Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+             nondet_var))
     |> PolyFunctionCall.to_poly_overapprox (* All function calls are replaced by TMP vars *)
   in
   Guard.Infix.(

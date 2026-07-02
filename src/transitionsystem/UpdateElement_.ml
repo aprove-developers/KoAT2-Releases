@@ -224,13 +224,13 @@ let as_linear_abstract manager constr t new_var =
     |> Sequence.map ~f:UnderlyingMon.to_sequence
     |> Set.to_sequence % MultiplicandSet.of_sequence % Sequence.join
     |> Sequence.map ~f:(fun (i, e) ->
-           let v =
-             if e = 1 then
-               Map.find_exn indeterminates_repr_map i
-             else
-               Var.fresh_id Var.Int ()
-           in
-           ((i, e), v))
+        let v =
+          if e = 1 then
+            Map.find_exn indeterminates_repr_map i
+          else
+            Var.fresh_id Var.Int ()
+        in
+        ((i, e), v))
     |> MultiplicandMap.of_sequence_exn
   in
 
@@ -239,20 +239,20 @@ let as_linear_abstract manager constr t new_var =
     Map.to_sequence multiplicands_repr_map
     |> Sequence.filter ~f:(fun ((_, e), _) -> e mod 2 = 0 && Int.(e > 0))
     |> Sequence.map ~f:(fun ((i, e), multipl_repr_var) ->
-           let ind_repr_var = Map.find_exn indeterminates_repr_map i in
-           let guard = Guard.Infix.(constr && UpdateValue.as_guard i ind_repr_var) in
-           let multipl_repr_poly = Polynomial.of_var multipl_repr_var in
+        let ind_repr_var = Map.find_exn indeterminates_repr_map i in
+        let guard = Guard.Infix.(constr && UpdateValue.as_guard i ind_repr_var) in
+        let multipl_repr_poly = Polynomial.of_var multipl_repr_var in
 
-           (* check if i^2 is always greater or equal than 4 *)
-           if check_if_abs_of_var_is_at_least guard ind_repr_var (OurInt.of_int 2) then
-             Guard.Infix.(
-               multipl_repr_poly >= Polynomial.of_int 4
-               && multipl_repr_poly >= Polynomial.(pow (of_int 2) Int.(e - 1) * of_var ind_repr_var))
-             (* check if i^2 is always greater or equal than 1 *)
-           else if check_if_abs_of_var_is_at_least guard ind_repr_var OurInt.one then
-             Guard.Infix.(multipl_repr_poly > Polynomial.zero)
-           else
-             Guard.Infix.(multipl_repr_poly >= Polynomial.zero))
+        (* check if i^2 is always greater or equal than 4 *)
+        if check_if_abs_of_var_is_at_least guard ind_repr_var (OurInt.of_int 2) then
+          Guard.Infix.(
+            multipl_repr_poly >= Polynomial.of_int 4
+            && multipl_repr_poly >= Polynomial.(pow (of_int 2) Int.(e - 1) * of_var ind_repr_var))
+          (* check if i^2 is always greater or equal than 1 *)
+        else if check_if_abs_of_var_is_at_least guard ind_repr_var OurInt.one then
+          Guard.Infix.(multipl_repr_poly > Polynomial.zero)
+        else
+          Guard.Infix.(multipl_repr_poly >= Polynomial.zero))
     |> Guard.all % Sequence.to_list
   in
 
@@ -275,8 +275,8 @@ let as_linear_abstract manager constr t new_var =
     let vars, assgnmts =
       Map.to_alist multiplicands_repr_map
       |> List.map ~f:(fun ((i, e), v) ->
-             let ind_repr_var = Map.find_exn indeterminates_repr_map i in
-             (v, poly_to_apron environment Polynomial.(pow (of_var ind_repr_var) e)))
+          let ind_repr_var = Map.find_exn indeterminates_repr_map i in
+          (v, poly_to_apron environment Polynomial.(pow (of_var ind_repr_var) e)))
       |> List.unzip
     in
     Apron.Abstract1.assign_texpr_array manager a
@@ -287,10 +287,10 @@ let as_linear_abstract manager constr t new_var =
   let update_final =
     monomials_with_coeffs t
     |> List.map ~f:(fun (c, m) ->
-           ( c,
-             UnderlyingMon.to_sequence m
-             |> Sequence.map ~f:(fun (i, e) -> (Map.find_exn multiplicands_repr_map (i, e), 1))
-             |> ClassicalMonomial.make % Sequence.to_list ))
+        ( c,
+          UnderlyingMon.to_sequence m
+          |> Sequence.map ~f:(fun (i, e) -> (Map.find_exn multiplicands_repr_map (i, e), 1))
+          |> ClassicalMonomial.make % Sequence.to_list ))
     |> Polynomial.of_coeff_and_mon_list
   in
 

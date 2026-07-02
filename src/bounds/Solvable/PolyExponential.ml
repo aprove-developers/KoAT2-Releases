@@ -41,7 +41,9 @@ module ConstantConstraint = struct
     if diff != 0 then
       diff
     else
-      match (comp1, comp2) with
+      match
+        (comp1, comp2)
+      with
       | Comparator.EQ, Comparator.NEQ -> -1
       | Comparator.NEQ, Comparator.EQ -> 1
       | _ -> 0
@@ -61,11 +63,11 @@ module ConstantConstraint = struct
         let exist_contradiction =
           List.cartesian_product atoms atoms
           |> List.exists (fun ((comp1, cons1), (comp2, cons2)) ->
-                 match (comp1, comp2) with
-                 | Comparator.EQ, Comparator.EQ -> not (OurInt.equal cons1 cons2)
-                 | Comparator.EQ, Comparator.NEQ -> OurInt.equal cons1 cons2
-                 | Comparator.NEQ, Comparator.EQ -> OurInt.equal cons1 cons2
-                 | _ -> false)
+              match (comp1, comp2) with
+              | Comparator.EQ, Comparator.EQ -> not (OurInt.equal cons1 cons2)
+              | Comparator.EQ, Comparator.NEQ -> OurInt.equal cons1 cons2
+              | Comparator.NEQ, Comparator.EQ -> OurInt.equal cons1 cons2
+              | _ -> false)
         in
         if exist_contradiction then
           F
@@ -241,9 +243,9 @@ module PE (Value : IntSupRing) = struct
         in
         xs
         |> List.map (fun (c, p, d, b) ->
-               [ to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b ]
-               |> List.filter (not % String.equal "")
-               |> String.concat " * ")
+            [ to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b ]
+            |> List.filter (not % String.equal "")
+            |> String.concat " * ")
         |> List.filter (not % String.equal "")
         |> String.concat " + "
 
@@ -283,9 +285,9 @@ module PE (Value : IntSupRing) = struct
         in
         xs
         |> List.map (fun (c, p, d, b) ->
-               [ to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b ]
-               |> List.filter (not % String.equal "")
-               |> String.concat "⋅")
+            [ to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b ]
+            |> List.filter (not % String.equal "")
+            |> String.concat "⋅")
         |> List.filter (not % String.equal "")
         |> String.concat " + "
 
@@ -304,10 +306,10 @@ module PE (Value : IntSupRing) = struct
   let simplify pe =
     List.group compare pe
     |> List.map (fun list ->
-           List.fold_right
-             (fun (c, p, d, b) (c1, p1, d1, b1) -> (c, Polynomial.add p p1, d, b))
-             list
-             (ConstantConstraint.mk_true, Polynomial.of_constant Value.zero, 0, Value.one))
+        List.fold_right
+          (fun (c, p, d, b) (c1, p1, d1, b1) -> (c, Polynomial.add p p1, d, b))
+          list
+          (ConstantConstraint.mk_true, Polynomial.of_constant Value.zero, 0, Value.one))
     |> List.filter (fun (c, p, d, b) -> not (Polynomial.is_zero p))
     |> List.map (fun (c, p, d, b) -> (ConstantConstraint.simplify c, p, d, b))
     |> List.filter (fun (c, p, d, b) -> not (ConstantConstraint.is_false c))
@@ -319,7 +321,7 @@ module PE (Value : IntSupRing) = struct
   let mul pe1 pe2 =
     List.cartesian_product pe1 pe2
     |> List.map (fun ((c1, p1, d1, b1), (c2, p2, d2, b2)) ->
-           (ConstantConstraint.mk_and c1 c2, Polynomial.mul p1 p2, d1 + d2, Value.(b1 * b2)))
+        (ConstantConstraint.mk_and c1 c2, Polynomial.mul p1 p2, d1 + d2, Value.(b1 * b2)))
     |> simplify
 
 
@@ -388,7 +390,7 @@ module PE (Value : IntSupRing) = struct
            let constant = (mk_cons (ScaledMonomial.coeff scaled_monom), 1) in
            vars
            |> List.map (fun var ->
-                  (ClosedFormTable.find closed_form_table var, Monomial.degree_variable var monom))
+               (ClosedFormTable.find closed_form_table var, Monomial.degree_variable var monom))
            |> List.append [ constant ] |> power_list)
          scaled_monomials)
       []
@@ -538,14 +540,14 @@ module PE (Value : IntSupRing) = struct
   let normalize pe_list =
     pe_list
     |> List.map (fun pe ->
-           List.map
-             (fun (c, p, d, b) ->
-               if Option.is_some (ConstantConstraint.contains_positive c) then
-                 (ConstantConstraint.mk_false, p, d, b)
-               else
-                 (ConstantConstraint.mk_true, p, d, b))
-             pe
-           |> simplify)
+        List.map
+          (fun (c, p, d, b) ->
+            if Option.is_some (ConstantConstraint.contains_positive c) then
+              (ConstantConstraint.mk_false, p, d, b)
+            else
+              (ConstantConstraint.mk_true, p, d, b))
+          pe
+        |> simplify)
 
 
   let max_const = function

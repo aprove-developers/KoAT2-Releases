@@ -77,22 +77,22 @@ module UnliftedTimeBound = struct
       let res_trans =
         Map.to_sequence t.entry_transitions_measure
         |> Sequence.map ~f:(fun (t', measure) ->
-               let timebound = get_timebound t' in
-               let overappr_measure = B.substitute_f (get_sizebound (RV.modifier_of_transition t')) measure in
-               B.mul timebound overappr_measure)
+            let timebound = get_timebound t' in
+            let overappr_measure = B.substitute_f (get_sizebound (RV.modifier_of_transition t')) measure in
+            B.mul timebound overappr_measure)
         |> B.sum
       in
       let res_fcs =
         Map.to_sequence t.entry_transitions_measure_fcs
         |> Sequence.map ~f:(fun (t', (measure, fcs)) ->
-               let timebound = get_timebound t' in
-               let overappr_measure =
-                 B.sum
-                 @@ Sequence.map
-                      ~f:(fun fc -> B.substitute_f (get_sizebound (RV.modifier_of_function_call fc)) measure)
-                      (Set.to_sequence fcs)
-               in
-               B.mul timebound overappr_measure)
+            let timebound = get_timebound t' in
+            let overappr_measure =
+              B.sum
+              @@ Sequence.map
+                   ~f:(fun fc -> B.substitute_f (get_sizebound (RV.modifier_of_function_call fc)) measure)
+                   (Set.to_sequence fcs)
+            in
+            B.mul timebound overappr_measure)
         |> B.sum
       in
       B.

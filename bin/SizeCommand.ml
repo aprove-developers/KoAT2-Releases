@@ -23,7 +23,7 @@ let run (params : params) =
   let lsbs =
     List.cartesian_product (Set.to_list @@ Program.transitions program) (Set.to_list input_vars)
     |> List.map ~f:(fun (t, v) ->
-           ((RV.modifier_of_transition t, v), LSB.compute_bound input_vars (RV.modifier_of_transition t) v))
+        ((RV.modifier_of_transition t, v), LSB.compute_bound input_vars (RV.modifier_of_transition t) v))
     |> Hashtbl.of_alist_exn (module ProgramModules.RV)
   in
 

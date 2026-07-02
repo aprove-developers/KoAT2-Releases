@@ -95,7 +95,7 @@ let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t li
     let templates = List.map ~f:ins_loc_prf locations in
     templates
     |> List.iter ~f:(fun (location, polynomial, _, _) ->
-           Hashtbl.add_exn cache.template_table ~key:location ~data:polynomial);
+        Hashtbl.add_exn cache.template_table ~key:location ~data:polynomial);
     templates
     |> List.fold_left
          ~f:(fun (l_vars, l_consts) (_, _, fresh_vars, fresh_const) ->
@@ -111,7 +111,7 @@ let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t li
     ~result:(fun () ->
       Hashtbl.to_sequence cache.template_table
       |> Util.sequence_to_string ~f:(fun (location, polynomial) ->
-             Location.to_string location ^ ": " ^ RationalParameterPolynomial.to_string polynomial))
+          Location.to_string location ^ ": " ^ RationalParameterPolynomial.to_string polynomial))
     execute
 
 
@@ -241,10 +241,10 @@ let entry_transitions_from_non_increasing program (non_increasing : GeneralTrans
   let all_possible_pre_trans =
     Stack.to_list non_increasing
     |> List.map ~f:(fun gt ->
-           let start_loc = GeneralTransition.src gt in
-           Set.to_sequence (Program.pre_gt program gt)
-           |> Sequence.map ~f:(fun gt -> (gt, start_loc))
-           |> Set.of_sequence (module GtLocComp))
+        let start_loc = GeneralTransition.src gt in
+        Set.to_sequence (Program.pre_gt program gt)
+        |> Sequence.map ~f:(fun gt -> (gt, start_loc))
+        |> Set.of_sequence (module GtLocComp))
     |> Set.union_list (module GtLocComp)
   in
   let non_incr_set = GeneralTransitionSet.of_array (Stack.to_array non_increasing) in
@@ -281,7 +281,7 @@ let finalise_plrf cache solver non_increasing (entry_trans : (GeneralTransition.
     let rfunc loc =
       Hashtbl.find_exn cache.template_table loc
       |> RationalParameterPolynomial.eval_coefficients (fun var ->
-             Valuation.eval_opt var model |? OurRational.zero)
+          Valuation.eval_opt var model |? OurRational.zero)
     in
     let ranking =
       {
@@ -364,10 +364,9 @@ let find_scc program is_time_bounded unbounded_vars scc gt =
     let locations = GeneralTransitionSet.locations scc |> Set.to_list in
     find_plrf program is_time_bounded unbounded_vars vars locations scc gt
     |> tap (function
-         | Some r -> Logger.log logger Logger.INFO (fun () -> ("found_plrf", [ ("plrf", to_string r) ]))
-         | None ->
-             Logger.log logger Logger.WARN (fun () ->
-                 ("no_plrf", [ ("gt", GeneralTransition.to_id_string gt) ])))
+      | Some r -> Logger.log logger Logger.INFO (fun () -> ("found_plrf", [ ("plrf", to_string r) ]))
+      | None ->
+          Logger.log logger Logger.WARN (fun () -> ("no_plrf", [ ("gt", GeneralTransition.to_id_string gt) ])))
   in
 
   Logger.with_log logger Logger.DEBUG
@@ -383,15 +382,15 @@ let find program =
   let execute () =
     Sequence.of_list (Program.sccs_gts program)
     |> Sequence.map ~f:(fun scc ->
-           let is_time_bounded (gt, _) = not (Set.mem scc gt) in
-           let unbounded_vars (gt, _) =
-             if Set.mem scc gt then
-               Program.vars program
-             else
-               VarSet.empty
-           in
-           Set.to_sequence scc
-           |> Sequence.map ~f:(fun gt -> (gt, find_scc program is_time_bounded unbounded_vars scc gt)))
+        let is_time_bounded (gt, _) = not (Set.mem scc gt) in
+        let unbounded_vars (gt, _) =
+          if Set.mem scc gt then
+            Program.vars program
+          else
+            VarSet.empty
+        in
+        Set.to_sequence scc
+        |> Sequence.map ~f:(fun gt -> (gt, find_scc program is_time_bounded unbounded_vars scc gt)))
     |> Sequence.join |> Sequence.memoize
   in
   Logger.with_log logger Logger.DEBUG
@@ -420,7 +419,7 @@ let compute_proof t bound_str program format =
     <> mk_paragraph
          (locations
          |> List.map ~f:(fun l ->
-                "• " ^ Location.to_string l ^ ": " ^ RationalPolynomial.to_string_pretty (t.rank l))
+             "• " ^ Location.to_string l ^ ": " ^ RationalPolynomial.to_string_pretty (t.rank l))
          |> List.map ~f:mk_str_line |> mappend)
     <>
     match format with

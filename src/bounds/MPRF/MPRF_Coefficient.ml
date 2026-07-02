@@ -24,4 +24,4 @@ let coefficient depth =
   OurRational.(gamma (OurInt.of_int depth) * of_ourint (factorial (OurInt.of_int depth)))
   |> OurRational.ceil
   |> tap (fun coeff ->
-         Logger.log logger Logger.INFO (fun () -> ("coefficient ", [ ("beta", OurInt.to_string coeff) ])))
+      Logger.log logger Logger.INFO (fun () -> ("coefficient ", [ ("beta", OurInt.to_string coeff) ])))

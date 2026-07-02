@@ -170,7 +170,9 @@ module Set = struct
         else
           Sequence.Step.Skip { state = (set_length, rem_choices, state_stack, curr_set) }
       else if i = set_length then
-        match state_stack with
+        match
+          state_stack
+        with
         | [] -> Sequence.Step.Yield { value = curr_set; state = (i + 1, -1, [], empty_set) }
         | prev_state :: rem ->
             let i', rem_choices', curr_set' = prev_state in

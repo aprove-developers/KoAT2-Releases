@@ -308,7 +308,7 @@ module ProbabilisticTransitionLabel_ (POverAppr : PolyAdapter.PolyAdapter) = str
   let rename_update rename_ue update rename_map =
     update |> Map.to_sequence
     |> Sequence.map ~f:(fun (key, value) ->
-           (RenameMap.find key rename_map ~default:key, rename_ue rename_map value))
+        (RenameMap.find key rename_map ~default:key, rename_ue rename_map value))
     |> Map.of_sequence_exn (module Var)
 
 
@@ -418,9 +418,9 @@ module ProbabilisticTransitionLabel = struct
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
-                  let nondet_var = Var.fresh_id Var.Int () in
-                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                  nondet_var))
+               let nondet_var = Var.fresh_id Var.Int () in
+               Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+               nondet_var))
       |> PolyFunctionCall.to_poly (* TODO Overappr rec -> tmp *)
     in
     Guard.Infix.(
@@ -498,7 +498,7 @@ module NonProbTransitionLabel (POverAppr : PolyAdapter.PolyAdapter) = struct
   let changed_vars t =
     input_vars t
     |> Set.filter ~f:(fun v ->
-           not POverAppr.(equal (of_var v) (Map.find (overappr_nonprob_update t) v |? of_var v)))
+        not POverAppr.(equal (of_var v) (Map.find (overappr_nonprob_update t) v |? of_var v)))
 end
 
 module ProbabilisticTransitionLabelNonProbOverapprNonRec = struct
@@ -514,9 +514,9 @@ module ProbabilisticTransitionLabelNonProbOverapprNonRec = struct
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
-                  let nondet_var = Var.fresh_id Var.Int () in
-                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                  nondet_var))
+               let nondet_var = Var.fresh_id Var.Int () in
+               Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+               nondet_var))
     in
     Guard.Infix.(
       overappr_guard t1 && invariant t1
@@ -574,10 +574,10 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
           PolyFunctionCall.(
             to_poly
             % substitute_var_function_call_f (fun v ->
-                  if VarFunctionCall.is_function_call v then
-                    of_var (Var.fresh_id Var.Int ())
-                  else
-                    of_var (VarFunctionCall.to_var v)))
+                if VarFunctionCall.is_function_call v then
+                  of_var (Var.fresh_id Var.Int ())
+                else
+                  of_var (VarFunctionCall.to_var v)))
         t.properties.overappr_nonprob_update
     in
     TransitionLabelNonFunctionCall.mk_2_with_gt
@@ -602,9 +602,9 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
            (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
            (Hashtbl.find nondet_vars var
            |> Option.value_or_thunk ~default:(fun () ->
-                  let nondet_var = Var.fresh_id Var.Int () in
-                  Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
-                  nondet_var))
+               let nondet_var = Var.fresh_id Var.Int () in
+               Hashtbl.add_exn nondet_vars ~key:var ~data:nondet_var;
+               nondet_var))
       |> PolyFunctionCall.to_poly (* TODO Overappr rec -> tmp *)
     in
     Guard.Infix.(
@@ -911,8 +911,8 @@ module GeneralTransition = struct
           transitions =
             Sequence.of_list rhss
             |> Sequence.map ~f:(fun (rhs, l') ->
-                   let label = ProbabilisticTransitionLabel.mk_2 rhs in
-                   (start, label, l'))
+                let label = ProbabilisticTransitionLabel.mk_2 rhs in
+                (start, label, l'))
             |> ProbabilisticTransitionSet.of_sequence;
         }
         |> flip add_invariant invariant
@@ -1223,17 +1223,15 @@ module ProbabilisticProgram = struct
   let sccs_gts t =
     sccs t
     |> List.map ~f:(fun tset ->
-           Set.to_sequence tset
-           |> Sequence.map ~f:ProbabilisticTransition.gt
-           |> GeneralTransitionSet.of_sequence)
+        Set.to_sequence tset |> Sequence.map ~f:ProbabilisticTransition.gt |> GeneralTransitionSet.of_sequence)
 
 
   let scc_gts_from_locs program locs =
     let transitions =
       Set.to_sequence locs
       |> Sequence.map ~f:(fun loc ->
-             Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc)
-             |> Sequence.filter ~f:(Set.mem locs % ProbabilisticTransition.target))
+          Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc)
+          |> Sequence.filter ~f:(Set.mem locs % ProbabilisticTransition.target))
       |> Sequence.join
     in
     Sequence.map ~f:ProbabilisticTransition.gt transitions |> GeneralTransitionSet.of_sequence
@@ -1243,9 +1241,9 @@ module ProbabilisticProgram = struct
     let transitions =
       Set.to_sequence locs
       |> Sequence.map ~f:(fun loc ->
-             let incoming = Sequence.of_list (ProbabilisticTransitionGraph.pred_e (graph program) loc) in
-             let outgoing = Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc) in
-             Sequence.append incoming outgoing)
+          let incoming = Sequence.of_list (ProbabilisticTransitionGraph.pred_e (graph program) loc) in
+          let outgoing = Sequence.of_list (ProbabilisticTransitionGraph.succ_e (graph program) loc) in
+          Sequence.append incoming outgoing)
       |> Sequence.join
     in
     Sequence.map ~f:ProbabilisticTransition.gt transitions |> GeneralTransitionSet.of_sequence

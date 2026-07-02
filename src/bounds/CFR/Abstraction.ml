@@ -203,11 +203,10 @@ end = struct
                |> for_cycles pr_d |> log_props head "PR_d")
           |> deduplicate_props
           |> tap (fun props ->
-                 Logging.log ~level:Logger.DEBUG cfr_logger "heuristic" (fun () ->
-                     [
-                       ("LOCATION", Location.to_string head);
-                       ("PROPERTIES", AtomSet.to_string ~pretty:true props);
-                     ]))
+              Logging.log ~level:Logger.DEBUG cfr_logger "heuristic" (fun () ->
+                  [
+                    ("LOCATION", Location.to_string head); ("PROPERTIES", AtomSet.to_string ~pretty:true props);
+                  ]))
         in
         Map.add_exn ~key:head ~data:properties_for_head properties)
       heads ~init:LocationMap.empty
@@ -235,16 +234,16 @@ end = struct
       let entailed_props =
         Set.to_sequence properties
         |> Sequence.filter_map ~f:(fun prop ->
-               if entails_prop prop then (
-                 Logging.log ~level:Logger.DEBUG cfr_logger "abstract" (fun () ->
-                     [ ("ENTAILS", Atom.to_string prop) ]);
-                 Some prop)
-               else if entails_prop (Atom.neg prop) then (
-                 Logging.log ~level:Logger.DEBUG cfr_logger "abstract" (fun () ->
-                     [ ("ENTAILS_NEG", Atom.to_string prop) ]);
-                 Some (Atom.neg prop))
-               else
-                 None)
+            if entails_prop prop then (
+              Logging.log ~level:Logger.DEBUG cfr_logger "abstract" (fun () ->
+                  [ ("ENTAILS", Atom.to_string prop) ]);
+              Some prop)
+            else if entails_prop (Atom.neg prop) then (
+              Logging.log ~level:Logger.DEBUG cfr_logger "abstract" (fun () ->
+                  [ ("ENTAILS_NEG", Atom.to_string prop) ]);
+              Some (Atom.neg prop))
+            else
+              None)
         |> AtomSet.of_sequence
       in
       entailed_props

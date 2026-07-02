@@ -25,10 +25,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               (* We can not look at the size bounds for predecessor transitions if transition is initial *)
               Bound.of_intpoly (Transition.cost transition)
               |> Bound.substitute_f (fun v ->
-                     if Set.mem temp_vars v then
-                       Bound.infinity
-                     else
-                       Bound.of_var v)
+                  if Set.mem temp_vars v then
+                    Bound.infinity
+                  else
+                    Bound.of_var v)
             else
               (* Overapproximate the cost by looking at the sizes of incoming transitions *)
               let inc_trans = Set.to_sequence @@ Program.pre program transition in

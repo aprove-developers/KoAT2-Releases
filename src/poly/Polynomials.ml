@@ -73,7 +73,7 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
     else
       Sequence.cartesian_product (Map.to_sequence poly1) (Map.to_sequence poly2)
       |> Sequence.fold ~init:MonMap.empty ~f:(fun t ((mon1, coeff1), (mon2, coeff2)) ->
-             add t (MonMap.singleton (Monomial_.mul mon1 mon2) (Value.mul coeff1 coeff2)))
+          add t (MonMap.singleton (Monomial_.mul mon1 mon2) (Value.mul coeff1 coeff2)))
 
 
   let pull_out_common_addends t1 t2 =
@@ -279,8 +279,8 @@ module PolynomialOverIndeterminate (I : PolyTypes.Indeterminate) (Value : PolyTy
   let is_sum_of_indeterminates_plus_constant poly =
     poly |> delete_monomial Monomial_.one |> scaled_monomials
     |> List.for_all ~f:(fun scaled ->
-           Value.( =~= ) (ScaledMonomial_.coeff scaled) Value.one
-           && Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
+        Value.( =~= ) (ScaledMonomial_.coeff scaled) Value.one
+        && Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
 
   let is_univariate_linear poly = degree poly <= 1 && Set.length (vars poly) <= 1

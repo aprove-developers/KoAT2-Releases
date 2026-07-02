@@ -347,7 +347,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
           if equal_bound b1 b2 then
             Some true
           else
-            match (b1, b2) with
+            match
+              (b1, b2)
+            with
             | Const c1, Const c2 when Num.Compare.(c1 >= c2) -> Some true
             | _ -> None)
       | _ -> Some false
@@ -468,10 +470,10 @@ module Make (Num : PolyTypes.OurNumber) = struct
             (* multiply through *)
             |> List.Cartesian_product.all
             |> List.map ~f:(fun l ->
-                   if multiply_with_const then
-                     Const const :: l
-                   else
-                     l)
+                if multiply_with_const then
+                  Const const :: l
+                else
+                  l)
             |> List.map ~f:group_exps
             |> List.map ~f:(construct_op_chain `Product)
             |> fun l ->
@@ -504,8 +506,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
               let logs, non_logs =
                 get_op_chain `Sum e
                 |> List.partition_map ~f:(function
-                     | Log v -> Base__Either0.First (`Log v)
-                     | b -> Base__Either0.Second b)
+                  | Log v -> Base__Either0.First (`Log v)
+                  | b -> Base__Either0.Second b)
               in
               let exp_logs_transformed = List.map logs ~f:(fun (`Log v) -> Exp (Const c, Log v)) in
               let exp_non_logs_transformed = Exp (Const c, construct_op_chain `Sum non_logs) in

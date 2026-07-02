@@ -68,19 +68,18 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
     let model = SMTSolver.get_model formula in
     Option.is_none model
     |> tap (fun bool ->
-           Logger.log logger Logger.INFO (fun () ->
-               ("termination", [ ("is_satisfiable", Bool.to_string (not bool)) ]));
-           Logger.log logger Logger.DEBUG (fun () ->
-               ("termination", [ ("formula", Formula.to_string formula) ]));
-           if Option.is_some model then
-             Logger.log logger Logger.DEBUG (fun () ->
-                 ("termination", [ ("model", Option.get model |> Valuation.to_string) ]));
-           ProofOutput.LocalProofOutput.add_to_proof twn_proofs @@ fun () ->
-           FormattedString.(
-             mk_str_line ("Termination: " ^ string_of_bool bool)
-             <> mk_str_line "Formula: "
-             <> (Formula.to_string_formatted formula |> mk_block)
-             |> mk_paragraph))
+        Logger.log logger Logger.INFO (fun () ->
+            ("termination", [ ("is_satisfiable", Bool.to_string (not bool)) ]));
+        Logger.log logger Logger.DEBUG (fun () -> ("termination", [ ("formula", Formula.to_string formula) ]));
+        if Option.is_some model then
+          Logger.log logger Logger.DEBUG (fun () ->
+              ("termination", [ ("model", Option.get model |> Valuation.to_string) ]));
+        ProofOutput.LocalProofOutput.add_to_proof twn_proofs @@ fun () ->
+        FormattedString.(
+          mk_str_line ("Termination: " ^ string_of_bool bool)
+          <> mk_str_line "Formula: "
+          <> (Formula.to_string_formatted formula |> mk_block)
+          |> mk_paragraph))
 
 
   (* Counterpart to TWN_Complexity.complexity *)
@@ -90,7 +89,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
       if Check_TWN.check_weakly_negativitiy loop then
         Loop.chain loop
         |> tap (fun loop ->
-               Logger.log logger Logger.INFO (fun () -> ("negative", [ ("chained", Loop.to_string loop) ])))
+            Logger.log logger Logger.INFO (fun () -> ("negative", [ ("chained", Loop.to_string loop) ])))
       else
         loop
     in

@@ -3,7 +3,9 @@ let git_version : string =
   if not (String.equal version_str "VERSION_STR") then
     version_str
   else
-    match Build_info.V1.version () with
+    match
+      Build_info.V1.version ()
+    with
     | None -> "dev"
     | Some v -> Build_info.V1.Version.to_string v
 

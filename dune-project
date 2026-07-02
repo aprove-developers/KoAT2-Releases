@@ -41,7 +41,7 @@
    lens
    menhir
    ocamlgraph
-   (ocamlformat (= 0.27.0))
+   (ocamlformat (= 0.28.1))
    odoc
    ounit
    parmap

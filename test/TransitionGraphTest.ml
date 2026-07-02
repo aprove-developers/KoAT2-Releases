@@ -68,17 +68,17 @@ let suite =
            (* TODO We have to redefine good bounds here: ("l1", "l1", "A", "A-1"); *)
          ]
          |> List.map (fun (l, l', var, bound) ->
-                "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ Var.to_string var ^ " is "
-                ^ Bound.to_string bound ^ "?"
-                >:: fun _ ->
-                let program = KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
-                let t =
-                  TransitionGraph.find_edge (Program.graph program) (Location.of_string l)
-                    (Location.of_string l')
-                in
-                assert_equal_bound bound
-                  LocalSizeBound.(
-                    sizebound_local program (RV.modifier_of_transition t) var |> option_lsb_as_bound_rec)));
+             "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ Var.to_string var ^ " is "
+             ^ Bound.to_string bound ^ "?"
+             >:: fun _ ->
+             let program = KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
+             let t =
+               TransitionGraph.find_edge (Program.graph program) (Location.of_string l)
+                 (Location.of_string l')
+             in
+             assert_equal_bound bound
+               LocalSizeBound.(
+                 sizebound_local program (RV.modifier_of_transition t) var |> option_lsb_as_bound_rec)));
          ( "Print" >:: fun _ ->
            GraphPrint.print_system ~format:"png"
              ~label:(TransitionLabel.to_string % Transition.label)
@@ -86,8 +86,8 @@ let suite =
              (KoatReaders.read_file "../../../examples/KoAT-2013/sect1-lin.koat");
            "../../../examples/KoAT-2013/sect1-lin.koat" |> KoatReaders.read_file
            |> tap (fun program ->
-                  GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:(Fpath.v "output")
-                    ~file:"sect1-lin" program)
+               GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:(Fpath.v "output")
+                 ~file:"sect1-lin" program)
            |> ignore );
          "ParseEdgeCases"
          >::: [
@@ -99,7 +99,7 @@ let suite =
                  Base.Set.choose_exn (Program.transitions prog)
                  |> TransitionLabel.update_map % Transition.label
                  |> Base.Map.for_all ~f:(fun u ->
-                        PolyFunctionCall.(equal (of_var @@ Var.of_string "Arg_1") u))
+                     PolyFunctionCall.(equal (of_var @@ Var.of_string "Arg_1") u))
                  |> assert_bool "Wrongly parsed update");
               ];
        ]

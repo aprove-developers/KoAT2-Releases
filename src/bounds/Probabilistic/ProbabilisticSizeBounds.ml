@@ -58,17 +58,17 @@ let trivial_sizebounds program ~grvs_in_and_out elcbs class_appr appr =
       let combined_updates =
         Set.to_list (GeneralTransition.transitions_to_target l gt)
         |> List.map ~f:(fun (_, label, _) ->
-               let open OptionMonad in
-               let+ update = TransitionLabel.update label v in
-               let ue_exp_abs_bound = UpdateElement.exp_value_abs_bound update in
-               let ue_exp_abs_poly = RationalBound.to_poly ue_exp_abs_bound in
-               match ue_exp_abs_poly with
-               | Some ue_exp_abs_poly ->
-                   Polynomials.RationalLaurentPolynomial.(ue_exp_abs_poly * TransitionLabel.probability label)
-                   |> RationalBound.of_overapprox_laurentpoly
-               | None ->
-                   RationalBound.(
-                     of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_bound))
+            let open OptionMonad in
+            let+ update = TransitionLabel.update label v in
+            let ue_exp_abs_bound = UpdateElement.exp_value_abs_bound update in
+            let ue_exp_abs_poly = RationalBound.to_poly ue_exp_abs_bound in
+            match ue_exp_abs_poly with
+            | Some ue_exp_abs_poly ->
+                Polynomials.RationalLaurentPolynomial.(ue_exp_abs_poly * TransitionLabel.probability label)
+                |> RationalBound.of_overapprox_laurentpoly
+            | None ->
+                RationalBound.(
+                  of_overapprox_laurentpoly (TransitionLabel.probability label) * ue_exp_abs_bound))
         |> OptionMonad.sequence |> Option.map ~f:RationalBound.sum_list
       in
       match combined_updates with
@@ -79,17 +79,17 @@ let trivial_sizebounds program ~grvs_in_and_out elcbs class_appr appr =
     in
     RationalBound.keep_simpler_bound elcb_overapprox_plus_var propagated_bound
     |> tap (fun r ->
-           Logger.log size_logger Logger.DEBUG (fun () ->
-               ( "trivial_sizebound_for_grv",
-                 [
-                   ("grv", GRV.to_id_string ((gt, l), v));
-                   ("var_overapprox", RationalBound.to_string var_overapprox);
-                   ("elcb", RationalBound.to_string elcb);
-                   ("elcb_overapprox", RationalBound.to_string elcb_overapprox);
-                   ("elcb_overapprox_plus_var", RationalBound.to_string elcb_overapprox_plus_var);
-                   ("propagated_bound", RationalBound.to_string propagated_bound);
-                   ("result", RationalBound.to_string r);
-                 ] )))
+        Logger.log size_logger Logger.DEBUG (fun () ->
+            ( "trivial_sizebound_for_grv",
+              [
+                ("grv", GRV.to_id_string ((gt, l), v));
+                ("var_overapprox", RationalBound.to_string var_overapprox);
+                ("elcb", RationalBound.to_string elcb);
+                ("elcb_overapprox", RationalBound.to_string elcb_overapprox);
+                ("elcb_overapprox_plus_var", RationalBound.to_string elcb_overapprox_plus_var);
+                ("propagated_bound", RationalBound.to_string propagated_bound);
+                ("result", RationalBound.to_string r);
+              ] )))
   in
   List.fold
     ~f:(fun appr (rvt, v) -> ExpApproximation.add_sizebound (trivial_sizebound_for_grv (rvt, v)) rvt v appr)
@@ -106,23 +106,23 @@ let nontrivial_sizebounds program ~program_vars ~scc ~rvts_scc elcbs class_appr 
         |> Sequence.map ~f:(fun rvt -> ExpApproximation.sizebound appr rvt v)
         |> RationalBound.sum
         |> tap (fun s ->
-               Logger.log size_logger Logger.DEBUG (fun () ->
-                   ("start_value", [ ("res", RationalBound.to_string s) ])))
+            Logger.log size_logger Logger.DEBUG (fun () ->
+                ("start_value", [ ("res", RationalBound.to_string s) ])))
       in
       let acc_change_grv (gt, l) =
         let elcb = Map.find_exn elcbs ((gt, l), v) in
         let change_bound = RationalBound.substitute_f (get_pre_size_classical gt) elcb in
         RationalBound.(change_bound * ExpApproximation.timebound appr gt)
         |> tap (fun r ->
-               Logger.log size_logger Logger.DEBUG (fun () ->
-                   ( "acc_change_rvt",
-                     [
-                       ("rv", GRV.to_id_string ((gt, l), v));
-                       ("elcb", RationalBound.to_string elcb);
-                       ("res", RationalBound.to_string r);
-                       ("change_bound", RationalBound.to_string change_bound);
-                       ("time_bound", RationalBound.to_string (ExpApproximation.timebound appr gt));
-                     ] )))
+            Logger.log size_logger Logger.DEBUG (fun () ->
+                ( "acc_change_rvt",
+                  [
+                    ("rv", GRV.to_id_string ((gt, l), v));
+                    ("elcb", RationalBound.to_string elcb);
+                    ("res", RationalBound.to_string r);
+                    ("change_bound", RationalBound.to_string change_bound);
+                    ("time_bound", RationalBound.to_string (ExpApproximation.timebound appr gt));
+                  ] )))
       in
       let acc_change = Sequence.of_list rvts_scc |> Sequence.map ~f:acc_change_grv |> RationalBound.sum in
       RationalBound.(start_value + acc_change)
@@ -159,9 +159,9 @@ let propagate_sizes program ~program_vars ~rvts_scc class_appr appr =
           let propagated_bound =
             Sequence.of_list update_polys
             |> Sequence.map ~f:(fun update_poly ->
-                   RationalBound.of_intpoly update_poly
-                   |> BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes
-                        ~exp_subst:get_pre_size_exp ~class_subst:get_pre_size_classical)
+                RationalBound.of_intpoly update_poly
+                |> BoundsHelper.RationalSubstHelper.substitute_bound_with_exp_and_class_sizes
+                     ~exp_subst:get_pre_size_exp ~class_subst:get_pre_size_classical)
             |> RationalBound.sum
           in
           if

@@ -85,7 +85,9 @@ let rec moment_poly d i =
   else if i = 1 then
     exp_value_poly d
   else
-    match d with
+    match
+      d
+    with
     | Binomial (n, p) ->
         (* ∑_{j=0}^i (p-1)^j binom(n,j) ∑_{k=0}^j (-1)^k binom(j,k) (n-k)^i  [https://doi.org/10.1137/070700024, Theorem 4.1] *)
         let q = OurRational.(one - p) in
@@ -139,13 +141,13 @@ let rec moment_poly d i =
           let sum_part =
             OurInt.(range zero OurInt.(of_int i - one))
             |> Sequence.map ~f:(fun j ->
-                   let bin_coeff = RationalPolynomial.of_intconstant OurInt.(binomial (of_int i - one) j) in
-                   let rec_res =
-                     moment_poly
-                       (Hypergeometric (OurInt.(bigN - one), Polynomial.(k - one), Polynomial.(n - one)))
-                       (OurInt.to_int j)
-                   in
-                   RationalPolynomial.(bin_coeff * rec_res))
+                let bin_coeff = RationalPolynomial.of_intconstant OurInt.(binomial (of_int i - one) j) in
+                let rec_res =
+                  moment_poly
+                    (Hypergeometric (OurInt.(bigN - one), Polynomial.(k - one), Polynomial.(n - one)))
+                    (OurInt.to_int j)
+                in
+                RationalPolynomial.(bin_coeff * rec_res))
             |> RationalPolynomial.sum
           in
           RationalPolynomial.(nk_bigN * sum_part)
@@ -191,7 +193,9 @@ let moment_abs_bound d i =
   if Int.equal i 1 then
     exp_value_abs_bound d
   else
-    match d with
+    match
+      d
+    with
     | Uniform (a, b) ->
         if i mod 2 = 0 then
           RationalBound.of_poly @@ moment_poly (Uniform (a, b)) i

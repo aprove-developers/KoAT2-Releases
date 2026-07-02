@@ -19,8 +19,8 @@ let run (params : params) =
   and constr = KoatReaders.read_formula params.constr in
   constr |> solve
   |> Option.map ~f:(fun solution ->
-         Sequence.fold
-           ~f:(fun str (var, value) -> str ^ Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")
-           ~init:"" (Valuation.bindings solution))
+      Sequence.fold
+        ~f:(fun str (var, value) -> str ^ Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")
+        ~init:"" (Valuation.bindings solution))
   |? "unsatisfiable\n" |> print_string;
   Stdio.printf "\nZ3 version: %s\n" Z3.version

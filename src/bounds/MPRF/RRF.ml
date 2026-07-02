@@ -154,13 +154,13 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       mk_header_small (mk_str ("RRF for transition " ^ Transition.to_string_pretty decreasing ^ ":"))
       <> mk_paragraph
            ((match bound with
-            | Some b ->
-                mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
-            | _ -> FormattedString.Empty)
+              | Some b ->
+                  mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b))
+              | _ -> FormattedString.Empty)
            <> mk_str "RRF:" <> mk_newline
            <> (locations
               |> List.map (fun l ->
-                     "• " ^ Location.to_string l ^ ": " ^ element_to_string ~pretty:true (rank, l))
+                  "• " ^ Location.to_string l ^ ": " ^ element_to_string ~pretty:true (rank, l))
               |> List.map mk_str_line |> mappend |> mk_paragraph))
       <>
       match format with
@@ -222,7 +222,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         let to_string t =
           TemplateTable.enum t
           |> Util.enum_to_string (fun (location, polynomial) ->
-                 Location.to_string location ^ ": " ^ to_string polynomial)
+              Location.to_string location ^ ": " ^ to_string polynomial)
         in
         to_string tt1 ^ "\n" ^ to_string tt2)
       (fun () ->
@@ -404,7 +404,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           |> Enum.fold Base.Set.union VarSet.empty
           |> Base.Set.to_sequence
           |> Base.Sequence.map ~f:(fun v ->
-                 Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc, v))
+              Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc, v))
           |> Base.Sequence.join |> VarSet.of_sequence)
         entry_trans_grouped_by_loc
       |> List.fold_left Base.Set.union VarSet.empty
@@ -421,17 +421,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
            (make cache problem.make_decreasing
               (non_increasing |> Stack.enum |> List.of_enum |> TransitionSet.of_list))
       |> Option.may (fun ranking_function ->
-             cache.rank_func := Some ranking_function;
-             Logger.(
-               log logger INFO (fun () ->
-                   ( "add_rrf",
-                     [
-                       ("measure", show_measure problem.measure);
-                       ("decreasing", Transition.to_id_string problem.make_decreasing);
-                       ( "non_increasing",
-                         Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing) );
-                       ("rank", only_rank_to_string ranking_function);
-                     ] ))));
+          cache.rank_func := Some ranking_function;
+          Logger.(
+            log logger INFO (fun () ->
+                ( "add_rrf",
+                  [
+                    ("measure", show_measure problem.measure);
+                    ("decreasing", Transition.to_id_string problem.make_decreasing);
+                    ("non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing));
+                    ("rank", only_rank_to_string ranking_function);
+                  ] ))));
       raise Exit)
     else
       Solver.pop solver_int
@@ -570,8 +569,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let execute () =
       Base.Sequence.of_list (PM.Program.sccs program)
       |> Base.Sequence.map ~f:(fun scc ->
-             Base.Set.to_sequence scc
-             |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc))
+          Base.Set.to_sequence scc
+          |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc))
       |> Base.Sequence.join |> Base.Sequence.filter_opt
     in
     Logger.with_log logger Logger.DEBUG

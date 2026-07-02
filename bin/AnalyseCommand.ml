@@ -203,25 +203,25 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
     in
     (program, Approximation.empty)
     |> tap (fun _ ->
-           ProofOutput.add_to_proof (fun () ->
-               FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
+        ProofOutput.add_to_proof (fun () ->
+            FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
     |> Tuple2.map1 preprocess
     |> tap (fun (prog, _) ->
-           ProofOutput.add_to_proof @@ fun () ->
-           FormattedString.(
-             mk_header_big (mk_str "Problem after Preprocessing")
-             <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-             <> program_to_formatted_string prog params.proof_format
-             <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
+        ProofOutput.add_to_proof @@ fun () ->
+        FormattedString.(
+          mk_header_big (mk_str "Problem after Preprocessing")
+          <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
+          <> program_to_formatted_string prog params.proof_format
+          <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
     |> tap (fun (program, appr) ->
-           if params.print_system then
-             GraphPrint.print_system ~format:"png"
-               ~label:(TransitionLabel.to_string % Transition.label)
-               ~outdir:output_dir ~file:input_filename program)
+        if params.print_system then
+          GraphPrint.print_system ~format:"png"
+            ~label:(TransitionLabel.to_string % Transition.label)
+            ~outdir:output_dir ~file:input_filename program)
     |> tap (fun (program, appr) ->
-           if params.print_rvg then
-             GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename
-               program)
+        if params.print_rvg then
+          GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename
+            program)
     |> (fun (program, appr) ->
     if params.no_boundsearch then
       (program, appr)
@@ -229,14 +229,14 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
       Analysis.improve ~conf:analysis_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr)
     |> tap (fun (program, appr) -> print_result params.result (module Bound) program appr)
     |> tap (fun (program, appr) ->
-           ProofOutput.add_to_proof (fun () ->
-               Approximation.to_formatted ~pretty:true ~show_initial:false
-                 ~termination_only:params.termination program appr))
+        ProofOutput.add_to_proof (fun () ->
+            Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination
+              program appr))
     |> tap (fun (program, appr) ->
-           if params.print_system then
-             GraphPrint.print_system ~format:"png"
-               ~label:(bounded_label_to_string (module Bound) appr)
-               ~outdir:output_dir ~file:input_filename program)
+        if params.print_system then
+          GraphPrint.print_system ~format:"png"
+            ~label:(bounded_label_to_string (module Bound) appr)
+            ~outdir:output_dir ~file:input_filename program)
     |> ignore
 end
 
@@ -313,12 +313,12 @@ let run (params : params) =
     else
       AriParser.from_file_exn input
       |> tap (fun prog ->
-             ProofOutput.add_to_proof @@ fun () ->
-             FormattedString.(
-               mk_header_big (mk_str "Initial Problem")
-               <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-               <> program_to_formatted_string prog params.proof_format
-               <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
+          ProofOutput.add_to_proof @@ fun () ->
+          FormattedString.(
+            mk_header_big (mk_str "Initial Problem")
+            <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
+            <> program_to_formatted_string prog params.proof_format
+            <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
   in
   Timeout.timed_run params.timeout
     ~action:(fun () ->

@@ -165,21 +165,20 @@ module Z3Solver = struct
     if status == Z3.Solver.SATISFIABLE then
       optimisation_goal |> Z3.Optimize.get_model
       |> Option.map ~f:(fun model ->
-             model |> Z3.Model.get_const_decls
-             |> List.map ~f:(fun func_decl ->
-                    let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
-                    let value =
-                      func_decl |> Z3.Model.get_const_interp model
-                      |> Option.value_exn (* Should be fine here *)
-                      |> fun expr ->
-                      if Z3.Arithmetic.is_int expr then
-                        Z3.Arithmetic.Integer.get_big_int expr
-                      else
-                        Z3.Arithmetic.Real.get_ratio expr
-                        (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                        |> Q.to_bigint
-                    in
-                    (var, value)))
+          model |> Z3.Model.get_const_decls
+          |> List.map ~f:(fun func_decl ->
+              let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
+              let value =
+                func_decl |> Z3.Model.get_const_interp model |> Option.value_exn (* Should be fine here *)
+                |> fun expr ->
+                if Z3.Arithmetic.is_int expr then
+                  Z3.Arithmetic.Integer.get_big_int expr
+                else
+                  Z3.Arithmetic.Real.get_ratio expr
+                  (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                  |> Q.to_bigint
+              in
+              (var, value)))
       |? [] |> Valuation.from |> Option.some
     else
       None
@@ -244,21 +243,20 @@ module Z3SolverTimeout = struct
     if status == Z3.Solver.SATISFIABLE then
       optimisation_goal |> Z3.Optimize.get_model
       |> Option.map ~f:(fun model ->
-             model |> Z3.Model.get_const_decls
-             |> List.map ~f:(fun func_decl ->
-                    let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
-                    let value =
-                      func_decl |> Z3.Model.get_const_interp model
-                      |> Option.value_exn (* Should be fine here *)
-                      |> fun expr ->
-                      if Z3.Arithmetic.is_int expr then
-                        Z3.Arithmetic.Integer.get_big_int expr
-                      else
-                        expr |> Z3.Arithmetic.Real.get_ratio
-                        (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                        |> Q.to_bigint
-                    in
-                    (var, value)))
+          model |> Z3.Model.get_const_decls
+          |> List.map ~f:(fun func_decl ->
+              let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
+              let value =
+                func_decl |> Z3.Model.get_const_interp model |> Option.value_exn (* Should be fine here *)
+                |> fun expr ->
+                if Z3.Arithmetic.is_int expr then
+                  Z3.Arithmetic.Integer.get_big_int expr
+                else
+                  expr |> Z3.Arithmetic.Real.get_ratio
+                  (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                  |> Q.to_bigint
+              in
+              (var, value)))
       |? [] |> Valuation.from |> Option.some
     else
       None
@@ -332,12 +330,12 @@ module IncrementalZ3Solver = struct
       let extract_from_model model =
         model |> Z3.Model.get_const_decls
         |> List.map ~f:(fun func_decl ->
-               let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
-               let value =
-                 func_decl |> Z3.Model.get_const_interp model |> Option.value_exn (* Should be fine here *)
-                 |> get_z3_value
-               in
-               (var, value))
+            let var = func_decl |> Z3.FuncDecl.get_name |> Z3.Symbol.get_string |> Var.of_string in
+            let value =
+              func_decl |> Z3.Model.get_const_interp model |> Option.value_exn (* Should be fine here *)
+              |> get_z3_value
+            in
+            (var, value))
       in
       Z3.Solver.get_model slv |> Option.map ~f:extract_from_model
     else

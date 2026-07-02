@@ -99,8 +99,8 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         List.flatten (List.map Polynomial.scaled_monomials xs)
         |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))
         |> List.map (fun ys ->
-               let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
-               List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
+            let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
+            List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
         |> Polynomial.make
 
 
@@ -124,20 +124,19 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         Bound.of_intpoly
           Polynomial.(alphas_abs + alphas_abs + (of_constant @@ OurInt.max m_ n_) + Polynomial.one)
         |> tap (fun b ->
-               Logger.log logger Logger.INFO (fun () ->
-                   ("complexity.compute_f", [ ("2*alpha_abs+max(N,M)", Bound.to_string b) ]));
-               ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-                   [
-                     "alphas_abs: " ^ Polynomial.to_string_pretty alphas_abs;
-                     "M: " ^ OurInt.to_string m_;
-                     "N: " ^ OurInt.to_string n_;
-                     "Bound: " ^ Bound.to_string ~pretty:true b;
-                   ]
-                   |> List.map FormattedString.mk_str_line |> FormattedString.mappend
-                   |> FormattedString.mk_block
-                   |> FormattedString.( <> )
-                        (FormattedString.mk_str_line
-                           ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
+            Logger.log logger Logger.INFO (fun () ->
+                ("complexity.compute_f", [ ("2*alpha_abs+max(N,M)", Bound.to_string b) ]));
+            ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+                [
+                  "alphas_abs: " ^ Polynomial.to_string_pretty alphas_abs;
+                  "M: " ^ OurInt.to_string m_;
+                  "N: " ^ OurInt.to_string n_;
+                  "Bound: " ^ Bound.to_string ~pretty:true b;
+                ]
+                |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block
+                |> FormattedString.( <> )
+                     (FormattedString.mk_str_line
+                        ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
   let rec is_sorted = function
@@ -179,20 +178,19 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           (of_OurInt coeff * log_of_poly Polynomial.(alphas_abs + alphas_abs))
           + (of_OurInt @@ OurInt.max m'_ n_))
         |> tap (fun b ->
-               Logger.log logger Logger.INFO (fun () ->
-                   ("complexity.compute_f'", [ ("log(2*alpha_abs)+max(N,M')", Bound.to_string b) ]));
-               ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
-                   [
-                     "alphas_abs: " ^ Polynomial.to_string_pretty alphas_abs;
-                     "M': " ^ OurInt.to_string m'_;
-                     "N: " ^ OurInt.to_string n_;
-                     "Bound: " ^ Bound.to_string ~pretty:true b;
-                   ]
-                   |> List.map FormattedString.mk_str_line |> FormattedString.mappend
-                   |> FormattedString.mk_block
-                   |> FormattedString.( <> )
-                        (FormattedString.mk_str_line
-                           ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
+            Logger.log logger Logger.INFO (fun () ->
+                ("complexity.compute_f'", [ ("log(2*alpha_abs)+max(N,M')", Bound.to_string b) ]));
+            ProofOutput.LocalProofOutput.add_to_proof twn_proofs (fun () ->
+                [
+                  "alphas_abs: " ^ Polynomial.to_string_pretty alphas_abs;
+                  "M': " ^ OurInt.to_string m'_;
+                  "N: " ^ OurInt.to_string n_;
+                  "Bound: " ^ Bound.to_string ~pretty:true b;
+                ]
+                |> List.map FormattedString.mk_str_line |> FormattedString.mappend |> FormattedString.mk_block
+                |> FormattedString.( <> )
+                     (FormattedString.mk_str_line
+                        ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
   let get_bound twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap =
@@ -212,7 +210,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           let sub_poly_n =
             sub_poly
             |> List.map (fun (c, p, d, b) ->
-                   (c, RationalPolynomial.normalize p, d |> OurInt.of_int, OurRational.to_ourint b))
+                (c, RationalPolynomial.normalize p, d |> OurInt.of_int, OurRational.to_ourint b))
           in
           let max_const = OurInt.max const (RationalPE.max_const sub_poly) in
           if twnlog && (is_sorted @@ List.map Tuple4.fourth sub_poly_n) then
@@ -227,8 +225,8 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         ("complexity.get_bound", [ ("max constant in constant constraint", OurInt.to_string max_con) ]));
     Bound.(add bound (of_OurInt OurInt.(max_con + one)))
     |> tap (fun b ->
-           Logger.log logger Logger.INFO (fun () ->
-               ("complexity.get_bound", [ ("local bound", Bound.to_string b) ])))
+        Logger.log logger Logger.INFO (fun () ->
+            ("complexity.get_bound", [ ("local bound", Bound.to_string b) ])))
 
 
   let preprocess_unsolvable twn_proofs loop =
@@ -252,7 +250,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           let q =
             List.hd candidates_for_substition |> Atom.poly |> Polynomial.monomials_with_coeffs
             |> List.filter (fun (_, mon) ->
-                   not @@ OurBase.Set.are_disjoint defective_vars (Monomial.vars mon))
+                not @@ OurBase.Set.are_disjoint defective_vars (Monomial.vars mon))
             |> List.map (uncurry ScaledMonomial.make)
             |> Polynomial.make
           in
@@ -297,8 +295,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         if Check_TWN.check_weakly_negativitiy loop then
           ( Loop.chain loop
             |> tap (fun loop ->
-                   Logger.log logger Logger.INFO (fun () ->
-                       ("negative", [ ("chained", Loop.to_string loop) ]))),
+                Logger.log logger Logger.INFO (fun () -> ("negative", [ ("chained", Loop.to_string loop) ]))),
             true )
         else
           (loop, false)

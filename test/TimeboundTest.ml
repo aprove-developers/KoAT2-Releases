@@ -75,11 +75,11 @@ let smaller_or_equal (vars : VarSet.t) b1 b2 =
   |> Enum.repeat ~times:(Base.Set.length vars)
   |> List.of_enum |> List.n_cartesian_product
   |> List.for_all (fun assignment ->
-         let valuation =
-           assignment |> List.map Bound.of_int |> List.combine (Base.Set.to_list vars) |> from
-           |> fun map var -> M.find var map
-         in
-         Bound.(substitute_f valuation b1 <= substitute_f valuation b2) |? false)
+      let valuation =
+        assignment |> List.map Bound.of_int |> List.combine (Base.Set.to_list vars) |> from |> fun map var ->
+        M.find var map
+      in
+      Bound.(substitute_f valuation b1 <= substitute_f valuation b2) |? false)
 
 
 let tests =

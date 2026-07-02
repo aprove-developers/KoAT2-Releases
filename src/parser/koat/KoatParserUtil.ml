@@ -20,7 +20,7 @@ let check_arity (loc : Location.t) (arity : int) : unit =
   and string_of_stored_arities =
     location_table |> Hashtbl.to_sequence
     |> Util.sequence_to_string ~f:(fun (location, arity) ->
-           Location.to_string location ^ ": " ^ string_of_int arity)
+        Location.to_string location ^ ": " ^ string_of_int arity)
   in
   match stored_arity with
   | None -> Hashtbl.add_exn location_table ~key:loc ~data:arity
@@ -51,13 +51,13 @@ let mk_transition lhs (cost : Polynomial.t) rhs (formula : Formula.t) (vars : Va
     (Tuple2.second rhs);
   formula |> Formula.constraints
   |> List.map ~f:(fun constr ->
-         List.map
-           ~f:(fun (target_loc, update_expr) ->
-             ( Location.of_string start_loc,
-               TransitionLabel.mk ~id:None ~assignments:update_expr ~guard:constr
-                 ~patterns:(List.map ~f:Var.of_string var_list) ~cost,
-               Location.of_string target_loc ))
-           (Tuple2.second rhs))
+      List.map
+        ~f:(fun (target_loc, update_expr) ->
+          ( Location.of_string start_loc,
+            TransitionLabel.mk ~id:None ~assignments:update_expr ~guard:constr
+              ~patterns:(List.map ~f:Var.of_string var_list) ~cost,
+            Location.of_string target_loc ))
+        (Tuple2.second rhs))
   |> List.map ~f:(List.map ~f:(fun (l, t, l') -> (l, t, l')))
 
 
@@ -72,11 +72,11 @@ let mk_transition_simple (start : string) vars (cost : Polynomial.t)
     let target_loc, updates = List.hd_exn @@ Tuple2.second rhs in
     formula |> Formula.constraints
     |> List.map ~f:(fun constr ->
-           ( Location.of_string start,
-             TransitionLabel.mk ~id:None ~assignments:updates
-               ~patterns:(List.take vars (List.length updates))
-               ~guard:constr ~cost,
-             Location.of_string target_loc ))
+        ( Location.of_string start,
+          TransitionLabel.mk ~id:None ~assignments:updates
+            ~patterns:(List.take vars (List.length updates))
+            ~guard:constr ~cost,
+          Location.of_string target_loc ))
 
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input. *)
@@ -140,13 +140,13 @@ let mk_general_transitions
       ~f:
         (Tuple4.map3
         @@ List.map ~f:(fun (com_kind, t) ->
-               if com_kind <> List.length t then
-                 raise ComKindAndTargetsMismatch;
-               let cleaned = List.filter ~f:(fun (_, _, target) -> Set.mem lhs_locations target) t in
-               if List.length cleaned > 1 then
-                 raise Program_.RecursionNotSupported
-               else
-                 List.hd_exn (cleaned @ t)))
+            if com_kind <> List.length t then
+              raise ComKindAndTargetsMismatch;
+            let cleaned = List.filter ~f:(fun (_, _, target) -> Set.mem lhs_locations target) t in
+            if List.length cleaned > 1 then
+              raise Program_.RecursionNotSupported
+            else
+              List.hd_exn (cleaned @ t)))
       gts
   in
   let number_patterns =
@@ -160,12 +160,12 @@ let mk_general_transitions
         formula ) =
     Sequence.of_list (Formula.constraints formula)
     |> Sequence.map ~f:(fun guard ->
-           GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns
-             ~patterns:(List.map ~f:Var.of_string patterns)
-             ~cost
-               (* Create the labels in a delayed fashion to ensure unique ids in the presence of disjunction / multiple constraints*)
-             ~rhss:(List.map ~f:(Tuple3.map3 Location.of_string) rhss)
-             ~guard)
+        GeneralTransition.mk ~start:(Location.of_string start_loc) ~fill_up_to_num_arg_vars:number_patterns
+          ~patterns:(List.map ~f:Var.of_string patterns)
+          ~cost
+            (* Create the labels in a delayed fashion to ensure unique ids in the presence of disjunction / multiple constraints*)
+          ~rhss:(List.map ~f:(Tuple3.map3 Location.of_string) rhss)
+          ~guard)
   in
   Sequence.of_list cleaned_com_k_transitions
   |> Sequence.map ~f:mk_general_transition

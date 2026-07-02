@@ -26,9 +26,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
              ( "lift",
                Bound.vars local_bound |> Set.to_list
                |> List.map ~f:(fun v ->
-                      ( "t: " ^ Transition.to_id_string entry ^ ", yvar: " ^ Var.to_string v,
-                        get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true ))
-             ));
+                   ( "t: " ^ Transition.to_id_string entry ^ ", yvar: " ^ Var.to_string v,
+                     get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true )) ));
          Logger.log logger Logger.INFO (fun () ->
              ( "lift",
                [ ("RB of entry", get_timebound entry |> Bound.to_string); ("Result", Bound.to_string b) ] ));
@@ -39,8 +38,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
              <> (mk_str_line ("relevant size-bounds w.r.t. " ^ Transition.to_id_string_pretty entry ^ ":")
                 <> (Bound.vars local_bound |> Set.to_list
                    |> List.map ~f:(fun v ->
-                          Var.to_string ~pretty:true v ^ ": "
-                          ^ (get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true))
+                       Var.to_string ~pretty:true v ^ ": "
+                       ^ (get_sizebound (RV.modifier_of_transition entry) v |> Bound.to_string ~pretty:true))
                    |> List.map ~f:mk_str_line |> mappend)
                 <> mk_str_line
                      ("Runtime-bound of t"

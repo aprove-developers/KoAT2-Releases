@@ -5,10 +5,10 @@ module GTAndLoc = MakeComparatorForTuples (GeneralTransition) (Location)
 let entry_gts_with_locs program of_gts =
   Set.to_sequence of_gts
   |> Sequence.map ~f:(fun gt ->
-         let loc = GeneralTransition.src gt in
-         Set.to_sequence (Program.pre_gt program gt)
-         |> Sequence.filter ~f:(fun gt -> not (Set.mem of_gts gt))
-         |> Sequence.map ~f:(fun gt -> (gt, loc)))
+      let loc = GeneralTransition.src gt in
+      Set.to_sequence (Program.pre_gt program gt)
+      |> Sequence.filter ~f:(fun gt -> not (Set.mem of_gts gt))
+      |> Sequence.map ~f:(fun gt -> (gt, loc)))
   |> Sequence.join
   |> Set.of_sequence (module GTAndLoc)
   |> Set.to_sequence
@@ -26,11 +26,11 @@ let entry_locations program of_gts =
 let pre_grvts program gt =
   Program.pre_gt program gt |> Set.to_sequence
   |> Sequence.filter_map ~f:(fun pre_gt ->
-         let loc = GeneralTransition.src gt in
-         if Set.mem (GeneralTransition.targets pre_gt) loc then
-           Some (pre_gt, loc)
-         else
-           None)
+      let loc = GeneralTransition.src gt in
+      if Set.mem (GeneralTransition.targets pre_gt) loc then
+        Some (pre_gt, loc)
+      else
+        None)
 
 
 (** We use a functor to obtain methods for different bound types *)
@@ -56,21 +56,21 @@ module MakeSubstHelper (Num : PolyTypes.OurNumber) = struct
         let linear_in_vars =
           Poly.monomials_with_coeffs p
           |> List.fold_left ~init:all_vars ~f:(fun vset (_, m) ->
-                 if Mon.is_univariate_linear m then
-                   all_vars
-                 else
-                   Set.diff all_vars (Mon.vars m))
+              if Mon.is_univariate_linear m then
+                all_vars
+              else
+                Set.diff all_vars (Mon.vars m))
         in
         let vars_of_degree_one_but_poly_not_linear_in =
           let vars_of_degree_one =
             Poly.monomials_with_coeffs p
             |> List.fold_left ~init:all_vars ~f:(fun vset (_, m) ->
-                   let nonlinear_vars =
-                     Mon.to_sequence m
-                     |> Sequence.filter_map ~f:(fun (v, e) -> Option.some_if (e <> 1) v)
-                     |> VarSet.of_sequence
-                   in
-                   Set.diff vset nonlinear_vars)
+                let nonlinear_vars =
+                  Mon.to_sequence m
+                  |> Sequence.filter_map ~f:(fun (v, e) -> Option.some_if (e <> 1) v)
+                  |> VarSet.of_sequence
+                in
+                Set.diff vset nonlinear_vars)
           in
           Set.diff vars_of_degree_one linear_in_vars
         in
