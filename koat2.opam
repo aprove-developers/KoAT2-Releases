@@ -32,7 +32,7 @@ depends: [
   "ppx_subliner"
   "ppx_sexp_conv"
   "zarith"
-  "z3" {= "4.15.2"}
+  "z3" {= "4.16.0"}
   "koat2_external"
   "ocolor"
 ]

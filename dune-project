@@ -20,7 +20,7 @@
 (package
  (name koat2_external)
  (synopsis "External (automatically generated files) for KoAT2")
- (depends (z3 (= 4.15.2)))
+ (depends (z3 (= 4.16.0)))
 )
 
 (package
@@ -51,7 +51,7 @@
    ppx_subliner
    ppx_sexp_conv
    zarith
-   (z3 (= 4.15.2))
+   (z3 (= 4.16.0))
    koat2_external
    ocolor
    )
