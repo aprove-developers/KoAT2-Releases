@@ -1,4 +1,3 @@
-type probabilistic_koat_goal = ExpectedComplexity | ExpectedSize of Var.t
 type classical
 type probabilistic
 
