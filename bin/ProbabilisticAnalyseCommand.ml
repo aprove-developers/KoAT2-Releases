@@ -67,7 +67,6 @@ type params = {
   pe : bool;  (** Enable partial evaluation *)
   pe_fvs : bool;
   pe_k : int; [@default 0]
-  pe_update_invariants : bool; [@default true]
   timeout : float; [@default 0.]
       (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
   goal :
