@@ -8,16 +8,16 @@ let description = "Search for a multiphase linear ranking function"
 let command = "mprf"
 
 type params = {
-  input : string; [@aka [ "i" ]] [@pos 0]
+  input : string; [@pos 0]
       (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
-  simple_input : bool; [@default false] [@aka [ "s" ]]
+  simple_input : bool; [@names [ "simple-input"; "s" ]]
       (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-  depth : int; [@default 1] [@aka [ "d" ]]
+  depth : int; [@default 1] [@names [ "depth"; "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 let run (params : params) =
   Logging.(use_loggers [ (MPRF, Logger.DEBUG) ]);

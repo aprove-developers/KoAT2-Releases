@@ -1,5 +1,6 @@
 open Koat2
 open! OurBase
+open SublinerHelper
 module Valuation = Valuation.Make (OurInt)
 
 let description = "Find solutions for a constraint"
@@ -7,9 +8,9 @@ let command = "smt"
 
 type params = {
   constr : string; [@pos 0]  (** The constraint for which a solution should be found. *)
-  solver : [ `Z3 ]; [@enum [ ("z3", `Z3) ]] [@default `Z3]  (** The solver which should be used. *)
+  solver : ([ `Z3 ][@conv mk_enum [ ("z3", `Z3) ]]); [@default `Z3]  (** The solver which should be used. *)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 let run (params : params) =
   let module Z3 = SMT.Z3Solver in

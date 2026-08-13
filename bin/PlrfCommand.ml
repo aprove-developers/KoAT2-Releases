@@ -11,7 +11,7 @@ type params = {
   input : string; [@pos 0]
       (** Path to the koat input file which defines the probabilistic integer transition system. *)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 let run (params : params) =
   Logging.(use_loggers [ (PLRF, Logger.DEBUG); (Preprocessor, Logger.DEBUG) ]);

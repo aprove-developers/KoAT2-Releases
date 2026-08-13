@@ -7,10 +7,10 @@ let command = "ari-to-koat"
 
 type params = {
   input_file : string; [@pos 0]  (** The input file which should be translated *)
-  output_file : string option; [@aka [ "o" ]]
+  output_file : string option; [@names [ "output"; "o" ]]
   parse_only : bool;  (** Do not print the KoAT version *)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 let run (params : params) =
   let program =

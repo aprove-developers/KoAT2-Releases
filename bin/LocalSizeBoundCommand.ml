@@ -1,5 +1,6 @@
 open Koat2
 open OurBase
+open SublinerHelper
 open Formulas
 open Bounds
 
@@ -9,7 +10,8 @@ let description = "Search for a local size bound"
 let command = "lsb"
 
 type params = {
-  kind : [ `Lower | `Upper ]; [@enum [ ("upper", `Upper); ("lower", `Lower) ]] [@pos 0] [@default `Upper]
+  kind : ([ `Lower | `Upper ][@conv mk_enum [ ("upper", `Upper); ("lower", `Lower) ]]);
+      [@pos 0] [@default `Upper]
       (** Which type of bound is requested. Available options: upper and lower. *)
   guard : string; [@default ""]
       (** The guard of the transition in the form of a constraint.
@@ -17,7 +19,7 @@ type params = {
         Atoms are two polynomials in a relation with <, >, <=, >= or =. *)
   var : string; [@default "x"]  (** The variable for which a local size bound should be found. *)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 let run (params : params) =
   Logging.(use_loggers [ (LocalSizeBound, Logger.DEBUG) ]);

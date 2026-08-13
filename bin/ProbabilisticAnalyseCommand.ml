@@ -2,6 +2,7 @@ open Koat2
 (** Perform a full-fledged probabilistic analysis *)
 
 open! OurBase
+open SublinerHelper
 open ProbabilisticProgramModules
 module OverapprAnalysis = Analysis.Make (Bounds.Bound) (NonProbOverappr)
 
@@ -11,62 +12,70 @@ let description = "Perform a probabilistic analysis on a given PIP"
 let command = "prob-analyse"
 
 type params = {
-  input : string; [@aka [ "i" ]]
+  input : string; [@names [ "input"; "i" ]]
       (** Either an absolute or relative path to the koat input file which defines the probabilistic integer transition system. *)
-  preprocessors : Program.t Preprocessor.t list;
-      [@enum Preprocessor.(List.map (fun p -> (show p, p)) all_probabilistic)]
+  preprocessors :
+    (Program.t Preprocessor.t
+    [@conv mk_enum Preprocessor.(List.map ~f:(fun p -> (show p, p)) all_probabilistic)])
+    list;
       [@default Preprocessor.all_probabilistic]
       (** The preprocessors which should be applied before running the actual algorithm. *)
-  mprf_depth : int; [@default 1] [@aka [ "d" ]]
+  mprf_depth : int; [@default 1] [@names [ "depth"; "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
-  classic_local : classic_local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("twnlog", `TWNLOG); ("unsolvable", `UNSOLVABLE) ]]
-      [@default [ `MPRF ]]
-      [@sep ',']
+  classic_local :
+    (classic_local
+    [@conv mk_enum [ ("mprf", `MPRF); ("twn", `TWN); ("twnlog", `TWNLOG); ("unsolvable", `UNSOLVABLE) ]])
+    list;
+      [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn, twnlog or unsolvable *)
-  closed_form_size_bounds : bool; [@default false]  (** If size should be computed by closed forms. *)
-  preprocessing_strategy : Preprocessor.strategy;
-      [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
+  closed_form_size_bounds : bool;  (** If size should be computed by closed forms. *)
+  preprocessing_strategy :
+    (Preprocessor.strategy
+    [@conv mk_enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]);
       [@default Preprocessor.process_till_fixpoint]
       (** The strategy which should be used to apply the preprocessors. *)
   show_proof : bool;  (** Displays the complexity proof. *)
-  proof_format : Formatter.format;
-      [@enum Formatter.all_formats |> List.map (fun f -> (Formatter.format_to_string f, f))]
+  proof_format :
+    (Formatter.format
+    [@conv mk_enum (Formatter.all_formats |> List.map ~f:(fun f -> (Formatter.format_to_string f, f)))]);
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
-  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound | `PrintTermcompLog ];
-      [@enum
+  result :
+    ([ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound | `PrintTermcompLog ]
+    [@conv
+      mk_enum
         [
           ("termcomp", `PrintTermcomp);
           ("termcompLog", `PrintTermcompLog);
           ("all", `PrintAllBounds);
           ("overall", `PrintOverallCostbound);
-        ]]
-      [@default `PrintOverallCostbound]
-      [@aka [ "r" ]]
+        ]]);
+      [@default `PrintOverallCostbound] [@names [ "result"; "r" ]]
       (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
-  logs : Logging.logger list;
-      [@enum Logging.(List.map (fun l -> (show_logger l, l)) all_available)]
-      [@default Logging.all_available]
-      [@sep ',']
-      [@aka [ "l" ]]
+  logs :
+    (Logging.logger[@conv mk_enum Logging.(List.map ~f:(fun l -> (show_logger l, l)) all_available)]) list;
+      [@default Logging.all_available] [@sep ','] [@names [ "logs"; "l" ]]
       (** The loggers which should be activated. *)
-  log_level : Logger.level;
-      [@enum
-        Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
-        |> List.map (fun level -> (Logger.name_of_level level, level))]
+  log_level :
+    (Logger.level
+    [@conv
+      mk_enum
+        (Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
+        |> List.map ~f:(fun level -> (Logger.name_of_level level, level)))]);
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
   pe : bool;  (** Enable partial evaluation *)
-  pe_fvs : bool; [@default false]
+  pe_fvs : bool;
   pe_k : int; [@default 0]
   pe_update_invariants : bool; [@default true]
   timeout : float; [@default 0.]
       (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
-  goal : Goal.probabilistic Goal.goal option;
-      [@enum [ ("PAST", Goal.ExpectedComplexity); ("AST", Goal.AlmostSureTermination) ]]
+  goal :
+    (Goal.probabilistic Goal.goal
+    [@conv mk_enum [ ("PAST", Goal.ExpectedComplexity); ("AST", Goal.AlmostSureTermination) ]])
+    option;
 }
-[@@deriving cmdliner]
+[@@deriving subliner]
 
 exception UnsupportedGoal of string
 

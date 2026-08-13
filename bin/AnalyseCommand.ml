@@ -2,6 +2,7 @@ open Koat2
 (** Handles shell arguments and computes an upper time-bound. *)
 
 open! OurBase
+open SublinerHelper
 open ProgramModules
 open RVGTypes
 open Bounds
@@ -65,73 +66,81 @@ type params = {
   print_system : bool;  (** Prints the integer transition system at the start as png *)
   print_rvg : bool;  (** Prints the input result variable graph at the start as png *)
   print_input : bool;  (** Prints the raw unmodified input before the start *)
-  no_boundsearch : bool; [@aka [ "n" ]]
+  no_boundsearch : bool; [@names [ "no-boundsearch"; "n" ]]
       (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
-  input : string option; [@aka [ "i" ]]
+  input : string option; [@names [ "input"; "i" ]]
       (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
-  output_dir : string option; [@aka [ "o" ]]
+  output_dir : string option; [@names [ "output-dir"; "o" ]]
       (** An absolute or relative path to the output directory, where all generated files should end up. *)
   show_proof : bool;  (** Displays the complexity proof. *)
-  proof_format : Formatter.format;
-      [@enum
-        [ Formatter.Html; Formatter.Markdown; Formatter.Plain ]
-        |> List.map (fun f -> (Formatter.format_to_string f, f))]
+  proof_format :
+    (Formatter.format
+    [@conv
+      mk_enum
+        ([ Formatter.Html; Formatter.Markdown; Formatter.Plain ]
+        |> List.map ~f:(fun f -> (Formatter.format_to_string f, f)))]);
       [@default Formatter.Plain]
       (** What should be the output format of the proof. html, markdown, or plain? *)
-  logs : Logging.logger list;
-      [@enum Logging.(List.map (fun l -> (show_logger l, l)) all_available)]
-      [@default Logging.all_available]
-      [@sep ',']
-      [@aka [ "l" ]]
+  logs :
+    (Logging.logger[@conv mk_enum Logging.(List.map ~f:(fun l -> (show_logger l, l)) all_available)]) list;
+      [@default Logging.all_available] [@sep ','] [@names [ "logs"; "l" ]]
       (** The loggers which should be activated. *)
-  log_level : Logger.level;
-      [@enum
-        Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
-        |> List.map (fun level -> (Logger.name_of_level level, level))]
+  log_level :
+    (Logger.level
+    [@conv
+      mk_enum
+        (Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
+        |> List.map ~f:(fun level -> (Logger.name_of_level level, level)))]);
       [@default Logger.NONE]
       (** The general log level of the loggers. *)
-  result : [ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound | `PrintTermcompLog ];
-      [@enum
+  result :
+    ([ `PrintTermcomp | `PrintAllBounds | `PrintOverallCostbound | `PrintTermcompLog ]
+    [@conv
+      mk_enum
         [
           ("termcomp", `PrintTermcomp);
           ("termcompLog", `PrintTermcompLog);
           ("all", `PrintAllBounds);
           ("overall", `PrintOverallCostbound);
-        ]]
-      [@default `PrintOverallCostbound]
-      [@aka [ "r" ]]
+        ]]);
+      [@default `PrintOverallCostbound] [@names [ "result"; "r" ]]
       (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
-  format : [ `ARI | `KOAT ]; [@enum [ ("ari", `ARI); ("koat", `KOAT) ]] [@default `KOAT]
-  preprocessors : Program.t Preprocessor.t list;
-      [@enum Preprocessor.(List.map (fun p -> (show p, p)) all_classical)]
+  format : ([ `ARI | `KOAT ][@conv mk_enum [ ("ari", `ARI); ("koat", `KOAT) ]]); [@default `KOAT]
+  preprocessors :
+    (Program.t Preprocessor.t[@conv mk_enum Preprocessor.(List.map ~f:(fun p -> (show p, p)) all_classical)])
+    list;
       [@default Preprocessor.default_classical]
       (** The preprocessors which should be applied before running the actual algorithm. *)
-  preprocessing_strategy : Preprocessor.strategy;
-      [@enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]
+  preprocessing_strategy :
+    (Preprocessor.strategy
+    [@conv mk_enum Preprocessor.[ ("once", process_only_once); ("fixpoint", process_till_fixpoint) ]]);
       [@default Preprocessor.process_till_fixpoint]
       (** The strategy which should be used to apply the preprocessors. *)
-  local : local list;
-      [@enum [ ("mprf", `MPRF); ("twn", `TWN); ("twnlog", `TWNLOG); ("unsolvable", `UNSOLVABLE) ]]
-      [@default [ `MPRF ]]
-      [@sep ',']
+  local :
+    (local
+    [@conv mk_enum [ ("mprf", `MPRF); ("twn", `TWN); ("twnlog", `TWNLOG); ("unsolvable", `UNSOLVABLE) ]])
+    list;
+      [@default [ `MPRF ]] [@sep ',']
       (** Choose methods to compute local runtime-bounds: mprf, twn, twnlog, or unsolvable *)
-  size : size list; [@enum [ ("closed", `CLOSED); ("commuting", `COMMUTING) ]] [@default []] [@sep ',']
+  size : (size[@conv mk_enum [ ("closed", `CLOSED); ("commuting", `COMMUTING) ]]) list;
+      [@default []] [@sep ',']
       (** Choose methods to compute size bounds (additionally to TOPLAS'16): closed-form size bounds *)
-  rename : bool; [@default false]  (** If the location names should be normalized to simplified names. *)
-  mprf_depth : int; [@default 1] [@aka [ "d" ]]
+  rename : bool;  (** If the location names should be normalized to simplified names. *)
+  mprf_depth : int; [@default 1] [@names [ "mprf-depth"; "d" ]]
       (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
-  cfr : cfr list; [@enum [ ("pe", `PartialEvaluation); ("chain", `Chaining) ]] [@default []] [@sep ',']
+  cfr : (cfr[@conv mk_enum [ ("pe", `PartialEvaluation); ("chain", `Chaining) ]]) list;
+      [@default []] [@sep ',']
       (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
-  pe_fvs : bool; [@default false]
+  pe_fvs : bool;
   time_limit_cfr : int; [@default 20]
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
       (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
-  termination : bool; [@default false]  (** Only looks for termination behavior. *)
+  termination : bool;  (** Only looks for termination behavior. *)
 }
-[@@deriving cmdliner]
+[@@deriving subliner]
 (** The shell arguments which can be defined in the console. *)
 
 (** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)

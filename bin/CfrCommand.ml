@@ -1,33 +1,36 @@
 open Koat2
 open! OurBase
+open SublinerHelper
 
 let command = "cfr"
 let description = "Do a control-flow refinement of a full (probabilistic) integer transition system"
 
 type params = {
-  probabilistic : bool; [@default false] [@aka [ "p" ]]
+  probabilistic : bool; [@names [ "probabilistic"; "p" ]]
   print_input : bool; [@default false]  (** Prints the raw unmodified input before the start *)
-  input : string; [@aka [ "i" ]]
+  input : string; [@names [ "input"; "i" ]]
       (** Either an absolute or relative path to the koat input file which defines the integer transition system. *)
-  output : string option; [@aka [ "o" ]]
+  output : string option; [@names [ "output"; "o" ]]
       (** An absolute or relative path to the output file, where refined program should end up.
       If ommited, the program will be printed to stdout. *)
   show_steps : bool;  (** Displays the steps of the control flow refinement. *)
-  log_level : Logger.level;
-      [@enum
-        Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
-        |> List.map (fun level -> (Logger.name_of_level level, level))]
+  log_level :
+    (Logger.level
+    [@conv
+      mk_enum
+        (Logger.[ NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG ]
+        |> List.map ~f:(fun level -> (Logger.name_of_level level, level)))]);
       [@default Logger.INFO]
       (** The general log level of the loggers. *)
-  abstract : [ `LoopHeads | `FVS ];
-      [@enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]] [@default `LoopHeads]
+  abstract : ([ `LoopHeads | `FVS ][@conv mk_enum [ ("loop_heads", `LoopHeads); ("fvs", `FVS) ]]);
+      [@default `LoopHeads]
       (** Where to abstract. One of loop_heads or fvs. *)
-  refinement_locations : Location.t list option;
+  refinement_locations : (Location.t[@conv Location.cmdliner_converter]) list option;
       (** List of comma-separated location names.
           The refinement is executed along all transitions between pairs of these locations
           If this parameter is ommitted *all* transitions are refined *)
 }
-[@@deriving cmdliner]
+[@@deriving subliner]
 (** The shell arguments which can be defined in the console. *)
 
 (* TODO: Program_.to_file should not add the extension.
