@@ -2,7 +2,7 @@ open Base
 
 (** Main Module *)
 
-type main_params = { version : bool [@default false]  (** Print the git version *) } [@@deriving cmdliner]
+type main_params = { version : bool  (** Print the git version *) } [@@deriving subliner]
 
 let subcommand run params_cmdliner_term description command =
   let term = Cmdliner.Term.(const run $ params_cmdliner_term ()) in

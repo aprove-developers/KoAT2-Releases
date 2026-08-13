@@ -20,7 +20,7 @@ depends: [
   "dune-build-info"
   "fpath"
   "lens"
-  "menhir"
+  "menhir" {>= "20180523"}
   "ocamlgraph"
   "ocamlformat" {= "0.28.1"}
   "odoc"
@@ -29,7 +29,7 @@ depends: [
   "parsexp"
   "parsexp_io"
   "ppx_deriving"
-  "ppx_deriving_cmdliner"
+  "ppx_subliner"
   "ppx_sexp_conv"
   "zarith"
   "z3" {= "4.15.2"}

@@ -10,7 +10,7 @@ let command = "size"
 type params = {
   program : string; [@pos 0] [@docv "FILE"]  (** The file of the program which should be analyzed. *)
 }
-[@@deriving cmdliner, show]
+[@@deriving subliner, show]
 
 module RVG = RVGTypes.MakeRVG (ProgramModules)
 module LSB = LocalSizeBound.Make (TransitionLabel) (Transition) (RV) (Program)

@@ -48,7 +48,7 @@
    parsexp
    parsexp_io
    ppx_deriving
-   ppx_deriving_cmdliner
+   ppx_subliner
    ppx_sexp_conv
    zarith
    (z3 (= 4.15.2))

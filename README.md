@@ -73,7 +73,7 @@ KoAT2 makes use of the following external tools and libraries.
 - [Ocamlgraph](<http://ocamlgraph.lri.fr/doc/>)
 - [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
-- [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
+- [ppx_subliner](<https://github.com/bn-d/ppx_subliner>)
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
