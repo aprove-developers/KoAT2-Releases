@@ -41,8 +41,7 @@ struct
           include G
 
           let empty () = add_locations (Set.to_sequence @@ locations t) G.empty
-        end)
-    in
+        end) in
     MapModule.map f t
 
 

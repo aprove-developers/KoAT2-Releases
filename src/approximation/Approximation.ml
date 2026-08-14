@@ -209,7 +209,6 @@ module Probabilistic (BP : BoundPair.T) = struct
           let rvtuple__eq = sym E.rvtuple__eq
           let trans_cmp_wit_eq = sym E.trans_cmp_wit_eq
           let rvtuple__cmp_wit_eq = sym E.rvtuple__cmp_wit_eq
-        end)
-    in
+        end) in
     M.coerce
 end
