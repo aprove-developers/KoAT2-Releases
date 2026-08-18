@@ -21,9 +21,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | Product of bound * bound
     | Log of Var.t
       (* We always consider log-Base 2. And we always normalize s.t. log(x^2 + 2^x) <= 2*log(x) + x. *)
-  [@@deriving eq, ord]
+  [@@deriving eq, ord, sexp]
 
-  type t = bound option [@@deriving eq, ord]
+  type t = bound Option.t [@@deriving eq, ord, sexp]
   (* None represents infinity *)
 
   let prove_finiteness = identity
@@ -705,7 +705,7 @@ module RationalBound = struct
 end
 
 module BinaryBound = struct
-  type t = Finite | Infinite [@@deriving eq, ord]
+  type t = Finite | Infinite [@@deriving eq, ord, sexp]
   type bound = Bound
   type value
   type polynomial

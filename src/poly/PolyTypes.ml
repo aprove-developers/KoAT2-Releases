@@ -2,7 +2,7 @@ open! OurBase
 (** Provides all modules related to polynomials. *)
 
 module type OurNumber = sig
-  type t
+  type t [@@deriving sexp]
 
   val zero : t
   val one : t

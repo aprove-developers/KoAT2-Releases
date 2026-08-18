@@ -3,7 +3,7 @@ open! OurBase
 
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module type Bound = sig
-  type t
+  type t [@@deriving sexp]
   type value
   type polynomial
 
