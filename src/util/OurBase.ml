@@ -1,5 +1,6 @@
 (* explicitly import required modules from Base *)
 module Array = Base.Array
+module Either = Base.Either
 module Exn = Base.Exn
 module Float = Base.Float
 module Fn = Base.Fn
