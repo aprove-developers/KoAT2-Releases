@@ -33,6 +33,8 @@ module type OurNumber = sig
 
   val root_pow : t -> t -> t Option.t
   (** [rootrem x n] computes the x^n if it exists. *)
+
+  include Comparator.S with type t := t
 end
 
 (** module type for indeterminates in polynomials and monomials *)

@@ -28,8 +28,16 @@ let ceil = identity
 include Z
 include Z.Compare
 
-let t_of_sexp = of_string % Sexplib0.Sexp_conv.string_of_sexp
-let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_string % to_string
+module ForComparator = struct
+  include Z
+
+  let t_of_sexp = of_string % Sexplib0.Sexp_conv.string_of_sexp
+  let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_string % to_string
+end
+
+include ForComparator
+include Comparator.Make (ForComparator)
+
 let ( =~= ) = equal
 let is_integral _ = true
 let of_ourint = identity

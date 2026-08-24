@@ -2,9 +2,14 @@ open! OurBase
 
 exception Div_Zero of string
 
-include Q
+module ForComparator = struct
+  include Q
 
-type t = Q.t = { num : OurInt.t; den : OurInt.t } [@@deriving sexp]
+  type t = Q.t = { num : OurInt.t; den : OurInt.t } [@@deriving sexp]
+end
+
+include ForComparator
+include Comparator.Make (ForComparator)
 
 let product = Sequence.fold ~init:Q.one ~f:Q.mul
 let is_integral t = OurInt.equal OurInt.one t.den
