@@ -57,10 +57,10 @@ module RationalBound : sig
   (** Ceil Floats to Ints *)
 
   val sqrt : t -> t
-  (** Computes the square root *)
+  (** Computes the square root. Performs some overapproximations. *)
 
-  val mth_root : OurInt.t -> t -> t
-  (** [mth_root m b] Computes the [b]m-th square root of [b], i.e., b^(1/m)*)
+  val mth_root : int -> t -> t
+  (** [mth_root m b] Computes the [b]m-th square root of [b], i.e., b^(1/m). Performs some overapproximations. *)
 end
 
 module BinaryBound : sig

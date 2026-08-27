@@ -74,4 +74,14 @@ let ceil t =
 
 
 let log x = of_ourint @@ OurInt.log @@ ceil x
+let log2int = OurInt.log2int % ceil
+
+let mth_root_up m x =
+  let r, rem = OurInt.rootrem (ceil x) m in
+  if OurInt.is_zero rem then
+    of_ourint r
+  else
+    of_ourint r + one
+
+
 let to_our_rational = identity

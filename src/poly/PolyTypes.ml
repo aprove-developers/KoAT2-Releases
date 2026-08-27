@@ -25,6 +25,10 @@ module type OurNumber = sig
   val ( =~= ) : t -> t -> bool
   val pow : t -> int -> t
   val log : t -> t
+
+  val log2int : t -> int
+  (** Compute the (ceiled) logarithm  *)
+
   val to_our_rational : t -> OurRational.t
   val max : t -> t -> t
   val min : t -> t -> t

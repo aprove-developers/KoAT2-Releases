@@ -45,6 +45,7 @@ let is_negative a = Compare.(zero > a)
 let is_ge = Compare.( >= )
 let is_gt = Compare.( > )
 let log x = of_int (Z.log2up x)
+let log2int = Z.log2up
 
 (* Use as [range start ~inc stop. Both ends are inclusive] *)
 let range_from ?(inc = one) start = Sequence.unfold ~init:start ~f:(fun next -> Some (next, next + inc))
