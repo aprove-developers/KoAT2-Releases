@@ -2,7 +2,7 @@ open! OurBase
 (** Provides all modules related to polynomials. *)
 
 module type OurNumber = sig
-  type t
+  type t [@@deriving sexp]
 
   val zero : t
   val one : t
@@ -25,6 +25,10 @@ module type OurNumber = sig
   val ( =~= ) : t -> t -> bool
   val pow : t -> int -> t
   val log : t -> t
+
+  val log2int : t -> int
+  (** Compute the (ceiled) logarithm  *)
+
   val to_our_rational : t -> OurRational.t
   val max : t -> t -> t
   val min : t -> t -> t
@@ -33,6 +37,8 @@ module type OurNumber = sig
 
   val root_pow : t -> t -> t Option.t
   (** [rootrem x n] computes the x^n if it exists. *)
+
+  include Comparator.S with type t := t
 end
 
 (** module type for indeterminates in polynomials and monomials *)

@@ -11,49 +11,337 @@ module Make (Num : PolyTypes.OurNumber) = struct
 
   module Poly = PolynomialOver (Num)
 
-  (* Minus Infinity is max of an empty list *)
-  (* Infinity is min of an empty list *)
-  type bound =
-    | Const of Num.t (* absolute value *)
-    | Var of Var.t
-    | Exp of bound * bound
-    | Sum of bound * bound
-    | Product of bound * bound
-    | Log of Var.t
-      (* We always consider log-Base 2. And we always normalize s.t. log(x^2 + 2^x) <= 2*log(x) + x. *)
-  [@@deriving eq, ord]
+  (** Hide the internal workings of the type as far as possible.
+      Only implement something here, if it requires modification of the internal structure *)
+  module Repr : sig
+    type 'a non_empty_list = 'a * 'a List.t [@@deriving eq, ord, sexp]
 
-  type t = bound option [@@deriving eq, ord]
-  (* None represents infinity *)
+    type first_level_bound = private Var of Var.t | Log of Var.t | Exp of (bound * bound)
+    and product_bound = private Product of { coeff : Num.t; mults : first_level_bound List.t }
+    and bound = private Sum of product_bound non_empty_list [@@deriving eq, ord, sexp]
+
+    val show_bound_inner : ?pretty:bool -> bound -> string
+    val mk_var_first_level : Var.t -> first_level_bound
+    val mk_log_first_level : Var.t -> first_level_bound
+    val mk_singleton_product : first_level_bound -> product_bound
+    val mk_singleton_sum : product_bound -> bound
+    val to_constant_bound : bound -> Num.t Option.t
+    val bound_of_constant : Num.t -> bound
+    val zero_bound : bound
+    val one_bound : bound
+    val sum_bounds : bound Sequence.t -> bound
+    val add_bound : bound -> bound -> bound
+    val mul_bound : bound -> bound -> bound
+    val product_bounds : bound Sequence.t -> bound
+    val pow_bound : bound -> int -> bound
+    val exp_bound : bound -> bound -> bound
+  end = struct
+    type 'a non_empty_list = 'a * 'a List.t [@@deriving eq, ord, sexp]
+
+    type first_level_bound = Var of Var.t | Log of Var.t | Exp of (bound * bound)
+    and multiplicands_bound = first_level_bound List.t
+    and product_bound = Product of { coeff : Num.t; mults : first_level_bound List.t }
+    and bound = Sum of product_bound non_empty_list [@@deriving eq, ord, sexp]
+
+    let mk_var_first_level v = Var v
+    let mk_log_first_level v = Log v
+    let mk_singleton_product b = Product { coeff = Num.one; mults = [ b ] }
+    let mk_singleton_sum b = Sum (b, [])
+
+    (* helper modules for maps *)
+    module MultiplicandsBoundComparator = struct
+      module Inner = struct
+        type t = multiplicands_bound [@@deriving eq, ord, sexp]
+      end
+
+      include Inner
+      include Comparator.Make (Inner)
+    end
+
+    module BoundComparator = struct
+      module Inner = struct
+        type t = bound [@@deriving eq, ord, sexp]
+      end
+
+      include Inner
+      include Comparator.Make (Inner)
+    end
+
+    let bound_of_constant c = Sum (Product { coeff = Num.abs c; mults = [] }, [])
+    let zero_bound = bound_of_constant Num.zero
+    let one_bound = bound_of_constant Num.one
+
+    let to_constant_bound = function
+      | Sum (Product { coeff; mults = [] }, []) -> Some coeff
+      | _ -> None
+
+
+    let to_first_level_bound = function
+      | Sum (Product { coeff; mults = [ f ] }, []) when Num.(equal coeff one) -> Some f
+      | _ -> None
+
+
+    let to_var_bound b =
+      match to_first_level_bound b with
+      | Some (Var v) -> Some v
+      | _ -> None
+
+
+    let rec show_bound_inner ?(pretty = false) =
+      let mul_sign =
+        if pretty then
+          "⋅"
+        else
+          "*"
+      in
+      let first_level = function
+        | Var v -> Var.to_string ~pretty v
+        | Log v -> "log(" ^ Var.to_string ~pretty v ^ ")"
+        | Exp (b, e) ->
+            let to_string_ t =
+              match to_constant_bound t with
+              | Some c -> Num.to_string c
+              | None -> (
+                  match to_var_bound t with
+                  | Some v -> Var.to_string ~pretty v
+                  | None -> "(" ^ show_bound_inner ~pretty t ^ ")")
+            in
+            to_string_ b ^ "^" ^ to_string_ e
+      in
+      let product = function
+        | Product { coeff; mults = [] } -> Num.to_string coeff
+        | Product { coeff; mults } ->
+            let coeff_str =
+              if Num.(equal coeff one) then
+                ""
+              else
+                Num.to_string coeff ^ mul_sign
+            in
+            let mults_string = mults |> List.map ~f:first_level |> String.concat ~sep:mul_sign in
+            coeff_str ^ mults_string
+      in
+      function
+      | Sum (s, ss) -> s :: ss |> List.map ~f:product |> String.concat ~sep:" + "
+
+
+    let sum_bounds bounds =
+      let bounds = Sequence.to_list bounds in
+      let execute () =
+        let product_bounds = List.bind bounds ~f:(fun (Sum (s, ss)) -> s :: ss) |> Sequence.of_list in
+        let summands_map =
+          product_bounds
+          |> Sequence.map ~f:(function Product { coeff; mults } -> (mults, coeff))
+          |> Map.of_sequence_reduce (module MultiplicandsBoundComparator) ~f:Num.add
+        in
+        let not_zero = function
+          | [], c when Num.(equal zero c) -> false
+          | _ -> true
+        in
+        let combined_summands =
+          Map.to_sequence ~order:`Increasing_key summands_map
+          |> Sequence.filter ~f:not_zero
+          |> Sequence.map ~f:(fun (mults, coeff) -> Product { coeff; mults })
+          |> Sequence.to_list
+        in
+        match combined_summands with
+        | p :: ps -> Sum (p, ps)
+        | [] -> zero_bound
+      in
+      Logger.with_log logger Logger.DEBUG
+        (fun () ->
+          ("sum_bounds", [ ("bounds", Util.sequence_to_string ~f:show_bound_inner (Sequence.of_list bounds)) ]))
+        ~result:show_bound_inner execute
+
+
+    let add_bound b1 b2 = Sequence.append (Sequence.singleton b1) (Sequence.singleton b2) |> sum_bounds
+
+    let mk_product_bound coeff mults =
+      let mults =
+        if Num.(equal coeff zero) then
+          []
+        else
+          List.sort ~compare:compare_first_level_bound mults
+      in
+      Product { coeff; mults }
+
+
+    let repeat_sequence x e = Sequence.init e ~f:(fun _ -> x)
+
+    let rec pow_bound b e = repeat_sequence b e |> product_bounds
+
+    (* We only call this recursively from exp_bound when we removed logs from the exponent (or via pow_bound for constant integral exponent) *)
+    and exp_bound b e =
+      let execute () =
+        match (b, to_constant_bound b, to_constant_bound e) with
+        (* double exp *)
+        | Sum (Product { coeff; mults = [ Exp (b1, e1) ] }, []), _, _ when Num.(equal coeff one) ->
+            exp_bound b1 (mul_bound e1 e)
+        | _, Some c, _ when Num.(equal c zero) -> zero_bound
+        | _, Some c, _ when Num.(equal c one) -> one_bound
+        | _, _, Some c when Num.is_integral c -> pow_bound b (Num.to_int c)
+        (* push in *)
+        | Sum (Product { coeff; mults }, []), _, _ when List.length mults >= 2 ->
+            exp_bound (bound_of_constant coeff) e
+            :: List.map mults ~f:(fun m -> exp_bound (mk_singleton_sum @@ mk_singleton_product m) e)
+            |> Sequence.of_list |> product_bounds
+        | _, Some c, e_opt ->
+            Option.bind e_opt ~f:(Option.map ~f:bound_of_constant % Num.root_pow c)
+            |> Option.value_or_thunk ~default:(fun () ->
+                let (Sum (s, ss)) = e in
+                let log_vars, rem =
+                  List.partition_map (s :: ss) ~f:(function
+                    | Product { coeff; mults = [ Log v ] } when Num.(equal coeff one) -> Base.Either.First v
+                    | r -> Base.Either.Second (mk_singleton_sum r))
+                in
+                if List.is_empty log_vars then
+                  mk_singleton_sum (mk_singleton_product (Exp (b, e)))
+                else
+                  let rem_product_bounds =
+                    let (Sum (s, ss)) = exp_bound b (sum_bounds (Sequence.of_list rem)) in
+                    s :: ss
+                  in
+                  let log_part =
+                    Sequence.of_list log_vars
+                    |> Sequence.bind ~f:(fun v ->
+                        if Num.(equal c one) then
+                          Sequence.singleton (Var v)
+                        else
+                          repeat_sequence (Var v) (Num.log2int c))
+                    |> Sequence.to_list
+                  in
+                  (* Now log_part should have no exps. So we multiply the bound "manually" back together here *)
+                  Sequence.of_list rem_product_bounds
+                  |> Sequence.map ~f:(fun (Product { coeff; mults }) ->
+                      mk_product_bound coeff (log_part @ mults))
+                  |> Sequence.map ~f:mk_singleton_sum |> sum_bounds)
+        | _ -> mk_singleton_sum (mk_singleton_product (Exp (b, e)))
+      in
+      Logger.with_log logger Logger.DEBUG
+        (fun () -> ("exp_bound", [ ("b", show_bound_inner b); ("e", show_bound_inner e) ]))
+        ~result:show_bound_inner execute
+
+
+    and mul_bound b1 b2 =
+      let execute () =
+        let addends = function
+          | Sum (p, ps) -> p :: ps
+        in
+        (* simplify 2^(0.5) * 8^(0.5) -> (2*8)^0.5 -> 16^0.5 *)
+        let mk_product_bound_and_simplify_exps coeff (multiplicands : first_level_bound list) =
+          let const_exps, rem_exps, rem =
+            let try_const_exp = function
+              | Exp (b, e) ->
+                  OptionMonad.liftM2
+                    (fun c_b c_e -> `Fst (Tuple2.make c_b c_e))
+                    (to_constant_bound b) (to_constant_bound e)
+                  |> Option.value ~default:(`Snd (b, e))
+              | Var v -> `Snd (mk_singleton_sum @@ mk_singleton_product (Var v), bound_of_constant Num.one)
+              | m -> `Trd m
+            in
+            List.partition3_map multiplicands ~f:try_const_exp
+          in
+          let simplified_grouped_const_exps, non_simplified_consts_exp =
+            Sequence.of_list const_exps |> Sequence.map ~f:Tuple2.swap
+            |> Map.of_sequence_reduce (module Num) ~f:Num.mul
+            |> Map.to_alist
+            |> List.partition_map ~f:(fun (e, b) ->
+                let try_compute_exp = Option.map (Num.root_pow b e) ~f:Either.first in
+                Option.value try_compute_exp
+                  ~default:(Either.second (bound_of_constant b, bound_of_constant e)))
+          in
+
+          let rem_exps_grouped_and_simplified =
+            let rem_exps =
+              Sequence.append (Sequence.of_list non_simplified_consts_exp) (Sequence.of_list rem_exps)
+            in
+            let map =
+              Sequence.map rem_exps ~f:(fun (b, e) -> (b, [ e ]))
+              |> Map.of_sequence_reduce (module BoundComparator) ~f:List.append
+            in
+            (* Either.t to indicate progress *)
+            Map.fold map ~init:(Either.first []) ~f:(fun ~key:b ~data:es ->
+                let reconstr_var_int_exp v c = Sequence.to_list (repeat_sequence (Var v) (Num.to_int c)) in
+                match es with
+                | [ e ] ->
+                    let reconstruct_exp b e =
+                      let opt =
+                        let open OptionMonad in
+                        let* v = to_var_bound b in
+                        let* c = to_constant_bound e in
+                        Option.some_if (Num.is_integral c) (reconstr_var_int_exp v c)
+                      in
+                      Option.value opt ~default:[ Exp (b, e) ]
+                    in
+                    Either.First.map ~f:(List.append (reconstruct_exp b e))
+                | es -> begin
+                    let sum_es = sum_bounds (Sequence.of_list es) in
+                    let as_exped () = exp_bound b sum_es in
+                    function
+                    | Either.First l -> (
+                        match (to_var_bound b, to_constant_bound sum_es) with
+                        | Some v, Some c_e when Num.is_integral c_e ->
+                            Either.first (reconstr_var_int_exp v c_e @ l)
+                        | _ ->
+                            Either.Second
+                              (as_exped () :: List.map ~f:(mk_singleton_sum % mk_singleton_product) l))
+                    | Either.Second l -> Either.Second (as_exped () :: l)
+                  end)
+          in
+
+          let coeff_from_simpl_const =
+            Num.mul coeff (List.fold ~init:Num.one ~f:Num.mul simplified_grouped_const_exps)
+          in
+          match rem_exps_grouped_and_simplified with
+          | Either.First l -> mk_singleton_sum @@ mk_product_bound coeff_from_simpl_const (l @ rem)
+          | Either.Second l ->
+              let rem_bounds =
+                Sequence.map (Sequence.of_list rem) ~f:(mk_singleton_sum % mk_singleton_product)
+              in
+              let bounds_from_exps = Sequence.of_list (bound_of_constant coeff_from_simpl_const :: l) in
+              Sequence.append bounds_from_exps rem_bounds |> product_bounds
+        in
+
+        Sequence.cartesian_product (Sequence.of_list @@ addends b1) (Sequence.of_list @@ addends b2)
+        |> Sequence.map ~f:(function Product p1, Product p2 ->
+            mk_product_bound_and_simplify_exps (Num.mul p1.coeff p2.coeff) (p1.mults @ p2.mults))
+        (* |> Sequence.map ~f:mk_singleton_sum *) |> sum_bounds
+      in
+      Logger.with_log logger Logger.DEBUG
+        (fun () -> ("mul_bound", [ ("b1", show_bound_inner b1); ("b2", show_bound_inner b2) ]))
+        ~result:show_bound_inner execute
+
+
+    and product_bounds bounds = Sequence.reduce ~f:mul_bound bounds |> Option.value ~default:one_bound
+  end
+
+  include Repr
+
+  type t = bound Option.t [@@deriving eq, ord, sexp]
 
   let prove_finiteness = identity
-  let bound_of_var v = Var v
+  let bound_of_var v = mk_singleton_sum (mk_singleton_product (mk_var_first_level v))
   let of_var = OptionMonad.return % bound_of_var
-  let bound_of_constant c = Const (Num.abs c)
   let of_constant = OptionMonad.return % bound_of_constant
+  let zero = OptionMonad.return zero_bound
+  let one = OptionMonad.return one_bound
   let of_OurInt = OptionMonad.return % bound_of_constant % Num.of_ourint
-
-  let is_constant =
-    let rec is_constant = function
-      | Const _ -> true
-      | Var _ -> false
-      | Exp (_, b) -> is_constant b
-      | Sum (b1, b2) -> is_constant b1 && is_constant b2
-      | Product (b1, b2) -> is_constant b1 && is_constant b2
-      | Log b -> false
-    in
-    Option.value ~default:false % Option.map ~f:is_constant
-
+  let to_constant = Option.bind ~f:to_constant_bound
+  let is_constant_bound = Option.is_some % to_constant_bound
+  let is_constant = Option.value_map ~default:false ~f:is_constant_bound
 
   let rec fold_bound ~const ~var ~plus ~times ~exp ~log p =
     let fold_ = fold_bound ~const ~var ~plus ~times ~exp ~log in
+    let first_level = function
+      | Var v -> var v
+      | Log v -> log v
+      | Exp (b, e) -> exp (fold_ b) (fold_ e)
+    in
+    let product = function
+      | Product { coeff; mults } ->
+          Sequence.map ~f:first_level (Sequence.of_list mults) |> Sequence.fold ~init:(const coeff) ~f:times
+    in
     match p with
-    | Var v -> var v
-    | Const c -> const c
-    | Exp (b, e) -> exp (fold_ b) (fold_ e)
-    | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
-    | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
-    | Log v -> log v
+    | Sum (b, bs) -> Sequence.of_list bs |> Sequence.map ~f:product |> Sequence.fold ~init:(product b) ~f:plus
 
 
   let fold ~const ~var ~plus ~times ~exp ~log ~inf = function
@@ -143,45 +431,53 @@ module Make (Num : PolyTypes.OurNumber) = struct
 
 
   let asymptotic_complexity =
-    let rec go = function
-      | Const c -> LogarithmicPolynomial (OurRational.zero, OurRational.zero)
-      | Var v -> LogarithmicPolynomial (OurRational.zero, OurRational.one)
-      | Sum (x, y) -> (
-          match (go x, go y) with
-          | Inf, _ -> Inf
-          | _, Inf -> Inf
-          | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
-              if lex_compare (y1, x1) (y2, x2) == -1 then
-                LogarithmicPolynomial (x2, y2)
-              else
-                LogarithmicPolynomial (x1, y1)
-          | Exponential x, Exponential y -> Exponential (Int.max x y)
-          | LogarithmicPolynomial _, Exponential y -> Exponential y
-          | Exponential x, LogarithmicPolynomial _ -> Exponential x)
-      | Product (x, y) -> (
-          match (go x, go y) with
-          | Inf, _ -> Inf
-          | _, Inf -> Inf
-          | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
-              LogarithmicPolynomial (OurRational.(x1 + x2), OurRational.(y1 + y2))
-          | Exponential x, Exponential y -> Exponential (Int.max x y)
-          | LogarithmicPolynomial _, Exponential y -> Exponential y
-          | Exponential x, LogarithmicPolynomial _ -> Exponential x)
-      | Exp (b, Const c) -> (
-          let c_our_rational = Num.to_our_rational c in
-          match go b with
-          | LogarithmicPolynomial (x, y) ->
-              LogarithmicPolynomial (OurRational.(x * c_our_rational), OurRational.(y * c_our_rational))
-          | Exponential _ as e -> e
-          | Inf -> Inf)
-      | Exp (b, e) -> (
-          match go e with
-          | Inf -> Inf
-          | LogarithmicPolynomial _ -> Exponential 1
-          | Exponential x -> Exponential (Int.succ x))
+    let rec first_level = function
+      | Var _ -> LogarithmicPolynomial (OurRational.zero, OurRational.one)
       | Log _ -> LogarithmicPolynomial (OurRational.one, OurRational.zero)
+      | Exp (b, e) -> (
+          match to_constant_bound e with
+          | Some c -> (
+              let c_our_rational = Num.to_our_rational c in
+              match sum_bound b with
+              | LogarithmicPolynomial (x, y) ->
+                  LogarithmicPolynomial (OurRational.(x * c_our_rational), OurRational.(y * c_our_rational))
+              | Exponential _ as e -> e
+              | Inf -> Inf)
+          | None -> (
+              match sum_bound e with
+              | Inf -> Inf
+              | LogarithmicPolynomial _ -> Exponential 1
+              | Exponential x -> Exponential (Int.succ x)))
+    and product_bound (Product { coeff; mults }) =
+      let f x y =
+        match (x, y) with
+        | Inf, _ -> Inf
+        | _, Inf -> Inf
+        | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
+            LogarithmicPolynomial (OurRational.(x1 + x2), OurRational.(y1 + y2))
+        | Exponential x, Exponential y -> Exponential (Int.max x y)
+        | LogarithmicPolynomial _, Exponential y -> Exponential y
+        | Exponential x, LogarithmicPolynomial _ -> Exponential x
+      in
+      Sequence.map ~f:first_level (Sequence.of_list mults)
+      |> Sequence.fold ~init:OurRational.(LogarithmicPolynomial (zero, zero)) ~f
+    and sum_bound (Sum (s, ss)) =
+      let f x y =
+        match (x, y) with
+        | Inf, _ -> Inf
+        | _, Inf -> Inf
+        | LogarithmicPolynomial (x1, y1), LogarithmicPolynomial (x2, y2) ->
+            if lex_compare (y1, x1) (y2, x2) == -1 then
+              LogarithmicPolynomial (x2, y2)
+            else
+              LogarithmicPolynomial (x1, y1)
+        | Exponential x, Exponential y -> Exponential (Int.max x y)
+        | LogarithmicPolynomial _, Exponential y -> Exponential y
+        | Exponential x, LogarithmicPolynomial _ -> Exponential x
+      in
+      Sequence.of_list ss |> Sequence.map ~f:product_bound |> Sequence.fold ~f ~init:(product_bound s)
     in
-    Option.value_map ~f:go ~default:Inf
+    Option.value_map ~f:sum_bound ~default:Inf
 
 
   (** Returns true iff. the bound is in complexity class O(n) *)
@@ -226,71 +522,14 @@ module Make (Num : PolyTypes.OurNumber) = struct
       bound
 
 
-  let get_op_chain_and_apply_to_atoms f t =
-    let rec go b =
-      match (t, b) with
-      | `Sum, Sum (b1, b2) -> go b1 @ go b2
-      | `Product, Product (b1, b2) -> go b1 @ go b2
-      | _, b -> (
-          match (t, f b) with
-          | `Sum, Sum (b1, b2) -> go b1 @ go b2
-          | `Product, Product (b1, b2) -> go b1 @ go b2
-          | _, b -> [ f b ])
-    in
-    go
-
-
-  let rec show_bound_inner ?(pretty = false) =
-    let mul_sign =
-      if pretty then
-        "⋅"
-      else
-        "*"
-    in
-    function
-    | Var v -> Var.to_string ~pretty v
-    | Log v -> "log(" ^ Var.to_string ~pretty v ^ ")"
-    | Const c -> Num.to_string c
-    | Exp (b, e) ->
-        let to_string_ t =
-          match t with
-          | Var v -> Var.to_string ~pretty v
-          | Const c -> Num.to_string c
-          | b -> "(" ^ show_bound_inner ~pretty b ^ ")"
-        in
-        to_string_ b ^ "^" ^ to_string_ e
-    | Sum (_, _) as b ->
-        (* Order terms by degree*)
-        let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b in
-        let sorted_chain =
-          List.sort
-            ~compare:(fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1))
-            sum_chain
-        in
-        List.foldi
-          ~f:(fun i s b ->
-            if i = 0 then
-              show_bound_inner ~pretty b
-            else
-              s ^ "+" ^ show_bound_inner ~pretty b)
-          ~init:"" sorted_chain
-    | Product (Sum (b1, b2), Sum (b3, b4)) ->
-        "("
-        ^ show_bound_inner ~pretty (Sum (b1, b2))
-        ^ ")" ^ mul_sign ^ "("
-        ^ show_bound_inner ~pretty (Sum (b3, b4))
-        ^ ")"
-    | Product (Sum (b1, b2), b3) ->
-        "(" ^ show_bound_inner ~pretty (Sum (b1, b2)) ^ ")" ^ mul_sign ^ show_bound_inner ~pretty b3
-    | Product (b1, Sum (b2, b3)) ->
-        show_bound_inner ~pretty b1 ^ mul_sign ^ "(" ^ show_bound_inner ~pretty (Sum (b2, b3)) ^ ")"
-    | Product (b1, b2) -> show_bound_inner ~pretty b1 ^ mul_sign ^ show_bound_inner ~pretty b2
-
-
   let show_bound ?(pretty = false) t =
     match t with
     | Some b -> show_bound_inner ~pretty b
-    | None -> "inf"
+    | None ->
+        if pretty then
+          "∞"
+        else
+          "inf"
 
 
   let show ?(pretty = false) ?(complexity = true) ?(termination_only = false) bound =
@@ -322,8 +561,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
 
   let gt_bound b1 b2 =
     let execute () =
-      match (b1, b2) with
-      | Const c1, Const c2 when Num.Compare.(c1 > c2) -> Some true
+      match (to_constant_bound b1, to_constant_bound b2) with
+      | Some c1, Some c2 when Num.Compare.(c1 > c2) -> Some true
       | _ -> None
     in
     Logger.with_log logger Logger.DEBUG
@@ -348,9 +587,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
             Some true
           else
             match
-              (b1, b2)
+              (to_constant_bound b1, to_constant_bound b2)
             with
-            | Const c1, Const c2 when Num.Compare.(c1 >= c2) -> Some true
+            | Some c1, Some c2 when Num.Compare.(c1 >= c2) -> Some true
             | _ -> None)
       | _ -> Some false
     in
@@ -363,191 +602,27 @@ module Make (Num : PolyTypes.OurNumber) = struct
   let ( < ) = flip ( > )
   let ( <= ) = flip ( >= )
   let ( =~= ) = equal
-
-  (* In the following we simplify (finite) bounds to normal forms.
-   * A bound b is in normal form if it can be represented as the sum of products of coefficients and variables, or terms n^b where b
-   * is in normal form.
-   * E.g. (x+y)*(x+y) should be simplified to x^2 + 2*x*y + y^2
-   *)
-  let rec get_op_chain t = get_op_chain_and_apply_to_atoms simplify_bound t
-
-  (* Reverse to get_op_chain, e.g. construct a chain *)
-  and construct_op_chain t bs =
-    (* Sort terms to allow for better equality checking of similar terms. String comparison is kind of arbitrary *)
-    (* We sort in reverse order, and then apply in reverse order again.
-     * This has the following advantage:
-           Consider a product chain [Var X, Const 1, Var Y]
-           Then, by sorting in reverse we get [Var Y, Var X, Const 1].
-           By, again applying in reverse we obtain Product (Var X, Var Y) -> Product (Const 1, Product (Var X, Var Y)).
-           The coefficient up-front then allows for better simplification later-on
-     * *)
-    let sorted =
-      List.sort ~compare:(fun b1 b2 -> String.compare (show_bound_inner b2) (show_bound_inner b1)) bs
-    in
-    match t with
-    | `Sum -> (
-        try List.reduce_exn ~f:(fun b1 b2 -> Sum (b2, b1)) sorted with
-        | Invalid_argument _ -> bound_of_constant Num.zero)
-    | `Product -> (
-        try List.reduce_exn ~f:(fun b1 b2 -> Product (b2, b1)) sorted with
-        | Invalid_argument _ -> bound_of_constant Num.one)
-
-
-  and simplify_bound bound =
-    let execute () =
-      match bound with
-      | Var v -> Var v
-      | Log v -> Log v
-      | Const c -> Const c
-      (* Simplify terms with sum head *)
-      | Sum (_, _) as b ->
-          let sum_chain = get_op_chain `Sum b |> List.filter ~f:(not % equal_bound (Const Num.zero)) in
-          (* Merge addends that are a product of the same bound with different coefficients *)
-          let combine_chain_elements_with_coeffs =
-            let get_coeff_elem = function
-              | Product (Const c, b) -> (b, c)
-              | Product (b, Const c) -> (b, c)
-              | Const k -> (Const Num.one, k)
-              | b -> (b, Num.one)
-            in
-            sum_chain |> List.map ~f:get_coeff_elem
-            |> List.fold_left
-                 ~f:(fun l (b, c) ->
-                   match List.findi ~f:(fun _ -> equal_bound b % fst) l with
-                   | Some (i, _) -> List.modify_at i ~f:(fun (b, c') -> (b, Num.(c + c'))) l
-                   | None -> List.cons (b, c) l)
-                 ~init:[]
-            |> List.map ~f:(fun (b, c) -> simplify_bound @@ Product (Const c, b))
-          in
-          (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
-          construct_op_chain `Sum combine_chain_elements_with_coeffs
-      (* Simplify terms with product head *)
-      | Product (_, _) as b ->
-          let chain = get_op_chain `Product b in
-
-          (* Partition the chain in sets of constants and non-constant factors *)
-          let all_consts, all_non_consts =
-            List.partition_map chain ~f:(function
-              | Const c -> Base__Either0.First c
-              | b -> Base__Either0.Second b)
-          in
-
-          (* Get the coefficient of the complete chain by multiplying all of its constant values *)
-          let const = List.fold_left ~f:Num.mul ~init:Num.one all_consts in
-
-          let group_exps product_chain =
-            let exps_wo_const_log, const_logs_exps_and_non_exps =
-              List.partition_map product_chain ~f:(function
-                | Exp (Const _, Log _) as b -> Base__.Either0.Second b
-                | Exp (b, e) -> Base__.Either0.First (b, e)
-                | Var _ as b -> Base__.Either0.First (b, Const Num.one)
-                | b -> Base__.Either0.Second b)
-            in
-            let back_to_bound (b, e) =
-              match (simplify_bound b, simplify_bound e) with
-              | (Const _ as b), (Const _ as e) -> simplify_bound (Exp (b, e))
-              | _, Const c when Num.(equal c one) -> b
-              | b, e -> Exp (b, e)
-            in
-            let exps_transformed =
-              List.fold_left exps_wo_const_log ~init:[] ~f:(fun acc_list (b, e) ->
-                  match List.findi acc_list ~f:(fun _ (b', e') -> equal_bound b b' || equal_bound e e') with
-                  | Some (i, (b', _)) when equal_bound b b' ->
-                      List.modify_at i acc_list ~f:(fun (b, eprev) -> (b, Sum (eprev, e)))
-                  | Some (i, (_, (Const c as e'))) when equal_bound e e' && Num.(c <> one) ->
-                      (* Here, we only progress with simplification if exponent is not equal to 1, so check for this *)
-                      List.modify_at i acc_list ~f:(fun (bprev, e) -> (Product (bprev, b), e))
-                  | _ -> List.cons (b, e) acc_list)
-              |> List.map ~f:back_to_bound
-            in
-            exps_transformed @ const_logs_exps_and_non_exps
-          in
-
-          let final_sum_chain multiply_with_const =
-            (* Here we expect all_non_consts to be sums or vars, or exponential terms.
-             * For all sums we have to multiply the corresponding chains *)
-            List.map ~f:(get_op_chain `Sum) all_non_consts
-            (* multiply through *)
-            |> List.Cartesian_product.all
-            |> List.map ~f:(fun l ->
-                if multiply_with_const then
-                  Const const :: l
-                else
-                  l)
-            |> List.map ~f:group_exps
-            |> List.map ~f:(construct_op_chain `Product)
-            |> fun l ->
-            if Int.(List.length l > 1) then
-              simplify_bound (construct_op_chain `Sum l)
-            else
-              construct_op_chain `Sum l
-          in
-
-          if Num.(equal const zero) then
-            Const const
-          else if Num.(equal const one) then
-            final_sum_chain false
-          else if List.is_empty all_non_consts then
-            Const const
-          else
-            final_sum_chain true
-      (* Simplify terms with exp head *)
-      | Exp (base, exponent) -> (
-          match (simplify_bound base, simplify_bound exponent) with
-          | Const value, _ when Num.(equal value zero) -> Const Num.zero
-          | Const value, _ when Num.(equal value one) -> Const Num.one
-          | Const value, Const e ->
-              Option.map (Num.root_pow value e) ~f:(fun r -> Const r) |? Exp (base, exponent)
-          | b, Const e when Num.is_integral e ->
-              (* TODO Do not use Num.to_int *)
-              Util.iterate_n_times (fun b' -> Product (b, b')) (Num.to_int e) (Const Num.one)
-              |> simplify_bound
-          | Const c, (Sum (_, _) as e) ->
-              let logs, non_logs =
-                get_op_chain `Sum e
-                |> List.partition_map ~f:(function
-                  | Log v -> Base__Either0.First (`Log v)
-                  | b -> Base__Either0.Second b)
-              in
-              let exp_logs_transformed = List.map logs ~f:(fun (`Log v) -> Exp (Const c, Log v)) in
-              let exp_non_logs_transformed = Exp (Const c, construct_op_chain `Sum non_logs) in
-              construct_op_chain `Product (exp_non_logs_transformed :: exp_logs_transformed)
-              |> ite (List.is_empty logs) identity simplify_bound
-          | Const b, Log v -> Product (Const (Num.log b), bound_of_var v)
-          | base, exponent -> Exp (base, exponent))
-    in
-
-    Logger.with_log logger Logger.DEBUG
-      (fun () -> ("simplify_bound", [ ("input", to_string (Some bound)) ]))
-      ~result:(to_string % OptionMonad.return) execute
-
-
-  let simplify = Option.map ~f:simplify_bound
-  let zero_bound = Const Num.zero
-  let zero = Some zero_bound
-  let one_bound = Const Num.one
-  let one = Some one_bound
-  let add_bound b1 b2 = simplify_bound (Sum (b1, b2))
+  let sum_list = Option.map ~f:(sum_bounds % Sequence.of_list) % OptionMonad.sequence
+  let sum = sum_list % Sequence.to_list
   let add = OptionMonad.liftM2 add_bound
-  let mul_bound b1 b2 = simplify_bound (Product (b1, b2))
 
   let max b1 b2 =
-    match (b1, b2) with
-    | Some (Const c1), Some (Const c2) -> Option.return @@ Const (Num.max c1 c2)
-    | b1, b2 -> add b1 b2 (* TODO Improve this. *)
+    match (to_constant b1, to_constant b2) with
+    | Some c1, Some c2 -> of_constant (Num.max c1 c2)
+    | _, _ -> add b1 b2 (* TODO Improve this. *)
 
 
-  let maximum bounds = Sequence.reduce ~f:max bounds |> Option.map ~f:simplify |? zero
+  let maximum bounds = Sequence.reduce ~f:max bounds |? zero
 
   let mul b1 b2 =
-    match (b1, b2) with
+    match (Option.map ~f:to_constant_bound b1, Option.map ~f:to_constant_bound b2) with
     (* 0 * inf = inf * 0 = 0 *)
-    | Some (Const c), None ->
+    | Some (Some c), None ->
         if Num.equal c Num.zero then
           zero
         else
           None
-    | None, Some (Const c) ->
+    | None, Some (Some c) ->
         if Num.equal c Num.zero then
           zero
         else
@@ -555,7 +630,7 @@ module Make (Num : PolyTypes.OurNumber) = struct
     | _ -> OptionMonad.liftM2 mul_bound b1 b2
 
 
-  let pow_bound bound n = Util.iterate_n_times (mul_bound bound) n one_bound |> simplify_bound
+  let product bounds = Sequence.reduce ~f:mul bounds |? one
   let pow bound n = Option.map ~f:(flip pow_bound n) bound
 
   (** Addition of two elements. *)
@@ -567,15 +642,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
   (** Raises an element to the power of an integer value. *)
   let ( ** ) = pow
 
-  let exp_bound b e = simplify_bound (Exp (b, e))
   let exp = OptionMonad.liftM2 exp_bound
-
-  (* simplify @@ Option.map ~f:(exp_bound value) b *)
-  let exp_int value b = Option.map ~f:((fun c -> exp_bound @@ Const (Num.of_ourint c)) value) b
+  let exp_int value = Option.map ~f:(exp_bound (bound_of_constant @@ Num.of_ourint value))
   let infinity = None
-  let sum bounds = Sequence.reduce ~f:add bounds |> Option.map ~f:simplify |? zero
-  let sum_list = sum % Sequence.of_list
-  let product bounds = Sequence.reduce ~f:mul bounds |> Option.map ~f:simplify |? one
 
   let of_poly =
     OptionMonad.return
@@ -589,19 +658,24 @@ module Make (Num : PolyTypes.OurNumber) = struct
         ~times:mul_bound ~pow:pow_bound
 
 
-  let log v = Option.return (Log v)
-  let log_of_constant = of_constant % Num.log
+  let log_bound v = mk_singleton_sum (mk_singleton_product (mk_log_first_level v))
+  let log = Option.some % log_bound
+  let log_of_constant_bound = bound_of_constant % Num.log
+  let log_of_constant = Option.some % log_of_constant_bound
 
   let log_of_bound =
-    let rec go = function
-      | Const c -> log_of_constant c
-      | Var v -> log v
-      | Sum (b1, b2) -> add (go b1) (go b2)
-      | Product (b1, b2) -> add (go b1) (go b2)
-      | Exp (b, e) -> mul (go b) (Option.some e)
-      | Log _ as l -> Option.some l
+    let rec first_level = function
+      | Var v -> log_bound v
+      | Log v -> log_bound v
+      | Exp (b, e) -> mul_bound (sum_level b) e
+    and prod_level = function
+      | Product { coeff; mults } ->
+          let mults_rec = List.map ~f:first_level mults in
+          log_of_constant_bound coeff :: mults_rec |> sum_bounds % Sequence.of_list
+    and sum_level = function
+      | Sum (s, ss) -> Sequence.of_list (s :: ss) |> Sequence.map ~f:prod_level |> sum_bounds
     in
-    Option.bind ~f:go
+    Option.map ~f:sum_level
 
 
   let log_of_poly p =
@@ -609,9 +683,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
     log_of_bound of_poly
 
 
-  let bound_of_int i = Const (Num.of_int @@ Int.abs i)
+  let bound_of_int i = bound_of_constant (Num.of_int @@ Int.abs i)
   let of_int = OptionMonad.return % bound_of_int
-  let bound_of_var_string str = Var (Var.of_string str)
+  let bound_of_var_string str = bound_of_var (Var.of_string str)
   let of_var_string = OptionMonad.return % bound_of_var_string
   let is_infinity = Option.is_none
   let is_finite = Option.is_some
@@ -637,13 +711,9 @@ module Make (Num : PolyTypes.OurNumber) = struct
     substitute_f (fun var -> Map.find_default ~default:(of_var var) substitution var)
 
 
-  let rec vars_bound = function
-    | Var v -> VarSet.singleton v
-    | Log v -> VarSet.singleton v
-    | Const _ -> VarSet.empty
-    | Exp (v, b) -> vars_bound b
-    | Sum (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
-    | Product (b1, b2) -> Set.union (vars_bound b1) (vars_bound b2)
+  let vars_bound =
+    fold_bound ~const:(const VarSet.empty) ~var:VarSet.singleton ~plus:Set.union ~times:Set.union
+      ~exp:Set.union ~log:VarSet.singleton
 
 
   let vars = Option.value ~default:VarSet.empty % Option.map ~f:vars_bound
@@ -667,12 +737,12 @@ module Make (Num : PolyTypes.OurNumber) = struct
             | _ -> b1))
 
 
-  let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
-  let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
-  let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
-  let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
-  let coeff_of_var p = raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
-  let of_coeff_list p = raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")
+  let degree n = raise (Failure "degree for Bounds not yet implemented")
+  let rename map p = raise (Failure "rename for Bounds not yet implemented")
+  let eval p valuation = raise (Failure "eval for Bounds not yet implemented")
+  let eval_f p valuation = raise (Failure "eval_f for Bounds not yet implemented")
+  let coeff_of_var p = raise (Failure "coeff_of_var for Bounds not yet implemented")
+  let of_coeff_list p = raise (Failure "of_coeff_list for Bounds not yet implemented")
 end
 
 module Bound = Make (OurInt)
@@ -700,12 +770,49 @@ module RationalBound = struct
       ~var:Bound.of_var ~plus:Bound.add ~times:Bound.mul ~exp:Bound.exp ~log:Bound.of_var ~inf:infinity
 
 
-  let mth_root m b = exp b (of_constant @@ OurRational.make OurInt.one m)
-  let sqrt = mth_root (OurInt.of_int 2)
+  module FirstLevelBoundComparator = struct
+    module Inner = struct
+      type t = first_level_bound [@@deriving eq, ord, sexp]
+    end
+
+    include Inner
+    include Comparator.Make (Inner)
+  end
+
+  let mth_root_bound m (Sum (s, ss)) =
+    let first_level_with_exp (f_l_b, occ) =
+      let b = mk_singleton_sum (mk_singleton_product f_l_b) in
+      let occ_divm_bound = bound_of_constant OurRational.(of_ourint occ / of_int m) in
+      match f_l_b with
+      | Var _ -> exp_bound b occ_divm_bound
+      | Log _ -> exp_bound b occ_divm_bound
+      | Exp (b, e) -> exp_bound b (mul_bound e @@ occ_divm_bound)
+    in
+    let product_level (Product { coeff; mults }) =
+      let new_coeff_bound = bound_of_constant (OurRational.mth_root_up m coeff) in
+      let new_mults =
+        Sequence.of_list mults
+        |> Sequence.map ~f:(fun f_l_b -> (f_l_b, OurInt.one))
+        |> Map.of_sequence_reduce (module FirstLevelBoundComparator) ~f:OurInt.add
+        |> Map.to_sequence |> Sequence.map ~f:first_level_with_exp |> Sequence.to_list
+      in
+      new_coeff_bound :: new_mults |> product_bounds % Sequence.of_list
+    in
+    Sequence.of_list (s :: ss) |> Sequence.map ~f:product_level |> sum_bounds
+
+
+  let mth_root m =
+    if Int.equal m 1 then
+      identity
+    else
+      Option.map ~f:(mth_root_bound m)
+
+
+  let sqrt = mth_root 2
 end
 
 module BinaryBound = struct
-  type t = Finite | Infinite [@@deriving eq, ord]
+  type t = Finite | Infinite [@@deriving eq, ord, sexp]
   type bound = Bound
   type value
   type polynomial
