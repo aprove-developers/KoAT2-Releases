@@ -7,3 +7,6 @@
  (dev
   (flags
    (:standard -g -w +A-3-4-27-33-40-42-44-45-48-66-70))))
+
+(dirs
+ (:standard \ result))

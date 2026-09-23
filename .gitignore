@@ -29,3 +29,6 @@ koat2_static
 /.vscode
 /docs
 .DS_Store
+result
+# nix-direnv's cached dev shell
+/.direnv
