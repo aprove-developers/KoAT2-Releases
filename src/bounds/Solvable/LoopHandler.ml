@@ -6,10 +6,6 @@ let logger = Logging.(get Twn)
 module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules) = struct
   open PM
   module Approximation = Approximation.MakeForClassicalAnalysis (Bound) (PM)
-
-  module EliminateNonContributors =
-    EliminateNonContributors.Make (PM) (EliminateNonContributors.DefaultAdapter)
-
   module TWN_Complexity = TWN_Complexity.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall)
   module SimpleCycle = SimpleCycle.Make (Bound) (PM)
   module UnliftedTimeBound = UnliftedBounds.UnliftedTimeBound.Make (PM) (Bound)
@@ -52,17 +48,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ProofOutput.add_to_proof_with_format (ProofOutput.LocalProofOutput.get_proof twn_proofs)
 
 
-  type loop = SimpleCycle.loop
+  (* For every entry we store its local bound, which is computed at most once and only on demand *)
+  type loop = Transition.t list * (Transition.t * TWN_Complexity.local_bound Lazy.t) list
 
   let handled_transitions ((cycle, _) : loop) = TransitionSet.of_list cycle
 
-  let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds (loop : loop) =
-    let loop_transitions, entries = loop in
-    let loop_transitions = TransitionSet.of_list loop_transitions in
-    let contributors = EliminateNonContributors.compute_contributors loop_transitions in
-    List.for_all entries ~f:(fun (entry_trans, _) ->
+  let finite_bound_possible_if_terminating_with_combined_bounds ~get_combined_bounds ((_, entries) : loop) =
+    List.for_all entries ~f:(fun (entry_trans, local_bound) ->
         let timebound, get_sizebound = get_combined_bounds entry_trans in
-        Bound.is_finite timebound && Set.for_all contributors ~f:(Bound.is_finite % get_sizebound))
+        Bound.is_finite timebound
+        && Set.for_all (Bound.vars (Lazy.force local_bound).bound) ~f:(Bound.is_finite % get_sizebound))
 
 
   let finite_bound_possible_if_terminating ~get_timebound ~get_sizebound (loop : loop) =
@@ -71,8 +66,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       loop
 
 
-  let find_all_possible_loops_for_scc requirement_for_cycle scc program :
-      SimpleCycle.loop ProofOutput.LocalProofOutput.with_proof List.t =
+  let find_all_possible_loops_for_scc ?(twnlog = false) ?(unsolvable = false) requirement_for_cycle scc
+      program : loop ProofOutput.LocalProofOutput.with_proof List.t =
     let open! OurBase in
     let create_proof trans =
       let twn_proofs = ProofOutput.LocalProofOutput.create () in
@@ -80,7 +75,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           mk_str_header_big @@ "TWN: " ^ Transition.to_id_string_pretty trans);
       twn_proofs
     in
-
+    let with_local_bounds (cycle_with_proof : SimpleCycle.loop ProofOutput.LocalProofOutput.with_proof) =
+      let twn_proofs, (cycle, entries) =
+        ProofOutput.LocalProofOutput.(proof cycle_with_proof, result cycle_with_proof)
+      in
+      let entries =
+        List.map entries ~f:(fun (entry, loop) ->
+            (entry, lazy (TWN_Complexity.local_bound twn_proofs ~twnlog ~unsolvable loop)))
+      in
+      ProofOutput.LocalProofOutput.{ result = (cycle, entries); proof = twn_proofs }
+    in
     let rec loop scc =
       match Set.choose scc with
       | None -> []
@@ -91,19 +95,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
               program scc trans
           in
           let scc' = Set.remove scc trans in
-          List.append all_cycles (loop scc')
+          List.map ~f:with_local_bounds all_cycles @ loop scc'
     in
     loop scc
 
 
-  let to_unlifted_bounds ?(twnlog = false) ?(unsolvable = false)
-      (loop : loop ProofOutput.LocalProofOutput.with_proof) =
-    let twn_proofs, (cycle, loops) = ProofOutput.LocalProofOutput.(proof loop, result loop) in
+  let to_unlifted_bounds (loop : loop ProofOutput.LocalProofOutput.with_proof) =
+    let twn_proofs, (cycle, entries) = ProofOutput.LocalProofOutput.(proof loop, result loop) in
     let cycle_set = TransitionSet.of_list cycle in
     let local_bounds =
-      List.map
-        ~f:(fun (entry, loop) -> (entry, TWN_Complexity.complexity ~twnlog ~unsolvable twn_proofs loop))
-        loops
+      List.map entries ~f:(fun (entry, local_bound) ->
+          (entry, TWN_Complexity.bound_if_terminating (Lazy.force local_bound)))
     in
     let complete_proofs = complete_proofs twn_proofs cycle_set in
     UnliftedTimeBound.mk ~measure_decr_transitions:cycle_set

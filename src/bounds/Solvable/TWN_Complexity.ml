@@ -280,7 +280,9 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
     preprocess_unsolvable_ twn_proofs loop []
 
 
-  let complexity twn_proofs ?(termination = true) ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
+  type local_bound = { bound : Bound.t; terminates : bool Lazy.t }
+
+  let local_bound twn_proofs ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
     try
       let loop, var_replacement =
         if unsolvable then
@@ -331,25 +333,34 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           ( "constrained-free closed-form",
             List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
       let varmap = Hashtbl.of_list @@ List.combine order npe in
-      let terminating =
-        if not termination then
-          true
-        else
-          TWN_Termination.termination_ twn_proofs t_ varmap
+      (* The termination proof is computed lazily but precedes the bound in the proof output *)
+      let termination_proofs = ProofOutput.LocalProofOutput.create () in
+      let bound_proofs = ProofOutput.LocalProofOutput.create () in
+      let f =
+        List.fold
+          (fun bound replace -> Bound.substitute_f replace bound)
+          (get_bound bound_proofs ~twnlog t_ order npe varmap)
+          var_replacement
       in
-      if not terminating then
-        Bound.infinity
-      else
-        let f =
-          List.fold
-            (fun bound replace -> Bound.substitute_f replace bound)
-            (get_bound twn_proofs ~twnlog t_ order npe varmap)
-            var_replacement
-        in
-        if was_negative then
-          Bound.(f + f + one)
-        else
-          f
+      ProofOutput.LocalProofOutput.add_to_proof_with_format twn_proofs (fun format ->
+          FormattedString.(
+            ProofOutput.LocalProofOutput.get_proof termination_proofs format
+            <> ProofOutput.LocalProofOutput.get_proof bound_proofs format));
+      {
+        bound =
+          (if was_negative then
+             Bound.(f + f + one)
+           else
+             f);
+        terminates = lazy (TWN_Termination.termination_ termination_proofs t_ varmap);
+      }
     with
-    | Check_TWN.NOT_TWN -> Bound.infinity
+    | Check_TWN.NOT_TWN -> { bound = Bound.infinity; terminates = lazy false }
+
+
+  let bound_if_terminating { bound; terminates } =
+    if Lazy.force terminates then
+      bound
+    else
+      Bound.infinity
 end

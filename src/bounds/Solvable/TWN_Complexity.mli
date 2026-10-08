@@ -4,13 +4,15 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
   val monotonicity_th_int : int -> int * int -> int * int -> OurInt.t
   (** Computes the monotonicity threshold for k and two tuples (b1,a1) and (b2,a2). *)
 
-  val complexity :
-    ProofOutput.LocalProofOutput.t ->
-    ?termination:bool ->
-    ?twnlog:bool ->
-    ?unsolvable:bool ->
-    Loop.t ->
-    Bound.t
-  (** This method computes a complexity bound for twn-loops.
-    Gets a {[Loop]}, an entry {[Transition]} for invariants derivation in the termination proof, and a closed form of every variable. *)
+  type local_bound = {
+    bound : Bound.t;  (** The local bound under the assumption that the loop terminates *)
+    terminates : bool Lazy.t;  (** The (expensive) termination proof, only computed when forced *)
+  }
+
+  val local_bound :
+    ProofOutput.LocalProofOutput.t -> ?twnlog:bool -> ?unsolvable:bool -> Loop.t -> local_bound
+  (** Computes the local bound of a twn-loop and defers its termination proof. *)
+
+  val bound_if_terminating : local_bound -> Bound.t
+  (** Proves termination and returns the local bound if successful and infinity otherwise. *)
 end

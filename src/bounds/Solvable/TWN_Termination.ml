@@ -82,7 +82,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           |> mk_paragraph))
 
 
-  (* Counterpart to TWN_Complexity.complexity *)
+  (* Counterpart to TWN_Complexity.local_bound *)
   let termination twn_proofs loop =
     let order = Check_TWN.(unwrap_twn @@ check_triangular loop) in
     let loop =

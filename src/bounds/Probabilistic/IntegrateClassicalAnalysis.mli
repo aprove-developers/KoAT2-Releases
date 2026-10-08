@@ -7,11 +7,18 @@ module Make (BP : BoundPair.T) : sig
   type twn_state
 
   val empty_twn_state : twn_state
-  val initial_twn_state : Program.t -> GeneralTransitionSet.t (** The scc to be analysed *) -> twn_state
+
+  val initial_twn_state :
+    ?twnlog:bool ->
+    ?unsolvable:bool ->
+    Program.t ->
+    GeneralTransitionSet.t (** The scc to be analysed *) ->
+    twn_state
+
   val twn_state_to_string : twn_state -> string
 
   val improve :
-    twn:twn_state ref * bool * bool * bool
+    twn:twn_state ref * bool
       (** The twn state will be modified during the execution of this method! Always pass on the same ref to avoid duplicated work *) ->
     mprf_depth:int Option.t ->
     Program.t (** The program *) ->

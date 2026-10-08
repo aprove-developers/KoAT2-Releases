@@ -145,8 +145,11 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
      Then we prove termination upon demand and propagate twn loops to unlifted time bounds. *)
   type loop_state = { remaining_loops : LoopHandler.loop ProofOutput.LocalProofOutput.with_proof List.t }
 
-  let initial_loop_state requirement_for_cycle program scc =
-    let all_loops = LoopHandler.find_all_possible_loops_for_scc requirement_for_cycle scc program in
+  let initial_loop_state ~(conf : allowed_local_conf_type) requirement_for_cycle program scc =
+    let all_loops =
+      LoopHandler.find_all_possible_loops_for_scc ~twnlog:conf.twnlog ~unsolvable:conf.unsolvable
+        requirement_for_cycle scc program
+    in
     { remaining_loops = all_loops }
 
 
@@ -175,9 +178,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
                 loop_res
             then
               (* Compute a new global time bound *)
-              let unlifted_bound =
-                LoopHandler.to_unlifted_bounds ~twnlog:conf.twnlog ~unsolvable:conf.unsolvable loop
-              in
+              let unlifted_bound = LoopHandler.to_unlifted_bounds loop in
               let new_appr_mc =
                 MaybeChanged.flat_map
                   (fun appr -> improve_with_unlifted_time_bound `Time appr unlifted_bound)
@@ -363,9 +364,9 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     let loop_state =
       let module Check_TWN = Check_TWN.Make (Bound) (PM.TransitionLabel.TransitionLabelNonFunctionCall) in
       if conf.unsolvable then
-        ref (initial_loop_state (const true) program scc)
+        ref (initial_loop_state ~conf (const true) program scc)
       else if conf.twn then
-        ref (initial_loop_state Check_TWN.check_twn program scc)
+        ref (initial_loop_state ~conf Check_TWN.check_twn program scc)
       else
         ref empty_loop_state
     in

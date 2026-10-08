@@ -185,10 +185,11 @@ let tests =
                   "" >:: fun _ ->
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
-                    TWN_Complexity.complexity twn_proofs
+                    TWN_Complexity.local_bound twn_proofs
                       (KoatReaders.read_program_simple program
                       |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
                       |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
+                    |> TWN_Complexity.bound_if_terminating
                   in
                   let error_msg =
                     "Asymptotic Complexity "
@@ -223,10 +224,11 @@ let tests =
                   "" >:: fun _ ->
                   let twn_proofs = ProofOutput.LocalProofOutput.create () in
                   let result =
-                    TWN_Complexity.complexity twn_proofs ~twnlog:true
+                    TWN_Complexity.local_bound twn_proofs ~twnlog:true
                       (KoatReaders.read_program_simple program
                       |> Program.sccs |> List.hd_exn |> Set.choose_exn |> Tuple3.second
                       |> ProgramModules.TransitionLabel.to_non_function_call |> Loop.mk)
+                    |> TWN_Complexity.bound_if_terminating
                   in
                   let error_msg =
                     "Asymptotic Complexity "

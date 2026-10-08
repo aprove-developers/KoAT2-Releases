@@ -168,10 +168,10 @@ module Make (BP : BoundPair.T) = struct
       |> ELCBMap.of_sequence_exn
     in
     let twn_state =
-      ( ref @@ IntegrateClassicalAnalysis.initial_twn_state program scc,
-        conf.classical_local.twn,
-        conf.classical_local.twnlog,
-        conf.classical_local.unsolvable )
+      ( ref
+        @@ IntegrateClassicalAnalysis.initial_twn_state ~twnlog:conf.classical_local.twnlog
+             ~unsolvable:conf.classical_local.unsolvable program scc,
+        conf.classical_local.twn )
     in
     let improve_scc_ appr =
       let open MaybeChanged.Monad in
