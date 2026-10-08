@@ -39,7 +39,9 @@ module IncrementalZ3Solver : sig
   type t
 
   val create : ?model:bool -> unit -> t
-  (** Creates a new incremental smt solver. *)
+  (** Creates a new incremental smt solver. If [model] is false, the solver shares its Z3 context with all other
+      solvers created without models. Z3 contexts are not thread-safe, so such solvers must not be used concurrently
+      from different threads or domains. *)
 
   val push : t -> unit
   (** Creates a backtracking point. *)

@@ -269,18 +269,29 @@ module IncrementalZ3Solver = struct
   module IntValuation = Valuation.Make (OurInt)
   module RealValuation = Valuation.Make (OurRational)
 
+  let mk_context ~model =
+    Z3.mk_context
+      [
+        ( "model",
+          if model then
+            "true"
+          else
+            "false" );
+        ("proof", "false");
+        (* ("timeout", "10"); *)
+      ]
+
+
+  (* Creating a Z3 context is expensive, so all solvers without models share one context.
+     This is not done for solvers with models, as the models found by Z3 depend on the history of the context. *)
+  let shared_context_without_model = lazy (mk_context ~model:false)
+
   let create ?(model = true) () =
     let context =
-      Z3.mk_context
-        [
-          ( "model",
-            if model then
-              "true"
-            else
-              "false" );
-          ("proof", "false");
-          (* ("timeout", "10"); *)
-        ]
+      if model then
+        mk_context ~model
+      else
+        Lazy.force shared_context_without_model
     in
     (Z3.Solver.mk_simple_solver context, context)
 
