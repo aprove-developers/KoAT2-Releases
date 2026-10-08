@@ -5,37 +5,51 @@ open Bounds
 
 exception SMTFailure of string
 
-let from_poly context =
-  Polynomial.fold
-    ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
-    ~indeterminate:(fun var ->
-      if Var.is_real var then
-        Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)
-      else
-        Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
-    ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
-    ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
-      (* Somehow Z3.Arithmetic.mk_power makes Z3 use real arithmetic.. *)
-    ~pow:(fun b e ->
-      if e = 1 then
-        b
-      else if e > 1 then
-        Z3.Arithmetic.mk_mul context (List.init e ~f:(const b))
-      else
-        failwith "Polynomial exponents should be between 1 and n")
+module Monomial = Monomials.Make (OurInt)
+
+(* Converts a polynomial, given by its monomials with coefficients, into a flat sum of monomials, as nested binary
+   sums and products are considerably more expensive to create and to simplify for Z3. *)
+let from_monomials_with_coeffs (type value) (module Value : PolyTypes.Ring with type t = value) context
+    ~mk_numeral ~mk_var monomials_with_coeffs =
+  let mk_monomial (coeff, monomial) =
+    (* Somehow Z3.Arithmetic.mk_power makes Z3 use real arithmetic.. *)
+    let factors =
+      Monomial.to_sequence monomial
+      |> Sequence.concat_map ~f:(fun (var, exponent) -> Sequence.init exponent ~f:(fun _ -> mk_var var))
+      |> Sequence.to_list
+    in
+    match factors with
+    | [] -> mk_numeral coeff
+    | [ factor ] when Value.equal coeff Value.one -> factor
+    | factors when Value.equal coeff Value.one -> Z3.Arithmetic.mk_mul context factors
+    | factors -> Z3.Arithmetic.mk_mul context (mk_numeral coeff :: factors)
+  in
+  match monomials_with_coeffs with
+  | [] -> mk_numeral Value.zero
+  | [ monomial ] -> mk_monomial monomial
+  | monomials -> Z3.Arithmetic.mk_add context (List.map ~f:mk_monomial monomials)
 
 
-let from_real_poly context =
-  RationalPolynomial.fold
-    ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
-    ~indeterminate:(fun var ->
+let from_poly context poly =
+  from_monomials_with_coeffs
+    (module OurInt)
+    context
+    ~mk_numeral:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
+    ~mk_var:(fun var -> Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
+    (Polynomial.monomials_with_coeffs poly)
+
+
+let from_real_poly context poly =
+  from_monomials_with_coeffs
+    (module OurRational)
+    context
+    ~mk_numeral:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurRational.to_string value))
+    ~mk_var:(fun var ->
       if Var.is_real var then
         Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
       else
         Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
-    ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [ p1; p2 ])
-    ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [ p1; p2 ])
-    ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Real.mk_numeral_i context e))
+    (RationalPolynomial.monomials_with_coeffs poly)
 
 
 exception SMTNotRepresentable
