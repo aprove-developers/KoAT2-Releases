@@ -62,7 +62,7 @@ let as_realparapoly label var =
 
 
 (** Given a list of variables an affine template-parameter-polynomial is generated*)
-let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynomial.t * Var.t list * Var.t =
+let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynomial.t =
   let vars = Set.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
@@ -76,34 +76,15 @@ let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynom
   let linear_poly = RationalParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Real () in
   let constant_poly = RationalParameterPolynomial.of_constant (RationalPolynomial.of_var constant_var) in
-  (RationalParameterPolynomial.(linear_poly + constant_poly), fresh_vars, constant_var)
+  RationalParameterPolynomial.(linear_poly + constant_poly)
 
-
-(* This will store the added coefficients and constants for later optimisation *)
-let fresh_coeffs : Var.t list ref = ref []
-let fresh_consts : Var.t list ref = ref []
 
 (* use ranking_template to compute ranking_templates for every location *)
 let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t list) : unit =
   let execute () =
-    let ins_loc_prf location =
-      (* Each location needs its own ranking template with different fresh variables *)
-      let parameter_poly, fresh_vars, fresh_const = ranking_template cache location vars in
-      (location, parameter_poly, fresh_vars, fresh_const)
-    in
-    let templates = List.map ~f:ins_loc_prf locations in
-    templates
-    |> List.iter ~f:(fun (location, polynomial, _, _) ->
-        Hashtbl.add_exn cache.template_table ~key:location ~data:polynomial);
-    templates
-    |> List.fold_left
-         ~f:(fun (l_vars, l_consts) (_, _, fresh_vars, fresh_const) ->
-           (List.cons fresh_vars l_vars, List.cons fresh_const l_consts))
-         ~init:([], [])
-    |> Tuple2.map1 List.join
-    |> fun (fresh_vars, fresh_cs) ->
-    fresh_coeffs := fresh_vars;
-    fresh_consts := fresh_cs
+    (* Each location needs its own ranking template with different fresh variables *)
+    List.iter locations ~f:(fun location ->
+        Hashtbl.add_exn cache.template_table ~key:location ~data:(ranking_template cache location vars))
   in
   Logger.with_log logger Logger.DEBUG
     (fun () -> ("compute_ranking_templates", []))
