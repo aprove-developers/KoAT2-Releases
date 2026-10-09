@@ -2,6 +2,23 @@ open OurBase
 open Formulas
 open Polynomials
 
+module PolynomialComparator = struct
+  module Inner = struct
+    type t = Polynomial.t
+
+    let compare = Polynomial.compare
+    let sexp_of_t = Polynomial.sexp_of_t
+  end
+
+  include Inner
+  include Comparator.Make (Inner)
+end
+
+module PolynomialPairComparator = MakeComparatorForTuples (PolynomialComparator) (PolynomialComparator)
+
+type invariance_cache =
+  (Polynomial.t * Polynomial.t, bool, PolynomialPairComparator.comparator_witness) Map.t ref
+
 module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) = struct
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
   (** A loop is a 3-tuple (guard_and_inv, guard, update) *)
@@ -95,11 +112,20 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
     Map.equal Polynomial.equal (update @@ append loop1 loop2) (update @@ append loop2 loop1)
 
 
-  let check_update_invariant (loop : t) atom =
+  type nonrec invariance_cache = invariance_cache
+
+  let create_invariance_cache () = ref (Map.empty (module PolynomialPairComparator))
+
+  let check_update_invariant (cache : invariance_cache) (loop : t) atom =
     let open Atoms in
     let module SMTSolver = SMT.Z3Solver in
     let poly = Atom.poly_lt atom in
     let poly_updated = Polynomial.substitute_f (update_var loop) poly in
-    let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
-    SMTSolver.tautology Formula.(implies (mk [ atom ]) (mk [ atom_updated ]))
+    match Map.find !cache (poly, poly_updated) with
+    | Some is_invariant -> is_invariant
+    | None ->
+        let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
+        let is_invariant = SMTSolver.tautology Formula.(implies (mk [ atom ]) (mk [ atom_updated ])) in
+        cache := Map.set !cache ~key:(poly, poly_updated) ~data:is_invariant;
+        is_invariant
 end

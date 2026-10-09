@@ -10,8 +10,14 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
   }
 
   val local_bound :
-    ProofOutput.LocalProofOutput.t -> ?twnlog:bool -> ?unsolvable:bool -> Loop.t -> local_bound
-  (** Computes the local bound of a twn-loop and defers its termination proof. *)
+    Loop.invariance_cache ->
+    ProofOutput.LocalProofOutput.t ->
+    ?twnlog:bool ->
+    ?unsolvable:bool ->
+    Loop.t ->
+    local_bound
+  (** Computes the local bound of a twn-loop and defers its termination proof.
+      The cache should be shared between the loops of an scc. *)
 
   val bound_if_terminating : local_bound -> Bound.t
   (** Proves termination and returns the local bound if successful and infinity otherwise. *)
