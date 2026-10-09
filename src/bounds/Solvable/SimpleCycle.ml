@@ -116,10 +116,16 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     However, we consider them when we compute the final bound. *)
   let chain_cycle ?(relevant_vars = None) (cycle : path) program =
     let entries = PM.Program.entry_transitions_with_logger logger program (handled_transitions cycle) in
-    List.map
-      (fun entry ->
-        (entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars))
-      entries
+    (* All entries which enter the cycle at the same location share the same loop *)
+    let loop_starting_at =
+      LocationSet.of_list (List.map Tuple3.third entries)
+      |> OurBase.Set.fold
+           ~init:(OurBase.Map.empty (module Location))
+           ~f:(fun loops start ->
+             OurBase.Map.set loops ~key:start
+               ~data:(contract_cycle cycle start |> Loop.eliminate_non_contributors ~relevant_vars))
+    in
+    List.map (fun entry -> (entry, OurBase.Map.find_exn loop_starting_at (Tuple3.third entry))) entries
 
 
   type loop = PM.Transition.t list * (PM.Transition.t * Loop.t) list
