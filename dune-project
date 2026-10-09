@@ -44,7 +44,6 @@
    (ocamlformat (= 0.29.0))
    odoc
    ounit
-   parmap
    parsexp
    parsexp_io
    ppx_deriving

@@ -100,7 +100,7 @@ module Make (BP : BoundPair.T) = struct
     in
     let unbounded_trans_arr = Set.to_array unbounded_trans in
     let mprf_map =
-      Parmap.array_parmap find_mprf unbounded_trans_arr
+      Array.map ~f:find_mprf unbounded_trans_arr
       |> Array.zip_exn unbounded_trans_arr
       |> Array.filter_map ~f:(fun (t, mprf) -> Option.map ~f:(fun mprf -> (t, mprf)) mprf)
       |> Array.to_list
