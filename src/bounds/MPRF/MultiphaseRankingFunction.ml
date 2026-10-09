@@ -29,7 +29,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   type mprf_problem = {
     program : PM.Program.t;
     measure : measure;
-    make_non_increasing : Transition.t Array.t;
+    make_non_increasing : TransitionSet.t;
     make_decreasing : Transition.t;
     unbounded_vars : Transition.t -> VarSet.t;
     find_depth : int;
@@ -37,7 +37,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   }
 
   type ranking_cache = {
-    rank_func : t option ref;
     template_table : ParameterPolynomial.t TemplateTable.t Array.t;
     coeffs_table : VarSet.t CoeffsTable.t;
     constraint_cache : (int * constraint_type * int, Formula.t) Hashtbl.t;
@@ -46,7 +45,6 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   let new_cache max_depth =
     let new_template_table () = Array.init max_depth (fun i -> TemplateTable.create 10) in
     {
-      rank_func = ref None;
       template_table = new_template_table ();
       coeffs_table = CoeffsTable.create 10;
       constraint_cache = Hashtbl.create 10;
@@ -370,175 +368,114 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     }
 
 
-  let entry_transitions_from_non_increasing program non_increasing =
-    let all_possible_pre_trans =
-      Stack.enum non_increasing
-      |> Enum.fold (fun tset -> Base.Set.union tset % Program.pre program) TransitionSet.empty
+  type formula_conjunction = Formula.t List.t
+  (*  formulas are in DNF. For conjunctions of formulas, avoid costly reconversion to DNF *)
+
+  (** Searches for a set of non-increasing transitions and an MPRF with a single SMT query.
+      Every candidate transition [t] gets an indicator variable in \{0,1\}, which is 1 iff [t] is non-increasing.
+      A non-increasing set is admissible if all its entry transitions are time-bounded, and the coefficients of the
+      variables which are unbounded on an entry transition are 0 at its target location. *)
+  let compute_scc problem =
+    let cache = new_cache problem.find_depth in
+    let locations = OurBase.Set.to_list @@ PM.TransitionGraph.locations (PM.Program.graph problem.program) in
+    compute_ranking_templates cache problem.find_depth (PM.Program.input_vars problem.program) locations;
+    let non_increasing_indicators =
+      OurBase.Set.to_list problem.make_non_increasing
+      |> List.map (fun t -> (t, Var.fresh_id Var.Int ()))
+      |> OurBase.Map.of_alist_exn (module Transition)
     in
-    Base.Set.diff all_possible_pre_trans (TransitionSet.of_list @@ List.of_enum @@ Stack.enum non_increasing)
-
-
-  let add_decreasing_constraint cache problem solver_int =
-    Solver.add solver_int
-      (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
-
-
-  let add_non_increasing_constraint cache problem solver_int transition =
-    Solver.push solver_int;
-    Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
-    (* Note that decreasing constraint is *not* subsumed by the non-increasing constraint.
-       Hence, we first try to add the non-increasing constraint. If this does not work, we try the decreasing constraint instead.
-    *)
-    if Solver.satisfiable solver_int then (
-      Solver.pop solver_int;
-      Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition))
-    else (
-      Solver.pop solver_int;
-      add_decreasing_constraint cache { problem with make_decreasing = transition } solver_int)
-
-
-  let finalise_mprf cache solver_int non_increasing entry_transitions problem =
-    (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
-     * 0. *)
-    let entry_trans_grouped_by_loc =
-      List.sort (fun (_, _, l'1) (_, _, l'2) -> Location.compare l'1 l'2) (Base.Set.to_list entry_transitions)
-      |> List.group_consecutive (fun (_, _, l'1) (_, _, l'2) -> Location.equal l'1 l'2)
+    let in_non_increasing_set t =
+      OurBase.Map.find non_increasing_indicators t
+      |> Option.map_default
+           (fun indicator -> Formula.mk_eq (Polynomial.of_var indicator) Polynomial.one)
+           Formula.mk_false
+    and not_in_non_increasing_set t =
+      OurBase.Map.find non_increasing_indicators t
+      |> Option.map_default
+           (fun indicator -> Formula.mk_eq (Polynomial.of_var indicator) Polynomial.zero)
+           Formula.mk_true
     in
-    let unbounded_vars_at_entry_locs coeff_table =
-      List.map
-        (fun ts ->
-          let entryloc = Transition.target (List.hd ts) in
-          List.enum ts |> Enum.map problem.unbounded_vars
-          |> Enum.fold Base.Set.union VarSet.empty
-          |> Base.Set.to_sequence
-          |> Base.Sequence.map ~f:(fun v ->
-              Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc, v))
-          |> Base.Sequence.join |> VarSet.of_sequence)
-        entry_trans_grouped_by_loc
-      |> List.fold_left Base.Set.union VarSet.empty
+    let indicator_bounds indicator : formula_conjunction =
+      Polynomial.[ Formula.mk_ge (of_var indicator) zero; Formula.mk_le (of_var indicator) one ]
     in
-
-    Solver.push solver_int;
-    Base.Set.iter
-      ~f:(Solver.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
-      (unbounded_vars_at_entry_locs cache.coeffs_table);
-    if Solver.satisfiable solver_int then (
-      (* Solver.minimize_absolute solver_int !fresh_coeffs; *)
-      Solver.model solver_int
-      |> Option.map
-           (make cache problem.find_depth problem.make_decreasing
-              (non_increasing |> Stack.enum |> List.of_enum |> TransitionSet.of_list))
-      |> Option.may (fun ranking_function ->
-          cache.rank_func := Some ranking_function;
-          Logger.(
-            log logger INFO (fun () ->
-                ( "add_mprf",
-                  [
-                    ("measure", show_measure problem.measure);
-                    ("decreasing", Transition.to_id_string problem.make_decreasing);
-                    ("non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing));
-                    ("rank", only_rank_to_string ranking_function);
-                  ] ))));
-      raise Exit)
-    else
-      Solver.pop solver_int
-
-
-  let rec backtrack cache (steps_left : int) (index : int) (solver_int : Solver.t)
-      (non_increasing : Transition.t Stack.t) problem =
-    let finalise_if_entrytime_bounded non_increasing =
-      let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
-      if Base.Set.for_all ~f:problem.is_time_bounded entry_trans then
-        finalise_mprf cache solver_int non_increasing entry_trans problem
-    in
-
-    if Solver.satisfiable solver_int then
-      if steps_left == 0 then
-        finalise_if_entrytime_bounded non_increasing
-      else (
-        for i = index to Array.length problem.make_non_increasing - 1 do
-          let transition = Array.get problem.make_non_increasing i in
-
-          Solver.push solver_int;
-
-          add_non_increasing_constraint cache problem solver_int transition;
-
-          Stack.push transition non_increasing;
-          backtrack cache (steps_left - 1) (i + 1) solver_int non_increasing problem;
-          ignore (Stack.pop non_increasing);
-
-          Solver.pop solver_int
-        done;
-        finalise_if_entrytime_bounded non_increasing)
-
-
-  let get_minimum_applicable_non_inc_set mprf_problem =
-    let possible_non_inc_set = Base.Set.of_array (module Transition) mprf_problem.make_non_increasing in
-    let rec helper min_applicable =
-      (* get time_unbounded pre transitions *)
-      Base.Set.to_sequence min_applicable
-      |> Base.Sequence.map ~f:(PM.Program.pre mprf_problem.program)
-      (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
-      |> Base.Sequence.map ~f:Base.Set.to_sequence
-      |> Base.Sequence.join
-      |> Base.Sequence.filter ~f:(not % mprf_problem.is_time_bounded)
-      |> TransitionSet.of_sequence
-      (* add previously found transitions*)
-      |> Base.Set.union min_applicable
-      (* we can only consider scc transitions *)
-      |> Base.Set.inter possible_non_inc_set
-      |> fun tset ->
-      if Base.Set.length tset > Base.Set.length min_applicable then
-        helper tset
+    let transition_constraints t : formula_conjunction =
+      if Transition.equal t problem.make_decreasing then
+        [ in_non_increasing_set t; decreasing_constraint cache problem.find_depth problem.measure t ]
       else
-        tset
+        let decreasing =
+          if problem.find_depth = 1 then
+            []
+          else
+            [ decreasing_constraint cache problem.find_depth problem.measure t ]
+        in
+        (* Note that decreasing constraint is *not* subsumed by the non-increasing constraint.
+           Hence, the decreasing constraint is allowed instead, unless the depth is 1, where it implies the
+           non-increasing constraint. *)
+        [
+          Formula.any
+            (not_in_non_increasing_set t
+            :: non_increasing_constraint cache problem.find_depth problem.measure t
+            :: decreasing);
+        ]
     in
-    helper (TransitionSet.singleton mprf_problem.make_decreasing)
-
-
-  let compute_scc cache program mprf_problem =
-    let locations = Base.Set.to_list @@ PM.TransitionGraph.locations (PM.Program.graph program) in
-    let vars = PM.Program.input_vars program in
-    compute_ranking_templates cache mprf_problem.find_depth vars locations;
-
-    let solver_int = Solver.create () in
-
-    (* make transition decreasing*)
-    add_decreasing_constraint cache mprf_problem solver_int;
-
-    (* initial constraint propagation for incoming timebounds*)
-    let min_applicable = get_minimum_applicable_non_inc_set mprf_problem in
-    Logger.log logger Logger.DEBUG (fun () ->
-        ( "compute_scc",
-          [
-            ("decreasing", Transition.to_id_string mprf_problem.make_decreasing);
-            ("min_applicable_non_inc_set", TransitionSet.to_id_string min_applicable);
-          ] ));
-    let non_inc = Stack.of_enum @@ List.enum (Base.Set.to_list min_applicable) in
-    let make_non_increasing =
-      Base.Set.to_array
-      @@ Base.Set.diff (Base.Set.of_array (module Transition) mprf_problem.make_non_increasing) min_applicable
+    let zero_coefficients_at_target entry_transition =
+      OurBase.Set.to_list (problem.unbounded_vars entry_transition)
+      |> List.concat_map (fun v ->
+          OurBase.Set.to_list @@ CoeffsTable.find cache.coeffs_table (Transition.target entry_transition, v))
+      |> List.map (fun coeff -> Formula.mk_eq (Polynomial.of_var coeff) Polynomial.zero)
+      |> Formula.all
     in
-    Base.Set.iter ~f:(add_non_increasing_constraint cache mprf_problem solver_int)
-    @@ Base.Set.remove min_applicable mprf_problem.make_decreasing;
-    (try
-       backtrack cache (Array.length make_non_increasing) 0 solver_int non_inc
-         { mprf_problem with make_non_increasing }
-     with
-    | Exit -> ());
-
-    if Option.is_none !(cache.rank_func) then
-      Logger.(
-        log logger WARN (fun () ->
-            ( "no_mprf",
-              [
-                ("measure", show_measure mprf_problem.measure);
-                ("transition", Transition.to_id_string mprf_problem.make_decreasing);
-              ] )))
+    let entry_constraints t =
+      OurBase.Set.to_list (Program.pre problem.program t)
+      |> List.map (fun pre ->
+          if problem.is_time_bounded pre then
+            Formula.any
+              (* This reads: t is entry transition → all vars occuring in template (with non-zero coeff) are bounded *)
+              [ not_in_non_increasing_set t; in_non_increasing_set pre; zero_coefficients_at_target pre ]
+          else
+            Formula.mk_or (not_in_non_increasing_set t) (in_non_increasing_set pre))
+    in
+    (* The constraints are added separately, as their conjunction would be expanded into a large DNF *)
+    let solver = Solver.create () in
+    List.concat_map indicator_bounds (OurBase.Map.data non_increasing_indicators)
+    @ List.concat_map
+        (fun t -> transition_constraints t @ entry_constraints t)
+        (OurBase.Set.to_list problem.make_non_increasing)
+    |> List.iter (Solver.add solver);
+    let ranking_function =
+      Solver.model solver
+      |> Option.map (fun valuation ->
+          let non_increasing =
+            OurBase.Set.filter problem.make_non_increasing ~f:(fun t ->
+                OurInt.equal OurInt.one
+                  (Valuation.eval_opt (OurBase.Map.find_exn non_increasing_indicators t) valuation
+                  |? OurInt.zero))
+          in
+          make cache problem.find_depth problem.make_decreasing non_increasing valuation)
+    in
+    (match ranking_function with
+    | Some ranking_function ->
+        Logger.(
+          log logger INFO (fun () ->
+              ( "add_mprf",
+                [
+                  ("measure", show_measure problem.measure);
+                  ("decreasing", Transition.to_id_string problem.make_decreasing);
+                  ("non_increasing", TransitionSet.to_id_string ranking_function.non_increasing);
+                  ("rank", only_rank_to_string ranking_function);
+                ] )))
+    | None ->
+        Logger.(
+          log logger WARN (fun () ->
+              ( "no_mprf",
+                [
+                  ("measure", show_measure problem.measure);
+                  ("transition", Transition.to_id_string problem.make_decreasing);
+                ] ))));
+    ranking_function
 
 
   let find_scc measure program is_time_bounded unbounded_vars (scc : TransitionSet.t) depth make_decreasing =
-    let cache = new_cache depth in
     let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
     let transitions_without_looping_fc =
       OurBase.Set.filter
@@ -558,21 +495,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           program;
           measure;
           make_non_increasing =
-            Base.Set.(
-              if is_empty (OurBase.Set.diff scc transitions_without_looping_fc) then
-                to_array scc
-              else
-                to_array @@ TransitionSet.singleton make_decreasing);
+            (if OurBase.Set.is_empty (OurBase.Set.diff scc transitions_without_looping_fc) then
+               scc
+             else
+               TransitionSet.singleton make_decreasing);
           make_decreasing;
           unbounded_vars;
           find_depth = depth;
           is_time_bounded;
         }
       in
-      let execute () =
-        compute_scc cache program mprf_problem;
-        !(cache.rank_func)
-      in
+      let execute () = compute_scc mprf_problem in
       Logger.with_log logger Logger.DEBUG
         (fun () ->
           ("find_scc", [ ("measure", show_measure measure); ("scc", TransitionSet.to_id_string scc) ]))
