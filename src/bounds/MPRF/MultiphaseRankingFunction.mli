@@ -54,6 +54,17 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       variables without a finite size bound after [t]. Both are needed for the entry transitions of the
       non-increasing transitions. *)
 
+  val find_scc_batch :
+    measure ->
+    PM.Program.t ->
+    is_time_bounded:(PM.Transition.t -> bool) ->
+    unbounded_vars:(PM.Transition.t -> VarSet.t) ->
+    int ->
+    (PM.TransitionSet.t * PM.Transition.t) list ->
+    t option list
+  (** Like [find_scc] for several pairs of an scc and a transition that should be decreasing.
+      The ranking templates and constraints are only computed once and shared between all pairs. *)
+
   val to_string : t -> string
   (** Converts a multiphase ranking function into a string*)
 

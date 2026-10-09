@@ -36,20 +36,12 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     is_time_bounded : Transition.t -> bool;
   }
 
+  (* Only depends on the program, measure, and depth. *)
   type ranking_cache = {
     template_table : ParameterPolynomial.t TemplateTable.t Array.t;
     coeffs_table : VarSet.t CoeffsTable.t;
     constraint_cache : (int * constraint_type * int, Formula.t) Hashtbl.t;
   }
-
-  let new_cache max_depth =
-    let new_template_table () = Array.init max_depth (fun i -> TemplateTable.create 10) in
-    {
-      template_table = new_template_table ();
-      coeffs_table = CoeffsTable.create 10;
-      constraint_cache = Hashtbl.create 10;
-    }
-
 
   (* Cache does not depend on measure since the cache is unique for each measure *)
   let constraint_cache cache =
@@ -232,6 +224,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       cache.template_table ParameterPolynomial.to_string
 
 
+  let new_cache program max_depth =
+    let new_template_table () = Array.init max_depth (fun i -> TemplateTable.create 10) in
+    let cache =
+      {
+        template_table = new_template_table ();
+        coeffs_table = CoeffsTable.create 10;
+        constraint_cache = Hashtbl.create 10;
+      }
+    in
+    let locations = OurBase.Set.to_list @@ PM.TransitionGraph.locations (PM.Program.graph program) in
+    compute_ranking_templates cache max_depth (PM.Program.input_vars program) locations;
+    cache
+
+
   let apply_farkas pre concl =
     ParameterConstraint.(farkas_transform (of_constraint @@ Constraint.drop_nonlinear pre)) concl
 
@@ -375,10 +381,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Every candidate transition [t] gets an indicator variable in \{0,1\}, which is 1 iff [t] is non-increasing.
       A non-increasing set is admissible if all its entry transitions are time-bounded, and the coefficients of the
       variables which are unbounded on an entry transition are 0 at its target location. *)
-  let compute_scc problem =
-    let cache = new_cache problem.find_depth in
-    let locations = OurBase.Set.to_list @@ PM.TransitionGraph.locations (PM.Program.graph problem.program) in
-    compute_ranking_templates cache problem.find_depth (PM.Program.input_vars problem.program) locations;
+  let compute_scc cache problem =
     let non_increasing_indicators =
       OurBase.Set.to_list problem.make_non_increasing
       |> List.map (fun t -> (t, Var.fresh_id Var.Int ()))
@@ -475,8 +478,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ranking_function
 
 
-  let find_scc measure program ~is_time_bounded ~unbounded_vars (scc : TransitionSet.t) depth make_decreasing
-      =
+  let find_scc_with_cache cache measure program ~is_time_bounded ~unbounded_vars (scc : TransitionSet.t) depth
+      make_decreasing =
     let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
     let transitions_without_looping_fc =
       OurBase.Set.filter
@@ -506,12 +509,25 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           is_time_bounded;
         }
       in
-      let execute () = compute_scc mprf_problem in
+      let execute () = compute_scc cache mprf_problem in
       Logger.with_log logger Logger.DEBUG
         (fun () ->
           ("find_scc", [ ("measure", show_measure measure); ("scc", TransitionSet.to_id_string scc) ]))
         ~result:(Util.enum_to_string to_string % Option.enum)
         execute
+
+
+  let find_scc measure program ~is_time_bounded ~unbounded_vars scc depth make_decreasing =
+    find_scc_with_cache (new_cache program depth) measure program ~is_time_bounded ~unbounded_vars scc depth
+      make_decreasing
+
+
+  let find_scc_batch measure program ~is_time_bounded ~unbounded_vars depth sccs_and_decreasing =
+    let cache = new_cache program depth in
+    List.map
+      (fun (scc, make_decreasing) ->
+        find_scc_with_cache cache measure program ~is_time_bounded ~unbounded_vars scc depth make_decreasing)
+      sccs_and_decreasing
 
 
   let find measure program depth =

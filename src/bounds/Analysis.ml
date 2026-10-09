@@ -217,19 +217,20 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     in
     let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
-      let compute_function trans =
+      let scc_and_decreasing trans =
         let scc_overapprox_nonlinear_only_connected =
           Set.filter scc_overapprox_nonlinear ~f:(fun t ->
               Set.mem (Program.reachable_locations program (Transition.src trans)) (Transition.target t))
         in
-        MultiphaseRankingFunction.find_scc measure program ~is_time_bounded ~unbounded_vars:get_unbounded_vars
-          scc_overapprox_nonlinear_only_connected depth
-        @@ Option.value_exn
-        @@ Set.binary_search scc_overapprox_nonlinear_only_connected ~compare:Transition.compare
-             `First_equal_to trans
+        ( scc_overapprox_nonlinear_only_connected,
+          Option.value_exn
+          @@ Set.binary_search scc_overapprox_nonlinear_only_connected ~compare:Transition.compare
+               `First_equal_to trans )
       in
-      Set.to_array unbounded_transitions |> Array.map ~f:compute_function |> Array.to_sequence
-      |> Sequence.filter_opt
+      Set.to_list unbounded_transitions |> List.map ~f:scc_and_decreasing
+      |> MultiphaseRankingFunction.find_scc_batch measure program ~is_time_bounded
+           ~unbounded_vars:get_unbounded_vars depth
+      |> Sequence.of_list |> Sequence.filter_opt
     in
     (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
        * or the depth is max_depth *)
