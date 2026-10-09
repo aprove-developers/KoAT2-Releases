@@ -92,7 +92,7 @@ module Make (BP : BoundPair.T) = struct
     let find_mprf t =
       let nonprob_trans = prob_trans_to_nonprob_trans t in
       let find_of_depth depth =
-        MultiphaseRankingFunction.find_scc `Time class_program is_time_bounded unbounded_vars
+        MultiphaseRankingFunction.find_scc `Time class_program ~is_time_bounded ~unbounded_vars
           all_trans_non_prob depth nonprob_trans
       in
       Sequence.range ~start:`inclusive ~stop:`inclusive 1 depth

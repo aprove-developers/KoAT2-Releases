@@ -40,10 +40,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   val find_scc :
     measure ->
     PM.Program.t ->
-    (PM.Transition.t -> bool) ->
-    (* Is the transition time-bounded? *)
-    (PM.Transition.t -> VarSet.t) ->
-    (* Unbounded vars for the transition *)
+    is_time_bounded:(PM.Transition.t -> bool) ->
+    unbounded_vars:(PM.Transition.t -> VarSet.t) ->
     PM.TransitionSet.t ->
     (* The scc*)
     int ->
@@ -51,6 +49,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     PM.Transition.t ->
     (* The transition that should be decreasing *)
     t option
+  (** Searches for an MPRF whose non-increasing transitions are a subset of the scc.
+      [is_time_bounded t] states whether [t] already has a finite time bound, and [unbounded_vars t] returns the
+      variables without a finite size bound after [t]. Both are needed for the entry transitions of the
+      non-increasing transitions. *)
 
   val to_string : t -> string
   (** Converts a multiphase ranking function into a string*)

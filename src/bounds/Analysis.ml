@@ -222,7 +222,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           Set.filter scc_overapprox_nonlinear ~f:(fun t ->
               Set.mem (Program.reachable_locations program (Transition.src trans)) (Transition.target t))
         in
-        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars
+        MultiphaseRankingFunction.find_scc measure program ~is_time_bounded ~unbounded_vars:get_unbounded_vars
           scc_overapprox_nonlinear_only_connected depth
         @@ Option.value_exn
         @@ Set.binary_search scc_overapprox_nonlinear_only_connected ~compare:Transition.compare

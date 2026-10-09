@@ -475,7 +475,8 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
     ranking_function
 
 
-  let find_scc measure program is_time_bounded unbounded_vars (scc : TransitionSet.t) depth make_decreasing =
+  let find_scc measure program ~is_time_bounded ~unbounded_vars (scc : TransitionSet.t) depth make_decreasing
+      =
     let locs = LocationSet.map ~f:Transition.src (OurBase.Set.add scc make_decreasing) in
     let transitions_without_looping_fc =
       OurBase.Set.filter
@@ -518,7 +519,10 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
       Base.Sequence.of_list (PM.Program.sccs program)
       |> Base.Sequence.map ~f:(fun scc ->
           Base.Set.to_sequence scc
-          |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc depth))
+          |> Base.Sequence.map
+               ~f:
+                 (find_scc measure program ~is_time_bounded:(const false) ~unbounded_vars:(const VarSet.empty)
+                    scc depth))
       |> Base.Sequence.join |> Base.Sequence.filter_opt
     in
     Logger.with_log logger Logger.DEBUG
