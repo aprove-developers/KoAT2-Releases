@@ -42,6 +42,16 @@ struct
   let equivalent : t -> t -> bool = equal G.equivalent
   let map_pre_cache program = Atomically.map_atomically program.pre_cache
 
+  (** Replaces the graph of the program and updates all data derived from it except for the pre-cache. *)
+  let set_graph program graph =
+    {
+      program with
+      graph;
+      dependency_graph = A.mk_from_graph graph;
+      transitions_with_function_calls = transitions_with_function_calls graph;
+    }
+
+
   let invalidate_pre_cache_for_transs invalidate_transs program =
     let new_pre_cache =
       map_pre_cache program @@ fun pre_cache ->
@@ -72,23 +82,17 @@ struct
       (* transitions following an outgoing transitions might have store the outgoing transition (now removed)  in their pre-cache. So we remove it *)
       ingress @ outgress @ outgreess_of_out_trans
     in
-    let graph = G.remove_vertex program.graph location in
-    { program with graph; dependency_graph = A.mk_from_graph graph }
+    set_graph program (G.remove_vertex program.graph location)
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
   let remove_transition program transition =
     let affected_transitions = transition :: G.succ_e program.graph (T.target transition) in
-    let graph = G.remove_edge_e program.graph transition in
-    { program with graph; dependency_graph = A.mk_from_graph graph }
+    set_graph program (G.remove_edge_e program.graph transition)
     |> invalidate_pre_cache_for_transs affected_transitions
 
 
-  let map_graph f program =
-    let graph = f program.graph in
-    invalidate_complete_pre_cache { program with graph; dependency_graph = A.mk_from_graph graph }
-
-
+  let map_graph f program = invalidate_complete_pre_cache (set_graph program (f program.graph))
   let map_transitions f = map_graph (G.map_transitions f)
   let map_labels f = map_transitions (fun (l, t, l') -> (l, f t, l'))
   let locations : t -> LocationSet.t = G.locations % graph
@@ -116,6 +120,7 @@ struct
           graph;
           return_locations;
           dependency_graph = A.mk_from_graph graph;
+          transitions_with_function_calls = transitions_with_function_calls graph;
           pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
         }
       else
@@ -129,6 +134,7 @@ struct
           graph;
           return_locations;
           dependency_graph = A.mk_from_graph graph;
+          transitions_with_function_calls = transitions_with_function_calls graph;
           pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T);
         }
 
@@ -371,6 +377,7 @@ let rename program =
     start = new_start;
     return_locations = new_return_locations;
     dependency_graph = DependencyGraphAdapter.ClassicAdapter.mk_from_graph graph;
+    transitions_with_function_calls = transitions_with_function_calls graph;
     pre_cache =
       Atomically.create
       @@ Hashtbl.create ~size:(TransitionGraph_.nb_vertex program.graph) (module Transition_);

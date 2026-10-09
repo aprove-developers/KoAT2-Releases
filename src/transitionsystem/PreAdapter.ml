@@ -24,6 +24,7 @@ struct
   open GenericProgram_
 
   let with_pre_cache program = Atomically.run_atomically program.pre_cache
+  let transitions_with_function_calls _ = Set.empty (module T)
 
   let compute_pre program (l, t, l') =
     let is_satisfiable f =
@@ -85,9 +86,13 @@ module PreAdapter = struct
   type transition_graph = TransitionGraph_.t
   type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
 
+  let transitions_with_function_calls graph =
+    Set.filter (TransitionGraph_.transitions graph) ~f:(TransitionLabel_.has_function_calls % Transition.label)
+
+
   let trans_with_function_call program l =
     let open GenericProgram_ in
-    Set.filter (TransitionGraph_.transitions program.graph) ~f:(fun t ->
+    Set.filter program.transitions_with_function_calls ~f:(fun t ->
         Set.mem (Set.map (module Location) ~f:VarFunctionCall.return_loc (Transition.function_call_vars t)) l)
 
 
