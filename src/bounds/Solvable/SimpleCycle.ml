@@ -69,7 +69,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
   let update_path vars tmp_vars (path : path) =
     let varlist = Base.Set.to_list vars in
-    let labels = List.map (List.first % Tuple3.second) path in
+    let labels = List.map (TL.overapprox_function_calls % List.first % Tuple3.second) path in
     (* HashSet where all elements are definitely not static*)
     let static_dep_table = Hashtbl.create 10 in
     Base.Set.iter ~f:(flip (Hashtbl.add static_dep_table) ()) tmp_vars;
@@ -80,10 +80,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         in
         (* all updates of var in the path *)
         let updates var =
-          OurBase.List.filter_opt
-          @@ List.map
-               (flip (TL.TransitionLabelNonFunctionCall.update % TL.overapprox_function_calls) var)
-               labels
+          OurBase.List.filter_opt @@ List.map (flip TL.TransitionLabelNonFunctionCall.update var) labels
         in
         let deterministic_update var = List.for_all update_is_deterministic @@ updates var in
         let new_deterministic var = not (deterministic_update var || Hashtbl.mem static_dep_table var) in
