@@ -11,7 +11,7 @@ WORKDIR /home/opam
 ARG OCAML_VERSION=5.5.0
 
 # Add graphviz for tests
-RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
+RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev mimalloc2-dev graphviz zip autoconf --no-cache
 
 # PPL
 RUN wget https://support.bugseng.com/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \

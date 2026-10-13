@@ -227,6 +227,13 @@
                 (musl.gmp.override { withStatic = true; })
                 (musl.mpfr.overrideAttrs { dontDisableStatic = true; })
                 (musl.ppl.overrideAttrs { dontDisableStatic = true; })
+                # Linked in the release profile, see ./dune. With musl, mimalloc's
+                # <linux/prctl.h> conflicts with <sys/prctl.h>, which suffices.
+                (musl.mimalloc.overrideAttrs (oa: {
+                  postPatch = (oa.postPatch or "") + ''
+                    substituteInPlace src/prim/unix/prim.c --replace-fail "#include <linux/prctl.h>" ""
+                  '';
+                }))
               ];
               # Like the Dockerfile's `strip ... -o koat2`.
               postFixup = ''

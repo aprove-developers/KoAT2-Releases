@@ -1,7 +1,16 @@
 (env
  (release
+  ; mimalloc replaces musl's allocator, which is considerably slower for the many small allocations of Z3,
+  ; Apron, and GMP. It is linked first, as libstdc++ and libc would otherwise provide some of the replaced
+  ; functions (e.g., operator new) as well.
   (link_flags
-   (:standard -ccopt -static -ccopt -no-pie))
+   (:standard
+    -ccopt
+    -static
+    -ccopt
+    -no-pie
+    -ccopt
+    -Wl,--whole-archive,-lmimalloc,--no-whole-archive))
   (flags
    (:standard -g -w +A-3-4-27-33-40-42-44-45-48-66-70)))
  (dev
