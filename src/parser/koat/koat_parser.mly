@@ -393,8 +393,7 @@ polynomialRec:
 rational_laurent_polynomial:
   | v = variable
     { RationalLaurentPolynomial.of_var v }
-  | c = our_int
-    { RationalLaurentPolynomial.of_constant (OurRational.of_ourint c) }
+  (* Integers are covered by our_float *)
   | c = our_float
     { RationalLaurentPolynomial.of_constant c }
   | LPAR; ex = rational_laurent_polynomial; RPAR
