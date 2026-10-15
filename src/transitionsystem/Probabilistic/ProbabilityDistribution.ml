@@ -17,12 +17,18 @@ let to_string ?(pretty = false) ?(to_file = false) =
     else
       Polynomial.to_string
   in
+  (* As in the input format, probabilities that are not integers are written as fractions in brackets *)
+  let probability_to_string p =
+    if OurRational.is_integral p then
+      OurRational.to_string p
+    else
+      "[" ^ OurRational.to_string p ^ "]"
+  in
   function
-  | Binomial (n, p) -> "Binomial (" ^ poly_to_string n ^ ", " ^ OurRational.to_string p ^ ")"
-  | Geometric p -> "Geometric (" ^ OurRational.to_string p ^ ")"
+  | Binomial (n, p) -> "BINOMIAL(" ^ poly_to_string n ^ ", " ^ probability_to_string p ^ ")"
+  | Geometric p -> "GEOMETRIC(" ^ probability_to_string p ^ ")"
   | Hypergeometric (bigN, k, n) ->
-      "Hypergeometric (" ^ OurInt.to_string bigN ^ ", " ^ Polynomial.to_string k ^ ", "
-      ^ Polynomial.to_string n ^ ")"
+      "HYPERGEOMETRIC(" ^ OurInt.to_string bigN ^ ", " ^ poly_to_string k ^ ", " ^ poly_to_string n ^ ")"
   | Uniform (p1, p2) -> "UNIFORM(" ^ poly_to_string p1 ^ ", " ^ poly_to_string p2 ^ ")"
 
 
