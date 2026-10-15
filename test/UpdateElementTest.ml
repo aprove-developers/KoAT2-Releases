@@ -8,6 +8,27 @@ open ProbabilisticProgramModules
 let tests =
   "UpdateElementTests"
   >::: [
+         (* Every sample is represented by a single variable, also if it occurs in several monomials. The
+            values of 1:UNIFORM(0,3)^2 - 1:UNIFORM(0,3) are 0, 2, and 6. *)
+         "as_guard"
+         >::: List.map
+                ~f:(fun (update, constr, expected) ->
+                  update ^ " && " ^ constr >:: fun _ ->
+                  let guard =
+                    UpdateElement.as_guard (KoatReaders.read_update_element update) (Var.of_string "X'")
+                  in
+                  assert_bool "unexpected satisfiability"
+                    (Bool.equal expected
+                       (SMT.Z3Solver.satisfiable
+                          (Formula.mk (Guard.mk_and guard (KoatReaders.read_constraint constr))))))
+                [
+                  ("1:UNIFORM(0,3)^2 - 1:UNIFORM(0,3)", "X' = 6", true);
+                  ("1:UNIFORM(0,3)^2 - 1:UNIFORM(0,3)", "X' = 1", false);
+                  ("1:UNIFORM(0,3)^2 - 1:UNIFORM(0,3)", "X' < 0", false);
+                  (* Different samples are independent, e.g., -3 = 0^2 - 3 *)
+                  ("UNIFORM(0,3)^2 - UNIFORM(0,3)", "X' < 0", true);
+                  ("UNIFORM(0,3) - UNIFORM(0,3)", "X' = 3", true);
+                ];
          "check_update_as_guard_of_max_degree"
          >::: List.mapi
                 ~f:(fun i (guard, updated_var, update, expected_result) ->

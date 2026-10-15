@@ -158,20 +158,23 @@ include
     (OrdinaryPoly)
 
 let as_guard ue new_var =
-  let replaced_poly, dist_constrs =
-    fold
-      ~const:(fun c -> (Polynomial.of_constant c, Guard.mk_true))
+  (* Every sample is represented by a single fresh variable in its support, also if it occurs several times *)
+  let sample_vars =
+    List.filter (indeterminates ue) ~f:UpdateValue.is_dist
+    |> List.map ~f:(fun sample -> (sample, Var.fresh_id Var.Int ()))
+    |> Map.of_alist_exn (module UpdateValue)
+  in
+  let replaced_poly =
+    fold ~const:Polynomial.of_constant ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
       ~indeterminate:(function
-        | Var v -> (Polynomial.of_var v, Guard.mk_true)
-        | Dist { dist; _ } ->
-            let temp_v = Var.fresh_id Var.Int () in
-            (Polynomial.of_var temp_v, ProbabilityDistribution.as_guard dist temp_v))
-      ~plus:(fun (p1, g1) (p2, g2) -> (Polynomial.add p1 p2, Guard.mk_and g1 g2))
-      ~times:(fun (p1, g1) (p2, g2) -> (Polynomial.mul p1 p2, Guard.mk_and g1 g2))
-      ~pow:(fun (p, g) i -> (Polynomial.pow p i, g))
+        | Var v -> Polynomial.of_var v
+        | sample -> Polynomial.of_var (Map.find_exn sample_vars sample))
       ue
   in
-  Guard.mk_and (Guard.mk_eq (Polynomial.of_var new_var) replaced_poly) dist_constrs
+  let sample_constrs =
+    Map.to_alist sample_vars |> List.map ~f:(fun (sample, var) -> UpdateValue.as_guard sample var)
+  in
+  Guard.all (Guard.mk_eq (Polynomial.of_var new_var) replaced_poly :: sample_constrs)
 
 
 let as_linear_abstract manager constr t new_var =
