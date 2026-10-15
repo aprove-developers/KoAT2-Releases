@@ -115,6 +115,55 @@ let ourfloat_of_decimal_or_fraction_string (str : string) : OurRational.t =
 (* Probabilistic Programs *)
 open ProbabilisticProgramModules
 
+(** Ids of the distributions in the updates of a general transition. Every occurrence of a distribution is an
+    independent sample and thus gets a fresh id, e.g., [UNIFORM(1,2)*UNIFORM(1,2)] is the product of two
+    independent samples, whereas [UNIFORM(1,2)^2] is the square of a single sample. Occurrences with the same
+    explicit label id share a single sample, e.g., both occurrences of [1:UNIFORM(1,2)] in [x + 1:UNIFORM(1,2)] and
+    [y - 1:UNIFORM(1,2)]. Parsed values that contain distributions are computations in a state monad whose state
+    are the ids in use so far, which are threaded from left to right through all updates of a general
+    transition. *)
+module DistributionIds = struct
+  module LabelIdMap = MakeMapCreators1 (Int)
+
+  (* The next fresh id, and for every label id the id and the distribution it was used for *)
+  type ids = { next : int; label_ids : (int * ProbabilityDistribution.t) LabelIdMap.t }
+
+  include StateMonad.Make (struct
+    type t = ids
+  end)
+
+  (** returns a fresh distribution id *)
+  let fresh : int t =
+    let* ids = get in
+    let+ () = put { ids with next = ids.next + 1 } in
+    ids.next
+
+
+  let of_label_id (label_id : int) (dist : ProbabilityDistribution.t) : int t =
+    let* ids = get in
+    (* All occurrences of a label id denote the same sample, i.e., the id minted for its first occurrence. Hence,
+       a label id that is already in use must denote the same distribution. *)
+    match Map.find ids.label_ids label_id with
+    | Some (id, label_id_dist) when ProbabilityDistribution.equal dist label_id_dist -> pure id
+    | Some (_, label_id_dist) ->
+        raise
+          (Error
+             ("Label id " ^ Int.to_string label_id ^ " is used for different distributions "
+             ^ ProbabilityDistribution.to_string label_id_dist
+             ^ " and "
+             ^ ProbabilityDistribution.to_string dist))
+    | None ->
+        let* id = fresh in
+        let+ () =
+          modify (fun ids -> { ids with label_ids = Map.set ids.label_ids ~key:label_id ~data:(id, dist) })
+        in
+        id
+
+
+  (** The result of a computation for a general transition, i.e., without any ids in use *)
+  let eval (m : 'a t) : 'a = eval m { next = 0; label_ids = LabelIdMap.empty }
+end
+
 let embed_probabilistic_transition_label lhs (probability, (com_kind, targets)) =
   let start_loc, patterns = Tuple2.map2 (List.map ~f:Var.of_string) lhs in
 

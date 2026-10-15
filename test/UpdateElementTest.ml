@@ -55,8 +55,48 @@ let tests =
                 (let open Polynomials.RationalPolynomial in
                  [
                    ("UNIFORM(0,3)", of_constant (OurRational.of_float 1.5));
+                   (* Every occurrence of a distribution is an independent sample *)
+                   ("UNIFORM(0,3)*UNIFORM(0,3)", of_constant (OurRational.of_float (1.5 *. 1.5)));
+                   ("UNIFORM(1,2)*UNIFORM(1,2)", of_constant (OurRational.of_float (1.5 *. 1.5)));
                    ("0:UNIFORM(0,3)*1:UNIFORM(0,3)", of_constant (OurRational.of_float (1.5 *. 1.5)));
-                   ("UNIFORM(0,3)*UNIFORM(0,3)", of_constant (OurRational.of_float (0.25 *. (1. +. 4. +. 9.))));
+                   (* A single sample *)
                    ("UNIFORM(0,3)^2", of_constant (OurRational.of_float (14. /. 4.)));
+                   ("(UNIFORM(0,3))^2", of_constant (OurRational.of_float (14. /. 4.)));
+                   ("(UNIFORM(1,2))^2", of_constant (OurRational.of_float 2.5));
+                   ("1:UNIFORM(0,3)*1:UNIFORM(0,3)", of_constant (OurRational.of_float (14. /. 4.)));
+                   (* Powers bind stronger than the other operators *)
+                   ( "(X + Y)^2",
+                     let x = of_var (Var.of_string "X") and y = of_var (Var.of_string "Y") in
+                     add (add (pow x 2) (mul (of_int 2) (mul x y))) (pow y 2) );
+                   ("X + Y^2", add (of_var (Var.of_string "X")) (pow (of_var (Var.of_string "Y")) 2));
+                   ("-X^2", neg (pow (of_var (Var.of_string "X")) 2));
+                   ("2*UNIFORM(0,3)^2", of_constant (OurRational.of_float (2. *. 14. /. 4.)));
+                   ( "(X + UNIFORM(0,3))^2",
+                     let x = of_var (Var.of_string "X") in
+                     add (add (pow x 2) (mul (of_int 3) x)) (of_constant (OurRational.of_float (14. /. 4.)))
+                   );
                  ]);
+         ( "same_label_id_requires_same_distribution" >:: fun _ ->
+           match KoatReaders.read_update_element "1:UNIFORM(0,3) + 1:GEOMETRIC(0.5)" with
+           | exception KoatParserUtil.Error _ -> ()
+           | _ -> assert_failure "the same label id for different distributions must be rejected" );
+         (* The ids are distinct for all updates of a general transition, apart from the same label ids. To observe
+            this, the expected value of the product of the updates of the two arguments is computed. *)
+         "distribution_ids_in_general_transitions"
+         >::: List.map
+                ~f:(fun (gt_str, expected) ->
+                  gt_str >:: fun _ ->
+                  let gt = Set.choose_exn (KoatReaders.read_general_transitions gt_str) in
+                  let label = Tuple3.second (Set.choose_exn (GeneralTransition.transitions gt)) in
+                  let update var = Option.value_exn (TransitionLabel.update label var) in
+                  let product = Sequence.take Var.args 2 |> Sequence.map ~f:update |> UpdateElement.product in
+                  assert_equal_rationalpoly_smt
+                    (Polynomials.RationalPolynomial.of_constant (OurRational.of_float expected))
+                    (UpdateElement.exp_value_poly product))
+                [
+                  ("(RULES f(X,Y) -> g(UNIFORM(0,3), UNIFORM(0,3)))", 1.5 *. 1.5);
+                  ("(RULES f(X,Y) -> g(1:UNIFORM(0,3), 2:UNIFORM(0,3)))", 1.5 *. 1.5);
+                  ("(RULES f(X,Y) -> g(1:UNIFORM(0,3), 1:UNIFORM(0,3)))", 14. /. 4.);
+                  ("(RULES f(X,Y) -> g(UNIFORM(0,3), 1:UNIFORM(0,3)))", 1.5 *. 1.5);
+                ];
        ]

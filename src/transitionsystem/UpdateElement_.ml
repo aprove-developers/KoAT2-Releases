@@ -9,7 +9,7 @@ module UpdateValue = struct
     let sexp_of_t = Sexplib0.Sexp_conv.sexp_of_opaque
 
     let to_string ?(pretty = false) ?(to_file = false) = function
-      | Dist { dist; _ } -> ProbabilityDistribution.to_string ~pretty dist
+      | Dist { dist; id } -> Int.to_string id ^ ":" ^ ProbabilityDistribution.to_string ~pretty dist
       | Var v -> Var.to_string ~pretty v
 
 
@@ -97,7 +97,7 @@ struct
 
 
   let of_poly = OrdinaryPoly.fold ~const:of_constant ~indeterminate:of_var ~plus:add ~times:mul ~pow
-  let of_dist ?(id = 1) dist = of_indeterminate (Dist { dist; id })
+  let of_dist ~id dist = of_indeterminate (Dist { dist; id })
 
   let exp_value_poly (* : t -> RationalPolynomial.t *) =
    fun t ->
@@ -313,9 +313,9 @@ let as_linear_guard constr t new_var =
 let pull_out_of_uniform : t -> t =
   fold ~const:of_constant
     ~indeterminate:(function
-      | Dist { dist = Uniform (a, b); _ } ->
+      | Dist { dist = Uniform (a, b); id } ->
           let p, (a', b') = Polynomial.pull_out_common_addends a b in
-          add (of_poly p) (of_dist @@ Uniform (a', b'))
+          add (of_poly p) (of_dist ~id @@ Uniform (a', b'))
       | i -> of_indeterminate i)
     ~plus:add ~times:mul ~pow
 

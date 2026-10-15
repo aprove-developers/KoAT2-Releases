@@ -189,7 +189,8 @@ general_transition:
   | lhs = transition_lhs; cost = cost; rhss = general_transition_rhss; constr = withConstraints
     { (lhs, cost,
        List.map
-         (fun r -> KoatParserUtil.embed_probabilistic_transition_label lhs r) rhss, constr) } ;
+         (fun r -> KoatParserUtil.embed_probabilistic_transition_label lhs r)
+         (KoatParserUtil.DistributionIds.eval rhss), constr) } ;
 
 cost:
   | MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
@@ -216,48 +217,52 @@ transition_target:
     { (target, assignments) } ;
 
 (* TODO: Alternatively parse classical transition here *)
+(* The update elements and everything containing them are computations in the state monad
+   KoatParserUtil.DistributionIds, which threads the distribution ids through all updates of a general transition *)
 general_transition_rhss:
   | rhss = separated_nonempty_list(PROBDIV, prob_transition_rhs_with_prob)
-    { rhss }
+    { KoatParserUtil.DistributionIds.sequence rhss }
     (** If there is only one transition then we allow to omit the probability annotation *)
   | rhs = prob_transition_rhs_without_prob
-    { [(RationalLaurentPolynomial.one,rhs)] };
+    { KoatParserUtil.DistributionIds.map (fun rhs -> [(RationalLaurentPolynomial.one,rhs)]) rhs };
 
 prob_transition_rhs_with_prob:
   | prob = rational_laurent_polynomial; COLON; rhs_without_prob=prob_transition_rhs_without_prob
-    { (prob,rhs_without_prob) }
+    { KoatParserUtil.DistributionIds.map (fun rhs -> (prob,rhs)) rhs_without_prob }
 
 prob_transition_rhs_without_prob:
  | com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, probabilistic_transition_target) RPAR
-   { (com_kind, targets) }
+   { KoatParserUtil.DistributionIds.(map (fun targets -> (com_kind, targets)) (sequence targets)) }
  | target = probabilistic_transition_target
-   { ("Com_1", [target]) } ;
+   { KoatParserUtil.DistributionIds.map (fun target -> ("Com_1", [target])) target } ;
 
 probabilistic_transition_target:
   | target = ID; LPAR assignments = separated_list(COMMA, update_element) RPAR
-    { (target,assignments) };
+    { KoatParserUtil.DistributionIds.(map (fun assignments -> (target,assignments)) (sequence assignments)) };
 
 update_element:
   | v = update_value
     { v }
   | c = our_int
-    { UpdateElement_.of_constant c }
+    { KoatParserUtil.DistributionIds.pure (UpdateElement_.of_constant c) }
   | LPAR; ex = update_element; RPAR
     { ex }
   | MINUS; ex = update_element
-    { UpdateElement_.neg ex }
+    { KoatParserUtil.DistributionIds.map UpdateElement_.neg ex }
   | p1 = update_element; op = update_element_bioperator; p2 = update_element
-    { op p1 p2 }
-  | v = update_value; POW; c = UINT
-    { UpdateElement_.pow v (int_of_string c) } ;
+    { KoatParserUtil.DistributionIds.liftM2 op p1 p2 }
+  (* The base is parsed once and then raised to the power, i.e., each of its distributions is a single sample,
+     e.g., (X + UNIFORM(1,2))^2 contains a single sample of UNIFORM(1,2) *)
+  | ex = update_element; POW; c = UINT
+    { KoatParserUtil.DistributionIds.map (fun ex -> UpdateElement_.pow ex (int_of_string c)) ex } ;
 
 update_value:
   | d = onlyProbabilityDistribution
-    { UpdateElement_.of_dist d }
-  | id_str = UINT; COLON; d = onlyProbabilityDistribution
-    { UpdateElement_.of_dist ~id:(int_of_string id_str) d }
+    { KoatParserUtil.DistributionIds.(map (fun id -> UpdateElement_.of_dist ~id d) fresh) }
+  | label_id = UINT; COLON; d = onlyProbabilityDistribution
+    { KoatParserUtil.DistributionIds.(map (fun id -> UpdateElement_.of_dist ~id d) (of_label_id (int_of_string label_id) d)) }
   | v = ID
-    { UpdateElement_.var v } ;
+    { KoatParserUtil.DistributionIds.pure (UpdateElement_.var v) } ;
 
 onlyProbabilityDistribution:
   | BERNOULLI; LPAR; p = our_float; RPAR
@@ -335,7 +340,7 @@ onlyPolynomialRec:
   | poly = polynomialRec EOF { poly } ;
 
 onlyUpdateElement:
-  | ue = update_element EOF { ue };
+  | ue = update_element EOF { KoatParserUtil.DistributionIds.eval ue };
 
 variable:
   | v = ID

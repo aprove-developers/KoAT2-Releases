@@ -45,7 +45,9 @@ val is_probabilistic : t -> bool
 val of_poly : Polynomial.t -> t
 (** Create an UpdateElement from a Polynomial *)
 
-val of_dist : ?id:int -> ProbabilityDistribution.t -> t
+val of_dist : id:int -> ProbabilityDistribution.t -> t
+(** A single sample of the distribution. Occurrences of the same distribution with the same id are the same
+    sample, whereas occurrences with different ids are independent samples. *)
 
 (* {i update_guard ue v} expresses the effects of the updatelement ue as guard, i.e., the returned guard enforces variable {i v} to lie in the support of {i ue} *)
 val as_guard : t -> Var.t -> Guard.t
