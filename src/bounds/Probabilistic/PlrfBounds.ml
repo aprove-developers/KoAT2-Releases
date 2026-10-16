@@ -111,7 +111,7 @@ module Make (BP : BoundPair.T) = struct
     let find_plrfs =
       Set.filter ~f:(not % ExpApproximation.is_time_bounded appr) scc
       |> Set.to_array
-      |> Parmap.array_parmap (Plrf.find_scc program is_exptime_bounded unbounded_vars scc)
+      |> Array.map ~f:(Plrf.find_scc program is_exptime_bounded unbounded_vars scc)
       |> Array.to_sequence |> Sequence.filter_opt
     in
     Sequence.of_list [ find_plrfs ] |> Sequence.filter ~f:(not % Sequence.is_empty) |> fun seq ->

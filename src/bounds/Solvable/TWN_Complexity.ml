@@ -193,7 +193,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
                         ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
-  let get_bound twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap =
+  let get_bound invariance_cache twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap =
     let bound, max_con =
       List.fold_right
         (fun atom (bound, const) ->
@@ -218,7 +218,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           else
             (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
         (Loop.guard loop |> Formula.atoms |> List.unique ~eq:Atom.equal
-        |> List.filter (not % Loop.check_update_invariant loop))
+        |> List.filter (not % Loop.check_update_invariant invariance_cache loop))
         (Bound.one, OurInt.zero)
     in
     Logger.log logger Logger.INFO (fun () ->
@@ -282,7 +282,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
 
   type local_bound = { bound : Bound.t; terminates : bool Lazy.t }
 
-  let local_bound twn_proofs ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
+  let local_bound invariance_cache twn_proofs ?(twnlog = false) ?(unsolvable = false) (loop : Loop.t) =
     try
       let loop, var_replacement =
         if unsolvable then
@@ -339,7 +339,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
       let f =
         List.fold
           (fun bound replace -> Bound.substitute_f replace bound)
-          (get_bound bound_proofs ~twnlog t_ order npe varmap)
+          (get_bound invariance_cache bound_proofs ~twnlog t_ order npe varmap)
           var_replacement
       in
       ProofOutput.LocalProofOutput.add_to_proof_with_format twn_proofs (fun format ->
@@ -352,7 +352,7 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
              Bound.(f + f + one)
            else
              f);
-        terminates = lazy (TWN_Termination.termination_ termination_proofs t_ varmap);
+        terminates = lazy (TWN_Termination.termination_ invariance_cache termination_proofs t_ varmap);
       }
     with
     | Check_TWN.NOT_TWN -> { bound = Bound.infinity; terminates = lazy false }

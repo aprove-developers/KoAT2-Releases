@@ -1,6 +1,10 @@
 open Formulas
 open Polynomials
 
+type invariance_cache
+(** Results of [check_update_invariant]. Many loops of an scc share atoms and updates, so a cache avoids repeating
+    the same SMT queries. It is defined outside of Make, so that all instances of Make share the type. *)
+
 module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabelNonFunctionCall) : sig
   type t = Formula.t * Formula.t * Polynomial.t ProgramTypes.VarMap.t
 
@@ -19,5 +23,11 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
   val compute_bound_n_iterations : t -> Var.t -> int -> Bound.t
   val substition_unsolvable : t -> Polynomial.t -> Var.t -> t
   val commuting : t -> t -> bool
-  val check_update_invariant : t -> Atoms.Atom.t -> bool
+
+  type nonrec invariance_cache = invariance_cache
+
+  val create_invariance_cache : unit -> invariance_cache
+
+  val check_update_invariant : invariance_cache -> t -> Atoms.Atom.t -> bool
+  (** [check_update_invariant cache loop atom] is true iff [atom] is invariant under the update of [loop]. *)
 end

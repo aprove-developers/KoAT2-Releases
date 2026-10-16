@@ -1,58 +1,35 @@
 #-------------------------------------------
-# Build KoAT
+# Build KoAT (the static binary of the Nix flake)
 #-------------------------------------------
-FROM ocaml/opam:alpine@sha256:c8252c887e7f137e73c54f4e704b50583810a3e71015e99a39c21a6010db6cdb AS koat2_build
+FROM nixos/nix:2.32.1@sha256:7767900b84b1f9d7d3108f86deee607a48e0edacd1075832af6a05864c4e8f40 AS koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 LABEL author="Nils Lommen"
 
-WORKDIR /home/opam
+RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
-ARG OCAML_VERSION=5.5.0
+WORKDIR /koat2
 
-# Add graphviz for tests
-RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
+# The dependencies only depend on these files. Building them first keeps them
+# cached when only the sources change.
+COPY flake.nix flake.lock koat2.opam koat2_external.opam ./
+RUN nix develop .#staticDev --command true
 
-# PPL
-RUN wget https://support.bugseng.com/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
-    tar xfv ppl-1.2.tar.xz && \
-    cd ppl-1.2 && \
-    ./configure && \
-    make -j$(nproc) && \
-    sudo make install && \
-    make -j$(nproc) installcheck
+COPY dune dune-project LICENSE README.md ./
+COPY bin ./bin
+COPY src ./src
+COPY test ./test
+COPY external ./external
+# For the tests
+COPY examples ./examples
 
-# Use our fork of opam-repository for static Z3
-RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git && \
-    opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda && \
-    opam repo remove default
-
-COPY --chown=opam:opam koat2.opam .
-COPY --chown=opam:opam koat2_external.opam .
-RUN opam update && \
-    opam install -j $(nproc) . --deps-only
-
-COPY --chown=opam:opam examples ./examples
-
-ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
-ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
-
-
-COPY --chown=opam:opam dune ./dune
-COPY --chown=opam:opam dune-project ./dune-project
-
-COPY --chown=opam:opam test ./test
-COPY --chown=opam:opam bin ./bin
-COPY --chown=opam:opam src ./src
-COPY --chown=opam:opam external ./external
-
-# Run Build command and strip binaries
+# Build and test the static binary
 ARG KOAT2_VERSION_STRING=UNKNOWN
-RUN eval $(opam env) && \
-    sed -i "s/= \"VERSION_STR\"/= \"$KOAT2_VERSION_STRING\"/" src/util/VersionString.ml && \
-    dune build --release && \
-    dune runtest --release && \
-    strip _build/default/bin/main.exe -o koat2
+# (The image has no sed, but the flake's nixpkgs does)
+RUN nix shell --inputs-from . nixpkgs#gnused --command \
+      sed -i "s/= \"VERSION_STR\"/= \"$KOAT2_VERSION_STRING\"/" src/util/VersionString.ml && \
+    nix build .#koat2-static && \
+    cp result/bin/koat2 koat2
 
 #-------------------------------------------
 # Get llvm2kittel + clang to analyse C programs
@@ -114,7 +91,7 @@ COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
 
 ENV PATH=$PATH:/koat2/bin
 
-COPY --from=koat2_build /home/opam/koat2 bin/koat2
+COPY --from=koat2_build /koat2/koat2 bin/koat2
 
 # ENV LD_LIBRARY_PATH=/lib:/usr/local/lib:/usr/lib
 ENTRYPOINT ["wrapper_script.sh"]

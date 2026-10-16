@@ -71,7 +71,6 @@ KoAT2 makes use of the following external tools and libraries.
 - [FPath](<https://erratique.ch/software/fpath>)
 - [metapp](<https://github.com/thierry-martinez/metapp>)
 - [Ocamlgraph](<http://ocamlgraph.lri.fr/doc/>)
-- [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_subliner](<https://github.com/bn-d/ppx_subliner>)
 - [Z3](https://github.com/Z3Prover/z3)

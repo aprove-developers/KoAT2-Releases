@@ -44,11 +44,10 @@ let rank t = t.rank
 let decreasing t = t.decreasing
 let non_increasing t = Set.union t.non_increasing (Set.singleton (module GeneralTransition) t.decreasing)
 
-type lrsm_cache = { rank : t option ref; template_table : template_table_t; coeffs_table : coeffs_table_t }
+type lrsm_cache = { template_table : template_table_t; coeffs_table : coeffs_table_t }
 
 let new_cache () =
   {
-    rank = ref None;
     template_table = Hashtbl.create ~size:10 (module Location);
     coeffs_table = Hashtbl.create ~size:10 (module CoeffTableEntry);
   }
@@ -63,7 +62,7 @@ let as_realparapoly label var =
 
 
 (** Given a list of variables an affine template-parameter-polynomial is generated*)
-let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynomial.t * Var.t list * Var.t =
+let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynomial.t =
   let vars = Set.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
@@ -77,34 +76,15 @@ let ranking_template cache location (vars : VarSet.t) : RationalParameterPolynom
   let linear_poly = RationalParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Real () in
   let constant_poly = RationalParameterPolynomial.of_constant (RationalPolynomial.of_var constant_var) in
-  (RationalParameterPolynomial.(linear_poly + constant_poly), fresh_vars, constant_var)
+  RationalParameterPolynomial.(linear_poly + constant_poly)
 
-
-(* This will store the added coefficients and constants for later optimisation *)
-let fresh_coeffs : Var.t list ref = ref []
-let fresh_consts : Var.t list ref = ref []
 
 (* use ranking_template to compute ranking_templates for every location *)
 let compute_ranking_templates cache (vars : VarSet.t) (locations : Location.t list) : unit =
   let execute () =
-    let ins_loc_prf location =
-      (* Each location needs its own ranking template with different fresh variables *)
-      let parameter_poly, fresh_vars, fresh_const = ranking_template cache location vars in
-      (location, parameter_poly, fresh_vars, fresh_const)
-    in
-    let templates = List.map ~f:ins_loc_prf locations in
-    templates
-    |> List.iter ~f:(fun (location, polynomial, _, _) ->
-        Hashtbl.add_exn cache.template_table ~key:location ~data:polynomial);
-    templates
-    |> List.fold_left
-         ~f:(fun (l_vars, l_consts) (_, _, fresh_vars, fresh_const) ->
-           (List.cons fresh_vars l_vars, List.cons fresh_const l_consts))
-         ~init:([], [])
-    |> Tuple2.map1 List.join
-    |> fun (fresh_vars, fresh_cs) ->
-    fresh_coeffs := fresh_vars;
-    fresh_consts := fresh_cs
+    (* Each location needs its own ranking template with different fresh variables *)
+    List.iter locations ~f:(fun location ->
+        Hashtbl.add_exn cache.template_table ~key:location ~data:(ranking_template cache location vars))
   in
   Logger.with_log logger Logger.DEBUG
     (fun () -> ("compute_ranking_templates", []))
@@ -221,122 +201,94 @@ let decreasing_constraint cache transition =
 
 module Solver = SMT.IncrementalZ3Solver
 
-(* Add the corresponding bounding constrained depending whether we perform a refind analysis*)
-let add_bounded_for_nonincreasing_constraint cache solver gt =
-  (* Try to add the normal bound constraint *)
-  Solver.add_real solver (bounded_for_nonincreasing_constraint cache gt)
-
-
 type plrf_problem = {
   program : Program.t;
-  make_non_increasing : GeneralTransition.t Array.t;
+  make_non_increasing : GeneralTransitionSet.t;
   unbounded_vars : GeneralTransition.t * Location.t -> VarSet.t;
   is_time_bounded : GeneralTransition.t * Location.t -> bool;
   decreasing : GeneralTransition.t;
 }
 
-module GtLocComp = MakeComparatorForTuples (GeneralTransition) (Location)
-
-let entry_transitions_from_non_increasing program (non_increasing : GeneralTransition.t Stack.t) =
-  let all_possible_pre_trans =
-    Stack.to_list non_increasing
-    |> List.map ~f:(fun gt ->
-        let start_loc = GeneralTransition.src gt in
-        Set.to_sequence (Program.pre_gt program gt)
-        |> Sequence.map ~f:(fun gt -> (gt, start_loc))
-        |> Set.of_sequence (module GtLocComp))
-    |> Set.union_list (module GtLocComp)
+(** Searches for a set of non-increasing general transitions and a PLRF with a single SMT query.
+    Every candidate [gt] gets an indicator variable in \{0,1\}, which is 1 iff [gt] is non-increasing.
+    A non-increasing set is admissible if all its entry transitions are time-bounded, and the coefficients of the
+    variables with unbounded expected size on an entry transition are 0 at the location where it enters. *)
+let compute_plrf cache problem =
+  let non_increasing_indicators =
+    Set.to_list problem.make_non_increasing
+    |> List.map ~f:(fun gt -> (gt, Var.fresh_id Var.Int ()))
+    |> Map.of_alist_exn (module GeneralTransition)
   in
-  let non_incr_set = GeneralTransitionSet.of_array (Stack.to_array non_increasing) in
-  all_possible_pre_trans |> Set.filter ~f:(fun (gt, _) -> not (Set.mem non_incr_set gt))
-
-
-let finalise_plrf cache solver non_increasing (entry_trans : (GeneralTransition.t * Location.t, 'b) Set.t)
-    problem =
-  let entry_trans_grouped_by_loc =
-    Set.to_list entry_trans |> List.sort_and_group ~compare:(fun (_, l1) (_, l2) -> Location.compare l1 l2)
+  let in_non_increasing_set gt =
+    Map.find non_increasing_indicators gt
+    |> Option.value_map ~default:RationalFormula.mk_false ~f:(fun indicator ->
+        RationalFormula.mk_eq (RationalPolynomial.of_var indicator) RationalPolynomial.one)
+  and not_in_non_increasing_set gt =
+    Map.find non_increasing_indicators gt
+    |> Option.value_map ~default:RationalFormula.mk_true ~f:(fun indicator ->
+        RationalFormula.mk_eq (RationalPolynomial.of_var indicator) RationalPolynomial.zero)
   in
-  let unbounded_vars_at_entry_locs =
-    List.map
-      ~f:(fun ts ->
-        let _, entryloc = List.hd_exn ts in
-        Sequence.of_list ts
-        |> Sequence.map ~f:problem.unbounded_vars
-        |> Sequence.fold ~f:Set.union ~init:VarSet.empty
-        |> VarSet.map ~f:(fun v -> Hashtbl.find_exn cache.coeffs_table (entryloc, v)))
-      entry_trans_grouped_by_loc
-    |> VarSet.union_list
+  let indicator_bounds indicator =
+    RationalPolynomial.
+      [ RationalFormula.mk_ge (of_var indicator) zero; RationalFormula.mk_le (of_var indicator) one ]
   in
-
-  (* Add variable constraints *)
-  Solver.push solver;
-  Set.iter
-    ~f:(Solver.add_real solver % RationalFormula.mk_eq RationalPolynomial.zero % RationalPolynomial.of_var)
-    unbounded_vars_at_entry_locs;
-  Logger.log logger Logger.DEBUG (fun () ->
-      ("finalise_plrf", [ ("unbounded_vars_at_entry_locs", VarSet.to_string unbounded_vars_at_entry_locs) ]));
-
-  if Solver.satisfiable solver then (
-    let model = Option.value_exn @@ Solver.model_real solver in
-    let rfunc loc =
-      Hashtbl.find_exn cache.template_table loc
-      |> RationalParameterPolynomial.eval_coefficients (fun var ->
-          Valuation.eval_opt var model |? OurRational.zero)
-    in
-    let ranking =
+  let transition_constraints gt =
+    if GeneralTransition.equal gt problem.decreasing then
+      (* The bounded constraint is needed since otherwise the ranking function could become negative after the
+         evaluation of a decreasing transition *)
+      [ in_non_increasing_set gt; decreasing_constraint cache gt; bounded_for_decreasing_constraint cache gt ]
+    else
+      [
+        RationalFormula.mk_or (not_in_non_increasing_set gt)
+          (RationalFormula.mk_and (non_increasing_constraint cache gt)
+             (bounded_for_nonincreasing_constraint cache gt));
+      ]
+  in
+  let zero_coefficients_at entry_loc entry_gt_and_loc =
+    Set.to_list (problem.unbounded_vars entry_gt_and_loc)
+    |> List.map ~f:(fun v ->
+        RationalFormula.mk_eq
+          (RationalPolynomial.of_var @@ Hashtbl.find_exn cache.coeffs_table (entry_loc, v))
+          RationalPolynomial.zero)
+    |> RationalFormula.all
+  in
+  let entry_constraints gt =
+    let entry_loc = GeneralTransition.src gt in
+    Set.to_list (Program.pre_gt problem.program gt)
+    |> List.map ~f:(fun pre ->
+        if problem.is_time_bounded (pre, entry_loc) then
+          RationalFormula.any
+            [
+              not_in_non_increasing_set gt;
+              in_non_increasing_set pre;
+              zero_coefficients_at entry_loc (pre, entry_loc);
+            ]
+        else
+          RationalFormula.mk_or (not_in_non_increasing_set gt) (in_non_increasing_set pre))
+  in
+  (* The constraints are added separately, as their conjunction would be expanded into a large DNF *)
+  let solver = Solver.create () in
+  List.concat_map ~f:indicator_bounds (Map.data non_increasing_indicators)
+  @ List.concat_map
+      ~f:(fun gt -> transition_constraints gt @ entry_constraints gt)
+      (Set.to_list problem.make_non_increasing)
+  |> List.iter ~f:(Solver.add_real solver);
+  Solver.model_real solver
+  |> Option.map ~f:(fun model ->
+      let is_non_increasing gt =
+        OurRational.equal OurRational.one
+          (Valuation.eval_opt (Map.find_exn non_increasing_indicators gt) model |? OurRational.zero)
+      in
+      let rfunc loc =
+        Hashtbl.find_exn cache.template_table loc
+        |> RationalParameterPolynomial.eval_coefficients (fun var ->
+            Valuation.eval_opt var model |? OurRational.zero)
+      in
       {
         decreasing = problem.decreasing;
-        non_increasing = GeneralTransitionSet.of_array @@ Stack.to_array non_increasing;
+        non_increasing = Set.filter problem.make_non_increasing ~f:is_non_increasing;
         rank = rfunc;
-      }
-    in
-    cache.rank := Some ranking;
-    raise Exit)
-  else
-    Solver.pop solver
-
-
-let rec backtrack cache steps_left index solver non_increasing problem =
-  let finalise_if_entrytime_bounded non_increasing =
-    let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
-    if Set.for_all ~f:problem.is_time_bounded entry_trans then
-      finalise_plrf cache solver non_increasing entry_trans problem
-  in
-
-  if Solver.satisfiable solver then
-    if steps_left == 0 then
-      finalise_if_entrytime_bounded non_increasing
-    else (
-      for i = index to Array.length problem.make_non_increasing - 1 do
-        let transition = Array.get problem.make_non_increasing i in
-
-        Solver.push solver;
-
-        Solver.add_real solver (non_increasing_constraint cache transition);
-        add_bounded_for_nonincreasing_constraint cache solver transition;
-
-        Stack.push non_increasing transition;
-        backtrack cache (steps_left - 1) (i + 1) solver non_increasing problem;
-        ignore (Stack.pop non_increasing);
-
-        Solver.pop solver
-      done;
-      finalise_if_entrytime_bounded non_increasing)
-
-
-(* Compute a RSM as needed by KoAT. *)
-let compute_plrf cache program is_time_bounded unbounded_vars transitions decreasing =
-  let solver = Solver.create () in
-  Solver.add_real solver (decreasing_constraint cache decreasing);
-  (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
-   * a decreasing transition *)
-  Solver.add_real solver (bounded_for_decreasing_constraint cache decreasing);
-  let make_non_increasing = Set.(remove transitions decreasing |> to_array) in
-  try
-    backtrack cache (Array.length make_non_increasing) 0 solver (Stack.singleton decreasing)
-      { program; is_time_bounded; unbounded_vars; decreasing; make_non_increasing }
-  with
-  | Exit -> ()
+      })
 
 
 (* Compute a ranking function as a side effect such that the given transition is decreasing.
@@ -344,9 +296,7 @@ let compute_plrf cache program is_time_bounded unbounded_vars transitions decrea
 let find_plrf program is_time_bounded unbounded_vars vars locations trans decreasing =
   let cache = new_cache () in
   compute_ranking_templates cache vars locations;
-
-  compute_plrf cache program is_time_bounded unbounded_vars trans decreasing;
-  !(cache.rank)
+  compute_plrf cache { program; is_time_bounded; unbounded_vars; decreasing; make_non_increasing = trans }
 
 
 let plrf_option_to_string = function

@@ -69,7 +69,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
   let update_path vars tmp_vars (path : path) =
     let varlist = Base.Set.to_list vars in
-    let labels = List.map (List.first % Tuple3.second) path in
+    let labels = List.map (TL.overapprox_function_calls % List.first % Tuple3.second) path in
     (* HashSet where all elements are definitely not static*)
     let static_dep_table = Hashtbl.create 10 in
     Base.Set.iter ~f:(flip (Hashtbl.add static_dep_table) ()) tmp_vars;
@@ -80,10 +80,7 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
         in
         (* all updates of var in the path *)
         let updates var =
-          OurBase.List.filter_opt
-          @@ List.map
-               (flip (TL.TransitionLabelNonFunctionCall.update % TL.overapprox_function_calls) var)
-               labels
+          OurBase.List.filter_opt @@ List.map (flip TL.TransitionLabelNonFunctionCall.update var) labels
         in
         let deterministic_update var = List.for_all update_is_deterministic @@ updates var in
         let new_deterministic var = not (deterministic_update var || Hashtbl.mem static_dep_table var) in
@@ -102,27 +99,43 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
 
   let logger = Logging.(get Twn)
 
-  (* We contract a (shifted to start) cycle to a loop  *)
-  let contract_cycle (cycle : path) start =
-    let pre, post = List.span (fun (l, _, _) -> not @@ Location.equal start l) cycle in
-    let merge (_, ts, _) =
-      ( List.map (Formula.mk % TL.guard) ts |> Formula.any,
-        List.map (Formula.mk % TL.guard_without_inv) ts |> Formula.any,
-        List.first ts |> TL.overapprox_function_calls |> TL.TransitionLabelNonFunctionCall.update_map )
-    in
-    let merge_pre = List.map merge pre and merge_post = List.map merge post in
+  (* Merges the (parallel) transitions of every step of the cycle into a loop *)
+  let merge_steps (cycle : path) =
+    List.map
+      (fun (l, ts, _) ->
+        ( l,
+          ( List.map (Formula.mk % TL.guard) ts |> Formula.any,
+            List.map (Formula.mk % TL.guard_without_inv) ts |> Formula.any,
+            List.first ts |> TL.overapprox_function_calls |> TL.TransitionLabelNonFunctionCall.update_map ) ))
+      cycle
+
+
+  (* We contract a (shifted to start) cycle, given by its merged steps, to a loop *)
+  let contract_merged_steps merged_steps start =
+    let pre, post = List.span (fun (l, _) -> not @@ Location.equal start l) merged_steps in
+    let merge_pre = List.map Tuple2.second pre and merge_post = List.map Tuple2.second post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post @ merge_pre)
 
+
+  let contract_cycle (cycle : path) = contract_merged_steps (merge_steps cycle)
 
   (** This method computes a loop for every entry transition of the cycle.
     Notice that we do not regard costs in the chaining step.
     However, we consider them when we compute the final bound. *)
   let chain_cycle ?(relevant_vars = None) (cycle : path) program =
     let entries = PM.Program.entry_transitions_with_logger logger program (handled_transitions cycle) in
-    List.map
-      (fun entry ->
-        (entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars))
-      entries
+    let merged_steps = merge_steps cycle in
+    (* All entries which enter the cycle at the same location share the same loop *)
+    let loop_starting_at =
+      LocationSet.of_list (List.map Tuple3.third entries)
+      |> OurBase.Set.fold
+           ~init:(OurBase.Map.empty (module Location))
+           ~f:(fun loops start ->
+             OurBase.Map.set loops ~key:start
+               ~data:
+                 (contract_merged_steps merged_steps start |> Loop.eliminate_non_contributors ~relevant_vars))
+    in
+    List.map (fun entry -> (entry, OurBase.Map.find_exn loop_starting_at (Tuple3.third entry))) entries
 
 
   type loop = PM.Transition.t list * (PM.Transition.t * Loop.t) list

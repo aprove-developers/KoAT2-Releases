@@ -22,7 +22,6 @@
   stdio
   z3
   ocamlgraph
-  parmap
   fpath
   apron
   apron.octD

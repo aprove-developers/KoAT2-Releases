@@ -1,6 +1,4 @@
 open! OurBase
-(** Implemenation of a preprocessor which eliminates variables that do not contribute to guards. *)
-
 open Constraints
 open Polynomials
 
@@ -9,7 +7,10 @@ module type Adapter = sig
   type transition_label
 
   val vars_with_function_call_calls : transition -> VarSet.t
+
   val dependency_rec : transition_label -> Var.t -> Var.t -> bool
+  (** [dependency_rec t x y] is true iff x depends on y in a recursive call of t.
+      The partial application [dependency_rec t] may perform expensive precomputations on [t]. *)
 end
 
 module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
@@ -25,18 +26,15 @@ module ClassicAdapter (M : ProgramTypes.ClassicalProgramModules) = struct
         TransitionLabel.update t x |? PolyFunctionCall.of_var x |> PolyFunctionCall.has_function_calls)
 
 
-  (* Returns true iff x depends on y in a recursive call of t. *)
-  let dependency_rec t x y =
+  let dependency_rec t =
     let vars_with_function_call = TransitionLabel.function_call_vars t in
-    Set.exists vars_with_function_call ~f:(fun var_function_call ->
-        Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x var_function_call) y
-        || Var.equal y (VarFunctionCall.return_var var_function_call))
+    fun x y ->
+      Set.exists vars_with_function_call ~f:(fun var_function_call ->
+          Set.mem (VarFunctionCall.dependencies (TransitionLabel.input_vars t) x var_function_call) y
+          || Var.equal y (VarFunctionCall.return_var var_function_call))
 end
 
 module DefaultAdapter = struct
-  type transition
-  type transition_label
-
   let vars_with_function_call_calls t = VarSet.empty
   let dependency_rec t x y = false
 end
@@ -48,10 +46,11 @@ struct
   open M
 
   let depends var label =
+    let dependency_rec = A.dependency_rec label in
     Set.exists ~f:(fun x ->
         TransitionLabel.update label x |? UpdateElement.zero |> UpdateElement.vars |> flip Set.mem var
         || TransitionLabel.cost label |> Polynomial.vars |> flip Set.mem var
-        || A.dependency_rec label x var)
+        || dependency_rec x var)
 
 
   let rec eliminate_t_ vars get_update contributors non_contributors =
@@ -89,22 +88,6 @@ struct
       contributors
     else
       compute_contributors_ transitionset xs ys
-
-
-  let compute_contributors transitionset =
-    let all_vars =
-      Set.to_list transitionset |> List.map ~f:(TransitionLabel.vars % Transition.label) |> VarSet.union_list
-    in
-    let vars_guard =
-      Set.to_list transitionset
-      |> List.map ~f:(Constraint.vars % TransitionLabel.guard % Transition.label)
-      |> VarSet.union_list
-    in
-    let vars_with_function_call =
-      List.map ~f:A.vars_with_function_call_calls (Set.to_list transitionset) |> VarSet.union_list
-    in
-    let vars = Set.union vars_with_function_call vars_guard in
-    compute_contributors_ transitionset vars (Set.diff all_vars vars)
 
 
   let eliminate_ program = compute_contributors_ (Program.transitions program)

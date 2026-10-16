@@ -11,6 +11,7 @@
 
   outputs =
     {
+      self,
       flake-utils,
       opam-nix,
       opam-repository,
@@ -31,29 +32,49 @@
 
         # Only what the opam/dune build needs, so that changes to the flake,
         # examples, Docker files etc. don't change koat2's source (and thus
-        # don't trigger rebuilds).
-        src = lib.fileset.toSource {
-          root = ./.;
-          fileset = lib.fileset.unions [
-            ./bin
-            ./src
-            ./test
-            ./external
-            ./dune
-            ./dune-project
-            ./koat2.opam
-            ./koat2_external.opam
-            # Installed as documentation by dune.
-            ./LICENSE
-            ./README.md
-          ];
-        };
+        # don't trigger rebuilds). The files may be missing, so that the
+        # dependencies can be built from just the flake and the .opam files
+        # (see the Dockerfile).
+        mkSrc =
+          extraFiles:
+          lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.unions (
+              map lib.fileset.maybeMissing (
+                [
+                  ./bin
+                  ./src
+                  ./test
+                  ./external
+                  ./dune
+                  ./dune-project
+                  ./koat2.opam
+                  ./koat2_external.opam
+                  # Installed as documentation by dune.
+                  ./LICENSE
+                  ./README.md
+                ]
+                ++ extraFiles
+              )
+            );
+          };
+        src = mkSrc [ ];
+        # The static build runs the tests, which read these examples.
+        srcWithTestExamples = mkSrc [
+          ./examples/CageKoAT-Input-Examples
+          ./examples/KoAT-2013
+          ./examples/KoAT-2014
+          ./examples/SAS10
+          ./examples/T2
+          ./examples/probabilistic
+          ./examples/rec
+        ];
 
         # opam-nix resolves the dependencies from a local opam repository built
         # from the project directory it is given. Giving it only the .opam
         # files keeps the resolution (done while evaluating the flake) from
         # being redone after every source edit; the local packages get their
-        # actual sources from `src` via `localSourcesOverlay`.
+        # actual sources via `localSourcesOverlay`.
         opamFiles = lib.fileset.toSource {
           root = ./.;
           fileset = lib.fileset.unions [
@@ -75,7 +96,7 @@
           utop = "*";
         };
         query = devPackagesQuery // {
-          # Flambda compiler, like the Dockerfile's opam switch.
+          # Flambda compiler.
           ocaml-variants = "${ocamlVersion}+options";
           ocaml-option-flambda = "*";
           # Since 5.5 the compiler's build script otherwise asks opam for
@@ -147,8 +168,23 @@
 
         # The local packages' sources (see `opamFiles`).
         localSourcesOverlay =
-          final: prev:
+          src: final: prev:
           lib.genAttrs localPackages (name: overridePkgdef prev.${name} (pkgdef: pkgdef // { inherit src; }));
+
+        # Shown by `koat2 --version`, like the version string the Dockerfile
+        # sets. Only koat2 itself depends on the git revision, which is unknown
+        # outside of a git checkout (e.g., in the Dockerfile).
+        gitRevision = self.shortRev or self.dirtyShortRev or null;
+        versionOverlay =
+          final: prev:
+          lib.optionalAttrs (gitRevision != null) {
+            ${package} = prev.${package}.overrideAttrs (oa: {
+              postPatch = (oa.postPatch or "") + ''
+                substituteInPlace src/util/VersionString.ml \
+                  --replace-fail 'version_str = "VERSION_STR"' 'version_str = "${gitRevision}"'
+              '';
+            });
+          };
 
         commonOverlay = lib.composeExtensions 
           (mapOpamPackages resolveInstalledTernaries)
@@ -190,12 +226,19 @@
 
         scope =
           (on.buildOpamProject { repos = [ opam-repository ]; } package opamFiles query).overrideScope
-            (lib.composeManyExtensions [ localSourcesOverlay commonOverlay devProfileOverlay ]);
+            (
+              lib.composeManyExtensions [
+                (localSourcesOverlay src)
+                versionOverlay
+                commonOverlay
+                devProfileOverlay
+              ]
+            );
 
         # --- Fully static build ---------------------------------------------
 
-        # Mirrors the Dockerfile behind compile_static_binary.sh
-        # (ocaml/opam:alpine): an ordinary musl toolchain, with the static
+        # The released binary (also built by the Dockerfile behind
+        # compile_static_binary.sh): an ordinary musl toolchain, with the static
         # link coming only from the project's release profile
         # (`-ccopt -static`). `pkgsStatic` doesn't work because it disables
         # dynamic loading in the whole toolchain, which breaks dune's
@@ -227,8 +270,17 @@
                 (musl.gmp.override { withStatic = true; })
                 (musl.mpfr.overrideAttrs { dontDisableStatic = true; })
                 (musl.ppl.overrideAttrs { dontDisableStatic = true; })
+                # Linked in the release profile, see ./dune. With musl, mimalloc's
+                # <linux/prctl.h> conflicts with <sys/prctl.h>, which suffices.
+                (musl.mimalloc.overrideAttrs (oa: {
+                  postPatch = (oa.postPatch or "") + ''
+                    substituteInPlace src/prim/unix/prim.c --replace-fail "#include <linux/prctl.h>" ""
+                  '';
+                }))
               ];
-              # Like the Dockerfile's `strip ... -o koat2`.
+              # Runs the tests (opam's `{with-test}`), as this is the released binary.
+              doCheck = true;
+              # The released binary is stripped.
               postFixup = ''
                 $STRIP $out/bin/${package}
               '';
@@ -241,7 +293,14 @@
             pkgs = musl;
             repos = [ opam-repository ];
           } package opamFiles query).overrideScope
-            (lib.composeManyExtensions [ localSourcesOverlay commonOverlay staticOverlay ]);
+            (
+              lib.composeManyExtensions [
+                (localSourcesOverlay srcWithTestExamples)
+                versionOverlay
+                commonOverlay
+                staticOverlay
+              ]
+            );
 
         koat2 = scope.${package};
         koat2Static = scopeStatic.${package};

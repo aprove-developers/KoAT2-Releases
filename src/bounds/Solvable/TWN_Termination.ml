@@ -42,14 +42,14 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
 
   module Valuation = Valuation.Make (OurInt)
 
-  let termination_ twn_proofs ((guard_and_inv, guard, update) : Loop.t) varmap =
+  let termination_ invariance_cache twn_proofs ((guard_and_inv, guard, update) : Loop.t) varmap =
     let formula =
       Formula.any
         (List.map
            (fun constr ->
              List.fold_right
                (fun atom formula ->
-                 if Loop.check_update_invariant (guard_and_inv, guard, update) atom then
+                 if Loop.check_update_invariant invariance_cache (guard_and_inv, guard, update) atom then
                    Formula.mk_and formula (Formula.lift @@ [ Constraint.lift atom ]) |> Formula.simplify
                  else
                    let poly = Atom.poly atom in
@@ -121,5 +121,5 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         ( "constrained-free closed-form",
           List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    termination_ twn_proofs loop varmap
+    termination_ (Loop.create_invariance_cache ()) twn_proofs loop varmap
 end

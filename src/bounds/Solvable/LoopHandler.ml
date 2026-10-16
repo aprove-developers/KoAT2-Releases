@@ -75,13 +75,15 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ClassicalProgramModules
           mk_str_header_big @@ "TWN: " ^ Transition.to_id_string_pretty trans);
       twn_proofs
     in
+    (* Shared by the local bounds of all loops of the scc, and freed together with them *)
+    let invariance_cache = TWN_Complexity.Loop.create_invariance_cache () in
     let with_local_bounds (cycle_with_proof : SimpleCycle.loop ProofOutput.LocalProofOutput.with_proof) =
       let twn_proofs, (cycle, entries) =
         ProofOutput.LocalProofOutput.(proof cycle_with_proof, result cycle_with_proof)
       in
       let entries =
         List.map entries ~f:(fun (entry, loop) ->
-            (entry, lazy (TWN_Complexity.local_bound twn_proofs ~twnlog ~unsolvable loop)))
+            (entry, lazy (TWN_Complexity.local_bound invariance_cache twn_proofs ~twnlog ~unsolvable loop)))
       in
       ProofOutput.LocalProofOutput.{ result = (cycle, entries); proof = twn_proofs }
     in

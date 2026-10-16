@@ -304,6 +304,10 @@ module type PreAdapter = sig
   type transition_graph
   type t = (transition_label, transition_label_comparator_witness, transition_graph) GenericProgram_.t
 
+  val transitions_with_function_calls : transition_graph -> transition_set
+  (** Returns all transitions of the graph with function calls, which are predecessors of all transitions starting in
+      their return locations. As this is needed for every pre-query, it is stored in the program type [t]. *)
+
   val compute_pre : t -> transition -> transition Sequence.t
 
   (** Type of a program consisting of a program graph and a start location. *)
