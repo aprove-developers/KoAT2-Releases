@@ -7,6 +7,8 @@ open ProgramModules
 open RVGTypes
 open Bounds
 
+exception FormatExn of string
+
 let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
@@ -106,8 +108,8 @@ type params = {
           ("overall", `PrintOverallCostbound);
         ]]);
       [@default `PrintOverallCostbound] [@names [ "result"; "r" ]]
-      (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
-  format : ([ `ARI | `KOAT ][@conv mk_enum [ ("ari", `ARI); ("koat", `KOAT) ]]); [@default `KOAT]
+      (** The kind of output which is desired. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
+  format : ([ `ARI | `KOAT ][@conv mk_enum [ ("ari", `ARI); ("koat", `KOAT) ]]) Option.t;
   preprocessors :
     (Program.t Preprocessor.t[@conv mk_enum Preprocessor.(List.map ~f:(fun p -> (show p, p)) all_classical)])
     list;
@@ -311,23 +313,30 @@ let run (params : params) =
       let conf = build_complete_conf goal closed_form_size_bounds in
       AnalysisComplexity.run_analysis conf
   in
-  let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
-  and output_dir = Option.map ~f:Fpath.v params.output_dir |? (input |> Fpath.v |> Fpath.parent) in
+  let input_filename, input_filename_ext =
+    let name, ext = Fpath.v input |> Fpath.normalize |> Fpath.split_ext in
+    (Fpath.filename name, ext)
+  in
+  let output_dir = Option.map ~f:Fpath.v params.output_dir |? (input |> Fpath.v |> Fpath.parent) in
   (if params.print_input then
      let program_str = Stdio.In_channel.read_lines input |> String.concat ~sep:"\n" in
      print_string (program_str ^ "\n\n"));
   let program =
-    if params.format == `KOAT then
-      KoatReaders.read_input ~termination:params.termination ~rename:params.rename false input
-    else
-      AriParser.from_file_exn input
-      |> tap (fun prog ->
-          ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.(
-            mk_header_big (mk_str "Initial Problem")
-            <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
-            <> program_to_formatted_string prog params.proof_format
-            <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
+    match (params.format, input_filename_ext) with
+    | Some `KOAT, _
+    | None, ".koat" ->
+        KoatReaders.read_input ~termination:params.termination ~rename:params.rename false input
+    | Some `ARI, _
+    | None, ".ari" ->
+        AriParser.from_file_exn input
+        |> tap (fun prog ->
+            ProofOutput.add_to_proof @@ fun () ->
+            FormattedString.(
+              mk_header_big (mk_str "Initial Problem")
+              <> mk_paragraph (Program.to_formatted_string ~pretty:true prog)
+              <> program_to_formatted_string prog params.proof_format
+              <> dependency_graph_to_formatted_string (Program.dependency_graph prog) params.proof_format))
+    | None, ext -> raise (FormatExn ext)
   in
   Timeout.timed_run params.timeout
     ~action:(fun () ->
