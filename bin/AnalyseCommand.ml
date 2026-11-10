@@ -110,6 +110,7 @@ type params = {
       [@default `PrintOverallCostbound] [@names [ "result"; "r" ]]
       (** The kind of output which is desired. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class by overapproximating logarithms. The option "termcompLog" prints the approximated complexity class and also handles logarithms. *)
   format : ([ `ARI | `KOAT ][@conv mk_enum [ ("ari", `ARI); ("koat", `KOAT) ]]) Option.t;
+      (** Specify the input format. If not provided, it it inferred from the file extension *)
   preprocessors :
     (Program.t Preprocessor.t[@conv mk_enum Preprocessor.(List.map ~f:(fun p -> (show p, p)) all_classical)])
     list;
