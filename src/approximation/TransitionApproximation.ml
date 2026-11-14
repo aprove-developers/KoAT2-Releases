@@ -1,10 +1,16 @@
 open! OurBase
+open ProgramModules
 
 type ('trans, 'bound, 'trans_cmp_wit) transition_approximation_t =
   string * ('trans, 'bound, 'trans_cmp_wit) Map.t
 
 module MakeDefaultApproximableTransition (PM : ProgramTypes.ProgramModules) = struct
   type program = PM.Program.t
+
+  let all_from_program_with_non_zero_cost program =
+    PM.Program.transitions program |> Set.to_sequence
+    |> Sequence.filter ~f:(fun t -> PM.Transition.cost t |> UpdateElementNonFunctionCall.is_zero |> not)
+
 
   let all_from_program = Set.to_sequence % PM.Program.transitions
 
@@ -22,6 +28,7 @@ module ApproximableGeneralTransition = struct
 
   let id = gt_id
   let all_from_program = Set.to_sequence % Program.gts
+  let all_from_program_with_non_zero_cost program = raise (Failure "not yet implemented")
 end
 
 module Make (B : ApproximationTypes.ApproximableBoundType) (T : ApproximationTypes.ApproximableTransitionType) =
@@ -45,6 +52,10 @@ struct
     Logger.with_log logger Logger.DEBUG
       (fun () -> (name ^ "bound", [ ("transition", T.to_id_string t) ]))
       ~result:B.to_string execute
+
+
+  let sum_of_non_zero_trans appr program =
+    T.all_from_program_with_non_zero_cost program |> Sequence.map ~f:(get appr) |> B.sum
 
 
   let sum appr program = T.all_from_program program |> Sequence.map ~f:(get appr) |> B.sum

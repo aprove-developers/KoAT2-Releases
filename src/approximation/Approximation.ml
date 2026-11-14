@@ -84,6 +84,7 @@ struct
 
 
   let program_costbound = TransitionApproximation.sum % cost
+  let program_costbound_fair : t -> PM.Program.t -> B.t = TransitionApproximation.sum_of_non_zero_trans % cost
   let add_costbound bound transition = Lens.cost ^%= TransitionApproximation.add bound transition
 
   let to_formatted ?(show_initial = false) ?(pretty = false) ?(termination_only = false) (program : Program.t)

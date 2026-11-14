@@ -8,6 +8,7 @@ module type ApproximableTransitionType = sig
   val id : t -> int
   val to_id_string : t -> string
   val compare : t -> t -> int
+  val all_from_program_with_non_zero_cost : program -> t Sequence.t
   val all_from_program : program -> t Sequence.t
   val ids_to_string : ?pretty:bool -> t -> string
 
@@ -51,6 +52,9 @@ module type TransitionApproximationType = sig
 
   val sum : t -> program -> bound
   (** Returns a timebound for the execution of all given transitions *)
+
+  val sum_of_non_zero_trans : t -> program -> bound
+  (** Returns a timebound for the execution of all given transitions with cost <> 0 *)
 
   val filter_transitions : (transition -> Bool.t) -> t -> t
   val add : ?simplifyfunc:(bound -> bound) -> bound -> transition -> t -> t

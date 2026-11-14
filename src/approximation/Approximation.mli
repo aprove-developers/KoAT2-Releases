@@ -63,6 +63,9 @@ module Make
   val program_costbound : t -> PM.Program.t -> B.t
   (** Returns a costbound for the program. *)
 
+  val program_costbound_fair : t -> PM.Program.t -> B.t
+  (** Returns a costbound for the program where only non-zero costs are considered. *)
+
   val add_costbound : B.t -> T.t -> t -> t
   (** Adds a (cost-)bound of a transition to an existing approximation. *)
 

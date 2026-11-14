@@ -494,10 +494,11 @@ module Classical (Bound : BoundType.Bound) = struct
     |> fun (program, appr) -> (program, scc_cost_bounds ~conf:conf.local_configuration program scc appr)
 
 
-  let improve ?(time_cfr = 180) ~(conf : (program_modules_t, Bound.t) analysis_configuration) ~preprocess
-      program (appr : Approximation.t) =
+  let improve ?(time_cfr = 180) ?(fairTermination = false)
+      ~(conf : (program_modules_t, Bound.t) analysis_configuration) ~preprocess program
+      (appr : Approximation.t) =
     CFR.time_cfr := float_of_int time_cfr;
-    let trivial_appr = TrivialTimeBounds.compute program appr in
+    let trivial_appr = TrivialTimeBounds.compute ~fairTermination program appr in
     let program, appr =
       program |> Program.sccs_locs_dependency_graph
       |> List.fold_left

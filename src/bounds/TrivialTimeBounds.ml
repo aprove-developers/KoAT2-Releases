@@ -17,9 +17,28 @@ module Make (Bound : BoundType.Bound) (PM : ProgramTypes.ProgramModules) = struc
     TransitionGraph.transitions graph |> Base.Set.filter ~f:(fun (l, t, l') -> not (same_scc l l'))
 
 
-  let compute program appr =
+  let all_trivial_fair_transitions program =
+    let sccs = DependencyGraph.DependencyGraph.sccs_locs (Program.dependency_graph program) in
+    let relevant_scc =
+      List.filter sccs ~f:(fun locs ->
+          Set.for_all (Program.scc_transitions_from_locs program locs) ~f:(fun t ->
+              Polynomials.Polynomial.is_zero @@ Transition.cost t))
+    in
+    TransitionSet.union_list (List.map relevant_scc ~f:(Program.scc_transitions_from_locs program))
+
+
+  let compute ?(fairTermination = false) program appr =
     let one_bounded_transitions = all_trivial_transitions program in
-    Base.Set.fold ~f:(flip @@ Approximation.add_timebound Bound.one) one_bounded_transitions ~init:appr
+    let all_trivial_fair_transitions =
+      if fairTermination then
+        all_trivial_fair_transitions program
+      else
+        TransitionSet.empty
+    in
+    Base.Set.fold
+      ~f:(flip @@ Approximation.add_timebound Bound.one)
+      (Set.union one_bounded_transitions all_trivial_fair_transitions)
+      ~init:appr
 end
 
 module Classical (Bound : BoundType.Bound) = struct

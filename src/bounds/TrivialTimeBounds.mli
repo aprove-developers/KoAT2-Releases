@@ -5,7 +5,7 @@ module Classical (Bound : BoundType.Bound) : sig
 
   type appr = Approximation.MakeForClassicalAnalysis(Bound)(ProgramModules).t
 
-  val compute : Program.t -> appr -> appr
+  val compute : ?fairTermination:bool -> Program.t -> appr -> appr
   (** This function infers for all transitions which are not part of an scc a time bound of one.
       Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
 end

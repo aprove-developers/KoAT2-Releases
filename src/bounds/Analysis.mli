@@ -54,6 +54,7 @@ module Classical (Bound : BoundType.Bound) : sig
 
   val improve :
     ?time_cfr:int ->
+    ?fairTermination:bool ->
     conf:allowed_conf_type ->
     preprocess:(Program.t -> Program.t) ->
     Program.t ->

@@ -12,29 +12,35 @@ exception FormatExn of string
 let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
+type mode = [ `Complexity | `Termination | `FairTermination ]
+
+let termination = function
+  | `Termination
+  | `FairTermination ->
+      true
+  | `Complexity -> false
+
+
 type 'bound approximation_t =
   ( (Transition.t, 'bound, Transition.comparator_witness) TransitionApproximation.transition_approximation_t,
     (RV.t, 'bound, RV.comparator_witness) SizeApproximation.size_approximation_t )
   Approximation.approximation_t
 
 (** Prints the whole resulting approximation to the shell. *)
-let print_all_bounds (type b) (module B : BoundType.Bound with type t = b) (program : Program.t)
+let print_all_bounds mode (type b) (module B : BoundType.Bound with type t = b) (program : Program.t)
     (appr : b approximation_t) : unit =
   (* Here, (type b) is a "locally abstract type". *)
   let module Approximation = Approximation.MakeForClassicalAnalysis (B) (ProgramModules) in
-  Approximation.to_string program appr |> print_string
+  Approximation.to_string ~termination_only:(termination mode) program appr |> print_string
 
 
 (** Prints the overall timebound of the program to the shell. *)
-let print_overall_costbound (type b) (module B : BoundType.Bound with type t = b) (program : Program.t)
+let print_overall_costbound mode (type b) (module B : BoundType.Bound with type t = b) (program : Program.t)
     (appr : b approximation_t) : unit =
   let module Approximation = Approximation.MakeForClassicalAnalysis (B) (ProgramModules) in
-  Approximation.program_costbound appr program |> B.to_string |> print_endline
-
-
-let print_overall_costbound :
-    (module Koat2.BoundType.Bound with type t = 'b) -> Koat2.Program_.t -> 'b approximation_t -> unit =
-  print_overall_costbound
+  match mode with
+  | `FairTermination -> Approximation.program_costbound_fair appr program |> B.to_string |> print_endline
+  | _ -> Approximation.program_costbound appr program |> B.to_string |> print_endline
 
 
 (** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
@@ -53,11 +59,11 @@ let print_termcompLog (type b) (module B : BoundType.Bound with type t = b) (pro
   |> B.asymptotic_complexity |> B.show_complexity_termcomp_log |> print_endline
 
 
-let print_result = function
-  | `PrintOverallCostbound -> print_overall_costbound
+let print_result mode = function
+  | `PrintOverallCostbound -> print_overall_costbound mode
   | `PrintTermcomp -> print_termcomp
   | `PrintTermcompLog -> print_termcompLog
-  | `PrintAllBounds -> print_all_bounds
+  | `PrintAllBounds -> print_all_bounds mode
 
 
 type local = [ `MPRF | `TWN | `TWNLOG | `UNSOLVABLE ]
@@ -141,7 +147,13 @@ type params = {
       (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
   timeout : float; [@default 0.]
       (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
-  termination : bool;  (** Only looks for termination behavior. *)
+  mode :
+    (mode
+    [@conv
+      mk_enum
+        [ ("complexity", `Complexity); ("termination", `Termination); ("fairTermination", `FairTermination) ]]);
+      [@default `Complexity] [@names [ "mode"; "m" ]]
+      (** The analysis goal: "complexity" infers runtime/cost bounds, "termination" only proves termination, and "fairTermination" proves that every run only executes finitely many transitions with non-zero cost. *)
 }
 [@@deriving subliner]
 (** The shell arguments which can be defined in the console. *)
@@ -238,12 +250,13 @@ module MakeAnalysis (Bound : BoundType.Bound) = struct
     if params.no_boundsearch then
       (program, appr)
     else
-      Analysis.improve ~conf:analysis_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr)
-    |> tap (fun (program, appr) -> print_result params.result (module Bound) program appr)
+      Analysis.improve ~fairTermination:(params.mode == `FairTermination) ~conf:analysis_conf ~preprocess
+        ~time_cfr:params.time_limit_cfr program appr)
+    |> tap (fun (program, appr) -> print_result params.mode params.result (module Bound) program appr)
     |> tap (fun (program, appr) ->
         ProofOutput.add_to_proof (fun () ->
-            Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination
-              program appr))
+            Approximation.to_formatted ~pretty:true ~show_initial:false
+              ~termination_only:(termination params.mode) program appr))
     |> tap (fun (program, appr) ->
         if params.print_system then
           GraphPrint.print_system ~format:"png"
@@ -296,23 +309,25 @@ let run (params : params) =
             params.cfr;
       }
     in
-    if params.termination then
-      let module AnalysisTermination = MakeAnalysis (Bounds.BinaryBound) in
-      let goal = Analysis.Termination in
-      let closed_form_size_bounds = Analysis.NoClosedFormSizeBounds in
-      let conf = build_complete_conf goal closed_form_size_bounds in
-      AnalysisTermination.run_analysis conf
-    else
-      let module AnalysisComplexity = MakeAnalysis (Bounds.Bound) in
-      let goal = Analysis.Complexity in
-      let closed_form_size_bounds =
-        if List.exists ~f:(fun x -> x == `CLOSED || x == `COMMUTING) params.size then
-          Analysis.ComputeClosedFormSizeBounds
-        else
-          Analysis.NoClosedFormSizeBounds
-      in
-      let conf = build_complete_conf goal closed_form_size_bounds in
-      AnalysisComplexity.run_analysis conf
+    match params.mode with
+    | `Termination
+    | `FairTermination ->
+        let module AnalysisTermination = MakeAnalysis (Bounds.BinaryBound) in
+        let goal = Analysis.Termination in
+        let closed_form_size_bounds = Analysis.NoClosedFormSizeBounds in
+        let conf = build_complete_conf goal closed_form_size_bounds in
+        AnalysisTermination.run_analysis conf
+    | `Complexity ->
+        let module AnalysisComplexity = MakeAnalysis (Bounds.Bound) in
+        let goal = Analysis.Complexity in
+        let closed_form_size_bounds =
+          if List.exists ~f:(fun x -> x == `CLOSED || x == `COMMUTING) params.size then
+            Analysis.ComputeClosedFormSizeBounds
+          else
+            Analysis.NoClosedFormSizeBounds
+        in
+        let conf = build_complete_conf goal closed_form_size_bounds in
+        AnalysisComplexity.run_analysis conf
   in
   let input_filename, input_filename_ext =
     let name, ext = Fpath.v input |> Fpath.normalize |> Fpath.split_ext in
@@ -326,7 +341,7 @@ let run (params : params) =
     match (params.format, input_filename_ext) with
     | Some `KOAT, _
     | None, ".koat" ->
-        KoatReaders.read_input ~termination:params.termination ~rename:params.rename false input
+        KoatReaders.read_input ~termination:(termination params.mode) ~rename:params.rename false input
     | Some `ARI, _
     | None, ".ari" ->
         AriParser.from_file_exn input
