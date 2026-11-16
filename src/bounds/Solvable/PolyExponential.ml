@@ -173,10 +173,14 @@ module ConstantConstraint = struct
           atoms
 
 
-  let max_constant = function
-    | C [] -> OurInt.minus_one
-    | C atoms -> OurInt.max_list (List.map Tuple2.second atoms)
-    | _ -> OurInt.minus_one
+  (** The first [n] from which the constraint no longer restricts [n], i.e., the largest constant plus one, or
+      [0] if the constraint has no constants. *)
+  let start = function
+    | C ((_, c) :: atoms) -> OurInt.succ (List.fold_left (fun acc (_, c) -> OurInt.max acc c) c atoms)
+    | C []
+    | T
+    | F ->
+        OurInt.zero
 end
 
 module type IntSupRing = sig
@@ -463,7 +467,7 @@ module PE (Value : IntSupRing) = struct
 
 
   (* c.f.: eq. (8) *)
-  let no_positive (c, p, d, b) max_const coeff_var =
+  let no_positive (c, p, d, b) start coeff_var =
     if ConstantConstraint.is_false c then
       []
     else
@@ -485,17 +489,16 @@ module PE (Value : IntSupRing) = struct
       (* c.f.: eq. (10) *)
       let gt_max =
         let r = compute_r (transform d) Value.(div coeff_var b) in
-        let max_const_inc = OurInt.(max_const + one) in
         let coeff =
-          Value.(mul (div (pow (div b coeff_var) (OurInt.to_int max_const_inc)) (neg b)))
-            (Polynomial.eval_f r (fun _ -> Value.of_ourint max_const_inc))
+          Value.(mul (div (pow (div b coeff_var) (OurInt.to_int start)) (neg b)))
+            (Polynomial.eval_f r (fun _ -> Value.of_ourint start))
         in
         let coeff_list = Polynomial.degree_coeff_list r in
         let degree_r = List.length coeff_list - 1 in
         let rec pe_ coeff_list_ i =
           let term x =
             [
-              ( ConstantConstraint.mk_gt (OurInt.to_int max_const + 1),
+              ( ConstantConstraint.mk_gt (OurInt.to_int start),
                 Polynomial.mult_with_const (Value.div x b) p,
                 degree_r - i,
                 b );
@@ -505,15 +508,10 @@ module PE (Value : IntSupRing) = struct
           | [] -> []
           | x :: xs -> term x @ pe_ xs (i - 1)
         in
-        [
-          ( ConstantConstraint.mk_gt (OurInt.to_int max_const + 1),
-            Polynomial.mult_with_const coeff p,
-            0,
-            coeff_var );
-        ]
+        [ (ConstantConstraint.mk_gt (OurInt.to_int start), Polynomial.mult_with_const coeff p, 0, coeff_var) ]
         @ pe_ coeff_list degree_r
       in
-      le_max (OurInt.to_int max_const + 1) @ gt_max
+      le_max (OurInt.to_int start) @ gt_max
 
 
   let poly_with_var var poly =
@@ -531,7 +529,7 @@ module PE (Value : IntSupRing) = struct
           if Option.is_some pos_const then
             positive (c, p, d, b) (Option.get pos_const) coeff_var @ tmp
           else
-            no_positive (c, p, d, b) (ConstantConstraint.max_constant c) coeff_var @ tmp)
+            no_positive (c, p, d, b) (ConstantConstraint.start c) coeff_var @ tmp)
         pe []
     in
     [ (ConstantConstraint.mk_true, Polynomial.of_var var, 0, coeff_var) ] @ pe_
@@ -550,9 +548,8 @@ module PE (Value : IntSupRing) = struct
         |> simplify)
 
 
-  let max_const = function
-    | [] -> OurInt.zero
-    | xs -> OurInt.max_list (List.map (ConstantConstraint.max_constant % Tuple4.first) xs)
+  let start pe =
+    List.fold_left (fun acc (c, _, _, _) -> OurInt.max acc (ConstantConstraint.start c)) OurInt.zero pe
 
 
   (** We assume that we get a list of var -> poly, s.t., the list ordering corresponds to a valid twn order. *)

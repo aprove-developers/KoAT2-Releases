@@ -41,7 +41,11 @@ module PE (Value : IntSupRing) : sig
   val substitute : (Var.t, t) Hashtbl.t -> Polynomial.t -> t
   val substitute_f : (Var.t -> Polynomial.t) -> t -> t
   val normalize : t list -> t list
-  val max_const : t -> OurInt.t
+
+  val start : t -> OurInt.t
+  (** The first [n] from which all constraints are satisfied, i.e., from which the constraint-free closed form
+      is valid. This is [0] if there are no constants in the constraints. *)
+
   val compute_closed_form : (Var.t * Polynomial.t) list -> t list
   val add : t -> t -> t
   val mul : t -> t -> t

@@ -193,12 +193,17 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
                         ("Stabilization-Threshold for: " ^ Atom.to_string ~pretty:true atom))))
 
 
-  let get_bound invariance_cache twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap =
-    let bound, max_con =
+  (* [n0] is the first iteration from which the constraint-free closed form [varmap] is valid.
+     By [thm:RBLoops] of the TWN journal paper, the runtime is bounded by the maximum of [n0] and the
+     stabilization thresholds of all atoms. We over-approximate the maximum of the thresholds by their sum.
+     Logarithms in bounds are rounded up, so the thresholds are integers and bound the runtime without further
+     slack. *)
+  let get_bound invariance_cache twn_proofs ?(twnlog = false) (loop : Loop.t) order npe varmap ~n0 =
+    let bound =
       List.fold_right
-        (fun atom (bound, const) ->
+        (fun atom ->
           let poly =
-            (* Transform from p ≤ 0 to p < 0 *)
+            (* Over the integers, p ≤ 0 is equivalent to p - 1 < 0. Negating yields q > 0, which holds iff the atom holds. *)
             Atom.poly_lt atom |> Polynomial.neg
           in
           let sub_poly =
@@ -206,25 +211,24 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           in
           Logger.log logger Logger.INFO (fun () ->
               ( "complexity: npe -> guard_atom",
-                [ ("atom", Atom.to_string atom); ("subs", "0 <= " ^ RationalPE.to_string sub_poly) ] ));
+                [ ("atom", Atom.to_string atom); ("subs", "0 < " ^ RationalPE.to_string sub_poly) ] ));
           let sub_poly_n =
             sub_poly
             |> List.map (fun (c, p, d, b) ->
                 (c, RationalPolynomial.normalize p, d |> OurInt.of_int, OurRational.to_ourint b))
           in
-          let max_const = OurInt.max const (RationalPE.max_const sub_poly) in
           if twnlog && (is_sorted @@ List.map Tuple4.fourth sub_poly_n) then
-            (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
+            Bound.add (compute_f' twn_proofs atom sub_poly_n)
           else
-            (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
+            Bound.add (compute_f twn_proofs atom sub_poly_n))
         (* No stabilization threshold is required for invariants, they hold anyway. *)
         (Loop.guard_without_inv loop |> Formula.atoms |> List.unique ~eq:Atom.equal
         |> List.filter (not % Loop.check_update_invariant invariance_cache loop))
-        (Bound.one, OurInt.zero)
+        Bound.zero
     in
     Logger.log logger Logger.INFO (fun () ->
-        ("complexity.get_bound", [ ("max constant in constant constraint", OurInt.to_string max_con) ]));
-    Bound.(add bound (of_OurInt OurInt.(max_con + one)))
+        ("complexity.get_bound", [ ("start of closed form", OurInt.to_string n0) ]));
+    Bound.max bound (Bound.of_OurInt n0)
     |> tap (fun b ->
         Logger.log logger Logger.INFO (fun () ->
             ("complexity.get_bound", [ ("local bound", Bound.to_string b) ])))
@@ -334,13 +338,21 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
           ( "constrained-free closed-form",
             List.combine (List.map Var.to_string order) (List.map RationalPE.to_string npe) ));
       let varmap = Hashtbl.of_list @@ List.combine order npe in
+      (* The constraint-free closed form is only valid after the largest constant in the constraints of the
+         closed form, so we start counting there. Only variables occurring in the guard matter. *)
+      let n0 =
+        let guard_vars = Formula.vars (Loop.guard_without_inv t_) in
+        List.combine order pe
+        |> List.filter (fun (v, _) -> OurBase.Set.mem guard_vars v)
+        |> List.fold_left (fun acc (_, pe) -> OurInt.max acc (RationalPE.start pe)) OurInt.zero
+      in
       (* The termination proof is computed lazily but precedes the bound in the proof output *)
       let termination_proofs = ProofOutput.LocalProofOutput.create () in
       let bound_proofs = ProofOutput.LocalProofOutput.create () in
       let f =
         List.fold
           (fun bound replace -> Bound.substitute_f replace bound)
-          (get_bound invariance_cache bound_proofs ~twnlog t_ order npe varmap)
+          (get_bound invariance_cache bound_proofs ~twnlog t_ order npe varmap ~n0)
           var_replacement
       in
       ProofOutput.LocalProofOutput.add_to_proof_with_format twn_proofs (fun format ->

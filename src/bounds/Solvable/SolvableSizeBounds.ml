@@ -61,7 +61,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
             let local_bound =
               Bound.max
                 (Loop.compute_bound_n_iterations loop_red var
-                   (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
+                   (max 0 (OurInt.to_int (PolyExponential.ComplexPE.start pe) - 2)))
                 (PolyExponential.ComplexPE.to_bound pe)
             in
             let res =
@@ -111,7 +111,7 @@ module Make (PM : ProgramTypes.ClassicalProgramModules) = struct
                        let local_bound =
                          Bound.max
                            (Loop.compute_bound_n_iterations loop var
-                              (max 0 ((OurInt.to_int @@ PolyExponential.ComplexPE.max_const pe) - 1)))
+                              (max 0 (OurInt.to_int (PolyExponential.ComplexPE.start pe) - 2)))
                            (PolyExponential.ComplexPE.to_bound pe)
                          |> Bound.substitute (Var.of_string "n") ~replacement:time_bound
                        in
