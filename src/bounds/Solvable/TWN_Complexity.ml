@@ -146,11 +146,30 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
     | x1 :: x2 :: xs -> OurInt.(x1 > x2) && is_sorted (x2 :: xs)
 
 
+  (* The smallest base b_j / (b_{j-1} + eps) of the logarithms in the bound, where the second argument is [b_l; ...; b_1]. It does
+     not exist for less than two bases. *)
   let rec min_logbase eps = function
     | []
     | [ _ ] ->
-        OurRational.one
-    | x1 :: x2 :: xs -> OurRational.(min (x1 / (x2 + eps)) (min_logbase eps (x2 :: xs)))
+        None
+    | b :: (b' :: _ as tail) ->
+        let curr = OurRational.(b / (b' + eps)) in
+        OurBase.Option.value_map (min_logbase eps tail) ~default:curr ~f:(OurRational.min curr)
+        |> OptionMonad.pure
+
+
+  (* Returns the smallest m in N with k^m >= 2 for k > 1. Since log_2(k) >= 1/m, we obtain
+     log_k(y) = log_2(y) / log_2(k) <= m * log_2(y). Hence, m is an integral upper bound on 1 / log_2(k). *)
+  let log_coefficient k =
+    if OurRational.(k <= one) then
+      invalid_arg "log_coefficient: the base of the logarithm must be greater than 1";
+    let rec smallest_m m k_pow_m =
+      if OurRational.(k_pow_m >= of_int 2) then
+        m
+      else
+        smallest_m (OurInt.succ m) OurRational.(k_pow_m * k)
+    in
+    smallest_m OurInt.one k
 
 
   let compute_f' twn_proofs atom = function
@@ -171,8 +190,11 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
         let eps = OurRational.(one / of_int 2) in
         let m'_ = OurInt.max_list (List.map (fun ys -> compute_M' eps (base_exp ys)) (prefix xs)) in
         Logger.log logger Logger.INFO (fun () -> ("complexity.compute_f'", [ ("M", OurInt.to_string m'_) ]));
+        (* The runtime is bounded by max_j log_{k_j}(2 * alphas_abs) for the bases k_j = b_j / (b_{j-1} + eps), and
+           log_k(y) is decreasing in k. So it suffices to consider the smallest base. *)
         let coeff =
-          OurRational.(ceil @@ (one / min_logbase eps (List.map (OurRational.of_ourint % Tuple4.fourth) xs)))
+          min_logbase eps (List.map (OurRational.of_ourint % Tuple4.fourth) xs)
+          |> Option.map_default log_coefficient OurInt.one
         in
         Bound.(
           (of_OurInt coeff * log_of_poly Polynomial.(alphas_abs + alphas_abs))
