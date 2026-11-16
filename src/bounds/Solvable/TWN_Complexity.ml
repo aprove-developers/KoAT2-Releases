@@ -217,7 +217,8 @@ module Make (Bound : BoundType.Bound) (TL : ProgramTypes.ClassicalTransitionLabe
             (Bound.add bound (compute_f' twn_proofs atom sub_poly_n), max_const)
           else
             (Bound.add bound (compute_f twn_proofs atom sub_poly_n), max_const))
-        (Loop.guard loop |> Formula.atoms |> List.unique ~eq:Atom.equal
+        (* No stabilization threshold is required for invariants, they hold anyway. *)
+        (Loop.guard_without_inv loop |> Formula.atoms |> List.unique ~eq:Atom.equal
         |> List.filter (not % Loop.check_update_invariant invariance_cache loop))
         (Bound.one, OurInt.zero)
     in
