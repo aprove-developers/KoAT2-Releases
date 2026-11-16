@@ -190,7 +190,8 @@ module Make (Num : PolyTypes.OurNumber) = struct
                 let (Sum (s, ss)) = e in
                 let log_vars, rem =
                   List.partition_map (s :: ss) ~f:(function
-                    | Product { coeff; mults = [ Log v ] } when Num.(equal coeff one) -> Base.Either.First v
+                    | Product { coeff; mults = [ Log v ] } when Num.Compare.(coeff > Num.zero) ->
+                        Base.Either.First (v, coeff)
                     | r -> Base.Either.Second (mk_singleton_sum r))
                 in
                 if List.is_empty log_vars then
@@ -200,13 +201,14 @@ module Make (Num : PolyTypes.OurNumber) = struct
                     let (Sum (s, ss)) = exp_bound b (sum_bounds (Sequence.of_list rem)) in
                     s :: ss
                   in
+                  (* c^(k * log v) = (c^(log v))^k = v^(k * log c) <= v^(ceil(k * ceil(log c))) *)
                   let log_part =
                     Sequence.of_list log_vars
-                    |> Sequence.bind ~f:(fun v ->
-                        if Num.(equal c one) then
-                          Sequence.singleton (Var v)
-                        else
-                          repeat_sequence (Var v) (Num.log2int c))
+                    |> Sequence.bind ~f:(fun (v, k) ->
+                        let exponent =
+                          OurInt.to_int @@ OurRational.(ceil (Num.to_our_rational k * of_int (Num.log2int c)))
+                        in
+                        repeat_sequence (Var v) exponent)
                     |> Sequence.to_list
                   in
                   (* Now log_part should have no exps. So we multiply the bound "manually" back together here *)

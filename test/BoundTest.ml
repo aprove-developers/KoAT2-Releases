@@ -55,6 +55,9 @@ let tests =
                   ("log(3*x^2+y)", "2*log(x)+log(y)+2");
                   ("2^(log(x) + log(y))", "x*y");
                   ("3^(log(x) + log(y))", "x^2 * y^2");
+                  ("2^(4*log(x))", "x^4");
+                  ("3^(2*log(x))", "x^4");
+                  ("2^(9 + 4*log(x))", "512*x^4");
                 ];
          "simplify_rational"
          >::: List.map
