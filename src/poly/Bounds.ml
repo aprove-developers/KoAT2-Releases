@@ -211,10 +211,17 @@ module Make (Num : PolyTypes.OurNumber) = struct
                         repeat_sequence (Var v) exponent)
                     |> Sequence.to_list
                   in
+                  (* As log v stands for the rounded up logarithm, we have, for c >= 1,
+                     c^(k * ceil(log_2 v)) <= c^(k * (log_2 v + 1)) <= c^(ceil k) * c^(k * log_2 v). *)
+                  let factor =
+                    List.fold log_vars ~init:Num.one ~f:(fun acc (_, k) ->
+                        let ceil_k = OurInt.to_int @@ OurRational.ceil (Num.to_our_rational k) in
+                        Num.(mul acc (pow (max one c) ceil_k)))
+                  in
                   (* Now log_part should have no exps. So we multiply the bound "manually" back together here *)
                   Sequence.of_list rem_product_bounds
                   |> Sequence.map ~f:(fun (Product { coeff; mults }) ->
-                      mk_product_bound coeff (log_part @ mults))
+                      mk_product_bound (Num.mul coeff factor) (log_part @ mults))
                   |> Sequence.map ~f:mk_singleton_sum |> sum_bounds)
         | _ -> mk_singleton_sum (mk_singleton_product (Exp (b, e)))
       in
