@@ -4,7 +4,7 @@
 
 (name koat2)
 
-(version 2.7.0)
+(version 2.7.1)
 
 (generate_opam_files true)
 
